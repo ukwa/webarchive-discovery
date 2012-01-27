@@ -7,9 +7,8 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
-import org.restlet.Client;
-import org.restlet.data.Protocol;
-import org.restlet.data.Response;
+import org.restlet.representation.Representation;
+import org.restlet.resource.ClientResource;
 
 import uk.bl.wap.util.solr.SolrRecord;
 
@@ -51,9 +50,14 @@ public class WctEnricher {
 	}
 
 	private void enrich( SolrRecord sr ) {
-		Client client = new Client( Protocol.HTTP );
-		Response resp = client.get( WctRestletUrl + sr.getWctInstanceId() );
-		this.read( resp.getEntityAsText() );
+		ClientResource resource = new ClientResource( WctRestletUrl + sr.getWctInstanceId() );  
+		Representation resp = resource.get();
+		try {
+			this.read( resp.getText() );
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 
 	public void read( String s ) {
