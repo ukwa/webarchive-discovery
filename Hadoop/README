@@ -1,3 +1,3 @@
-This project contains various classes for the use of (W)ARC files with Hadoop. Separate classes currently exist for both ARCs and WARCs though these should be merged in the near future.
+This project contains various classes for the use of (W)ARC files with Hadoop.
 
 The 'hadoop_utils.config' file contains some include/exclude parameters to skip certain records, specifically those with which Tika did not cope gracefully.

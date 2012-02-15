@@ -1,3 +1,1 @@
 This project contains those classes used to run text-extraction jobs on Hadoop using Tika. They are somewhat bespoke insofar as the output (SolrRecord) is specifically tailored to our Solr XML schema. Additional metadata are too added from the Web Curator Tool (WctEnricher).
-
-Separate classes currently exist for both ARCs and WARCs though these should be merged in the near future.
