@@ -9,33 +9,33 @@ import java.util.HashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.conf.Configured;
+import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.util.ToolRunner;
 import org.apache.hadoop.util.Tool;
+import org.apache.hadoop.util.ToolRunner;
 
+import uk.bl.wap.hadoop.ArchiveFileInputFormat;
 import uk.bl.wap.hadoop.TextOutputFormat;
-import uk.bl.wap.hadoop.WARCFileInputFormat;
 import uk.bl.wap.util.solr.SolrRecord;
 
 /**
- * WARCTikExtractor
- * Extracts text using Tika from a series of WARC files.
+ * ArchiveTikExtractor
+ * Extracts text using Tika from a series of (W)ARC files.
  * 
  * @author rcoram
  */
 
 @SuppressWarnings( { "deprecation" } )
-public class WARCTikaExtractor extends Configured implements Tool {
+public class ArchiveTikaExtractor extends Configured implements Tool {
 
 	public int run( String[] args ) throws IOException {
-		JobConf conf = new JobConf( getConf(), WARCTikaExtractor.class );
+		JobConf conf = new JobConf( getConf(), ArchiveTikaExtractor.class );
 		String line = null;
 
 		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
@@ -63,8 +63,8 @@ public class WARCTikaExtractor extends Configured implements Tool {
 		}
 
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
-		conf.setInputFormat( WARCFileInputFormat.class );
-		conf.setMapperClass( WARCTikaMapper.class );
+		conf.setInputFormat( ArchiveFileInputFormat.class );
+		conf.setMapperClass( ArchiveTikaMapper.class );
 		conf.setReducerClass( ArchiveTikaReducer.class );
 		conf.setOutputFormat( TextOutputFormat.class );
 		conf.set( "map.output.key.field.separator", "" );
@@ -75,7 +75,6 @@ public class WARCTikaExtractor extends Configured implements Tool {
 		conf.setNumReduceTasks( tiMap.size() );
 		JobClient.runJob( conf );
 		return 0;
-
 	}
 
 	public static void main( String[] args ) throws Exception {
@@ -84,13 +83,13 @@ public class WARCTikaExtractor extends Configured implements Tool {
 			System.exit( 0 );
 
 		}
-		int ret = ToolRunner.run( new WARCTikaExtractor(), args );
+		int ret = ToolRunner.run( new ArchiveTikaExtractor(), args );
 
 		System.exit( ret );
 	}
 
 	private String getWctTi( String warcName ) {
-		Pattern pattern = Pattern.compile( "^BL-([0-9]+)-[0-9]+\\.warc(\\.gz)?$" );
+		Pattern pattern = Pattern.compile( "^BL-([0-9]+)-[0-9]+\\.w?arc(\\.gz)?$" );
 		Matcher matcher = pattern.matcher( warcName );
 		if( matcher.matches() ) {
 			return matcher.group( 1 );

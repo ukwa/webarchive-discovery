@@ -1,14 +1,5 @@
 package uk.bl.wap.hadoop.tika;
 
-/*
- * For JobConf.get() property see:
- * http://hadoop.apache.org/common/docs/r0.18.3/mapred_tutorial.html
- */
-
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_DATE;
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_URI;
-
 import java.io.IOException;
 import java.net.URI;
 import java.security.MessageDigest;
@@ -30,12 +21,12 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.archive.io.ArchiveRecordHeader;
 
-import uk.bl.wap.hadoop.WritableWARCRecord;
+import uk.bl.wap.hadoop.WritableArchiveRecord;
 import uk.bl.wap.util.solr.SolrRecord;
 import uk.bl.wap.util.solr.TikaExtractor;
 
 @SuppressWarnings( { "deprecation" } )
-public class WARCTikaMapper extends MapReduceBase implements Mapper<Text, WritableWARCRecord, Text, SolrRecord> {
+public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, SolrRecord> {
 	String workingDirectory = "";
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5;
@@ -44,17 +35,18 @@ public class WARCTikaMapper extends MapReduceBase implements Mapper<Text, Writab
 
 	@Override
 	public void configure( JobConf job ) {
-		//this.workingDirectory = job.get( "mapred.work.output.dir" );
 		try {
 			this.hdfs = FileSystem.get( job );
 			URI[] uris = DistributedCache.getCacheFiles( job );
-			for( URI uri : uris ) {
-				FSDataInputStream input = hdfs.open( new Path( uri.getPath()) );
-				String line;
-				String[] values;
-				while( ( line = input.readLine() ) != null ) {
-					values = line.split( "\t" );
-					map.put( values[ 0 ], values[ 1 ] );
+			if( uris != null ) {
+				for( URI uri : uris ) {
+					FSDataInputStream input = hdfs.open( new Path( uri.getPath()) );
+					String line;
+					String[] values;
+					while( ( line = input.readLine() ) != null ) {
+						values = line.split( "\t" );
+						map.put( values[ 0 ], values[ 1 ] );
+					}
 				}
 			}
 		} catch( IOException e ) {
@@ -62,16 +54,16 @@ public class WARCTikaMapper extends MapReduceBase implements Mapper<Text, Writab
 		}
 	}
 
-	public WARCTikaMapper() throws IOException {
+	public ArchiveTikaMapper() throws IOException {
 		try {
 			md5 = MessageDigest.getInstance( "MD5" );
 		} catch( NoSuchAlgorithmException e ) {
-			System.err.println( "WARCTikaMapper(): " + e.getMessage() );
+			System.err.println( "ArchiveTikaMapper(): " + e.getMessage() );
 		}
 	}
 
 	@Override
-	public void map( Text key, WritableWARCRecord value, OutputCollector<Text, SolrRecord> output, Reporter reporter ) throws IOException {
+	public void map( Text key, WritableArchiveRecord value, OutputCollector<Text, SolrRecord> output, Reporter reporter ) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
 		SolrRecord sr = null;
 
@@ -79,32 +71,33 @@ public class WARCTikaMapper extends MapReduceBase implements Mapper<Text, Writab
 			sr = tika.extract( value.getPayload() );
 
 			String wctID = this.getWctTi( key.toString() );
-			String waybackDate = ( ( String ) header.getHeaderFields().get( HEADER_KEY_DATE ) ).replaceAll( "[^0-9]", "" );
+			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 
-			String id = waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) );
-			sr.setId( id );
-
-			sr.setHash( ( String ) header.getHeaderFields().get( HEADER_KEY_PAYLOAD_DIGEST ) );
-			String url = ( String ) header.getHeaderFields().get( HEADER_KEY_URI );
-			sr.setWctUrl( url );
-			sr.setTimestamp( ( String ) header.getHeaderFields().get( HEADER_KEY_DATE ) );
-			sr.setReferrerUrl( map.get( url ) );
+			sr.setId( waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
+			sr.setHash( header.getDigest() );
+			sr.setWctUrl( header.getUrl() );
+			sr.setTimestamp( header.getDate() );
+			sr.setReferrerUrl( map.get( header.getUrl() ) );
 			sr.setWctWaybackDate( waybackDate );
 			sr.setWctInstanceId( wctID );
 
 			try {
 				if( sr.getContentType().equals( "" ) ) {
-					sr.setContentType( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) );
+					if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
+						sr.setContentType( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) );
+					} else {
+						sr.setContentType( header.getMimetype() );
+					}
 				}
 				output.collect( new Text( wctID ), sr );
 			} catch( Exception e ) {
-				System.err.println( e.getMessage() );
+				System.err.println( "map(): " + e.getMessage() );
 			}
 		}
 	}
 
 	private String getWctTi( String warcName ) {
-		Pattern pattern = Pattern.compile( "^BL-\\b([0-9]+)\\b.*\\.warc(\\.gz)?$" );
+		Pattern pattern = Pattern.compile( "^BL-\\b([0-9]+)\\b.*\\.w?arc(\\.gz)?$" );
 		Matcher matcher = pattern.matcher( warcName );
 		if( matcher.matches() ) {
 			return matcher.group( 1 );

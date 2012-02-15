@@ -10,27 +10,28 @@ import java.io.StringReader;
 import java.util.HashMap;
 
 import org.apache.hadoop.io.Writable;
-import org.archive.io.arc.ARCRecord;
+import org.archive.io.ArchiveRecord;
+import org.archive.io.warc.WARCRecord;
 
-public class WritableARCRecord implements Writable {
-	private ARCRecord arcrecord = null;
+public class WritableArchiveRecord implements Writable {
+	private ArchiveRecord record = null;
 	private byte[] payload = new byte[ 0 ];
 	private HashMap<String, String> headers = new HashMap<String, String>();
 
-	public WritableARCRecord() {}
+	public WritableArchiveRecord() {}
 
-	public WritableARCRecord( ARCRecord arcrecord ) throws IOException {
-		this.arcrecord = arcrecord;
-		this.setPayload( arcrecord );
+	public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
+		this.record = record;
+		this.setPayload( record );
 	}
 
-	public void setRecord( ARCRecord arcrecord ) throws IOException {
-		this.arcrecord = arcrecord;
-		this.setPayload( arcrecord );
+	public void setRecord( ArchiveRecord record ) throws IOException {
+		this.record = record;
+		this.setPayload( record );
 	}
 
-	public ARCRecord getRecord() {
-		return this.arcrecord;
+	public ArchiveRecord getRecord() {
+		return record;
 	}
 
 	public byte[] getPayload() {
@@ -59,21 +60,21 @@ public class WritableARCRecord implements Writable {
 
 	@Override
 	public void readFields( DataInput input ) throws IOException {
-		arcrecord = ( ARCRecord ) input;
+		record = ( WARCRecord ) input;
 	}
 
 	@Override
 	public void write( DataOutput output ) throws IOException {
-		if( arcrecord != null ) {
+		if( record != null ) {
 			int ch;
 			byte[] buffer = new byte[ 1048576 ];
-			while( ( ch = arcrecord.read( buffer ) ) >= 0 ) {
+			while( ( ch = record.read( buffer ) ) >= 0 ) {
 				output.write( buffer, 0, ch );
 			}
 		}
 	}
 
-	private void setPayload( ARCRecord record ) throws IOException {
+	private void setPayload( ArchiveRecord record ) throws IOException {
 		BufferedInputStream input = new BufferedInputStream( record );
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		int ch;

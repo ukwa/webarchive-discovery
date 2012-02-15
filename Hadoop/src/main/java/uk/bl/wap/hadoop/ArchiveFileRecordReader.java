@@ -1,13 +1,11 @@
 package uk.bl.wap.hadoop;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_URI;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
-import java.util.zip.ZipException;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -21,33 +19,33 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.MultiFileSplit;
 import org.apache.hadoop.mapred.RecordReader;
+import org.archive.io.ArchiveReader;
+import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
-import org.archive.io.warc.WARCReader;
-import org.archive.io.warc.WARCReaderFactory;
-import org.archive.io.warc.WARCRecord;
+import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wap.util.warc.WARCRecordUtils;
 
-@SuppressWarnings( { "deprecation" } )
-public class WARCFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableWARCRecord> {
+@SuppressWarnings( "deprecation" )
+public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
 	private static final String CONFIG = "/hadoop_utils.config";
+	private FSDataInputStream datainputstream = null;
+	private FileStatus status = null;
+	private FileSystem filesystem = null;
 	private long maxPayloadSize = 104857600L;
 	private String[] url_excludes;
 	private String[] response_includes;
 	private String[] protocol_includes;
-	private FileSystem filesystem = null;
 	private Path[] paths = null;
-	private FileStatus status = null;
 	int currentPath = -1;
-	FSDataInputStream datainputstream = null;
 	Long offset = 0L;
-	WARCReader warcreader = null;
-	Iterator<ArchiveRecord> warciterator = null;
-	WARCRecord warcrecord = null;
+	private ArchiveReader arcreader = null;
+	private Iterator<ArchiveRecord> iterator = null;
+	private ArchiveRecord record = null;
+	private ArchiveRecordHeader header = null;
+	private String archiveName = null;
 
-	String warcName = null;
-
-	public WARCFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
+	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
 		Properties properties = new Properties();
 		try {
 			properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
@@ -80,7 +78,6 @@ public class WARCFileRecordReader<Key extends WritableComparable<?>, Value exten
 				System.err.println( "close(): " + e.getMessage() );
 			}
 		}
-
 	}
 
 	@Override
@@ -89,8 +86,8 @@ public class WARCFileRecordReader<Key extends WritableComparable<?>, Value exten
 	}
 
 	@Override
-	public WritableWARCRecord createValue() {
-		return new WritableWARCRecord();
+	public WritableArchiveRecord createValue() {
+		return new WritableArchiveRecord();
 	}
 
 	@Override
@@ -104,52 +101,65 @@ public class WARCFileRecordReader<Key extends WritableComparable<?>, Value exten
 	}
 
 	@Override
-	public boolean next( Text key, WritableWARCRecord value ) throws IOException {
+	public boolean next( Text key, WritableArchiveRecord value ) throws IOException {
 		boolean found = false;
 		while( !found ) {
+			boolean hasNext = false;
 			try {
-				if( warciterator.hasNext() ) {
-					warcrecord = ( WARCRecord ) warciterator.next();
-					if( !warcrecord.getHeader().getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
+				 hasNext = iterator.hasNext();
+			} catch( Exception e ) {
+				System.err.println( e.toString() );
+				hasNext = false;
+			}
+			try {
+				if( hasNext ) {
+					record = ( ArchiveRecord ) iterator.next();
+					header = record.getHeader();
+					String url = header.getUrl();
+
+					if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 						continue;
 					}
-					String url = ( String ) warcrecord.getHeader().getHeaderValue( HEADER_KEY_URI );
-					if( warcrecord.getHeader().getLength() <= maxPayloadSize &&
+					if( header.getLength() <= maxPayloadSize &&
 						this.checkUrl( url ) &&
 						this.checkProtocol( url ) ) {
-							value.setHttpHeaders( WARCRecordUtils.getHeaders( warcrecord, true ) );
-							if( this.checkResponse( value.getHttpHeader( "bl_status" ).split( " " )[ 1 ] ) ) {
+							String http = WARCRecordUtils.getHeaders( record, true );
+							value.setHttpHeaders( http );
+							if( value.getHttpHeader( "bl_status" ) != null &&
+									this.checkResponse( value.getHttpHeader( "bl_status" ).split( " " )[ 1 ] ) ) {
 								found = true;
-								key.set( this.warcName );
-								value.setRecord( warcrecord );
+								key.set( this.archiveName );
+								value.setRecord( record );
 							}
 					}
 				} else if( !this.nextFile() ) {
 					break;
 				}
-			} catch( ZipException z ) {
-				// Do nothing for now.
+			} catch( Exception e ) {
+				found = false;
+				e.printStackTrace();
+				System.err.println( e.toString() );
 			}
 		}
 		return found;
 	}
 
-	public boolean nextFile() throws IOException {
+	private boolean nextFile() throws IOException {
 		currentPath++;
 		if( currentPath >= paths.length ) {
 			return false;
 		}
 		this.status = this.filesystem.getFileStatus( paths[ currentPath ] );
 		datainputstream = this.filesystem.open( paths[ currentPath ] );
-		warcreader = ( WARCReader ) WARCReaderFactory.get( "", datainputstream, true );
-		warciterator = warcreader.iterator();
-		this.warcName = paths[ currentPath ].getName();
+		arcreader = ( ArchiveReader ) ArchiveReaderFactory.get( paths[ currentPath ].getName(), datainputstream, true );
+		iterator = arcreader.iterator();
+		this.archiveName = paths[ currentPath ].getName();
 		return true;
 	}
-	
+
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
-			if( url.matches( ".*" +  exclude + ".*" ) ) {
+			if( url.matches( ".*" + exclude + ".*" ) ) {
 				return false;
 			}
 		}
@@ -174,13 +184,4 @@ public class WARCFileRecordReader<Key extends WritableComparable<?>, Value exten
 		return false;
 	}
 
-	public static void main( String[] args ) {
-		String[] url_excludes = "robots.txt,.rss,panaccess-mime.types,.js,.cat".replaceAll( "\\.", "\\\\." ).split( "," );
-		String url = "http://www.google.com/urchin.js";
-		for( String exclude : url_excludes ) {
-			if( url.matches( ".*" +  exclude + ".*" ) ) {
-				System.out.println( exclude );
-			}
-		}
-	}
 }

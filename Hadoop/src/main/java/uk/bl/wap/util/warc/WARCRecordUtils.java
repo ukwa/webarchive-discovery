@@ -5,11 +5,16 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 
 public class WARCRecordUtils {
 	public static BufferedInputStream getPayload( WARCRecord record ) throws IOException {
 		WARCRecordUtils.getHeaders( record, true );
+		return new BufferedInputStream( record );
+	}
+
+	public static BufferedInputStream getPayload( ARCRecord record ) throws IOException {
 		return new BufferedInputStream( record );
 	}
 

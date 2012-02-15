@@ -12,11 +12,11 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 @SuppressWarnings( { "deprecation", "unchecked", "rawtypes" } )
-public class WARCFileInputFormat extends FileInputFormat< LongWritable, WritableWARCRecord > {
+public class ArchiveFileInputFormat extends FileInputFormat< LongWritable, WritableArchiveRecord > {
 
 	@Override
-	public RecordReader< LongWritable, WritableWARCRecord > getRecordReader( InputSplit split, JobConf conf, Reporter reporter ) throws IOException {
-		return new WARCFileRecordReader( conf, split );
+	public RecordReader<LongWritable, WritableArchiveRecord> getRecordReader( InputSplit split, JobConf conf, Reporter reporter ) throws IOException {
+		return new ArchiveFileRecordReader( conf, split );
 	}
 
 	@Override
