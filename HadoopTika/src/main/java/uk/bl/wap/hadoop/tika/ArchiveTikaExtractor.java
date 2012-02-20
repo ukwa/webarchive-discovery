@@ -22,7 +22,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import uk.bl.wap.hadoop.ArchiveFileInputFormat;
 import uk.bl.wap.hadoop.TextOutputFormat;
-import uk.bl.wap.util.solr.SolrRecord;
+import uk.bl.wap.util.solr.WritableSolrRecord;
 
 /**
  * ArchiveTikExtractor
@@ -71,7 +71,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 
 		conf.setOutputKeyClass( Text.class );
 		conf.setOutputValueClass( Text.class );
-		conf.setMapOutputValueClass( SolrRecord.class );
+		conf.setMapOutputValueClass( WritableSolrRecord.class );
 		conf.setNumReduceTasks( tiMap.size() );
 		JobClient.runJob( conf );
 		return 0;

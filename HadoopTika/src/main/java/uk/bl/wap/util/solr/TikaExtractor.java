@@ -1,16 +1,10 @@
 package uk.bl.wap.util.solr;
 
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_URI;
-
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.util.Iterator;
 import java.util.Properties;
 
 import javax.xml.transform.OutputKeys;
@@ -22,21 +16,13 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
-import org.apache.tika.io.IOUtils;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.archive.io.ArchiveRecord;
-import org.archive.io.warc.WARCReader;
-import org.archive.io.warc.WARCReaderFactory;
-import org.archive.io.warc.WARCRecord;
 import org.xml.sax.ContentHandler;
-
-import uk.bl.wap.util.solr.SolrRecord;
-import uk.bl.wap.util.warc.WARCRecordUtils;
 
 public class TikaExtractor {
 	private static final String CONFIG = "/hadoop_utils.config";
@@ -56,8 +42,8 @@ public class TikaExtractor {
 		}
 	}
 
-	public SolrRecord extract( byte[] payload ) {
-		SolrRecord solr = new SolrRecord();
+	public WritableSolrRecord extract( byte[] payload ) {
+		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !this.checkMime( tika.detect( payload ) ) ) {
 			return solr;
@@ -95,14 +81,14 @@ public class TikaExtractor {
 			if( runner.complete || !content.toString( "UTF-8" ).equals( "" ) ) {
 				output = content.toString( "UTF-8" ).replaceAll( "<!\\[CDATA\\[", "" );
 				output = output.toString().replaceAll( "\\]\\]>", "" );
-				solr.setExtractedText( output );
+				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 			}
-			solr.setContentType( metadata.get( "Content-Type" ) );
+			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( "Content-Type" ) );
 
 			if( metadata.get( DublinCore.TITLE ) != null )
-				solr.setTitle( metadata.get( DublinCore.TITLE ).trim().replaceAll( "\\p{Cntrl}", "" ) );
+				solr.doc.setField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ).trim().replaceAll( "\\p{Cntrl}", "" ) );
 			if( metadata.get( DublinCore.DESCRIPTION ) != null )
-				solr.setDescription( metadata.get( DublinCore.DESCRIPTION ).trim().replaceAll( "\\p{Cntrl}", "" ) );
+				solr.doc.setField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ).trim().replaceAll( "\\p{Cntrl}", "" ) );
 		} catch( Exception e ) {
 			System.err.println( "TikaExtractor.extract(): " + e.getMessage() );
 		}
