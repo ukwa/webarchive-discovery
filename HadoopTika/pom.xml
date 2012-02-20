@@ -19,7 +19,7 @@
 	</build>
 	<dependencies>
 		<!-- This should work, except archive.org have made the wayback 1.7.0 release 
-			dependent upon a snapshot release of heretrix, which doesn't resolve well. 
+			dependent upon a snapshot release of heritrix, which doesn't resolve well. 
 			<dependency> <groupId>org.archive.wayback</groupId> <artifactId>wayback-core</artifactId> 
 			<version>1.7.0</version> </dependency> -->
 		<dependency>
@@ -43,6 +43,11 @@
 			<version>1.6.1</version>
 			<scope>system</scope>
 			<systemPath>${basedir}/lib/wayback-core-1.6.1.jar</systemPath>
+		</dependency>
+		<dependency>
+			<artifactId>solr-solrj</artifactId>
+			<groupId>org.apache.solr</groupId>
+			<version>3.3.0</version>
 		</dependency>
 	</dependencies>
 	<repositories>
