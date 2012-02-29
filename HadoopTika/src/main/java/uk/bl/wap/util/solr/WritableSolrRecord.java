@@ -18,7 +18,7 @@ public class WritableSolrRecord implements Writable {
 	
 	@Override
 	public void readFields( DataInput input ) throws IOException {
-		this.doc.clear();
+		this.doc = new SolrInputDocument();
 		int length = 0;
 		String key = "";
 		String value = "";
@@ -72,9 +72,9 @@ public class WritableSolrRecord implements Writable {
 		Iterator<SolrInputField> iterator = this.doc.iterator();
 		while( iterator.hasNext() ) {
 			SolrInputField field = iterator.next();
-			sb.append( "<" + ( String ) field.getName() + ">" );
+			sb.append( "<" + ( String ) field.getName() + "><![CDATA[" );
 			sb.append( field.getValue() );
-			sb.append( "</" + ( String ) field.getName() + ">" );
+			sb.append( "]]></" + ( String ) field.getName() + ">" );
 		}
 		sb.append( "</doc>" );
 		return sb.toString();

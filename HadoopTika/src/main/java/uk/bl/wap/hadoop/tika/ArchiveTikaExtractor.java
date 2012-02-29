@@ -73,7 +73,8 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		conf.setOutputValueClass( Text.class );
 		conf.setMapOutputValueClass( WritableSolrRecord.class );
 		conf.setNumReduceTasks( tiMap.size() );
-		JobClient.runJob( conf );
+		JobClient client = new JobClient( conf );
+		client.submitJob( conf );
 		return 0;
 	}
 
@@ -89,7 +90,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 	}
 
 	private String getWctTi( String warcName ) {
-		Pattern pattern = Pattern.compile( "^BL-([0-9]+)-[0-9]+\\.w?arc(\\.gz)?$" );
+		Pattern pattern = Pattern.compile( "^[A-Z]+-([0-9]+)-[0-9]+\\.w?arc(\\.gz)?$" );
 		Matcher matcher = pattern.matcher( warcName );
 		if( matcher.matches() ) {
 			return matcher.group( 1 );

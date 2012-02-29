@@ -57,10 +57,10 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 	}
 
 	private void processDoc( SolrInputDocument doc ) {
-		String mime = ( String ) doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
-		if( mime.matches( "^(?:image).*$" ) ) {
+		String mime = ( String ) doc.getFieldValue( SolrFields.SOLR_NORMALISED_CONTENT_TYPE );
+		if( mime.equals( "image" ) ) {
 			docs.get( SOLR_IMAGE ).add( doc );
-		} else if( mime.matches( "^(?:(audio|video)).*$" ) ) {
+		} else if( mime.equals( "media" ) ) {
 			docs.get( SOLR_MEDIA ).add( doc );
 		} else {
 			docs.get( SOLR_DEFAULT ).add( doc );
@@ -78,8 +78,8 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 			if( ( flush && collection.size() != 0 ) || collection.size() >= BATCH ) {
 				server = servers.get( key );
 				try {
-					server.add( docs.get( key ) );
-					docs.get( key ).clear();
+					server.add( collection );
+					collection.clear();
 				} catch( Exception e ) {
 					e.printStackTrace();
 				}

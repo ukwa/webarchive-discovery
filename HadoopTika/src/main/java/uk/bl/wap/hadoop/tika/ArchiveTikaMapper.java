@@ -24,6 +24,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.ArchiveUtils;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wap.hadoop.WritableArchiveRecord;
 import uk.bl.wap.util.solr.SolrFields;
@@ -34,6 +35,7 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
 @SuppressWarnings( { "deprecation" } )
 public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	String workingDirectory = "";
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5;
@@ -83,6 +85,7 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getDigest() );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
+			solr.doc.setField( SolrFields.SOLR_DOMAIN, canon.urlStringToKey( header.getUrl() ).split( "/" )[ 0 ] );
 			try {
 				solr.doc.setField( SolrFields.SOLR_TIMESTAMP, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
 			} catch( ParseException p ) {
