@@ -5,7 +5,6 @@ import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.IOException;
 import java.util.Iterator;
-import java.util.Properties;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -28,34 +27,27 @@ import uk.bl.wap.util.warc.WARCRecordUtils;
 
 @SuppressWarnings( "deprecation" )
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
-	private static final String CONFIG = "/hadoop_utils.config";
-	private FSDataInputStream datainputstream = null;
-	private FileStatus status = null;
-	private FileSystem filesystem = null;
-	private long maxPayloadSize = 104857600L;
+	private FSDataInputStream datainputstream;
+	private FileStatus status;
+	private FileSystem filesystem;
+	private long maxPayloadSize;
 	private String[] url_excludes;
 	private String[] response_includes;
 	private String[] protocol_includes;
-	private Path[] paths = null;
+	private Path[] paths;
 	int currentPath = -1;
 	Long offset = 0L;
-	private ArchiveReader arcreader = null;
-	private Iterator<ArchiveRecord> iterator = null;
-	private ArchiveRecord record = null;
-	private ArchiveRecordHeader header = null;
-	private String archiveName = null;
+	private ArchiveReader arcreader;
+	private Iterator<ArchiveRecord> iterator;
+	private ArchiveRecord record;
+	private ArchiveRecordHeader header;
+	private String archiveName;
 
 	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
-		Properties properties = new Properties();
-		try {
-			properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
-			this.maxPayloadSize = Long.parseLong( properties.getProperty( "max_payload_size" ) );
-			this.url_excludes = properties.getProperty( "url_exclude" ).replaceAll( "\\.", "\\\\." ).split( "," );
-			this.response_includes = properties.getProperty( "response_include" ).split( "," );
-			this.protocol_includes = properties.getProperty( "protocol_include" ).split( "," );
-		} catch( IOException i ) {
-			System.err.println( "Could not find Properties file: " + i.getMessage() );
-		}
+		this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
+		this.url_excludes = conf.getStrings( "record.exclude.url", new String[ 0 ] );
+		this.response_includes = conf.getStrings( "record.include.response", new String[ 0 ] );
+		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[ 0 ] ); 
 		this.filesystem = FileSystem.get( conf );
 
 		if( split instanceof FileSplit ) {

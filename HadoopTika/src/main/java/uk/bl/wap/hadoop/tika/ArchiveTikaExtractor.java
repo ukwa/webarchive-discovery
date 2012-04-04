@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashMap;
+import java.util.Properties;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -33,13 +34,13 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class ArchiveTikaExtractor extends Configured implements Tool {
+	private static final String CONFIG = "/hadoop_utils.config";
 
 	public int run( String[] args ) throws IOException {
 		JobConf conf = new JobConf( getConf(), ArchiveTikaExtractor.class );
 		String line = null;
 
 		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
-
 		HashMap<String, Integer> tiMap = new HashMap<String, Integer>();
 
 		while( ( line = br.readLine() ) != null ) {
@@ -51,7 +52,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		}
 
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
-		
+
 		if( args.length > 2 ) {
 			for( int i = 2; i < args.length; i++ ) {
 				try {
@@ -62,6 +63,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 			}
 		}
 
+		this.setProperties( conf );
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
 		conf.setMapperClass( ArchiveTikaMapper.class );
@@ -87,6 +89,27 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		int ret = ToolRunner.run( new ArchiveTikaExtractor(), args );
 
 		System.exit( ret );
+	}
+
+	private void setProperties( JobConf conf ) throws IOException {
+		Properties properties = new Properties();
+		properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
+		conf.set( "solr.default", properties.getProperty( "solr_default" ) );
+		conf.set( "solr.image", properties.getProperty( "solr_image" ) );
+		conf.set( "solr.media", properties.getProperty( "solr_media" ) );
+		conf.set( "solr.batch.size", properties.getProperty( "solr_batch_size" ) );
+		conf.set( "solr.threads", properties.getProperty( "solr_threads" ) );
+		conf.set( "solr.image.regex", properties.getProperty( "solr_image_regex" ) );
+		conf.set( "solr.media.regex", properties.getProperty( "solr_media_regex" ) );
+
+		conf.set( "record.exclude.mime", properties.getProperty( "mime_exclude" ) );
+		conf.set( "record.exclude.url", properties.getProperty( "url_exclude" ) );
+		conf.set( "record.size.max", properties.getProperty( "max_payload_size" ) );
+		conf.set( "record.include.response", properties.getProperty( "response_include" ) );
+		conf.set( "record.include.protocol", properties.getProperty( "protocol_include" ) );
+
+		conf.set( "tika.exclude.mime", properties.getProperty( "mime_exclude" ) );
+		conf.set( "tika.timeout", properties.getProperty( "tika_timeout" ) );
 	}
 
 	private String getWctTi( String warcName ) {

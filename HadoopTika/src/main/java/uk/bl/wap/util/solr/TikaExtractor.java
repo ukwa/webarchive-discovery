@@ -1,11 +1,9 @@
 package uk.bl.wap.util.solr;
 
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
-import java.util.Properties;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
@@ -13,6 +11,7 @@ import javax.xml.transform.sax.SAXTransformerFactory;
 import javax.xml.transform.sax.TransformerHandler;
 import javax.xml.transform.stream.StreamResult;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
 import org.apache.tika.config.TikaConfig;
 import org.apache.tika.detect.Detector;
@@ -25,21 +24,18 @@ import org.apache.tika.parser.Parser;
 import org.xml.sax.ContentHandler;
 
 public class TikaExtractor {
-	private static final String CONFIG = "/hadoop_utils.config";
-	private long parseTimeout = 300000L;
+	private long parseTimeout;
 	private String[] excludes;
 	private Tika tika;
 
 	public TikaExtractor() {
+		this( new Configuration() );
+	}
+
+	public TikaExtractor( Configuration conf ) {
 		this.tika = new Tika();
-		Properties properties = new Properties();
-		try {
-			properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
-			this.excludes = properties.getProperty( "mime_exclude" ).split( "," );
-			this.parseTimeout = Long.parseLong( properties.getProperty( "parse_timeout" ) );
-		} catch( IOException i ) {
-			System.err.println( "Could not find Properties file: " + i.getMessage() );
-		}
+		this.excludes = conf.getStrings( "tika.exclude.mime", new String[ 0 ] );
+		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
 	}
 
 	public WritableSolrRecord extract( byte[] payload ) {
@@ -82,6 +78,7 @@ public class TikaExtractor {
 				output = content.toString( "UTF-8" ).replaceAll( "<!\\[CDATA\\[", "" );
 				output = output.toString().replaceAll( "\\]\\]>", "" );
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
+				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			}
 			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( "Content-Type" ) );
 
