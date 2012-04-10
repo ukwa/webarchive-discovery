@@ -36,15 +36,17 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
 public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
-	String workingDirectory = "";
-	TikaExtractor tika = new TikaExtractor();
+	TikaExtractor tika;
 	MessageDigest md5;
 	HashMap<String, String> map = new HashMap<String, String>();
 	FileSystem hdfs;
-
+	String image_regex;
+	String media_regex;
+	
 	@Override
 	public void configure( JobConf job ) {
 		try {
+			this.tika = new TikaExtractor( job );
 			this.hdfs = FileSystem.get( job );
 			URI[] uris = DistributedCache.getCacheFiles( job );
 			if( uris != null ) {
@@ -58,6 +60,8 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 					}
 				}
 			}
+			this.image_regex = job.get( "solr.image.regex", "(?i)^.+\\.(bmp|jpe?g|gif|png)\\b.*$" );
+			this.media_regex = job.get( "solr.media.regex", "(?i)^.+\\.(avi|flv|mp3|wm[av]|mp4|wave?)\\b.*$" );
 		} catch( IOException e ) {
 			e.printStackTrace();
 		}
@@ -95,7 +99,7 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 			solr.doc.setField( WctFields.WCT_WAYBACK_DATE, waybackDate );
 			solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
 
-			this.processMime( solr, header );
+			this.processContentType( solr, header );
 			this.stripNull( solr );
 			output.collect( new Text( wctID ), solr );
 		}
@@ -110,8 +114,9 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 		return "";
 	}
 
-	private void processMime( WritableSolrRecord solr, ArchiveRecordHeader header ) {
+	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header ) {
 		StringBuilder mime = new StringBuilder();
+		String url = header.getUrl();
 		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
 		if( mime.toString().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
@@ -122,9 +127,9 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 		}
 		solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, mime.toString().replaceAll( ";.*$", "" ) );
 
-		if( mime.toString().matches( "^(?:image).*$" ) ) {
+		if( mime.toString().matches( "^(?:image).*$" ) || url.matches( this.image_regex ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
-		} else if( mime.toString().matches( "^(?:(audio|video)).*$" ) ) {
+		} else if( mime.toString().matches( "^(?:(audio|video)).*$" ) || url.matches( this.media_regex ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
 		} else if( mime.toString().matches( "^.*htm.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );

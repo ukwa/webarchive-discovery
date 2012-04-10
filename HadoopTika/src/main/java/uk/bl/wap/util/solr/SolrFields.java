@@ -17,5 +17,6 @@ public interface SolrFields {
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";
 	public static final String SOLR_EXTRACTED_TEXT = "text";
+	public static final String SOLR_EXTRACTED_TEXT_LENGTH = "text_length";
 	public static final String SOLR_TIKA_METADATA = "tika_metadata";
 }
