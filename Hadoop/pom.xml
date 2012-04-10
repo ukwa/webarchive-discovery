@@ -38,6 +38,13 @@
 			<artifactId>jtar</artifactId>
 			<version>1.0.4</version>
 		</dependency>
+		<dependency>
+			<groupId>org.archive.wayback</groupId>
+			<artifactId>wayback-core</artifactId>
+			<version>1.6.1</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/../HadoopTika/lib/wayback-core-1.6.1.jar</systemPath>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
