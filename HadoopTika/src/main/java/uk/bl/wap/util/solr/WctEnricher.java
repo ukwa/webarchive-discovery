@@ -1,5 +1,7 @@
 package uk.bl.wap.util.solr;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 
 import javax.xml.stream.XMLInputFactory;
@@ -7,9 +9,8 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
 import org.apache.solr.common.SolrInputDocument;
-import org.restlet.Client;
-import org.restlet.data.Protocol;
-import org.restlet.data.Response;
+import org.restlet.resource.ClientResource;
+import org.restlet.resource.ResourceException;
 
 public class WctEnricher {
 	private static final String WctRestletUrl = "http://mosaic-private:9090/wctmeta/instanceInfo/";
@@ -32,9 +33,14 @@ public class WctEnricher {
 	}
 
 	private void getWctMetadata( WritableSolrRecord solr ) {
-		Client client = new Client( Protocol.HTTP );
-		Response response = client.get( WctRestletUrl + this.solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
-		this.read( response.getEntityAsText() );
+		ClientResource cr = new ClientResource( WctRestletUrl + this.solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
+		try {
+			this.read( cr.get().getStream() );
+		} catch (ResourceException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public void addWctMetadata( WritableSolrRecord in ) {
@@ -46,13 +52,12 @@ public class WctEnricher {
 		in.doc.addField( WctFields.WCT_SUBJECTS, this.solr.doc.getFieldValue( WctFields.WCT_SUBJECTS ) );
 	}
 
-	public void read( String s ) {
+	public void read( InputStream s ) {
 		inputFactory = XMLInputFactory.newInstance();
-		StringReader sr = new StringReader( s );
 		String tag = "";
 
 		try {
-			xmlReader = inputFactory.createXMLStreamReader( sr );
+			xmlReader = inputFactory.createXMLStreamReader( s );
 			while( xmlReader.hasNext() ) {
 				Integer eventType = xmlReader.next();
 				if( eventType.equals( XMLEvent.START_ELEMENT ) ) {
