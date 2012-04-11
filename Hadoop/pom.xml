@@ -27,6 +27,7 @@
 			<groupId>org.apache.hadoop</groupId>
 			<artifactId>hadoop-core</artifactId>
 			<version>0.20.2</version>
+			<scope>provided</scope>
 		</dependency>
 		<!-- This doesn't work, as this release version appears to depend on SNAPSHOTs that are not available.
 		<dependency>
@@ -34,6 +35,9 @@
 			<artifactId>wayback-core</artifactId>
 			<version>1.7.0</version>
 		</dependency>
+		
+		However, only the /wap-recordreaders/src/main/java/uk/bl/wap/hadoop/mapreduce/lib/DereferencingArchiveToCDXRecordReader.java
+		class required wayback code, AFAICT, so this suggests that that code should be in a separate project.
 		 -->
 		<dependency>
 			<groupId>org.archive.wayback</groupId>
