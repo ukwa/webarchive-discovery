@@ -18,6 +18,7 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.MultiFileSplit;
 import org.apache.hadoop.mapred.RecordReader;
+import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -27,6 +28,8 @@ import uk.bl.wap.util.warc.WARCRecordUtils;
 
 @SuppressWarnings( "deprecation" )
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
+	private static Logger log = Logger.getLogger(ArchiveFileRecordReader.class.getName());
+	
 	private FSDataInputStream datainputstream;
 	private FileStatus status;
 	private FileSystem filesystem;
@@ -45,9 +48,17 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
 		this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
-		this.url_excludes = conf.getStrings( "record.exclude.url", new String[ 0 ] );
-		this.response_includes = conf.getStrings( "record.include.response", new String[ 0 ] );
-		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[ 0 ] ); 
+		log.warn("maxPayloadSize="+this.maxPayloadSize);
+		
+		this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
+		log.warn("url_excludes="+this.printList(url_excludes));
+		
+		this.response_includes = conf.getStrings( "record.include.response", new String[] { "200" } );
+		log.warn("response_includes="+this.printList(response_includes));
+		
+		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
+		log.warn("protocol_includes="+this.printList(protocol_includes));
+		
 		this.filesystem = FileSystem.get( conf );
 
 		if( split instanceof FileSplit ) {
@@ -59,6 +70,15 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			throw new IOException( "InputSplit is not a file split or a multi-file split - aborting" );
 		}
 		this.nextFile();
+	}
+	
+	private String printList(String[] set ) {
+		String list = "";
+		for( String item : set ) {
+			if( ! "".equals(list) ) list += ",";
+			list += item;
+		}
+		return list;
 	}
 
 	@Override
@@ -123,6 +143,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 								key.set( this.archiveName );
 								value.setRecord( record );
 							}
+					} else {
+						log.debug("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
 					}
 				} else if( !this.nextFile() ) {
 					break;
@@ -151,7 +173,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
-			if( url.matches( ".*" + exclude + ".*" ) ) {
+			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
 				return false;
 			}
 		}
@@ -160,7 +182,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	private boolean checkProtocol( String url ) {
 		for( String include : protocol_includes ) {
-			if( url.startsWith( include ) ) {
+			if( "".equals(include) || url.startsWith( include ) ) {
 				return true;
 			}
 		}
@@ -169,7 +191,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	private boolean checkResponse( String response ) {
 		for( String include : response_includes ) {
-			if( response.matches( include ) ) {
+			if( "".equals(include) || response.matches( include ) ) {
 				return true;
 			}
 		}
