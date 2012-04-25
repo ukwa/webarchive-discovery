@@ -119,8 +119,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			boolean hasNext = false;
 			try {
 				 hasNext = iterator.hasNext();
-			} catch( Exception e ) {
-				System.err.println( e.toString() );
+			} catch( Throwable e ) {
+				log.error( "ERROR in hasNext():  "+this.archiveName+": "+ e.toString() );
 				hasNext = false;
 			}
 			try {
@@ -166,6 +166,9 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		this.status = this.filesystem.getFileStatus( paths[ currentPath ] );
 		datainputstream = this.filesystem.open( paths[ currentPath ] );
 		arcreader = ( ArchiveReader ) ArchiveReaderFactory.get( paths[ currentPath ].getName(), datainputstream, true );
+		// Set to strict reading, to better cope with malformed archive files.
+		arcreader.setStrict(true);
+		// Get the iterator:
 		iterator = arcreader.iterator();
 		this.archiveName = paths[ currentPath ].getName();
 		return true;
