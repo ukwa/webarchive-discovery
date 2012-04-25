@@ -149,10 +149,10 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 				} else if( !this.nextFile() ) {
 					break;
 				}
-			} catch( Exception e ) {
+			} catch( Throwable e ) {
 				found = false;
-				e.printStackTrace();
-				System.err.println( e.toString() );
+				log.error( "ERROR reading "+this.archiveName+": "+ e.toString() );
+				//e.printStackTrace();
 			}
 		}
 		return found;
