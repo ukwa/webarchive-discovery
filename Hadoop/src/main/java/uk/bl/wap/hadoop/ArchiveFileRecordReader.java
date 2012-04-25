@@ -163,10 +163,13 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		if( currentPath >= paths.length ) {
 			return false;
 		}
+		// Output the archive filename, to help with debugging:
+		log.info("Opening nextFile: " + paths[currentPath]);
+		// Set up the ArchiveReader:
 		this.status = this.filesystem.getFileStatus( paths[ currentPath ] );
 		datainputstream = this.filesystem.open( paths[ currentPath ] );
 		arcreader = ( ArchiveReader ) ArchiveReaderFactory.get( paths[ currentPath ].getName(), datainputstream, true );
-		// Set to strict reading, to better cope with malformed archive files.
+		// Set to strict reading, in order to cope with malformed archive files which cause an infinite loop otherwise.
 		arcreader.setStrict(true);
 		// Get the iterator:
 		iterator = arcreader.iterator();
