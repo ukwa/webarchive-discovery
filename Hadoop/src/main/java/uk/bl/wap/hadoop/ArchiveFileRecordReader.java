@@ -69,6 +69,11 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		} else {
 			throw new IOException( "InputSplit is not a file split or a multi-file split - aborting" );
 		}
+		// Log the paths:
+		for( Path p : this.paths ) {
+			log.warn("Processing path: "+p);
+		}
+		// Queue up the iterator:
 		this.nextFile();
 	}
 	
@@ -144,7 +149,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 								value.setRecord( record );
 							}
 					} else {
-						log.debug("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
+						log.warn("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
 					}
 				} else if( !this.nextFile() ) {
 					break;
