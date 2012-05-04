@@ -71,7 +71,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		}
 		// Log the paths:
 		for( Path p : this.paths ) {
-			log.warn("Processing path: "+p);
+			log.info("Processing path: "+p);
+			System.out.println("Processing path: "+p);
 		}
 		// Queue up the iterator:
 		this.nextFile();
