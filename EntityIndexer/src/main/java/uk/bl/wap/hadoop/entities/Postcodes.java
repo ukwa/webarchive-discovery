@@ -19,7 +19,13 @@ public class Postcodes {
 	
 	public static final Pattern APPROX_PATTERN = Pattern.compile("[^A-Z0-9]("+BS7666_APPROX+")[^A-Z0-9]");
 	
-	public static String[] extractPostcodes( String source ) {
+	/**
+	 * This uses the approximate matcher to extract all text strings that are probably postcodes.
+	 * 
+	 * @param source
+	 * @return
+	 */
+	public static String[] extractProbablePostcodes( String source ) {
 		ArrayList<String> results = new ArrayList<String>();
 		Matcher m = APPROX_PATTERN.matcher(source);
 		while (m.find()) {
