@@ -46,6 +46,13 @@
 			<scope>compile</scope>
 		</dependency>
 		<dependency>
+			<groupId>org.archive.wayback</groupId>
+			<artifactId>wayback-core</artifactId>
+			<version>1.6.1</version>
+			<scope>system</scope>
+			<systemPath>${basedir}/../HadoopTika/lib/wayback-core-1.6.1.jar</systemPath>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.mrunit</groupId>
 			<artifactId>mrunit</artifactId>
 			<version>0.8.1-incubating</version>

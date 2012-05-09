@@ -3,6 +3,8 @@ package uk.bl.wap.hadoop.regex;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
@@ -14,6 +16,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.Logger;
 
 import uk.bl.wap.hadoop.ArchiveFileInputFormat;
 
@@ -26,18 +29,23 @@ import uk.bl.wap.hadoop.ArchiveFileInputFormat;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCRegexIndexer extends Configured implements Tool {
+	private static Logger log = Logger.getLogger(WARCRegexIndexer.class.getName());
 	
 	public static final String REGEX_PATTERN_PARAM = "regex.pattern";
 
 	public int run( String[] args ) throws IOException {
 		JobConf conf = new JobConf( getConf(), WARCRegexIndexer.class );
+		
+		log.info("Loading paths...");
 		String line = null;
-
+		List<Path> paths = new ArrayList<Path>();
 		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
-
 		while( ( line = br.readLine() ) != null ) {
-			FileInputFormat.addInputPath( conf, new Path( line ) );
+			paths.add( new Path( line ) );
 		}
+		log.info("Setting paths...");
+		FileInputFormat.setInputPaths( conf, paths.toArray(new Path[] {}) );
+		log.info("Set "+paths.size()+" InputPaths");
 
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 		

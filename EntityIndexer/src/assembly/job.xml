@@ -14,8 +14,6 @@
 			<outputDirectory>lib</outputDirectory>
 			<excludes>
 				<exclude>${artifact.groupId}:${artifact.artifactId}</exclude>
-				<exclude>poi:poi-scratchpad:jar:2.5.1-final-20040804</exclude>
-				<exclude>poi:poi:jar:2.5.1-final-20040804</exclude>
 			</excludes>
 		</dependencySet>
 		<dependencySet>
