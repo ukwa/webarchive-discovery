@@ -56,7 +56,6 @@ public class WARCRegexIndexer extends Configured implements Tool {
 		conf.setInputFormat( ArchiveFileInputFormat.class );
 		conf.setMapperClass( WARCRegexMapper.class );
 		conf.setReducerClass( WARCRegexReducer.class );
-		conf.setNumReduceTasks( 1 );
 		conf.setOutputFormat( TextOutputFormat.class );
 
 		conf.setOutputKeyClass( Text.class );
