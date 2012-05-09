@@ -61,7 +61,17 @@ public class WARCRegexIndexer extends Configured implements Tool {
 
 		conf.setOutputKeyClass( Text.class );
 		conf.setOutputValueClass( Text.class );
+		
+		// Override the maxiumum JobConf size so very large lists of files can be processed:
+		// Default mapred.user.jobconf.limit=5242880 (5M), bump to 100 megabytes = 104857600 bytes.
+		conf.set("mapred.user.jobconf.limit", "104857600");
+		
+		// Manually set a large number of reducers:
+		conf.setNumReduceTasks(50);
+		
+		// Run it:
 		JobClient.runJob( conf );
+		
 		return 0;
 
 	}
