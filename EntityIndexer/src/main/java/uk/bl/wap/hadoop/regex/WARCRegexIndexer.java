@@ -50,6 +50,7 @@ public class WARCRegexIndexer extends Configured implements Tool {
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 		
 		conf.set( REGEX_PATTERN_PARAM, args[ 2 ] );
+		log.info("Set regex pattern = "+conf.get(REGEX_PATTERN_PARAM));
 
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );

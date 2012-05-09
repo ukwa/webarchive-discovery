@@ -1,8 +1,5 @@
 package uk.bl.wap.hadoop.regex;
 
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_URI;
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_DATE;
-
 import java.io.IOException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -33,9 +30,15 @@ public class WARCRegexMapper extends MapReduceBase implements Mapper<Text, Writa
 	public void map( Text key, WritableArchiveRecord value, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
 
+		// Generate the key:
+		String newKey = "0/unknown";			
+		if( !header.getHeaderFields().isEmpty() ) {
+			newKey = header.getDate() + "/" + header.getUrl();
+		}
+		
+		// Collect the matches:
 		Matcher matcher = pattern.matcher( new String( value.getPayload(), "UTF-8" ) );
 		while( matcher.find() ) {
-			String newKey = ( String ) header.getHeaderValue( HEADER_KEY_DATE ) + "/" + ( String ) header.getHeaderValue( HEADER_KEY_URI );
 			output.collect( new Text( newKey ), new Text( matcher.group( 0 ) ) );
 		}
 	}

@@ -53,6 +53,11 @@
 			<systemPath>${basedir}/../HadoopTika/lib/wayback-core-1.6.1.jar</systemPath>
 		</dependency>
 		<dependency>
+			<groupId>org.archive.heritrix</groupId>
+			<artifactId>heritrix-commons</artifactId>
+			<version>3.1.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.apache.mrunit</groupId>
 			<artifactId>mrunit</artifactId>
 			<version>0.8.1-incubating</version>
@@ -71,5 +76,21 @@
                 <enabled>false</enabled>
             </snapshots>
         </repository>  
-    </repositories>
+		<repository>
+			<releases>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>warn</checksumPolicy>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+				<updatePolicy>daily</updatePolicy>
+				<checksumPolicy>fail</checksumPolicy>
+			</snapshots>
+			<id>internetarchive</id>
+			<name>Internet Archive Maven Repository</name>
+			<url>http://builds.archive.org:8080/maven2</url>
+			<layout>default</layout>
+		</repository>
+	</repositories>
 </project>
