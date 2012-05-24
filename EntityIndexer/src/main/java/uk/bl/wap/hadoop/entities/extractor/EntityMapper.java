@@ -69,7 +69,19 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		String base_url = value.getRecord().getHeader().getUrl();
 		String sourceSuffix = LinkExtractor.extractPublicSuffix( base_url );
 		if( sourceSuffix == null ) sourceSuffix = "null";
-		Set<String> destSuffixes = LinkExtractor.extractPublicSuffixes(value, false);
+		Set<String> destSuffixes = null;
+		try {
+			destSuffixes= LinkExtractor.extractPublicSuffixes(value, false);
+		} catch( java.nio.charset.UnsupportedCharsetException e ) {
+			log.error("Could not parse record! "+e);
+			return;
+		} catch( java.nio.charset.IllegalCharsetNameException e ) {
+			log.error("Could not parse record! "+e);
+			return;
+		} catch( Exception e) {
+			log.error("Could not parse record! "+e);
+			return;
+		}
 		// Pass out the mapped results as in-links by year:
 		for( String destSuffix : destSuffixes ) {
 			output.collect( new Text( newKey+"\t"+destSuffix ), new Text( sourceSuffix ) );			
