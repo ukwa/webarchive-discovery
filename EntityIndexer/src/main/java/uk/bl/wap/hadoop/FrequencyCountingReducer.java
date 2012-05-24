@@ -38,9 +38,9 @@ public class FrequencyCountingReducer extends MapReduceBase implements Reducer<T
 		// Loop through and collect all distinct matches:
 		for( String match : matches.keySet() ) {
 			// This ignores the count:
-			output.collect( key, new Text( match ) );
+			//output.collect( key, new Text( match ) );
 			// This also outputs the count:
-			//output.collect( key, new Text( match + "\t" + matches.get(match).get() ) );
+			output.collect( key, new Text( match + "\t" + matches.get(match).get() ) );
 		}
 		
 	}
