@@ -66,8 +66,9 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		}
 		
 		// Collect the linkages
-		String sourceSuffix = LinkExtractor.extractPublicSuffix( value.getRecord().getHeader().getUrl());
-		Set<String> destSuffixes = LinkExtractor.extractLinks(value, false);
+		String base_url = value.getRecord().getHeader().getUrl();
+		String sourceSuffix = LinkExtractor.extractPublicSuffix( base_url );
+		Set<String> destSuffixes = LinkExtractor.extractPublicSuffixes(value, false);
 		// Pass out the mapped results as in-links by year:
 		for( String destSuffix : destSuffixes ) {
 			output.collect( new Text( newKey+"\t"+destSuffix ), new Text( sourceSuffix ) );			

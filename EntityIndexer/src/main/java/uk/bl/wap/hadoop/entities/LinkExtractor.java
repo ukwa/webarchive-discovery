@@ -43,7 +43,7 @@ public class LinkExtractor {
 	}
 	
 	/**
-	 * Use a tolerant parser to extract all of the a href links from a document.
+	 * Use a tolerant parser to extract all of the absolute a href links from a document.
 	 * 
 	 * Does not extract other links, e.g. stylesheets, etc. etc. Image links optional.
 	 * 
@@ -60,12 +60,12 @@ public class LinkExtractor {
 
 		// All a with href
 		for( Element link : doc.select("a[href]") ) {
-			linkset.add( link.attr("href") );
+			linkset.add( link.attr("abs:href") );
 		}
 		// All images:
 		if( includeImgLinks ) {
 			for( Element link : doc.select("img[src]") ) {
-				linkset.add( link.attr("src") );
+				linkset.add( link.attr("abs:src") );
 			}
 		}
 		// Example of use: all PNG references...
@@ -73,6 +73,22 @@ public class LinkExtractor {
 
 		//Element masthead = doc.select("div.masthead").first();
 		return linkset;
+	}
+	
+	/**
+	 * 
+	 * @param rec
+	 * @param includeImgLinks
+	 * @return
+	 * @throws IOException
+	 */
+	public static Set<String> extractPublicSuffixes( WritableArchiveRecord rec, boolean includeImgLinks ) throws IOException {
+		return extractPublicSuffixes(
+				new ByteArrayInputStream( rec.getPayload() ), 
+				null, 
+				rec.getRecord().getHeader().getUrl(),
+				includeImgLinks 
+				);
 	}
 
 	/**
