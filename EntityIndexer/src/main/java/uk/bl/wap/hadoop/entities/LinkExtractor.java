@@ -127,8 +127,13 @@ public class LinkExtractor {
 			return null;
 		}
 		if( host == null ) return null;
-		// Parse out the public suffix
-		InternetDomainName domainName = InternetDomainName.fromLenient(host);
+		// Parse out the public suffix:
+		InternetDomainName domainName;
+		try {
+			domainName = InternetDomainName.fromLenient(host);
+		} catch( Exception e ) {
+			return null;
+		}
 		InternetDomainName suffix = null;
 		if( host.endsWith(".uk")) {
 			ImmutableList<String> parts = domainName.parts();
