@@ -1,4 +1,4 @@
-package uk.bl.wap.hadoop.entities.extractor;
+package uk.bl.wap.hadoop;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -11,13 +11,12 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
-import uk.bl.wap.hadoop.MutableInt;
 
 @SuppressWarnings( { "deprecation" } )
 /**
  * 
  */
-public class EntityReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
+public class FrequencyCountingReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
 	
 	@Override
 	public void reduce( Text key, Iterator<Text> iterator, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {

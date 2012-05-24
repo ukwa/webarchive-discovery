@@ -19,6 +19,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 import uk.bl.wap.hadoop.ArchiveFileInputFormat;
+import uk.bl.wap.hadoop.FrequencyCountingReducer;
 
 /**
  * EntityExtractor:
@@ -56,7 +57,7 @@ public class EntityExtractor extends Configured implements Tool {
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
 		conf.setMapperClass( EntityMapper.class );
-		conf.setReducerClass( EntityReducer.class );
+		conf.setReducerClass( FrequencyCountingReducer.class );
 		conf.setOutputFormat( TextOutputFormat.class );
 
 		conf.setOutputKeyClass( Text.class );
