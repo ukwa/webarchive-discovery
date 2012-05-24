@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>uk.bl.wap.hadoop</groupId>
   <artifactId>EntityIndexer</artifactId>
-  <version>0.0.1-SNAPSHOT</version>
+  <version>0.0.2-SNAPSHOT</version>
 	<build>
 		<plugins>
 			<plugin>
@@ -70,6 +70,11 @@
 			<artifactId>tika-core</artifactId>
 			<version>1.1</version>
 			<scope>compile</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.jsoup</groupId>
+			<artifactId>jsoup</artifactId>
+			<version>1.6.2</version>
 		</dependency>
   </dependencies>
   <repositories>
