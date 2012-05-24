@@ -126,6 +126,7 @@ public class LinkExtractor {
 		} catch (URISyntaxException e) {
 			return null;
 		}
+		if( host == null ) return null;
 		// Parse out the public suffix
 		InternetDomainName domainName = InternetDomainName.fromLenient(host);
 		InternetDomainName suffix = null;
