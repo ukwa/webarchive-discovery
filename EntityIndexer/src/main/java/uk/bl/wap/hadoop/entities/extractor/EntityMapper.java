@@ -55,9 +55,9 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		*/
 		
 		// Generate the key:
-		String newKey = "0/unknown";			
+		String newKey = "0000";//"0/unknown";			
 		if( !header.getHeaderFields().isEmpty() ) {
-			newKey = header.getDate() + "/" + header.getUrl();
+			//newKey = header.getDate() + "/" + header.getUrl();
 			// Reduce this to just the year and the host:
 			String year = extractYear(header.getDate());
 			//String host = extractHost(header.getUrl());
