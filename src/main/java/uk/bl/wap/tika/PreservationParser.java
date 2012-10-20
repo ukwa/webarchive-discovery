@@ -26,8 +26,8 @@ import org.apache.tika.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import eu.scape_project.pc.cc.nanite.tika.ExtendedMimeType;
 
+import uk.bl.wap.nanite.ExtendedMimeType;
 import uk.bl.wap.tika.detect.HighlightJSDetector;
 import uk.bl.wap.tika.parser.iso9660.ISO9660Parser;
 import uk.bl.wap.tika.parser.warc.ARCParser;

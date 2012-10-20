@@ -31,7 +31,8 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
 
-import eu.scape_project.pc.cc.nanite.tika.ExtendedMimeType;
+import uk.bl.wap.nanite.ExtendedMimeType;
+
 
 
 /**

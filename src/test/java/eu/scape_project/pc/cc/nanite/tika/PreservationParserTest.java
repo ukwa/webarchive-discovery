@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import uk.bl.wap.nanite.ExtendedMimeType;
 import uk.bl.wap.tika.PreservationParser;
 
 /**
