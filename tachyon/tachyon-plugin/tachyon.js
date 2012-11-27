@@ -1,8 +1,15 @@
 /* This is used to record the state of the plugin - active or not. */
 var listenerIsActive = false;
 
-var mementoPrefix = "http://www.webarchive.org.uk/wayback/memento/"
-var timegatePrefix = mementoPrefix + "timegate/"
+var mementoPrefix = "http://www.webarchive.org.uk/wayback/memento/";
+var timegatePrefix = mementoPrefix + "timegate/";
+//
+// Redirect loop:
+//var timegatePrefix = "http://purl.org/memento/timegate/";
+// 
+// This is rather hacky, as we should be able to determine Memento status from the requests etc.
+//var mementoPrefix = "http://api.wayback.archive.org/memento/"
+//var timegatePrefix = "http://mementoproxy.lanl.gov/aggr/timegate/";
 
 /* This is used to record any useful information about each tab, 
  * determined from the headers during download.
@@ -23,8 +30,8 @@ function toggleActive(tab) {
         // Else fall back on Link header.
         else {
           // Look up relevant Link header entry:
-          // TODO only do this if it's not empty/NULL/etc.
-          original = tabRels[tab.id]["original"];
+          if( tabRels[tab.id]["original"] != undefined )
+            original = tabRels[tab.id]["original"];
         }
         // Update if changed:
         if( original != tab.url) {
@@ -52,11 +59,22 @@ chrome.webRequest.onBeforeRequest.addListener(
     }
 
     // Re-direct to the preferred TimeGate:
-    if( ! (details.url.indexOf(mementoPrefix) == 0) ) {
-        return { redirectUrl: timegatePrefix+(details.url.replace("?","%3F")) }
-    } else {
+    // TODO switch to allowing timegatePrefix OR Memento-Datetime header.
+    console.log("TabId: "+details.tabId);
+    var hasOriginal = false;
+    if( tabRels[details.tabId]["original"] != undefined ) 
+      hasOriginal = true;
+    if( details.url.indexOf(timegatePrefix) == 0 || 
+        details.url.indexOf(mementoPrefix)  == 0 ) {
+      /*
+        || (
+            hasOriginal && 
+            (details.type == "main_frame" || details.type == "sub_frame_ARG" ) 
+          ) ) {
+  */
         return {};
     }
+    return { redirectUrl: timegatePrefix+(details.url.replace("?","%3F")) };
   },
   {
     urls: ["http://*/*", "https://*/*"]
@@ -105,6 +123,10 @@ chrome.webRequest.onHeadersReceived.addListener(
           console.log("tabRels: "+matches[2]+" -> "+matches[1]);
           tabRels[details.tabId][matches[2]] = matches[1];
         }
+      }
+      if( headers[i].name == 'Memento-Datetime' ) {
+        console.log("Memento-Datetime: "+headers[i].value);
+        tabRels[details.tabId]["Memento-Datetime"] = headers[i].value;
       }
     }
     /*
