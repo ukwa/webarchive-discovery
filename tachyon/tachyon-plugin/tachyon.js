@@ -1,8 +1,3 @@
-/*
- * Started with 
- * http://stackoverflow.com/questions/9698059/disable-single-javascript-file-with-addon-or-extension
- */
-
 chrome.webRequest.onBeforeRequest.addListener(
   function(details){ 
     if( ! (details.url.indexOf("http://www.webarchive.org.uk/wayback/memento/") == 0) ) {
