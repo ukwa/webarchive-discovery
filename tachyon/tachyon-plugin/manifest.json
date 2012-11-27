@@ -6,5 +6,13 @@
        "scripts": ["tachyon.js"],
        "persistent": true
    },
-   "permissions": ["webRequest","<all_urls>","webRequestBlocking"]
+   "browser_action": {
+    "default_icon": "icon.png"
+   },
+   "permissions": [
+       "webRequest",
+       "<all_urls>",
+       "webRequestBlocking",
+       "tabs"
+    ]
 }
