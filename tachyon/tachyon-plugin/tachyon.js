@@ -1,6 +1,8 @@
 /* This is used to record the state of the plugin - active or not. */
 var listenerIsActive = false;
 
+var targetTime = "Thu, 31 May 2001 20:35:00 GMT";
+
 var mementoPrefix = "http://www.webarchive.org.uk/wayback/memento/";
 var timegatePrefix = mementoPrefix + "timegate/";
 //
@@ -19,20 +21,21 @@ var timegatePrefix = mementoPrefix + "timegate/";
 function toggleActive(tab) {
     if( listenerIsActive ) {
         listenerIsActive = false;
+        chrome.browserAction.setPopup({popup: ""});
         chrome.browserAction.setIcon({path:"icon.png"});
         // Strip our archival prefix, redirect to live site.
         // If starts with timegatePrefix then strip that.
         var original = tab.url;
-        console.log("Original: "+original);
         if( original.indexOf(timegatePrefix) == 0 ) {
           original = original.replace(timegatePrefix,"");
         }
         // Else fall back on Link header.
         else {
           // Look up relevant Link header entry:
-          if( tabRels[tab.id]["original"] != undefined )
+          if( tabRels[tab.id] != undefined && tabRels[tab.id]["original"] != undefined )
             original = tabRels[tab.id]["original"];
         }
+        console.log("Original: "+original);
         // Update if changed:
         if( original != tab.url) {
           chrome.tabs.update(tab.id, {url: original} );
@@ -40,12 +43,35 @@ function toggleActive(tab) {
     } else {
         listenerIsActive = true;
         chrome.browserAction.setIcon({path:"icon-on.png"});
+        chrome.browserAction.setPopup({popup: "popup.html"});
         // Refresh tab to force switch to archival version:
         chrome.tabs.reload(tab.id);
     }
 }
 
+function enableTimeTravel() {
+
+}
+
 chrome.browserAction.onClicked.addListener(toggleActive);
+
+chrome.extension.onMessage.addListener(function(msg, _, sendResponse) {
+  if (msg.disengageTimeGate) {
+    console.log("Disengage TimeGate...");
+    chrome.tabs.getSelected(null, function(selectedTab) {
+      toggleActive(selectedTab);
+    });
+  } else if( msg.setTargetTime ) {
+    console.log("Setting date "+msg.targetTime);
+    targetTime = msg.targetTime;
+    chrome.tabs.getSelected(null, function(selectedTab) {
+      toggleActive(selectedTab);
+    });
+  } else if( msg.requestTargetTime ) {
+    console.log("Sending current targetTime...");
+    chrome.extension.sendMessage({showTargetTime: true, targetTime: targetTime });
+  }
+});
 
 /**
  * This takes the url of any request and redirects it to the TimeGate.
@@ -59,10 +85,13 @@ chrome.webRequest.onBeforeRequest.addListener(
     }
 
     // Re-direct to the preferred TimeGate:
-    // TODO switch to allowing timegatePrefix OR Memento-Datetime header.
-    console.log("TabId: "+details.tabId);
+    // TODO switch to allowing timegatePrefix OR Memento-Datetime header?
+    // No, must note known Mementos (based on TimeGate response) and 
+    // allow those to pass-through.
+    //console.log("TabId: "+details.tabId);
     var hasOriginal = false;
-    if( tabRels[details.tabId]["original"] != undefined ) 
+    if( tabRels[details.tabId] != undefined && 
+          tabRels[details.tabId]["original"] != undefined ) 
       hasOriginal = true;
     if( details.url.indexOf(timegatePrefix) == 0 || 
         details.url.indexOf(mementoPrefix)  == 0 ) {
@@ -94,7 +123,7 @@ chrome.webRequest.onBeforeSendHeaders.addListener(
         // Push in the Accept-Datetime header:
         details.requestHeaders.push( 
             { name: "Accept-Datetime", 
-              value: "Thu, 31 May 2001 20:35:00 GMT" }
+              value: targetTime }
         );
         return {requestHeaders: details.requestHeaders};
     },
@@ -124,6 +153,7 @@ chrome.webRequest.onHeadersReceived.addListener(
           tabRels[details.tabId][matches[2]] = matches[1];
         }
       }
+      // According to spec, can use presence of this header as definitive indicator that this is a Memento, and therefore not a live URL.
       if( headers[i].name == 'Memento-Datetime' ) {
         console.log("Memento-Datetime: "+headers[i].value);
         tabRels[details.tabId]["Memento-Datetime"] = headers[i].value;
