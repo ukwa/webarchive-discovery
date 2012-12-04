@@ -65,7 +65,9 @@ chrome.extension.onMessage.addListener(function(msg, _, sendResponse) {
     console.log("Setting date "+msg.targetTime);
     targetTime = msg.targetTime;
     chrome.tabs.getSelected(null, function(selectedTab) {
-      toggleActive(selectedTab);
+      // Update by sending back to the TimeGate with the new Target Time:
+      chrome.tabs.update(selectedTab.id, {url: 
+        timegatePrefix+(tabRels[selectedTab.id]["original"].replace("?","%3F")) });
     });
   } else if( msg.requestTargetTime ) {
     console.log("Sending current targetTime...");
@@ -146,6 +148,7 @@ chrome.webRequest.onHeadersReceived.addListener(
   function(details) {
     tabRels[details.tabId] = {};
     var headers = details.responseHeaders;
+    var isMemento = false;
     for( var i = 0, l = headers.length; i < l; ++i ) {
       if( headers[i].name == 'Link' ) {
         while( matches = relRegex.exec(headers[i].value) ) {
@@ -156,13 +159,17 @@ chrome.webRequest.onHeadersReceived.addListener(
       // According to spec, can use presence of this header as definitive indicator that this is a Memento, and therefore not a live URL.
       if( headers[i].name == 'Memento-Datetime' ) {
         console.log("Memento-Datetime: "+headers[i].value);
+        isMemento = true;
         tabRels[details.tabId]["Memento-Datetime"] = headers[i].value;
       }
     }
-    /*
-    while (matches = qualityRegex.exec(window.location.search)) {
-      qualities.push(decodeURIComponent(matches[1]));   
-    } */
+    // If we are in Time Travel mode, force update to point to TimeGate for non-Mementos?
+    // FIXME This should not be doing anything! I think?
+    if( listenerIsActive ) {
+      if( details.url.indexOf(timegatePrefix) != 0  && !isMemento && details.type == "main_frame") {
+        chrome.tabs.update(details.tabId, {url: timegatePrefix+(details.url.replace("?","%3F")) });
+      }
+    }
   },
   {
     urls:["http://*/*", "https://*/*"],
