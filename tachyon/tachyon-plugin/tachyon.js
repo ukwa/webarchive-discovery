@@ -163,17 +163,10 @@ chrome.webRequest.onHeadersReceived.addListener(
         tabRels[details.tabId]["Memento-Datetime"] = headers[i].value;
       }
     }
-    // If we are in Time Travel mode, force update to point to TimeGate for non-Mementos?
-    // FIXME This should not be doing anything! I think?
-    if( listenerIsActive ) {
-      if( details.url.indexOf(timegatePrefix) != 0  && !isMemento && details.type == "main_frame") {
-        chrome.tabs.update(details.tabId, {url: timegatePrefix+(details.url.replace("?","%3F")) });
-      }
-    }
   },
   {
     urls:["http://*/*", "https://*/*"],
-    types:["xmlhttprequest","main_frame"]
+    types:["main_frame"]
   },
   ["responseHeaders","blocking"]
 );
