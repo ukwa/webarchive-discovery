@@ -43,7 +43,6 @@
 			<groupId>uk.bl.wap.hadoop</groupId>
 			<artifactId>wap-recordreaders</artifactId>
 			<version>0.0.1-SNAPSHOT</version>
-			<scope>compile</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.archive.wayback</groupId>
