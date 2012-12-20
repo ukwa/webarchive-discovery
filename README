@@ -1,3 +1,6 @@
-This is the git repository for projects relating to The British Library's Web Archiving Programme.
+WARC Discovery
+==============
 
-http://www.webarchive.org.uk/
+These are the components we use to index our WARC files and make the contents discoverable.
+
+
