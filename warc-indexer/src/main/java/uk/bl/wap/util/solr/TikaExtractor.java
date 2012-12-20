@@ -75,10 +75,8 @@ public class TikaExtractor {
 			} catch( RuntimeException r ) {
 				System.err.println( "TikaExtractor.parse(): " + r.getMessage() );
 			}
-			String output;
+			String output = content.toString();
 			if( runner.complete || !content.toString( "UTF-8" ).equals( "" ) ) {
-				output = content.toString( "UTF-8" ).replaceAll( "<!\\[CDATA\\[", "" );
-				output = output.toString().replaceAll( "\\]\\]>", "" );
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			}

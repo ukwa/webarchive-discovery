@@ -34,6 +34,8 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.io.arc.ARCRecord;
+import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.w3c.dom.Document;
@@ -64,26 +66,44 @@ public class WARCIndexer {
 		WritableSolrRecord solr = null;
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			for( String h : header.getHeaderFields().keySet()) {
-				System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
-			}
-
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
 			
-			
 			if( header.getUrl() == null ) return null;
 			
-			Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
-			String referrer = null;
-			for( Header h : headers ) {
-				System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-				if( h.getName().equals("Referer"))
-					referrer = h.getValue();
+			for( String h : header.getHeaderFields().keySet()) {
+				System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
 			}
-			// Parse payload using Tika:
-			solr = tika.extract( record );
+			
+			if( ! record.hasContentHeaders() ) return null;
+
+			String referrer = null;
+			if( record instanceof WARCRecord ) {
+				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
+				for( Header h : headers ) {
+					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals("Referer"))
+						referrer = h.getValue();
+				}
+				// Parse payload using Tika:
+				solr = tika.extract( WARCRecordUtils.getPayload(record) );
+			
+			} else if ( record instanceof ARCRecord ) {
+				ARCRecord arcr = (ARCRecord) record;
+				for( Header h : arcr.getHttpHeaders() ) {
+					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals("Referer"))
+						referrer = h.getValue();
+				}
+				// Parse payload using Tika:
+				arcr.skipHttpHeader();
+				solr = tika.extract(arcr);
+				
+			} else {
+				System.err.println("WRONG!");
+			}
+			
 
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 
@@ -120,8 +140,10 @@ public class WARCIndexer {
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
 				WritableSolrRecord doc = windex.extract(rec);
-				if( doc != null )
+				if( doc != null ) {
 					prettyPrintXML(ClientUtils.toXML(doc.doc));
+					break;
+				}
 				System.out.println(" ---- ---- ");
 			}
 		}
