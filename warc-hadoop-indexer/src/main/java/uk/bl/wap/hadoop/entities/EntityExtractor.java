@@ -1,4 +1,4 @@
-package uk.bl.wap.hadoop.entities.extractor;
+package uk.bl.wap.hadoop.entities;
 
 import java.io.BufferedReader;
 import java.io.FileReader;

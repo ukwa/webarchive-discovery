@@ -1,6 +1,7 @@
 package uk.bl.wap.util.solr;
 
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
@@ -38,7 +39,7 @@ public class TikaExtractor {
 		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
 	}
 
-	public WritableSolrRecord extract( byte[] payload ) {
+	public WritableSolrRecord extract( InputStream payload ) throws IOException {
 		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !this.checkMime( tika.detect( payload ) ) ) {
@@ -61,7 +62,7 @@ public class TikaExtractor {
 		context.set( Parser.class, parser );
 
 		try {
-			InputStream tikainput = TikaInputStream.get( payload, metadata );
+			InputStream tikainput = TikaInputStream.get( payload );//, metadata );
 			ParseRunner runner = new ParseRunner( parser, tikainput, this.getHandler( content ), metadata, context );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
 			try {

@@ -45,5 +45,10 @@
 			<type>jar</type>
 			<scope>compile</scope>
 		</dependency>
+		<dependency>
+		   <groupId>uk.bl.wa.discovery</groupId>
+		   <artifactId>warc-indexer</artifactId>
+		   <version>0.0.1-SNAPSHOT</version>
+		</dependency>
 	</dependencies>
 </project>

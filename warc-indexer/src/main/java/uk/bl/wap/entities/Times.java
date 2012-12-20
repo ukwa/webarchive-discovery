@@ -1,4 +1,4 @@
-package uk.bl.wap.hadoop.entities;
+package uk.bl.wap.entities;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

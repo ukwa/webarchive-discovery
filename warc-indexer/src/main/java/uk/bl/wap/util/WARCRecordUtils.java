@@ -1,20 +1,28 @@
-package uk.bl.wap.util.warc;
+package uk.bl.wap.util;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 
 public class WARCRecordUtils {
-	public static BufferedInputStream getPayload( WARCRecord record ) throws IOException {
+	
+	public static InputStream getPayload(ArchiveRecord record) throws IOException {
+		if( record instanceof ARCRecord ) return getPayload( (ARCRecord) record );
+		if( record instanceof WARCRecord ) return getPayload( (WARCRecord) record );
+		return null;
+	}
+	
+	private static BufferedInputStream getPayload( WARCRecord record ) throws IOException {
 		WARCRecordUtils.getHeaders( record, true );
 		return new BufferedInputStream( record );
 	}
 
-	public static BufferedInputStream getPayload( ARCRecord record ) throws IOException {
+	private static BufferedInputStream getPayload( ARCRecord record ) throws IOException {
 		return new BufferedInputStream( record );
 	}
 
@@ -48,4 +56,5 @@ public class WARCRecordUtils {
 		}
 		return new String( buffer.toByteArray() );
 	}
+
 }

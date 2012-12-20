@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.hadoop.entities;
+package uk.bl.wap.entities;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -11,14 +11,13 @@ import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.archive.io.ArchiveRecord;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
-
-import uk.bl.wap.hadoop.WritableArchiveRecord;
 
 /**
  * @author AnJackson
@@ -34,11 +33,11 @@ public class LinkExtractor {
 	 * @return
 	 * @throws IOException
 	 */
-	public static Set<String> extractLinks( WritableArchiveRecord rec, boolean includeImgLinks ) throws IOException {
+	public static Set<String> extractLinks( ArchiveRecord rec, boolean includeImgLinks ) throws IOException {
 		return extractLinks( 
-				new ByteArrayInputStream( rec.getPayload() ), 
+				rec, 
 				null, 
-				rec.getRecord().getHeader().getUrl(),
+				rec.getHeader().getUrl(),
 				includeImgLinks );
 	}
 	
@@ -82,11 +81,11 @@ public class LinkExtractor {
 	 * @return
 	 * @throws IOException
 	 */
-	public static Set<String> extractPublicSuffixes( WritableArchiveRecord rec, boolean includeImgLinks ) throws IOException {
+	public static Set<String> extractPublicSuffixes( ArchiveRecord rec, boolean includeImgLinks ) throws IOException {
 		return extractPublicSuffixes(
-				new ByteArrayInputStream( rec.getPayload() ), 
+				rec, 
 				null, 
-				rec.getRecord().getHeader().getUrl(),
+				rec.getHeader().getUrl(),
 				includeImgLinks 
 				);
 	}

@@ -81,7 +81,7 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 		WritableSolrRecord solr = null;
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			solr = tika.extract( value.getPayload() );
+			solr = tika.extract( value.getRecord() );
 
 			String wctID = this.getWctTi( key.toString() );
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );

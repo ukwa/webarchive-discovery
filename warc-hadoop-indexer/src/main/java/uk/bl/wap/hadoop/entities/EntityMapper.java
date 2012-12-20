@@ -1,4 +1,4 @@
-package uk.bl.wap.hadoop.entities.extractor;
+package uk.bl.wap.hadoop.entities;
 
 import java.io.IOException;
 import java.util.Set;
@@ -18,7 +18,7 @@ import org.apache.tika.Tika;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wap.hadoop.WritableArchiveRecord;
-import uk.bl.wap.hadoop.entities.LinkExtractor;
+import uk.bl.wap.entities.LinkExtractor;
 
 @SuppressWarnings( { "deprecation" } )
 public class EntityMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
@@ -71,7 +71,7 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		if( sourceSuffix == null ) sourceSuffix = "null";
 		Set<String> destSuffixes = null;
 		try {
-			destSuffixes= LinkExtractor.extractPublicSuffixes(value, false);
+			destSuffixes= LinkExtractor.extractPublicSuffixes(value.getRecord(), false);
 		} catch( java.nio.charset.UnsupportedCharsetException e ) {
 			log.error("Could not parse record! "+e);
 			return;

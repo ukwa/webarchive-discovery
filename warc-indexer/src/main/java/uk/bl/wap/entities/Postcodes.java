@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.hadoop.entities;
+package uk.bl.wap.entities;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
