@@ -1,9 +1,13 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>uk.bl.wap.hadoop</groupId>
-	<artifactId>tika</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<artifactId>warc-hadoop-indexer</artifactId>
+    <parent>
+      <groupId>uk.bl.wa.discovery</groupId>
+      <artifactId>warc-discovery</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+    </parent>
 	<build>
 		<plugins>
 			<plugin>
@@ -34,16 +38,9 @@
 			<version>2.0.12</version>
 		</dependency>
 		<dependency>
-		<!-- This should work, except archive.org have made the wayback 1.7.0 release 
-			dependent upon a snapshot release of heritrix, which doesn't resolve well. 
-			<dependency> <groupId>org.archive.wayback</groupId> <artifactId>wayback-core</artifactId> 
-			<version>1.7.0</version> </dependency> 
-			So instead we use this: -->
 			<groupId>org.archive.wayback</groupId>
 			<artifactId>wayback-core</artifactId>
-			<version>1.6.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/lib/wayback-core-1.6.1.jar</systemPath>
+			<version>1.7.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<artifactId>solr-solrj</artifactId>
@@ -55,6 +52,11 @@
 			<artifactId>hadoop-core</artifactId>
 			<version>0.20.2</version>
 			<scope>provided</scope>
+		</dependency>
+		<dependency>
+		   <groupId>org.jsoup</groupId>
+		   <artifactId>jsoup</artifactId>
+		   <version>1.7.1</version>
 		</dependency>
 	</dependencies>
 	<repositories>

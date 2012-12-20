@@ -1,8 +1,12 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>uk.bl.wap.hadoop</groupId>
-  <artifactId>EntityIndexer</artifactId>
-  <version>0.0.2-SNAPSHOT</version>
+  <artifactId>warc-indexer</artifactId>
+    <parent>
+      <groupId>uk.bl.wa.discovery</groupId>
+      <artifactId>warc-discovery</artifactId>
+      <version>0.0.1-SNAPSHOT</version>
+      <relativePath>..</relativePath>
+    </parent>
 	<build>
 		<plugins>
 			<plugin>
@@ -40,16 +44,9 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>uk.bl.wap.hadoop</groupId>
-			<artifactId>wap-recordreaders</artifactId>
-			<version>0.0.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>org.archive.wayback</groupId>
 			<artifactId>wayback-core</artifactId>
-			<version>1.6.1</version>
-			<scope>system</scope>
-			<systemPath>${basedir}/../HadoopTika/lib/wayback-core-1.6.1.jar</systemPath>
+			<version>1.7.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.archive.heritrix</groupId>
