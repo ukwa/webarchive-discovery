@@ -50,8 +50,7 @@
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
-			<version>1.1</version>
-			<scope>compile</scope>
+			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
@@ -67,6 +66,11 @@
 		   <groupId>org.restlet.jee</groupId>
 		   <artifactId>org.restlet</artifactId>
 		   <version>2.0.15</version>
+		</dependency>
+		<dependency>
+		   <groupId>org.apache.tika</groupId>
+		   <artifactId>tika-parsers</artifactId>
+		   <version>1.2</version>
 		</dependency>
   </dependencies>
   <repositories>

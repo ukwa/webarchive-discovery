@@ -42,7 +42,10 @@ public class TikaExtractor {
 	public WritableSolrRecord extract( InputStream payload ) throws IOException {
 		WritableSolrRecord solr = new WritableSolrRecord();
 
-		if( !this.checkMime( tika.detect( payload ) ) ) {
+		InputStream tikainput = TikaInputStream.get( payload );//, metadata );
+		String detected = tika.detect( tikainput );
+		System.err.println("Tika Detected: "+detected);
+		if( !this.checkMime( detected ) ) {
 			return solr;
 		}
 
@@ -55,15 +58,13 @@ public class TikaExtractor {
 		try {
 			detector = ( new TikaConfig() ).getMimeRepository();
 		} catch( Exception i ) {
+			System.err.println("Exception: "+i);
 			return solr;
 
 		}
-		parser = new AutoDetectParser( detector );
-		context.set( Parser.class, parser );
 
 		try {
-			InputStream tikainput = TikaInputStream.get( payload );//, metadata );
-			ParseRunner runner = new ParseRunner( parser, tikainput, this.getHandler( content ), metadata, context );
+			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
 			try {
 				parseThread.start();
@@ -94,14 +95,14 @@ public class TikaExtractor {
 	}
 
 	private class ParseRunner implements Runnable {
-		private AutoDetectParser parser;
+		private Parser parser;
 		private InputStream tikainput;
 		private ContentHandler handler;
 		private Metadata metadata;
 		private ParseContext context;
 		private boolean complete;
 
-		public ParseRunner( AutoDetectParser parser, InputStream tikainput, ContentHandler handler, Metadata metadata, ParseContext context ) {
+		public ParseRunner( Parser parser, InputStream tikainput, ContentHandler handler, Metadata metadata, ParseContext context ) {
 			this.parser = parser;
 			this.tikainput = tikainput;
 			this.handler = handler;
@@ -117,6 +118,7 @@ public class TikaExtractor {
 				this.complete = true;
 			} catch( InterruptedIOException i ) {
 				this.complete = false;
+				System.err.println( "ParseRunner.run(): " + i.getMessage() );
 			} catch( Exception e ) {
 				System.err.println( "ParseRunner.run(): " + e.getMessage() );
 			}
