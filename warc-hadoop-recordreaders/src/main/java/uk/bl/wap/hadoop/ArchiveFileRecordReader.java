@@ -143,8 +143,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 						this.checkProtocol( url ) ) {
 							String http = WARCRecordUtils.getHeaders( record, true );
 							value.setHttpHeaders( http );
-							if( value.getHttpHeader( "bl_status" ) != null &&
-									this.checkResponse( value.getHttpHeader( "bl_status" ).split( " " )[ 1 ] ) ) {
+							if( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ) != null &&
+									this.checkResponse( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ).split( " " )[ 1 ] ) ) {
 								found = true;
 								key.set( this.archiveName );
 								value.setRecord( record );

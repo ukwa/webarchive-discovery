@@ -6,6 +6,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.util.HashMap;
 
@@ -15,27 +16,41 @@ import org.archive.io.warc.WARCRecord;
 
 public class WritableArchiveRecord implements Writable {
 	private ArchiveRecord record = null;
-	private byte[] payload = new byte[ 0 ];
 	private HashMap<String, String> headers = new HashMap<String, String>();
+	
+	public static final String BL_STATUS_CODE_HEADER = "bl_status";
 
 	public WritableArchiveRecord() {}
 
 	public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
 		this.record = record;
-		this.setPayload( record );
 	}
 
 	public void setRecord( ArchiveRecord record ) throws IOException {
 		this.record = record;
-		this.setPayload( record );
 	}
 
 	public ArchiveRecord getRecord() {
 		return record;
 	}
 
-	public byte[] getPayload() {
-		return payload;
+	public byte[] getPayload() throws IOException {
+		BufferedInputStream input = new BufferedInputStream( record );
+		ByteArrayOutputStream output = new ByteArrayOutputStream();
+		int ch;
+		byte[] buffer = new byte[ 1048576 ];
+		try {
+			while( ( ch = input.read( buffer ) ) >= 0 ) {
+				output.write( buffer, 0, ch );
+			}
+		} catch( IndexOutOfBoundsException i ) {
+			// Invalid Content-Length throws this.
+		}
+		return output.toByteArray();
+	}
+	
+	public InputStream getPayloadAsStream() {
+		return record;
 	}
 
 	public void setHttpHeaders( String httpHeaders ) {
@@ -43,7 +58,7 @@ public class WritableArchiveRecord implements Writable {
 		String line;
 		String[] values;
 		try {
-			headers.put( "bl_status", input.readLine() );
+			headers.put( BL_STATUS_CODE_HEADER, input.readLine() );
 			while( ( line = input.readLine() ) != null ) {
 				values = line.split( ": ", 2 );
 				if( values.length == 2 )
@@ -74,18 +89,4 @@ public class WritableArchiveRecord implements Writable {
 		}
 	}
 
-	private void setPayload( ArchiveRecord record ) throws IOException {
-		BufferedInputStream input = new BufferedInputStream( record );
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
-		int ch;
-		byte[] buffer = new byte[ 1048576 ];
-		try {
-			while( ( ch = input.read( buffer ) ) >= 0 ) {
-				output.write( buffer, 0, ch );
-			}
-		} catch( IndexOutOfBoundsException i ) {
-			// Invalid Content-Length throws this.
-		}
-		this.payload = output.toByteArray();
-	}
 }

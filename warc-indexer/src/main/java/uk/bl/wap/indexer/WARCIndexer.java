@@ -14,6 +14,8 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Transformer;
@@ -61,7 +63,7 @@ public class WARCIndexer {
 		md5 = MessageDigest.getInstance( "MD5" );
 	}
 
-	public WritableSolrRecord extract( ArchiveRecord record ) throws IOException {
+	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		WritableSolrRecord solr = null;
 
@@ -80,6 +82,8 @@ public class WARCIndexer {
 
 			String referrer = null;
 			if( record instanceof WARCRecord ) {
+				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
+				System.out.println("Status Code: "+firstLine[1]);
 				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
 				for( Header h : headers ) {
 					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
@@ -91,6 +95,7 @@ public class WARCIndexer {
 			
 			} else if ( record instanceof ARCRecord ) {
 				ARCRecord arcr = (ARCRecord) record;
+				System.out.println("Status Code: "+arcr.getStatusCode());				
 				for( Header h : arcr.getHttpHeaders() ) {
 					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
 					if( h.getName().equals("Referer"))
@@ -101,16 +106,23 @@ public class WARCIndexer {
 				solr = tika.extract(arcr);
 				
 			} else {
-				System.err.println("WRONG!");
+				System.err.println("FAIL!");
 			}
 			
-
+			// Date
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
+			solr.doc.setField( WctFields.WCT_WAYBACK_DATE, waybackDate );
+			
+			// WCT ID if any:
+			String wctID = this.getWctTi( archiveName );
+			solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
 
+			// 
 			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getDigest() );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, canon.urlStringToKey( header.getUrl() ).split( "/" )[ 0 ] );
+
 			try {
 				solr.doc.setField( SolrFields.SOLR_TIMESTAMP, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
 			} catch( ParseException p ) {
@@ -118,10 +130,18 @@ public class WARCIndexer {
 			}
 			if( referrer != null )
 				solr.doc.setField( SolrFields.SOLR_REFERRER_URI, referrer );
-			solr.doc.setField( WctFields.WCT_WAYBACK_DATE, waybackDate );
 		}
 		return solr;
 	}
+	
+	private String getWctTi( String warcName ) {
+		Pattern pattern = Pattern.compile( "^[A-Z]+-\\b([0-9]+)\\b.*\\.w?arc(\\.gz)?$" );
+		Matcher matcher = pattern.matcher( warcName );
+		if( matcher.matches() ) {
+			return matcher.group( 1 );
+		}
+		return "";
+	}	
 
 
 	/**
@@ -139,10 +159,10 @@ public class WARCIndexer {
 			Iterator<ArchiveRecord> ir = reader.iterator();
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
-				WritableSolrRecord doc = windex.extract(rec);
+				WritableSolrRecord doc = windex.extract("",rec);
 				if( doc != null ) {
 					prettyPrintXML(ClientUtils.toXML(doc.doc));
-					break;
+					//break;
 				}
 				System.out.println(" ---- ---- ");
 			}

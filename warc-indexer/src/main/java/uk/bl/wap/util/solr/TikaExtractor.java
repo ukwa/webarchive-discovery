@@ -1,10 +1,13 @@
 package uk.bl.wap.util.solr;
 
 import java.io.ByteArrayOutputStream;
+import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.OutputStream;
+import java.io.StringWriter;
+import java.io.Writer;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.TransformerConfigurationException;
@@ -22,6 +25,8 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.sax.TextContentHandler;
+import org.apache.tika.sax.ToTextContentHandler;
 import org.xml.sax.ContentHandler;
 
 public class TikaExtractor {
@@ -53,7 +58,7 @@ public class TikaExtractor {
 		Detector detector;
 		AutoDetectParser parser;
 		Metadata metadata = new Metadata();
-		ByteArrayOutputStream content = new ByteArrayOutputStream();
+		StringWriter content = new StringWriter();
 		context = new ParseContext();
 		try {
 			detector = ( new TikaConfig() ).getMimeRepository();
@@ -76,10 +81,15 @@ public class TikaExtractor {
 				System.err.println( "TikaExtractor.parse(): " + r.getMessage() );
 			}
 			String output = content.toString();
-			if( runner.complete || !content.toString( "UTF-8" ).equals( "" ) ) {
+			if( runner.complete || !output.equals( "" ) ) {
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			}
+			
+			for( String m : metadata.names() ) {
+				System.err.println("Metadata: "+m+" -> "+metadata.get(m));
+			}
+			
 			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( "Content-Type" ) );
 
 			if( metadata.get( DublinCore.TITLE ) != null )
@@ -123,14 +133,53 @@ public class TikaExtractor {
 		}
 	}
 
-	public ContentHandler getHandler( OutputStream out ) throws TransformerConfigurationException {
-		SAXTransformerFactory factory = ( SAXTransformerFactory ) SAXTransformerFactory.newInstance();
-		TransformerHandler handler = factory.newTransformerHandler();
-		handler.getTransformer().setOutputProperty( OutputKeys.METHOD, "text" );
-		handler.getTransformer().setOutputProperty( OutputKeys.INDENT, "yes" );
-		handler.getTransformer().setOutputProperty( OutputKeys.ENCODING, "UTF-8" );
-		handler.setResult( new StreamResult( out ) );
-		return handler;
+	public ContentHandler getHandler( Writer out ) {
+		return new ToTextContentHandler( new SpaceTrimWriter(out) );
+	}
+	
+	public class SpaceTrimWriter extends FilterWriter
+	{
+	  private boolean isStartSpace = true;
+	  private boolean lastCharWasSpace;
+	  private boolean includedNewline = false;
+	  
+	  public SpaceTrimWriter(Writer out) { super(out); }
+	  public void write(char[] cbuf, int off, int len) throws IOException
+	  {
+	    for (int i = off; i < len; i++)
+	      write(cbuf[ i ]);
+	  }
+	  public void write(String str, int off, int len) throws IOException
+	  {
+	    for (int i = off; i < len; i++)
+	      write(str.charAt(i));
+	  }
+	  public void write(int c) throws IOException
+	  {
+	    if (c == ' ' || c == '\n' || c == '\t') 
+	    {
+	      lastCharWasSpace = true;
+	      if( c == '\n' )
+	    	  includedNewline = true;
+	    }
+	    else
+	    {
+	      if (lastCharWasSpace)
+	      {
+	        if (!isStartSpace) {
+	        	if( includedNewline ) {
+		          out.write('\n');
+	        	} else {
+	        		out.write(' ');
+	        	}
+	        }
+	        lastCharWasSpace = false;
+	        includedNewline = false;
+	      }
+	      isStartSpace = false;
+	      out.write(c);
+	    }
+	  }
 	}
 	
 	private boolean checkMime( String mime ) {
