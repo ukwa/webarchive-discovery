@@ -27,6 +27,7 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.TextContentHandler;
 import org.apache.tika.sax.ToTextContentHandler;
+import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
 
 public class TikaExtractor {
@@ -134,7 +135,7 @@ public class TikaExtractor {
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new ToTextContentHandler( new SpaceTrimWriter(out) );
+		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), 1000 );
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter
@@ -168,7 +169,7 @@ public class TikaExtractor {
 	      {
 	        if (!isStartSpace) {
 	        	if( includedNewline ) {
-		          out.write('\n');
+		            out.write('\n');
 	        	} else {
 	        		out.write(' ');
 	        	}
