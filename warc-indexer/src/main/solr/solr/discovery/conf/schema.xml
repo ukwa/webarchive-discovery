@@ -336,8 +336,8 @@
 
    <!-- Create a string version of author for faceting -->
 <!-- 
- -->
     <copyField source="author" dest="author_s"/>
+ -->
 	
    <!-- Above, multiple source fields are copied to the [text] field. 
 	  Another way to map multiple source fields to the same 
