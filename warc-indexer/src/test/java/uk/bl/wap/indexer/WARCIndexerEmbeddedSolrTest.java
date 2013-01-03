@@ -21,6 +21,7 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
@@ -50,7 +51,8 @@ public class WARCIndexerEmbeddedSolrTest {
 	public void setUp() throws Exception {
 		
 		// Note that the following property could be set through JVM level arguments too
-		  System.setProperty("solr.solr.home", "target/test-classes/solr");
+		  System.setProperty("solr.solr.home", "src/main/solr/solr");
+		  System.setProperty("solr.data.dir", "target/test-classes/solr");
 		  CoreContainer.Initializer initializer = new CoreContainer.Initializer();
 		  CoreContainer coreContainer = initializer.initialize();
 		  server = new EmbeddedSolrServer(coreContainer, "");
@@ -66,7 +68,32 @@ public class WARCIndexerEmbeddedSolrTest {
 
 	@Test
 	public void test() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
-		
+		// Fire up a SOLR:
+		SolrInputDocument document = new SolrInputDocument();
+        document.addField("id", "1");
+        document.addField("name", "my name");
+
+        System.out.println("Adding document: "+document);
+        server.add(document);
+        server.commit();
+        System.out.println("Querying for document...");
+
+        SolrParams params = new SolrQuery("*:*");
+        QueryResponse response = server.query(params);
+        assertEquals(1L, response.getResults().getNumFound());
+        assertEquals("1", response.getResults().get(0).get("id"));
+        for( SolrDocument result : response.getResults() ) {
+        	for( String f : result.getFieldNames() ) {
+        		System.out.println(f + " -> " + result.get(f));
+        	}
+        }
+
+        params = new SolrQuery("name:name");
+        response = server.query(params);
+        assertEquals(1L, response.getResults().getNumFound());
+        assertEquals("1", response.getResults().get(0).get("id"));
+
+        //  Now generate some Solr documents from WARCs:
 		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
 		/*
@@ -124,19 +151,6 @@ public class WARCIndexerEmbeddedSolrTest {
 			}
 			System.out.println(" ---- ---- ");
 		}
-
-		// Fire up a SOLR:
-		SolrInputDocument document = new SolrInputDocument();
-        document.addField("id", "1");
-        document.addField("name", "my name");
-
-        server.add(document);
-        server.commit();
-
-        SolrParams params = new SolrQuery("name");
-        QueryResponse response = server.query(params);
-        assertEquals(1L, response.getResults().getNumFound());
-        assertEquals("1", response.getResults().get(0).get("id"));
 
         server.add(docs);
         server.commit();
