@@ -38,6 +38,7 @@ import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
+import org.archive.io.warc.WARCConstants;
 import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
@@ -91,10 +92,16 @@ public class WARCIndexer {
 				solr.doc.setField( SolrFields.HARVEST_YEAR, year );
 			
 			// 
-			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
-			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getDigest() );
+			byte[] md5digest = md5.digest( header.getUrl().getBytes( "UTF-8" ) );
+			String md5hex = new String( Base64.encodeBase64( md5digest ) );
+			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + md5hex);
+			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
+			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
-			String domain = canon.urlStringToKey( header.getUrl() ).split( "/" )[ 0 ];
+			String[] urlParts = canon.urlStringToKey( header.getUrl() ).split( "/" );
+			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].startsWith("index") ) ) 
+				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
+			String domain = urlParts[ 0 ];
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
 

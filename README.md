@@ -19,6 +19,7 @@ Currently, we are refactoring the code, in order to make our current indexes con
 ### TODO ###
 
 * Create command-line tool for extracting or posting SOLR records.
+* Add a test ARC file to go alongside the WARC one.
 * Once warc-indexer stabilised, get the Hadoop version cleaned up and working.
 * Then get WCTEnricher working again.
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.

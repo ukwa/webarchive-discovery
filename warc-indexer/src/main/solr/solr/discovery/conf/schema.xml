@@ -166,14 +166,29 @@
    <!-- wa.bl.uk fields begin -->
    
    <!-- Core fields -->
+   <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
+        that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
+   <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
+   <!-- The url_type is used to distinguish certain URLs, e.g. so they can be 'title level records'.
+        Values are 'slashpage' (for a hosts homepage), or 'embed' ? -->
+   <field name="url_type" type="text_general" indexed="true" stored="true"/>
+   <!-- Length of the content, in bytes: -->
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
+   <!-- The timestamp, same as the harvest_date? Not clear this is needed/useful. -->
    <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
+   <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The harvest/crawl date, as a date -->
    <field name="harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <!-- The harvest/crawl year, for faceting -->
    <field name="harvest_year" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <!-- The domain (or more accurately, the host) for this URL: -->
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
