@@ -4,6 +4,7 @@ public interface SolrFields {
 	public static final String SOLR_ID = "id";
 	public static final String SOLR_URL = "url";
 	public static final String SOLR_DOMAIN = "domain";
+	public static final String PUBLIC_SUFFIX = "public_suffix";
 	public static final String SOLR_DIGEST = "hash";
 	public static final String SOLR_TITLE = "title";
 	public static final String SOLR_SUBJECT = "subject";
@@ -13,6 +14,7 @@ public interface SolrFields {
 	public static final String SOLR_KEYWORDS = "keywords"; 
 	public static final String SOLR_CATEGORY = "category";
 	public static final String SOLR_CONTENT_TYPE = "content_type";
+	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";
@@ -21,4 +23,5 @@ public interface SolrFields {
 	public static final String SOLR_TIKA_METADATA = "tika_metadata";
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String HARVEST_DATE = "harvest_date";
+	public static final String HARVEST_YEAR = "harvest_year";
 }

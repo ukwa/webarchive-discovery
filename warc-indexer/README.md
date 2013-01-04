@@ -1,5 +1,15 @@
+WARC Indexer
+============
+
+This code runs Apache Tika on WARC and ARC records and extracts suitable metadata for indexing.
+
+It is set up to work with Apache Solr, and our schema is provided in src/main/solr. The tests are able to spin-up an embedded Solr instance to verify the configuration and regression-test the indexer at the query level.
+
+It also builds a suitable command-line tool for generating/posting Solr records from web archive files.
+
+
 EntityIndexer
-=============
+-------------
 
 Mostly a collection of fragments and ideas for entity extraction. 
 

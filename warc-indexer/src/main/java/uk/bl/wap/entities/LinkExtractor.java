@@ -125,6 +125,10 @@ public class LinkExtractor {
 		} catch (URISyntaxException e) {
 			return null;
 		}
+		return extractPublicSuffixFromHost(host);
+	}
+	
+    public static String extractPublicSuffixFromHost( String host ) {
 		if( host == null ) return null;
 		// Parse out the public suffix:
 		InternetDomainName domainName;

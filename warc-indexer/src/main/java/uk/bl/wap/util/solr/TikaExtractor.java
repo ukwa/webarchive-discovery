@@ -24,7 +24,7 @@ public class TikaExtractor {
 	private Tika tika;
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
-	private int MAX_TEXT_LENGTH = 10000;
+	private int MAX_TEXT_LENGTH = 1024*1024; // 1MB ~= 1024 * 1KB
 
 	public TikaExtractor() {
 		this( new Configuration() );
@@ -73,7 +73,7 @@ public class TikaExtractor {
 				System.err.println("Metadata: "+m+" -> "+metadata.get(m));
 			}
 			
-			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( "Content-Type" ) );
+			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( Metadata.CONTENT_TYPE ) );
 
 			if( metadata.get( DublinCore.TITLE ) != null )
 				solr.doc.setField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ).trim().replaceAll( "\\p{Cntrl}", "" ) );

@@ -166,13 +166,16 @@
    <!-- wa.bl.uk fields begin -->
    
    <!-- Core fields -->
+   <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <field name="harvest_year" type="tint" indexed="true" stored="true" multiValued="false"/>
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="text_length" type="int" indexed="true" stored="false" multiValued="false"/>
+   <field name="text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
    <!-- Core fields to be removed? -->
    <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
@@ -181,11 +184,11 @@
    <!-- WCT fields -->
    <field name="wct_target_id" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="wct_instance_id" type="int" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_collections" type="string" indexed="true" stored="false" multiValued="true"/>
-   <field name="wct_subjects" type="string" indexed="true" stored="false" multiValued="true"/>
+   <field name="wct_collections" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="wct_subjects" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="wct_description" type="text_general" indexed="true" stored="true"/>
    <field name="wct_title" type="text_general" indexed="true" stored="true"/>
-   <field name="wct_agency" type="string" indexed="true" stored="false" multiValued="false" default="British Library"/>
+   <field name="wct_agency" type="string" indexed="true" stored="true" multiValued="false" default="British Library"/>
    <!-- WCT fields that should no longer use WCT-specific names? -->
 <!--    <field name="wct_domain" type="string" indexed="true" stored="true" multiValued="false"/> -->
 <!--    <field name="wct_url" type="string" indexed="true" stored="true" multiValued="false"/> -->

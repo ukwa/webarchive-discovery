@@ -18,6 +18,7 @@ import org.apache.tika.Tika;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wap.hadoop.WritableArchiveRecord;
+import uk.bl.wap.indexer.WARCIndexer;
 import uk.bl.wap.entities.LinkExtractor;
 
 @SuppressWarnings( { "deprecation" } )
@@ -59,7 +60,7 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		if( !header.getHeaderFields().isEmpty() ) {
 			//newKey = header.getDate() + "/" + header.getUrl();
 			// Reduce this to just the year and the host:
-			String year = extractYear(header.getDate());
+			String year = WARCIndexer.extractYear(header.getDate());
 			//String host = extractHost(header.getUrl());
 			//newKey = year + "/" + host;
 			newKey = year;
@@ -82,42 +83,12 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 			log.error("Could not parse record! "+e);
 			return;
 		}
+		
 		// Pass out the mapped results as in-links by year:
 		for( String destSuffix : destSuffixes ) {
 			output.collect( new Text( newKey+"\t"+destSuffix ), new Text( sourceSuffix ) );			
 		}
 	}
 	
-	/**
-	 * 
-	 * @param timestamp
-	 * @return
-	 */
-	private static String extractYear(String timestamp) {
-		String waybackYear = "unknown-year";
-		String waybackDate = timestamp.replaceAll( "[^0-9]", "" );
-		if( waybackDate != null ) 
-			waybackYear = waybackDate.substring(0,4);
-		return waybackYear;
-	}
-	
-	/**
-	 * 
-	 * @param url
-	 * @return
-	 */
-	private static String extractHost(String url) {
-		String host = "unknown.host";
-		URI uri = null;
-		// Attempt to parse:
-		try {
-			uri = new URI(url,false);
-			// Extract domain:
-			host = uri.getHost();
-		} catch ( Exception e ) {
-			// Return a special hostname if parsing failed:
-			host = "malformed.host";
-		}
-		return host;
-	}
+
 }

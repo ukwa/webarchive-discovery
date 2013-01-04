@@ -17,8 +17,6 @@ Roadmap
 Currently, we are refactoring the code, in order to make our current indexes consistent.
 
 TODO:
-* Create stable Solr config, stablise names of fields, clearly distinguish current and future fields. 
-* Choose a sensible maximum character limit for the extracted text.
 * Create command-line tool for extracting or posting SOLR records.
 * Once warc-indexer stabilised, get the Hadoop version cleaned up and working.
 * Get WCTEnricher working again.

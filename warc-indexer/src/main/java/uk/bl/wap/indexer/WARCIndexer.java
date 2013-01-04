@@ -30,6 +30,7 @@ import javax.xml.transform.stream.StreamSource;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
+import org.apache.commons.httpclient.URI;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.tika.io.TikaInputStream;
 import org.archive.io.ArchiveReader;
@@ -40,6 +41,8 @@ import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+
+import uk.bl.wap.entities.LinkExtractor;
 import uk.bl.wap.util.WARCRecordUtils;
 import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.TikaExtractor;
@@ -83,12 +86,17 @@ public class WARCIndexer {
 			// Date
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
+			String year = extractYear(header.getDate());
+			if( !"0000".equals(year))
+				solr.doc.setField( SolrFields.HARVEST_YEAR, year );
 			
 			// 
 			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getDigest() );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
-			solr.doc.setField( SolrFields.SOLR_DOMAIN, canon.urlStringToKey( header.getUrl() ).split( "/" )[ 0 ] );
+			String domain = canon.urlStringToKey( header.getUrl() ).split( "/" )[ 0 ];
+			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
+			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
 
 			try {
 				solr.doc.setField( SolrFields.SOLR_TIMESTAMP, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
@@ -145,7 +153,7 @@ public class WARCIndexer {
 			// Pass on to other extractors as required, resetting the stream before each:
 			//tikainput.reset();
 			// Entropy, compressibility, fussy hashes, etc.
-			// JSoup link extractor for (x)html
+			// JSoup link extractor for (x)html, deposit in 'links' field.
 			
 			// These extractors don't need to re-read the payload:
 			// Postcode Extractor (based on text extracted by Tika)
@@ -154,6 +162,39 @@ public class WARCIndexer {
 			
 		}
 		return solr;
+	}
+	
+	/**
+	 * 
+	 * @param timestamp
+	 * @return
+	 */
+	public static String extractYear(String timestamp) {
+		String waybackYear = "unknown-year";
+		String waybackDate = timestamp.replaceAll( "[^0-9]", "" );
+		if( waybackDate != null ) 
+			waybackYear = waybackDate.substring(0,4);
+		return waybackYear;
+	}
+	
+	/**
+	 * 
+	 * @param url
+	 * @return
+	 */
+	public static String extractHost(String url) {
+		String host = "unknown.host";
+		URI uri = null;
+		// Attempt to parse:
+		try {
+			uri = new URI(url,false);
+			// Extract domain:
+			host = uri.getHost();
+		} catch ( Exception e ) {
+			// Return a special hostname if parsing failed:
+			host = "malformed.host";
+		}
+		return host;
 	}
 	
 	/**
