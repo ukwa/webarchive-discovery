@@ -1,31 +1,19 @@
 package uk.bl.wap.util.solr;
 
-import java.io.ByteArrayOutputStream;
 import java.io.FilterWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.io.OutputStream;
 import java.io.StringWriter;
 import java.io.Writer;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.TransformerConfigurationException;
-import javax.xml.transform.sax.SAXTransformerFactory;
-import javax.xml.transform.sax.TransformerHandler;
-import javax.xml.transform.stream.StreamResult;
-
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
-import org.apache.tika.config.TikaConfig;
-import org.apache.tika.detect.Detector;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.apache.tika.sax.TextContentHandler;
 import org.apache.tika.sax.ToTextContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
@@ -34,6 +22,9 @@ public class TikaExtractor {
 	private long parseTimeout;
 	private String[] excludes;
 	private Tika tika;
+	
+	/** Maximum number of characters of text to pull out of any given resource: */
+	private int MAX_TEXT_LENGTH = 10000;
 
 	public TikaExtractor() {
 		this( new Configuration() );
@@ -45,29 +36,20 @@ public class TikaExtractor {
 		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
 	}
 
-	public WritableSolrRecord extract( InputStream payload ) throws IOException {
-		WritableSolrRecord solr = new WritableSolrRecord();
-
-		InputStream tikainput = TikaInputStream.get( payload );//, metadata );
-		String detected = tika.detect( tikainput );
-		System.err.println("Tika Detected: "+detected);
+	public WritableSolrRecord extract( WritableSolrRecord solr, InputStream is, String url ) throws IOException {
+		
+		TikaInputStream tikainput = TikaInputStream.get(is);
+		// Also pass URL as metadata to allow extension hints to work:
+		Metadata metadata = new Metadata();
+		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
+		String detected = tika.detect( tikainput, metadata );
+		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected ) ) {
 			return solr;
 		}
 
-		ParseContext context;
-		Detector detector;
-		AutoDetectParser parser;
-		Metadata metadata = new Metadata();
+		ParseContext context = new ParseContext();
 		StringWriter content = new StringWriter();
-		context = new ParseContext();
-		try {
-			detector = ( new TikaConfig() ).getMimeRepository();
-		} catch( Exception i ) {
-			System.err.println("Exception: "+i);
-			return solr;
-
-		}
 
 		try {
 			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
@@ -135,7 +117,7 @@ public class TikaExtractor {
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), 1000 );
+		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), MAX_TEXT_LENGTH );
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter

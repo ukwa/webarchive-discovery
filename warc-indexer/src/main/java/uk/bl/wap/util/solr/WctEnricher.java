@@ -3,6 +3,8 @@ package uk.bl.wap.util.solr;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
@@ -18,14 +20,11 @@ public class WctEnricher {
 	private XMLInputFactory inputFactory = null;
 	private XMLStreamReader xmlReader = null;
 
-	public WctEnricher( String wctTiId ) {
+	public WctEnricher( String archiveName ) {
+		String wctID = this.getWctTi( archiveName );
 		solr = new WritableSolrRecord();
-		solr.doc.addField( WctFields.WCT_INSTANCE_ID, wctTiId );
+		solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
 		getWctMetadata( solr );
-	}
-
-	public WctEnricher() {
-		solr = new WritableSolrRecord();
 	}
 
 	public SolrInputDocument getSolr() {
@@ -33,6 +32,7 @@ public class WctEnricher {
 	}
 
 	private void getWctMetadata( WritableSolrRecord solr ) {
+		
 		ClientResource cr = new ClientResource( WctRestletUrl + this.solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
 		try {
 			this.read( cr.get().getStream() );
@@ -87,4 +87,15 @@ public class WctEnricher {
 			this.solr.doc.addField( WctFields.WCT_SUBJECTS, value );
 		}
 	}
+	
+	private String getWctTi( String warcName ) {
+		Pattern pattern = Pattern.compile( "^[A-Z]+-\\b([0-9]+)\\b.*\\.w?arc(\\.gz)?$" );
+		Matcher matcher = pattern.matcher( warcName );
+		if( matcher.matches() ) {
+			return matcher.group( 1 );
+		}
+		return "";
+	}	
+
+
 }

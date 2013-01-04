@@ -57,7 +57,7 @@
 		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
-			<version>1.2</version>
+			<version>${tika.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.jsoup</groupId>
@@ -72,7 +72,7 @@
 		<dependency>
 		   <groupId>org.apache.tika</groupId>
 		   <artifactId>tika-parsers</artifactId>
-		   <version>1.2</version>
+		   <version>${tika.version}</version>
 		</dependency>
 		<dependency>
 		   <groupId>junit</groupId>
@@ -83,13 +83,13 @@
       <dependency>
          <groupId>org.apache.solr</groupId>
          <artifactId>solr-solrj</artifactId>
-         <version>4.0.0</version>
+         <version>${solr.version}</version>
       </dependency>
       <!-- dependencies needed for Solr integration test-->
         <dependency>
             <groupId>org.apache.solr</groupId>
             <artifactId>solr-core</artifactId>
-            <version>4.0.0</version>
+            <version>${solr.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -104,7 +104,7 @@
             <version>2.5</version>
             <scope>test</scope>
         </dependency>
-      </dependencies>
+  </dependencies>
   <repositories>
   <repository>
             <id>weka</id>

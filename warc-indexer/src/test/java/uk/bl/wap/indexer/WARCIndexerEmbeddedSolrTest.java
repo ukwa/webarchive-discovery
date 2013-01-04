@@ -52,10 +52,12 @@ public class WARCIndexerEmbeddedSolrTest {
 		
 		// Note that the following property could be set through JVM level arguments too
 		  System.setProperty("solr.solr.home", "src/main/solr/solr");
-		  System.setProperty("solr.data.dir", "target/test-classes/solr");
+		  System.setProperty("solr.data.dir", "target/solr-test-home");
 		  CoreContainer.Initializer initializer = new CoreContainer.Initializer();
 		  CoreContainer coreContainer = initializer.initialize();
 		  server = new EmbeddedSolrServer(coreContainer, "");
+		  // Remove any items from previous executions:
+		  server.deleteByQuery("*:*");
 	}
 
 	/**
@@ -76,23 +78,13 @@ public class WARCIndexerEmbeddedSolrTest {
         System.out.println("Adding document: "+document);
         server.add(document);
         server.commit();
+        
         System.out.println("Querying for document...");
-
-        SolrParams params = new SolrQuery("*:*");
+        SolrParams params = new SolrQuery("name:name");
         QueryResponse response = server.query(params);
         assertEquals(1L, response.getResults().getNumFound());
         assertEquals("1", response.getResults().get(0).get("id"));
-        for( SolrDocument result : response.getResults() ) {
-        	for( String f : result.getFieldNames() ) {
-        		System.out.println(f + " -> " + result.get(f));
-        	}
-        }
-
-        params = new SolrQuery("name:name");
-        response = server.query(params);
-        assertEquals(1L, response.getResults().getNumFound());
-        assertEquals("1", response.getResults().get(0).get("id"));
-
+        
         //  Now generate some Solr documents from WARCs:
 		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
@@ -154,8 +146,17 @@ public class WARCIndexerEmbeddedSolrTest {
 
         server.add(docs);
         server.commit();
-        
-		fail("Not yet implemented");
+
+        // Now query:
+        params = new SolrQuery("content_type:image*");
+        response = server.query(params);
+        for( SolrDocument result : response.getResults() ) {
+        	for( String f : result.getFieldNames() ) {
+        		System.out.println(f + " -> " + result.get(f));
+        	}
+        }
+        assertEquals(21L, response.getResults().getNumFound());
+
 	}
 
 }

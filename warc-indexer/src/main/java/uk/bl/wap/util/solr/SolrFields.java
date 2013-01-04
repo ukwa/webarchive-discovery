@@ -2,8 +2,8 @@ package uk.bl.wap.util.solr;
 
 public interface SolrFields {
 	public static final String SOLR_ID = "id";
-	public static final String SOLR_URL = "wct_url";
-	public static final String SOLR_DOMAIN = "wct_domain";
+	public static final String SOLR_URL = "url";
+	public static final String SOLR_DOMAIN = "domain";
 	public static final String SOLR_DIGEST = "hash";
 	public static final String SOLR_TITLE = "title";
 	public static final String SOLR_SUBJECT = "subject";
@@ -19,4 +19,6 @@ public interface SolrFields {
 	public static final String SOLR_EXTRACTED_TEXT = "text";
 	public static final String SOLR_EXTRACTED_TEXT_LENGTH = "text_length";
 	public static final String SOLR_TIKA_METADATA = "tika_metadata";
+	public static final String WAYBACK_DATE = "wayback_date";
+	public static final String HARVEST_DATE = "harvest_date";
 }

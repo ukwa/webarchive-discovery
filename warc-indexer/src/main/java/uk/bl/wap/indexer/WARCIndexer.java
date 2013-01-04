@@ -6,7 +6,9 @@ package uk.bl.wap.indexer;
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
 
+import java.io.BufferedInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.security.MessageDigest;
@@ -29,6 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.tika.io.TikaInputStream;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -60,7 +63,7 @@ public class WARCIndexer {
 
 	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
-		WritableSolrRecord solr = null;
+		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
@@ -74,44 +77,13 @@ public class WARCIndexer {
 			}
 			
 			if( ! record.hasContentHeaders() ) return null;
-
-			String referrer = null;
-			if( record instanceof WARCRecord ) {
-				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
-				System.out.println("Status Code: "+firstLine[1]);
-				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
-				for( Header h : headers ) {
-					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					if( h.getName().equals("Referer"))
-						referrer = h.getValue();
-				}
-				// Parse payload using Tika:
-				solr = tika.extract( WARCRecordUtils.getPayload(record) );
 			
-			} else if ( record instanceof ARCRecord ) {
-				ARCRecord arcr = (ARCRecord) record;
-				System.out.println("Status Code: "+arcr.getStatusCode());				
-				for( Header h : arcr.getHttpHeaders() ) {
-					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					if( h.getName().equals("Referer"))
-						referrer = h.getValue();
-				}
-				// Parse payload using Tika:
-				arcr.skipHttpHeader();
-				solr = tika.extract(arcr);
-				
-			} else {
-				System.err.println("FAIL!");
-			}
+			// Basic headers
 			
 			// Date
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
-			solr.doc.setField( WctFields.WCT_WAYBACK_DATE, waybackDate );
+			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			
-			// WCT ID if any:
-			String wctID = this.getWctTi( archiveName );
-			solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
-
 			// 
 			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + new String( Base64.encodeBase64( md5.digest( header.getUrl().getBytes( "UTF-8" ) ) ) ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getDigest() );
@@ -123,22 +95,69 @@ public class WARCIndexer {
 			} catch( ParseException p ) {
 				p.printStackTrace();
 			}
+			
+			// Parse body:
+
+			String referrer = null;
+			InputStream tikainput = null;
+			String statusCode = null;
+			if( record instanceof WARCRecord ) {
+				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
+				statusCode = firstLine[1];
+				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
+				for( Header h : headers ) {
+					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals("Referer"))
+						referrer = h.getValue();
+				}
+				// Parse payload using Tika:
+				// No need for this, as the headers have already been read from the InputStream:
+				//solr = tika.extract( WARCRecordUtils.getPayload(record) );
+				tikainput = record;//, metadata );
+			
+			} else if ( record instanceof ARCRecord ) {
+				ARCRecord arcr = (ARCRecord) record;
+				statusCode = ""+arcr.getStatusCode();
+				for( Header h : arcr.getHttpHeaders() ) {
+					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals("Referer"))
+						referrer = h.getValue();
+				}
+				// Parse payload using Tika:
+				arcr.skipHttpHeader();
+				tikainput = arcr;
+				
+			} else {
+				System.err.println("FAIL!");
+				return solr;
+			}
+			
+			// Fields from Http headers:
 			if( referrer != null )
 				solr.doc.setField( SolrFields.SOLR_REFERRER_URI, referrer );
+			System.out.println("Status Code: "+statusCode);
+			
+			// Characterise the payload:
+			
+			// Mark the start of the payload, and then run Tika on it:
+			tikainput = new BufferedInputStream( tikainput );
+			tikainput.mark((int) header.getLength());
+			solr = tika.extract( solr, tikainput, header.getUrl() );
+			
+			// Pass on to other extractors as required, resetting the stream before each:
+			//tikainput.reset();
+			// Entropy, compressibility, fussy hashes, etc.
+			// JSoup link extractor for (x)html
+			
+			// These extractors don't need to re-read the payload:
+			// Postcode Extractor (based on text extracted by Tika)
+			// Named entity detection
+			// WctEnricher, currently invoked in the reduce stage to lower query hits.
+			
 		}
 		return solr;
 	}
 	
-	private String getWctTi( String warcName ) {
-		Pattern pattern = Pattern.compile( "^[A-Z]+-\\b([0-9]+)\\b.*\\.w?arc(\\.gz)?$" );
-		Matcher matcher = pattern.matcher( warcName );
-		if( matcher.matches() ) {
-			return matcher.group( 1 );
-		}
-		return "";
-	}	
-
-
 	/**
 	 * 
 	 * @param args

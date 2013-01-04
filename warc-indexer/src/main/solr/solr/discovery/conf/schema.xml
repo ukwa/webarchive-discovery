@@ -164,62 +164,38 @@
      -->
      
    <!-- wa.bl.uk fields begin -->
-   <!-- Selective -->
-<!--    <field name="id" type="string" indexed="true" stored="true" required="true" />  -->
-   <field name="spell" type="spell" indexed="true" stored="false" multiValued="true"/>
-<!--    <field name="title" type="text_en" indexed="true" stored="true" multiValued="true"/> -->
-<!--    <field name="subject" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="comments" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="author" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="description" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="keywords" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="category" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="content_type" type="string" indexed="true" stored="true" multiValued="false"/> -->
+   
+   <!-- Core fields -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
-<!--    <field name="last_modified" type="date" indexed="true" stored="true"/> -->
    <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
-   <!-- wct fields -->
+   <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="text_length" type="int" indexed="true" stored="false" multiValued="false"/>
    <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
+   <!-- Core fields to be removed? -->
+   <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
+   <field name="text_ns" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   
+   <!-- WCT fields -->
    <field name="wct_target_id" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="wct_instance_id" type="int" indexed="true" stored="true" multiValued="false"/>
    <field name="wct_collections" type="string" indexed="true" stored="false" multiValued="true"/>
    <field name="wct_subjects" type="string" indexed="true" stored="false" multiValued="true"/>
    <field name="wct_description" type="text_general" indexed="true" stored="true"/>
    <field name="wct_title" type="text_general" indexed="true" stored="true"/>
-   <field name="wct_url" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="wct_agency" type="string" indexed="true" stored="false" multiValued="false" default="British Library"/>
+   <!-- WCT fields that should no longer use WCT-specific names? -->
+<!--    <field name="wct_domain" type="string" indexed="true" stored="true" multiValued="false"/> -->
+<!--    <field name="wct_url" type="string" indexed="true" stored="true" multiValued="false"/> -->
+<!--    <field name="wct_wayback_date" type="string" indexed="true" stored="true" multiValued="false"/> -->
+<!--    <field name="wct_harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/> -->
 
-<!--    <field name="text" type="text_en" indexed="true" stored="true" multiValued="true" termPositions="on" termVectors="on" termOffsets="on"/> -->
-   
-   <!-- IA -->
-<!--    <field name="id" type="string" indexed="true" stored="true" required="true" />  -->
-<!--    <field name="title" type="text_general" indexed="true" stored="true" multiValued="true"/> -->
-<!--    <field name="subject" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="description" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="comments" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="author" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="keywords" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="category" type="text_general" indexed="true" stored="true"/> -->
-<!--    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/> -->
-<!--    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="true"/> -->
-<!--    <field name="last_modified" type="date" indexed="true" stored="true"/> -->
-<!--    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/> -->
-
-<!--    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/> -->
-   <field name="ssdeep_hash" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="ia_url" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
-   <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
-<!--    <field name="text_length" type="int" indexed="true" stored="false" multiValued="false"/> -->
-<!--    <field name="text" type="text_en" indexed="true" stored="false" multiValued="true" termPositions="on" termVectors="on" termOffsets="on"/> -->
-
-   <field name="text_ns" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   <!-- Future fields -->
+   <field name="ssdeep_hash_block_size" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="ssdeep_hash_short" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="ssdeep_hash_long" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- wa.bl.uk fields end -->
 
@@ -301,11 +277,11 @@
         or to add multiple fields to the same field for easier/faster searching.  -->
 
    <!-- wa.bl.uk copies begin -->
-   <!-- Selective -->
-   <copyField source="title" dest="text"/>
-   <copyField source="text" dest="spell"/>
-   <!-- IA -->
-   <copyField source="text" dest="text_ns"/>
+   <!-- Metadata fields to add to default search: -->
+   <copyField source="title" dest="text"/> <!-- Selective -->
+   <!-- Old fields to remove? -->
+   <copyField source="text" dest="spell"/> <!-- Selective -->
+   <copyField source="text" dest="text_ns"/> <!-- IA -->
    <!-- wa.bl.uk end begin -->
 
 <!-- 
@@ -350,6 +326,30 @@
    <!-- <copyField source="name" dest="alphaNameSort"/> -->
  
   <types>
+   <!-- wa.bl.uk fieldTypes begin -->
+   <fieldType name="textSpell" class="solr.TextField"
+      positionIncrementGap="100">
+      <analyzer type="index">
+         <tokenizer class="solr.StandardTokenizerFactory" />
+         <filter class="solr.StopFilterFactory" ignoreCase="true"
+            words="stopwords.txt" />
+         <filter class="solr.StandardFilterFactory" />
+         <filter class="solr.LowerCaseFilterFactory" />
+         <filter class="solr.RemoveDuplicatesTokenFilterFactory" />
+      </analyzer>
+      <analyzer type="query">
+         <tokenizer class="solr.StandardTokenizerFactory" />
+         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt"
+            ignoreCase="true" expand="true" />
+         <filter class="solr.StopFilterFactory" ignoreCase="true"
+            words="stopwords.txt" />
+         <filter class="solr.StandardFilterFactory" />
+         <filter class="solr.LowerCaseFilterFactory" />
+         <filter class="solr.RemoveDuplicatesTokenFilterFactory" />
+      </analyzer>
+   </fieldType>
+   <!-- wa.bl.uk fieldTypes end -->  
+  
     <!-- field type definitions. The "name" attribute is
        just a label to be used by field definitions.  The "class"
        attribute and any other attributes determine the real
@@ -1165,31 +1165,7 @@
         <filter class="solr.SnowballPorterFilterFactory" language="Turkish"/>
       </analyzer>
     </fieldType>
-
-   <!-- wa.bl.uk fieldTypes begin -->
-   <fieldType name="spell" class="solr.TextField"
-      positionIncrementGap="100">
-      <analyzer type="index">
-         <tokenizer class="solr.StandardTokenizerFactory" />
-         <filter class="solr.StopFilterFactory" ignoreCase="true"
-            words="stopwords.txt" />
-         <filter class="solr.StandardFilterFactory" />
-         <filter class="solr.LowerCaseFilterFactory" />
-         <filter class="solr.RemoveDuplicatesTokenFilterFactory" />
-      </analyzer>
-      <analyzer type="query">
-         <tokenizer class="solr.StandardTokenizerFactory" />
-         <filter class="solr.SynonymFilterFactory" synonyms="synonyms.txt"
-            ignoreCase="true" expand="true" />
-         <filter class="solr.StopFilterFactory" ignoreCase="true"
-            words="stopwords.txt" />
-         <filter class="solr.StandardFilterFactory" />
-         <filter class="solr.LowerCaseFilterFactory" />
-         <filter class="solr.RemoveDuplicatesTokenFilterFactory" />
-      </analyzer>
-   </fieldType>
-   <!-- wa.bl.uk fieldTypes end -->
-   
+    
  </types>
   
   <!-- Similarity is the scoring routine for each document vs. a query.
