@@ -156,6 +156,8 @@ public class WARCIndexer {
 			tikainput = new BufferedInputStream( tikainput );
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
+			// Derive normalised/simplified content type:
+			processContentType(solr, header);
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			//tikainput.reset();
@@ -203,6 +205,44 @@ public class WARCIndexer {
 		}
 		return host;
 	}
+	
+	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header ) {
+		StringBuilder mime = new StringBuilder();
+		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
+		if( mime.toString().isEmpty() ) {
+			if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
+				mime.append( ( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) ) );
+			} else {
+				mime.append( header.getMimetype() );
+			}
+		}
+		
+		// Strip parameters out of main type field:
+		solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, mime.toString() );
+		solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, mime.toString().replaceAll( ";.*$", "" ) );
+
+		// Also add a more general, simplified type, as appropriate:
+		if( mime.toString().matches( "^(?:image).*$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
+		} else if( mime.toString().matches( "^(?:(audio|video)).*$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
+		} else if( mime.toString().matches( "^.*htm.*$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
+		} else if( mime.toString().matches( "^.*pdf$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
+		} else if( mime.toString().matches( "^.*word$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
+		} else if( mime.toString().matches( "^.*excel$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
+		} else if( mime.toString().matches( "^.*powerpoint$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
+		} else if( mime.toString().matches( "^text/plain$" ) ) {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
+		} else {
+			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
+		}		
+	}
+
 	
 	/**
 	 * 

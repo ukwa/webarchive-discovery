@@ -20,8 +20,9 @@ public interface SolrFields {
 	public static final String SOLR_KEYWORDS = "keywords"; 
 	public static final String SOLR_CATEGORY = "category";
 	public static final String SOLR_CONTENT_TYPE = "content_type";
-	public static final String CONTENT_LENGTH = "content_length";
+	public static final String FULL_CONTENT_TYPE = "content_type_full";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
+	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";
 	public static final String SOLR_EXTRACTED_TEXT = "text";
