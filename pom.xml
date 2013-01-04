@@ -10,6 +10,10 @@
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
    </modules>
+   <properties>
+     <solr.version>4.0.0</solr.version>
+     <tika.version>1.2</tika.version>
+   </properties>
 	<build>
 		<plugins>
 			<plugin>

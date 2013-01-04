@@ -78,10 +78,10 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 	@Override
 	public void map( Text key, WritableArchiveRecord value, OutputCollector<Text, WritableSolrRecord> output, Reporter reporter ) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
-		WritableSolrRecord solr = null;
+		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			solr = tika.extract( value.getRecord() );
+			solr = tika.extract( solr, value.getRecord(), header.getUrl() );
 
 			String wctID = this.getWctTi( key.toString() );
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );

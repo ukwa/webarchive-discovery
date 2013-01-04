@@ -7,11 +7,11 @@ import java.util.Collection;
 import java.util.Iterator;
 
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CommonsHttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-public class QueueingHttpSolrServer extends CommonsHttpSolrServer {
+public class QueueingHttpSolrServer extends HttpSolrServer {
 	private static final long serialVersionUID = 2827955704705820516L;
 	private int queueSize = 50;
 	Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
