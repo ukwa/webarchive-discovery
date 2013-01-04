@@ -3,6 +3,17 @@ WARC Discovery
 
 These are the components we use to index our WARC files and make the contents discoverable.
 
+Structure
+---------
+
+ * warc-indexer: The core information extraction code is here, along with the Solr schema.
+ * warc-solr-test-server: A skeleton project that can be used to fire up a test Solr server using our schema.
+ * warc-hadoop-recordreaders: The generic code that parses WARC files for map-reduce jobs.
+ * warc-hadoop-indexer: The actual map-reduce tasks, combining the record readers and the indexer to run large scale indexing jobs.
+
+Roadmap
+-------
+
 Currently, we are refactoring the code, in order to make our current indexes consistent.
 
 TODO:
