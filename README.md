@@ -16,19 +16,19 @@ Roadmap
 
 Currently, we are refactoring the code, in order to make our current indexes consistent.
 
-TODO:
+### TODO ###
+
 * Create command-line tool for extracting or posting SOLR records.
 * Once warc-indexer stabilised, get the Hadoop version cleaned up and working.
-* Get WCTEnricher working again.
+* Then get WCTEnricher working again.
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
 * Facets like log(size), or small, medium, large, to boost longer texts
+* Move issues to GitHub issue tracker.
 
 Once the basic features are tested and working, we start to explore new, richer indexing techniques.
 
-* Explicit proximity searching UI or simpler syntax (as well as raw query interface?)
-* SPT (nominations part at least) 
+### Ideas ###
 
-Ideas:
 * Deadness (Active, Empty, Gone)
 * Fussy hashes of the text.
 * Compression ratio/entropy or other info content measure?
