@@ -110,10 +110,9 @@ public class WARCIndexer {
 					if( h.getName().equals("Referer"))
 						referrer = h.getValue();
 				}
-				// Parse payload using Tika:
 				// No need for this, as the headers have already been read from the InputStream:
-				//solr = tika.extract( WARCRecordUtils.getPayload(record) );
-				tikainput = record;//, metadata );
+				// WARCRecordUtils.getPayload(record);
+				tikainput = record;
 			
 			} else if ( record instanceof ARCRecord ) {
 				ARCRecord arcr = (ARCRecord) record;
@@ -123,7 +122,6 @@ public class WARCIndexer {
 					if( h.getName().equals("Referer"))
 						referrer = h.getValue();
 				}
-				// Parse payload using Tika:
 				arcr.skipHttpHeader();
 				tikainput = arcr;
 				
@@ -137,7 +135,7 @@ public class WARCIndexer {
 				solr.doc.setField( SolrFields.SOLR_REFERRER_URI, referrer );
 			System.out.println("Status Code: "+statusCode);
 			
-			// Characterise the payload:
+			// Parse payload using Tika:
 			
 			// Mark the start of the payload, and then run Tika on it:
 			tikainput = new BufferedInputStream( tikainput );
