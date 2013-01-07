@@ -42,6 +42,10 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
  */
 public class WARCIndexerEmbeddedSolrTest {
 
+	private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+	//private String testWarc = "src/test/resources/variations.warc.gz";
+	//private String testWarc = "src/test/resources/TEST.arc.gz";
+	
 	private EmbeddedSolrServer server;
 
 	/**
@@ -131,17 +135,17 @@ public class WARCIndexerEmbeddedSolrTest {
 		 */
 		
 		WARCIndexer windex = new WARCIndexer();
-		ArchiveReader reader = ArchiveReaderFactory.get( new File("src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz"));
+		ArchiveReader reader = ArchiveReaderFactory.get( new File(testWarc));
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
 			WritableSolrRecord doc = windex.extract("",rec);
 			if( doc != null ) {
-				WARCIndexer.prettyPrintXML(ClientUtils.toXML(doc.doc));
+				//WARCIndexer.prettyPrintXML(ClientUtils.toXML(doc.doc));
 				//break;
 				docs.add(doc.doc);
 			}
-			System.out.println(" ---- ---- ");
+			//System.out.println(" ---- ---- ");
 		}
 
         server.add(docs);
@@ -149,6 +153,7 @@ public class WARCIndexerEmbeddedSolrTest {
 
         // Now query:
         params = new SolrQuery("content_type:image*");
+        //params = new SolrQuery("generator:*");
         response = server.query(params);
         for( SolrDocument result : response.getResults() ) {
         	for( String f : result.getFieldNames() ) {

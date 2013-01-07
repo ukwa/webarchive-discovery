@@ -45,4 +45,32 @@
 			<layout>default</layout>
 		</repository>
 	</repositories>
+	<dependencies>
+	   <dependency>
+	      <groupId>org.archive.wayback</groupId>
+	      <artifactId>wayback-core</artifactId>
+	      <version>1.7.1-SNAPSHOT</version>
+	      <exclusions>
+	         <exclusion>
+	            <artifactId>poi-scratchpad</artifactId>
+	            <groupId>poi</groupId>
+	         </exclusion>
+	         <exclusion>
+	            <artifactId>poi</artifactId>
+	            <groupId>poi</groupId>
+	         </exclusion>
+	      </exclusions>
+	   </dependency>
+	   <dependency>
+	      <groupId>org.apache.solr</groupId>
+	      <artifactId>solr-core</artifactId>
+	      <version>${solr.version}</version>
+	      <exclusions>
+	         <exclusion>
+	            <artifactId>guava</artifactId>
+	            <groupId>com.google.guava</groupId>
+	         </exclusion>
+	      </exclusions>
+	   </dependency>
+	</dependencies>
 </project>

@@ -12,6 +12,7 @@ import java.util.Iterator;
 import org.apache.hadoop.io.Writable;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
+import org.apache.tika.metadata.DublinCore;
 
 public class WritableSolrRecord implements Writable {
 	public SolrInputDocument doc = new SolrInputDocument();
@@ -78,5 +79,16 @@ public class WritableSolrRecord implements Writable {
 		}
 		sb.append( "</doc>" );
 		return sb.toString();
+	}
+
+	/**
+	 * Add any non-null string properties, stripping control characters if present.
+	 * 
+	 * @param solr_property
+	 * @param value
+	 */
+	public void addField(String solr_property, String value) {
+		if( value != null )
+			doc.addField( solr_property, value.trim().replaceAll( "\\p{Cntrl}", "" ) );		
 	}
 }

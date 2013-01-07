@@ -19,9 +19,15 @@ public interface SolrFields {
 	public static final String SOLR_AUTHOR = "author";
 	public static final String SOLR_KEYWORDS = "keywords"; 
 	public static final String SOLR_CATEGORY = "category";
+	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String FULL_CONTENT_TYPE = "content_type_full";
+	public static final String CONTENT_TYPE_TIKA = "content_type_tika";
+	public static final String CONTENT_TYPE_DROID = "content_type_droid";
+	public static final String CONTENT_TYPE_SERVED = "content_type_served";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
+	public static final String GENERATOR = "generator";
+	
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";

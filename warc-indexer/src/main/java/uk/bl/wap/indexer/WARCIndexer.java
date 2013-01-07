@@ -31,6 +31,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.URI;
+import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.tika.io.TikaInputStream;
 import org.archive.io.ArchiveReader;
@@ -77,19 +78,25 @@ public class WARCIndexer {
 			if( header.getUrl() == null ) return null;
 			
 			for( String h : header.getHeaderFields().keySet()) {
-				System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
+				//System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
 			}
 			
 			if( ! record.hasContentHeaders() ) return null;
 			
 			// Basic headers
 			
-			// Date
+			// Dates
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			String year = extractYear(header.getDate());
 			if( !"0000".equals(year))
 				solr.doc.setField( SolrFields.HARVEST_YEAR, year );
+			try {
+				solr.doc.setField( SolrFields.HARVEST_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
+			} catch( ParseException p ) {
+				p.printStackTrace();
+			}
+			
 			
 			// 
 			byte[] md5digest = md5.digest( header.getUrl().getBytes( "UTF-8" ) );
@@ -105,25 +112,22 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
 
-			try {
-				solr.doc.setField( SolrFields.SOLR_TIMESTAMP, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
-			} catch( ParseException p ) {
-				p.printStackTrace();
-			}
-			
 			// Parse body:
 
 			String referrer = null;
 			InputStream tikainput = null;
 			String statusCode = null;
+			String serverType = null;
 			if( record instanceof WARCRecord ) {
 				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
 				statusCode = firstLine[1];
 				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
 				for( Header h : headers ) {
-					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					if( h.getName().equals("Referer"))
+					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals(HttpHeaders.REFERER))
 						referrer = h.getValue();
+					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
+						serverType = h.getValue();
 				}
 				// No need for this, as the headers have already been read from the InputStream:
 				// WARCRecordUtils.getPayload(record);
@@ -133,9 +137,11 @@ public class WARCIndexer {
 				ARCRecord arcr = (ARCRecord) record;
 				statusCode = ""+arcr.getStatusCode();
 				for( Header h : arcr.getHttpHeaders() ) {
-					System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					if( h.getName().equals("Referer"))
+					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					if( h.getName().equals(HttpHeaders.REFERER))
 						referrer = h.getValue();
+					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
+						serverType = h.getValue();
 				}
 				arcr.skipHttpHeader();
 				tikainput = arcr;
@@ -148,7 +154,12 @@ public class WARCIndexer {
 			// Fields from Http headers:
 			if( referrer != null )
 				solr.doc.setField( SolrFields.SOLR_REFERRER_URI, referrer );
-			System.out.println("Status Code: "+statusCode);
+			// Get the type from the server
+			if( serverType != null)
+				solr.addField(SolrFields.CONTENT_TYPE_SERVED, serverType);			
+			
+			// Skip recording non-content URLs (i.e. 2xx responses only please):
+			if( statusCode == null || !statusCode.startsWith("2") ) return null;
 			
 			// Parse payload using Tika:
 			
@@ -222,13 +233,14 @@ public class WARCIndexer {
 		solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, mime.toString().replaceAll( ";.*$", "" ) );
 
 		// Also add a more general, simplified type, as appropriate:
-		if( mime.toString().matches( "^(?:image).*$" ) ) {
+		// FIXME clean up this messy code:
+		if( mime.toString().matches( "^image/.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
-		} else if( mime.toString().matches( "^(?:(audio|video)).*$" ) ) {
+		} else if( mime.toString().matches( "^(audio|video)/.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
-		} else if( mime.toString().matches( "^.*htm.*$" ) ) {
+		} else if( mime.toString().matches( "^text/htm.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
-		} else if( mime.toString().matches( "^.*pdf$" ) ) {
+		} else if( mime.toString().matches( "^application/pdf.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
 		} else if( mime.toString().matches( "^.*word$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
@@ -236,7 +248,7 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
 		} else if( mime.toString().matches( "^.*powerpoint$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
-		} else if( mime.toString().matches( "^text/plain$" ) ) {
+		} else if( mime.toString().matches( "^text/plain.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
 		} else {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );

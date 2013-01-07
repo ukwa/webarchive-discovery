@@ -45,16 +45,6 @@
             <version>3.5.7</version>
         </dependency>
 		<dependency>
-			<groupId>org.archive.wayback</groupId>
-			<artifactId>wayback-core</artifactId>
-			<version>1.7.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
-			<groupId>org.archive.heritrix</groupId>
-			<artifactId>heritrix-commons</artifactId>
-			<version>3.1.1</version>
-		</dependency>
-		<dependency>
 			<groupId>org.apache.tika</groupId>
 			<artifactId>tika-core</artifactId>
 			<version>${tika.version}</version>
@@ -87,12 +77,6 @@
       </dependency>
       <!-- dependencies needed for Solr integration test-->
         <dependency>
-            <groupId>org.apache.solr</groupId>
-            <artifactId>solr-core</artifactId>
-            <version>${solr.version}</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-simple</artifactId>
             <version>1.6.1</version>
@@ -103,6 +87,11 @@
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>test</scope>
+        </dependency>
+        <dependency>
+           <groupId>eu.scape-project.nanite</groupId>
+           <artifactId>nanite-ext</artifactId>
+           <version>0.0.1-SNAPSHOT</version>
         </dependency>
   </dependencies>
   <repositories>

@@ -6,7 +6,10 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.Arrays;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
@@ -18,24 +21,67 @@ import org.apache.tika.sax.ToTextContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
 
+
+/**
+ * c.f. uk.bl.wap.tika.TikaDeepIdentifier
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 public class TikaExtractor {
+	
+	private static Log log = LogFactory.getLog(TikaExtractor.class);
+	
+	/** Time to wait for Tika to complete before giving up: */
 	private long parseTimeout;
+	
+	/**
+	 *  MIME types to exclude from parsing:
+	 *  e.g.
+# Javascript/CSS excluded as irrelevant.
+# Archives excluded as these seem to cause Java heap space errors with Tika.
+mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image,video,audio
+     *
+     */
 	private String[] excludes;
+	
+	/** The actual Tika instance */
 	private Tika tika;
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
-	private int MAX_TEXT_LENGTH = 1024*1024; // 1MB ~= 1024 * 1KB
+	private int max_text_length; 
 
+	/* --- --- --- --- */
+	
 	public TikaExtractor() {
 		this( new Configuration() );
 	}
 
+	/**
+	 * 
+	 * @param conf
+	 */
 	public TikaExtractor( Configuration conf ) {
 		this.tika = new Tika();
+		
 		this.excludes = conf.getStrings( "tika.exclude.mime", new String[ 0 ] );
+		log.info("MIME exclude list: " + Arrays.toString(this.excludes));
+		
 		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
+		log.info("Parser timeout (ms) " + parseTimeout);
+		
+		this.max_text_length = conf.getInt( "tika.max_text_length", 1024*1024 ); // 1MB ~= 1024 * 1KB
+		log.info("Maximum length of text to extract (characters) "+ this.max_text_length);
 	}
 
+	/**
+	 * 
+	 * @param solr
+	 * @param is
+	 * @param url
+	 * @return
+	 * @throws IOException
+	 */
 	public WritableSolrRecord extract( WritableSolrRecord solr, InputStream is, String url ) throws IOException {
 		
 		TikaInputStream tikainput = TikaInputStream.get(is);
@@ -43,6 +89,7 @@ public class TikaExtractor {
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
 		String detected = tika.detect( tikainput, metadata );
+		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected ) ) {
 			return solr;
@@ -59,9 +106,9 @@ public class TikaExtractor {
 				parseThread.join( this.parseTimeout );
 				parseThread.interrupt();
 			} catch( OutOfMemoryError o ) {
-				System.err.println( "TikaExtractor.parse(): " + o.getMessage() );
+				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() );
 			} catch( RuntimeException r ) {
-				System.err.println( "TikaExtractor.parse(): " + r.getMessage() );
+				log.error( "TikaExtractor.parse() - RuntimeException: " + r.getMessage() );
 			}
 			String output = content.toString();
 			if( runner.complete || !output.equals( "" ) ) {
@@ -69,18 +116,50 @@ public class TikaExtractor {
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			}
 			
+			/*
 			for( String m : metadata.names() ) {
-				System.err.println("Metadata: "+m+" -> "+metadata.get(m));
+				log.info("For "+url.substring(url.length() - (int) Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m));
+			}
+			*/
+			
+			String contentType = metadata.get( Metadata.CONTENT_TYPE );
+			solr.addField( SolrFields.SOLR_CONTENT_TYPE, contentType );
+			solr.addField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ) );
+			solr.addField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ) );
+			solr.addField( SolrFields.SOLR_AUTHOR, metadata.get( DublinCore.CREATOR) );
+			
+			// Also look to record the software:
+			String software = null;
+			// For PDF, create separate tags:
+			if( contentType != null && contentType.startsWith("application/pdf") ) {
+				
+				// PDF has Creator and Producer application properties:
+				String creator = metadata.get("pdf:creator");
+				if( creator != null ) solr.addField(SolrFields.GENERATOR, creator+ " (pdf:creator)");
+				String producer = metadata.get("pdf:producer");
+				if( producer != null) solr.addField(SolrFields.GENERATOR, producer+" (pdf:producer)");
+			}
+			// Application ID, MS Office only AFAICT, and the VERSION is only doc
+			if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
+			if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
+			// Images, e.g. JPEG and TIFF, can have 'Software', 'tiff:Software',
+			if( metadata.get( "Software" ) != null ) software = metadata.get( "Software" );
+			if( metadata.get( Metadata.SOFTWARE ) != null ) software = metadata.get( Metadata.SOFTWARE );
+			if( metadata.get( "generator" ) != null ) software = metadata.get( "generator" );
+			// PNGs have a 'tEXt tEXtEntry: keyword=Software, value=GPL Ghostscript 8.71'
+			String png_textentry = metadata.get("tEXt tEXtEntry");
+			if( png_textentry != null && png_textentry.contains("keyword=Software, value=") )
+				software = png_textentry.replace("keyword=Software, value=", "");
+			/* Some JPEGs have this:
+	Jpeg Comment: CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality
+	comment: CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality
+			 */
+			if( software != null ) {
+				solr.addField(SolrFields.GENERATOR, software);
 			}
 			
-			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, metadata.get( Metadata.CONTENT_TYPE ) );
-
-			if( metadata.get( DublinCore.TITLE ) != null )
-				solr.doc.setField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ).trim().replaceAll( "\\p{Cntrl}", "" ) );
-			if( metadata.get( DublinCore.DESCRIPTION ) != null )
-				solr.doc.setField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ).trim().replaceAll( "\\p{Cntrl}", "" ) );
 		} catch( Exception e ) {
-			System.err.println( "TikaExtractor.extract(): " + e.getMessage() );
+			log.error( "TikaExtractor.extract(): " + e.getMessage() );
 		}
 		return solr;
 	}
@@ -109,15 +188,15 @@ public class TikaExtractor {
 				this.complete = true;
 			} catch( InterruptedIOException i ) {
 				this.complete = false;
-				System.err.println( "ParseRunner.run(): " + i.getMessage() );
+				log.error( "ParseRunner.run(): " + i.getMessage() );
 			} catch( Exception e ) {
-				System.err.println( "ParseRunner.run(): " + e.getMessage() );
+				log.error( "ParseRunner.run(): " + e.getMessage() );
 			}
 		}
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), MAX_TEXT_LENGTH );
+		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length );
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter

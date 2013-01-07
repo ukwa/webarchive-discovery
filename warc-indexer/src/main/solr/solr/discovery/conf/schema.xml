@@ -163,9 +163,10 @@
    <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
      -->
      
+     
    <!-- wa.bl.uk fields begin -->
    
-   <!-- Core fields -->
+   <!-- Core fields, in addition to those above -->
    <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
         that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
    <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
@@ -174,12 +175,8 @@
    <field name="url_type" type="text_general" indexed="true" stored="true"/>
    <!-- Length of the content, in bytes: -->
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
-   <!-- The 'full' content type, e.g. including charset parameters: -->
-   <field name="content_type_full" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
-   <!-- The timestamp, same as the harvest_date? Not clear this is needed/useful. -->
-   <field name="timestamp" type="date" indexed="true" stored="true" default="NOW" multiValued="false"/>
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl date, as a date -->
@@ -213,11 +210,31 @@
 <!--    <field name="wct_harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/> -->
 
    <!-- Future fields -->
+
+   <!-- The version of the content type, e.g. '1.4' for PDF-1.4: -->
+   <field name="content_type_version" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The 'full' content type, e.g. including charset parameters: -->
+   <field name="content_type_full" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content type, as determined via Apache Tika: -->
+   <field name="content_type_tika" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content type, as determined by Droid: -->
+   <field name="content_type_droid" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content type, as supplied by the original server: -->
+   <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false"/>
+   
+   <!-- The software generators or creator tools, that can be determined from the item: -->
+   <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
+   
+   <!-- The size of images, in pixels? or tags/ranges? -->
+   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
+
+   <!-- Fuzzy hashing for detecting similar content. -->
    <field name="ssdeep_hash_block_size" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="ssdeep_hash_short" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="ssdeep_hash_long" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- wa.bl.uk fields end -->
+
 
    <!-- Dynamic field definitions allow using convention over configuration
        for fields via the specification of patterns to match field names. 

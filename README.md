@@ -30,6 +30,10 @@ Once the basic features are tested and working, we start to explore new, richer 
 
 ### Ideas ###
 
+* Switch to Nanite/Extended Tika to extract
+    * Software and format versions, integrate DROID, etc.
+    * Published, Company, Keywords? Subject? Last Modified?
+    * Higher quality XMP metadata?
 * Deadness (Active, Empty, Gone)
 * Fussy hashes of the text.
 * Compression ratio/entropy or other info content measure?
