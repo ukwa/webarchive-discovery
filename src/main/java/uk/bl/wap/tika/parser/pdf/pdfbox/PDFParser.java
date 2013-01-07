@@ -31,6 +31,7 @@ import java.util.Set;
 
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaPDF;
+import org.apache.log4j.Logger;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -68,6 +69,8 @@ import uk.bl.wap.tika.parser.pdf.XMPSchemaPDFA;
  * the document using the empty password that's often used with PDFs.
  */
 public class PDFParser extends AbstractParser {
+	
+	private static Logger log = Logger.getLogger(PDFParser.class);
 
     /** Serial version UID */
     private static final long serialVersionUID = -752276948656079347L;
@@ -153,6 +156,8 @@ public class PDFParser extends AbstractParser {
             PDF2XHTML.process(pdfDocument, handler, metadata,
                               extractAnnotationText, enableAutoSpace,
                               suppressDuplicateOverlappingText, sortByPosition);
+        } catch( Exception e ) {
+        	log.error("Exception while parsing PDF: "+e);
         } finally {
             if (pdfDocument != null) {
                pdfDocument.close();
@@ -191,11 +196,13 @@ public class PDFParser extends AbstractParser {
              "Author", "Creator", "CreationDate", "ModDate",
              "Keywords", "Producer", "Subject", "Title", "Trapped"
         });
-        for(COSName key : info.getDictionary().keySet()) {
+        if( info.getDictionary() != null && info.getDictionary().keySet() != null ) {
+          for(COSName key : info.getDictionary().keySet()) {
             String name = key.getName();
             if(! handledMetadata.contains(name)) {
         	addMetadata(metadata, name, info.getDictionary().getDictionaryObject(key));
             }
+          }
         }
         // ANJ Extensions:
 		//
@@ -228,6 +235,7 @@ public class PDFParser extends AbstractParser {
         		// TODO WARN if this XMP version is inconsistent with document header version?
         	}
 		} catch (IOException e) {
+			log.error("XMP Parsing failed: "+e);
 			metadata.set("pdf:metadata-xmp-parse-failed", ""+e);
 		}
 		
@@ -239,9 +247,11 @@ public class PDFParser extends AbstractParser {
 				// If it's an Adobe one, interpret it to determine the extension level:
 				if( extName.equals( COSName.getPDFName("ADBE") )) {
 					COSDictionary adobeExt = (COSDictionary) extensions.getDictionaryObject(extName);
-					String baseVersion = adobeExt.getNameAsString(COSName.getPDFName("BaseVersion"));
-					int el = adobeExt.getInt(COSName.getPDFName("ExtensionLevel"));
-					metadata.set("pdf:version", baseVersion+" Adobe Extension Level "+el );
+					if( adobeExt != null ){
+						String baseVersion = adobeExt.getNameAsString(COSName.getPDFName("BaseVersion"));
+						int el = adobeExt.getInt(COSName.getPDFName("ExtensionLevel"));
+						metadata.set("pdf:version", baseVersion+" Adobe Extension Level "+el );
+					}
 					// TODO WARN if this embedded version is inconsistent with document header version?
 				} else {
 					// WARN that there is an Extension, but it's not Adobe's, and so is a 'new' format'.
