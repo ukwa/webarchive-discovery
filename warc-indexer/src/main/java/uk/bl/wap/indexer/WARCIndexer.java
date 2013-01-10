@@ -118,9 +118,11 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
+			// Spot 'slash pages'
 			String[] urlParts = canon.urlStringToKey( header.getUrl() ).split( "/" );
 			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].startsWith("index") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
+			// Record the domain (strictly, the host):
 			String domain = urlParts[ 0 ];
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
@@ -181,7 +183,7 @@ public class WARCIndexer {
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 			// Derive normalised/simplified content type:
-			processContentType(solr, header);
+			processContentType(solr, header, serverType);
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			//tikainput.reset();
@@ -230,7 +232,7 @@ public class WARCIndexer {
 		return host;
 	}
 	
-	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header ) {
+	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType ) {
 		StringBuilder mime = new StringBuilder();
 		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
 		if( mime.toString().isEmpty() ) {
@@ -241,9 +243,19 @@ public class WARCIndexer {
 			}
 		}
 		
+		// Determine content type:
+		String contentType = mime.toString();
+		solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
+		
+		// Fall back on serverType for plain text:
+		if( contentType != null && contentType.startsWith("text/plain")){
+			if( serverType != null ){
+				contentType = serverType;
+			}
+		}
+		
 		// Strip parameters out of main type field:
-		solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, mime.toString() );
-		solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, mime.toString().replaceAll( ";.*$", "" ) );
+		solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
 
 		// Also add a more general, simplified type, as appropriate:
 		// FIXME clean up this messy code:
@@ -265,7 +277,14 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
 		} else {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
-		}		
+		}
+		
+		// Remove text from JavaScript, CSS, ...
+		if( contentType.startsWith("application/javascript") || 
+				contentType.startsWith("text/javascript") || 
+				contentType.startsWith("text/css") ){
+			solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+		}
 	}
 
 	
