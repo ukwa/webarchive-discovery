@@ -7,23 +7,29 @@ import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.BufferedInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.StringReader;
 import java.io.StringWriter;
+import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.List;
 
 import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Result;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
+import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -31,9 +37,11 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.URI;
+import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
+import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.util.ClientUtils;
-import org.apache.tika.io.TikaInputStream;
+import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -45,10 +53,9 @@ import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wap.entities.LinkExtractor;
-import uk.bl.wap.util.WARCRecordUtils;
 import uk.bl.wap.util.solr.SolrFields;
+import uk.bl.wap.util.solr.SolrWebServer;
 import uk.bl.wap.util.solr.TikaExtractor;
-import uk.bl.wap.util.solr.WctFields;
 import uk.bl.wap.util.solr.WritableSolrRecord;
 
 /**
@@ -57,6 +64,7 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
  */
 public class WARCIndexer {
 	
+	public static final String UPDATE_SOLR_PARM = "--update-solr-server";
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5 = null;
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
@@ -77,9 +85,6 @@ public class WARCIndexer {
 			
 			if( header.getUrl() == null ) return null;
 			
-			for( String h : header.getHeaderFields().keySet()) {
-				//System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
-			}
 			
 			if( ! record.hasContentHeaders() ) return null;
 			
@@ -263,22 +268,96 @@ public class WARCIndexer {
 	 * @throws IOException
 	 * @throws TransformerException 
 	 * @throws TransformerFactoryConfigurationError 
+	 * @throws SolrServerException 
 	 */
-	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException {
+	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException {
+		
+		if( !( args.length > 1 ) ) {
+			System.out.println( "Arguments required are 1) Output directory 2) List of WARC files 3) Optionally --update-solr-server=url" );
+			System.exit( 0 );
+
+		}
+
+		String outputDir = args[0];
+		if(outputDir.endsWith("/")||outputDir.endsWith("\\")){
+			outputDir = outputDir.substring(0, outputDir.length()-1);
+		}
+		
+		outputDir = outputDir + "//";
+		System.out.println("Output Directory is: " + outputDir);
+		File dir = new File(outputDir);
+		if(!dir.exists()){
+			FileUtils.forceMkdir(dir);
+		}
+		
+		parseWarcFiles(outputDir, args);
+	
+	
+	}
+	
+	/**
+	 * @param outputDir
+	 * @param args
+	 * @throws NoSuchAlgorithmException
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
+	public static void parseWarcFiles(String outputDir, String[] args) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
+		
 		WARCIndexer windex = new WARCIndexer();
-		for( String f : args ) {
-			ArchiveReader reader = ArchiveReaderFactory.get(f);
+		int argCount = 0;
+		
+		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+		String solrUrl = null;
+				
+		// Loop through each Warc file
+		argLoop:for( String inputFile : args ) {
+			if(argCount == 0){
+				// Skip the output directory arg
+				argCount++;
+				continue argLoop;
+			}
+			
+			// If the Update Solr paramter is used then extract the URL
+			if(inputFile.startsWith(UPDATE_SOLR_PARM)){
+				String[] strParts = inputFile.split("=");
+				String url = strParts[1];
+				if(url.contains("\"")){
+					url  = url.replaceAll("\"", "");
+				}
+				solrUrl = new String(url);
+				continue argLoop;
+			}
+			
+			ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
 			Iterator<ArchiveRecord> ir = reader.iterator();
+			int recordCount = 1;
+			
+			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
 				WritableSolrRecord doc = windex.extract("",rec);
 				if( doc != null ) {
-					prettyPrintXML(ClientUtils.toXML(doc.doc));
-					//break;
+					File fileOutput = new File(outputDir + "FILE_" + argCount + "_" + recordCount + ".xml");
+					writeXMLToFile(doc.toXml(), fileOutput);
+					recordCount++;
+					
+					docs.add(doc.doc);
 				}
-				System.out.println(" ---- ---- ");
+				
 			}
+			argCount++;
 		}
+		
+		// If the Solr URL is set then update it with the Docs
+		if(solrUrl != null){
+			SolrWebServer solrWeb = new SolrWebServer(solrUrl);
+			solrWeb.updateSolr(docs);
+		}
+		
+		System.out.println("WARC Indexer Finished");
 	}
 	
 	
@@ -291,5 +370,25 @@ public class WARCIndexer {
 		transformer.transform(source, result);
 		String xmlString = result.getWriter().toString();
 		System.out.println(xmlString);		
+	}
+	
+	/**
+	 * @param xml
+	 * @param file
+	 * @throws IOException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
+	public static void writeXMLToFile( String xml, File file ) throws IOException, TransformerFactoryConfigurationError, TransformerException {
+		
+		Result result = new StreamResult(file);
+		Source source =  new StreamSource(new StringReader(xml));
+		
+		Transformer transformer = TransformerFactory.newInstance().newTransformer();
+		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+		//FileUtils.writeStringToFile(file, xml);
+		
+		transformer.transform(source, result);
+	  
 	}
 }
