@@ -25,11 +25,9 @@ import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
@@ -40,7 +38,6 @@ import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
@@ -73,7 +70,15 @@ public class WARCIndexer {
 	public WARCIndexer() throws NoSuchAlgorithmException {
 		md5 = MessageDigest.getInstance( "MD5" );
 	}
-
+	
+	/**
+	 * This extracts metadata and text from the ArchiveRecord and creates a suitable SolrRecord.
+	 * 
+	 * @param archiveName
+	 * @param record
+	 * @return
+	 * @throws IOException
+	 */
 	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		WritableSolrRecord solr = new WritableSolrRecord();
@@ -85,6 +90,9 @@ public class WARCIndexer {
 			
 			if( header.getUrl() == null ) return null;
 			
+			//for( String h : header.getHeaderFields().keySet()) {
+			//	System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
+			//}
 			
 			if( ! record.hasContentHeaders() ) return null;
 			
