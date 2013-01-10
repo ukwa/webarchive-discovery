@@ -34,11 +34,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.archive.wayback</groupId>
-			<artifactId>wayback-core</artifactId>
-			<version>1.7.1-SNAPSHOT</version>
-		</dependency>
-		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 			<version>1.2.14</version>
