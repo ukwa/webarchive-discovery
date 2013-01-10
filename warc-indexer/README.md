@@ -7,6 +7,12 @@ It is set up to work with Apache Solr, and our schema is provided in src/main/so
 
 It also builds a suitable command-line tool for generating/posting Solr records from web archive files.
 
+It runs like this:
+
+<pre>
+    java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target --update-solr-server=http://localhost:8080/ src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
+</pre>
+
 
 EntityIndexer
 -------------

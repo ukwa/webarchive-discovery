@@ -103,9 +103,9 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			String year = extractYear(header.getDate());
 			if( !"0000".equals(year))
-				solr.doc.setField( SolrFields.HARVEST_YEAR, year );
+				solr.doc.setField( SolrFields.CRAWL_YEAR, year );
 			try {
-				solr.doc.setField( SolrFields.HARVEST_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
+				solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
 			} catch( ParseException p ) {
 				p.printStackTrace();
 			}
