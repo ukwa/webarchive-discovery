@@ -4,7 +4,7 @@
     <parent>
       <groupId>uk.bl.wa.discovery</groupId>
       <artifactId>warc-discovery</artifactId>
-      <version>0.0.1-SNAPSHOT</version>
+      <version>1.0.0-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
 	<build>
@@ -87,11 +87,6 @@
             <artifactId>servlet-api</artifactId>
             <version>2.5</version>
             <scope>test</scope>
-        </dependency>
-        <dependency>
-           <groupId>eu.scape-project.nanite</groupId>
-           <artifactId>nanite-ext</artifactId>
-           <version>0.0.1-SNAPSHOT</version>
         </dependency>
   </dependencies>
   <repositories>
