@@ -124,7 +124,7 @@
    <field name="subject" type="text_general" indexed="true" stored="true"/>
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
-   <field name="author" type="text_general" indexed="true" stored="true"/>
+   <field name="author" type="string" indexed="true" stored="true"/>
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
    <field name="category" type="text_general" indexed="true" stored="true"/>
    <field name="resourcename" type="text_general" indexed="true" stored="true"/>
@@ -175,6 +175,8 @@
    <field name="url_type" type="text_general" indexed="true" stored="true"/>
    <!-- Length of the content, in bytes: -->
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content encoding: -->
+   <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
@@ -182,7 +184,7 @@
    <!-- The harvest/crawl date, as a date -->
    <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl year, for faceting -->
-   <field name="crawl_year" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="crawl_year" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The domain (or more accurately, the host) for this URL: -->
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
@@ -203,7 +205,7 @@
    <field name="wct_collections" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="wct_subjects" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="wct_description" type="text_general" indexed="true" stored="true"/>
-   <field name="wct_title" type="text_general" indexed="true" stored="true"/>
+   <field name="wct_title" type="string" indexed="true" stored="true"/>
    <field name="wct_agency" type="string" indexed="true" stored="true" multiValued="false"/> <!-- default="British Library"/  -->
    <!-- WCT fields that should no longer use WCT-specific names? -->
 <!--    <field name="wct_domain" type="string" indexed="true" stored="true" multiValued="false"/> -->
@@ -318,6 +320,12 @@
    <!-- wa.bl.uk copies begin -->
    <!-- Metadata fields to add to default search: -->
    <copyField source="title" dest="text"/> <!-- Selective -->
+   <copyField source="author" dest="text"/>
+   <copyField source="keywords" dest="text"/>
+   <copyField source="description" dest="text"/>
+   <copyField source="wct_title" dest="text"/>
+   <copyField source="wct_description" dest="text"/>
+   
    <!-- Old fields to remove? -->
 <!--    <copyField source="text" dest="spell"/> Selective -->
 <!--    <copyField source="text" dest="text_ns"/> IA -->

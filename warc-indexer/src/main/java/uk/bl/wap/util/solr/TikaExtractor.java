@@ -12,6 +12,8 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
+import org.apache.tika.extractor.EmbeddedDocumentExtractor;
+import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
@@ -65,15 +67,58 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		this.tika = new Tika();
 		
 		this.excludes = conf.getStrings( "tika.exclude.mime", new String[ 0 ] );
-		log.info("MIME exclude list: " + Arrays.toString(this.excludes));
+		log.info("Config: MIME exclude list: " + Arrays.toString(this.excludes));
 		
 		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
-		log.info("Parser timeout (ms) " + parseTimeout);
+		log.info("Config: Parser timeout (ms) " + parseTimeout);
 		
 		this.max_text_length = conf.getInt( "tika.max_text_length", 1024*1024 ); // 1MB ~= 1024 * 1KB
-		log.info("Maximum length of text to extract (characters) "+ this.max_text_length);
+		log.info("Config: Maximum length of text to extract (characters) "+ this.max_text_length);
 	}
 
+
+	
+	/**
+	 * Override embedded document parser logic to prevent descent.
+	 * 
+	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+	 *
+	 */
+	public class NonRecursiveEmbeddedDocumentExtractor extends ParsingEmbeddedDocumentExtractor {
+
+		/** Parse embedded documents? Defaults to FALSE */
+		private boolean parseEmbedded = false;
+
+		public NonRecursiveEmbeddedDocumentExtractor(ParseContext context) {
+			super(context);
+		}
+
+		/* (non-Javadoc)
+		 * @see org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor#shouldParseEmbedded(org.apache.tika.metadata.Metadata)
+		 */
+		@Override
+		public boolean shouldParseEmbedded(Metadata metadata) {
+			return this.parseEmbedded;
+		}
+		
+		/**
+		 * @return the parseEmbedded
+		 */
+		public boolean isParseEmbedded() {
+			return parseEmbedded;
+		}
+
+		/**
+		 * @param parseEmbedded the parseEmbedded to set
+		 */
+		public void setParseEmbedded(boolean parseEmbedded) {
+			this.parseEmbedded = parseEmbedded;
+		}
+
+	}
+	
+	private NonRecursiveEmbeddedDocumentExtractor embedded = null;
+	
 	/**
 	 * 
 	 * @param solr
@@ -97,7 +142,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
 		ParseContext context = new ParseContext();
 		StringWriter content = new StringWriter();
-
+		
+		// Override the recursive parsing:
+		if( embedded == null )
+			embedded = new NonRecursiveEmbeddedDocumentExtractor(context);
+		context.set( EmbeddedDocumentExtractor.class, embedded );
+		
 		try {
 			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
@@ -117,6 +167,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			}
 			
 			/*
+			// Noisily report all metadata properties:
 			for( String m : metadata.names() ) {
 				log.info("For "+url.substring(url.length() - (int) Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m));
 			}
@@ -127,6 +178,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			solr.addField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ) );
 			solr.addField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ) );
 			solr.addField( SolrFields.SOLR_AUTHOR, metadata.get( DublinCore.CREATOR) );
+			solr.addField( SolrFields.CONTENT_ENCODING, metadata.get( Metadata.CONTENT_ENCODING ) );
+
 			
 			// Also look to record the software:
 			String software = null;

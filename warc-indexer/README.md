@@ -10,7 +10,9 @@ It also builds a suitable command-line tool for generating/posting Solr records 
 It runs like this:
 
 <pre>
-    java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target --update-solr-server=http://localhost:8080/ src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
+    java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target \
+    --update-solr-server=http://localhost:8080/ \
+    src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
 </pre>
 
 
