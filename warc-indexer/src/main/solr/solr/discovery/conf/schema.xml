@@ -185,10 +185,16 @@
    <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl year, for faceting -->
    <field name="crawl_year" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The harvest/crawl year and month, for faceting -->
+   <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The harvest/crawl year, month and day, for faceting -->
+   <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The domain (or more accurately, the host) for this URL: -->
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
+   <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
@@ -213,7 +219,7 @@
 <!--    <field name="wct_wayback_date" type="string" indexed="true" stored="true" multiValued="false"/> -->
 <!--    <field name="wct_harvest_date" type="tdate" indexed="true" stored="true" multiValued="false"/> -->
 
-   <!-- Future fields -->
+   <!-- Format fields -->
 
    <!-- The version of the content type, e.g. '1.4' for PDF-1.4: -->
    <field name="content_type_version" type="string" indexed="true" stored="true" multiValued="false"/>
@@ -228,6 +234,8 @@
    
    <!-- The software generators or creator tools, that can be determined from the item: -->
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
+
+   <!-- Content-oriented fields -->
    
    <!-- The size of images, in pixels? or tags/ranges? -->
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
