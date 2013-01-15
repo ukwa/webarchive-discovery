@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Iterator;
 
 import org.apache.hadoop.io.Writable;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.apache.tika.metadata.DublinCore;
@@ -67,18 +68,7 @@ public class WritableSolrRecord implements Writable {
 	}
 
 	public String toXml() {
-		StringBuilder sb = new StringBuilder();
-		sb.append( "<doc>" );
-
-		Iterator<SolrInputField> iterator = this.doc.iterator();
-		while( iterator.hasNext() ) {
-			SolrInputField field = iterator.next();
-			sb.append( "<" + ( String ) field.getName() + "><![CDATA[" );
-			sb.append( field.getValue() );
-			sb.append( "]]></" + ( String ) field.getName() + ">" );
-		}
-		sb.append( "</doc>" );
-		return sb.toString();
+		return ClientUtils.toXML(doc);
 	}
 
 	/**

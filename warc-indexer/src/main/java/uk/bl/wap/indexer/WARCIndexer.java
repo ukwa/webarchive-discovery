@@ -127,8 +127,8 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
 
-			// Parse body:
-
+			// Parse HTTP headers:
+			// TODO Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
 			String referrer = null;
 			InputStream tikainput = null;
 			String statusCode = null;
@@ -139,6 +139,8 @@ public class WARCIndexer {
 				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
 				for( Header h : headers ) {
 					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+					// FIXME This can't work, because the Referer is in the Request, not the Response.
+					// TODO Generally, need to think about ensuring the request and response are brought together.
 					if( h.getName().equals(HttpHeaders.REFERER))
 						referrer = h.getValue();
 					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
@@ -162,16 +164,14 @@ public class WARCIndexer {
 				tikainput = arcr;
 				
 			} else {
-				System.err.println("FAIL!");
+				System.err.println("FAIL! Unsupported archive record type.");
 				return solr;
 			}
 			
 			// Fields from Http headers:
-			if( referrer != null )
-				solr.doc.setField( SolrFields.SOLR_REFERRER_URI, referrer );
+			solr.addField( SolrFields.SOLR_REFERRER_URI, referrer );
 			// Get the type from the server
-			if( serverType != null)
-				solr.addField(SolrFields.CONTENT_TYPE_SERVED, serverType);			
+			solr.addField(SolrFields.CONTENT_TYPE_SERVED, serverType);			
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
 			if( statusCode == null || !statusCode.startsWith("2") ) return null;
@@ -368,7 +368,10 @@ public class WARCIndexer {
 				WritableSolrRecord doc = windex.extract("",rec);
 				if( doc != null ) {
 					File fileOutput = new File(outputDir + "FILE_" + argCount + "_" + recordCount + ".xml");
-					writeXMLToFile(doc.toXml(), fileOutput);
+					// Write XML to file if not posting straight to the server.
+					if(solrUrl == null) {
+						writeXMLToFile(doc.toXml(), fileOutput);
+					}
 					recordCount++;
 					
 					docs.add(doc.doc);
@@ -379,7 +382,7 @@ public class WARCIndexer {
 		}
 		
 		// If the Solr URL is set then update it with the Docs
-		if(solrUrl != null){
+		if(solrUrl != null) {		
 			SolrWebServer solrWeb = new SolrWebServer(solrUrl);
 			solrWeb.updateSolr(docs);
 		}
