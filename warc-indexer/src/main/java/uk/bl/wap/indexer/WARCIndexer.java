@@ -119,13 +119,17 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
 			// Spot 'slash pages':
-			String[] urlParts = canon.urlStringToKey( header.getUrl() ).split( "/" );
+			String fullUrl = header.getUrl();
+			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
+			if( fullUrl.length() > 2080 ) fullUrl.subSequence(0, 2080);
+			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
 			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].startsWith("index") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Record the domain (strictly, the host): 
 			String domain = urlParts[ 0 ];
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
+			// TOOD Add Private Suffix?
 
 			// Parse HTTP headers:
 			// TODO Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
