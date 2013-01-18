@@ -121,7 +121,7 @@ public class WARCIndexer {
 			// Spot 'slash pages':
 			String fullUrl = header.getUrl();
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
-			if( fullUrl.length() > 2080 ) fullUrl.subSequence(0, 2080);
+			if( fullUrl.length() > 2080 ) fullUrl = fullUrl.substring(0, 2080);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
 			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].startsWith("index") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
