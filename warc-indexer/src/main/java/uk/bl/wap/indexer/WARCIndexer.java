@@ -17,9 +17,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -31,6 +29,11 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
@@ -38,7 +41,6 @@ import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.FileUtils;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -61,7 +63,11 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
  */
 public class WARCIndexer {
 	
-	public static final String UPDATE_SOLR_PARM = "--update-solr-server";
+	private static final String CLI_USAGE = "[WARC File List] [-o <output dir>] [-s <Solr instance>] [-t]";
+	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
+	private static final String CLI_FOOTER = "";
+	
+	
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5 = null;
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
@@ -80,6 +86,21 @@ public class WARCIndexer {
 	 * @throws IOException
 	 */
 	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
+		
+		return extract(archiveName, record, true);
+	}
+	
+	/**
+	 * This extracts metadata from the ArchiveRecord and creates a suitable SolrRecord.
+	 * Removes the text field if flag set
+	 * 
+	 * @param archiveName
+	 * @param record
+	 * @param isTextIncluded
+	 * @return
+	 * @throws IOException
+	 */
+	public WritableSolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		WritableSolrRecord solr = new WritableSolrRecord();
 
@@ -189,6 +210,11 @@ public class WARCIndexer {
 			// Derive normalised/simplified content type:
 			processContentType(solr, header, serverType);
 			
+			// Remove the Text Field if required
+			if( !isTextIncluded){ 
+				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+			}
+			
 			// Pass on to other extractors as required, resetting the stream before each:
 			//tikainput.reset();
 			// Entropy, compressibility, fussy hashes, etc.
@@ -236,7 +262,7 @@ public class WARCIndexer {
 		return host;
 	}
 	
-	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType ) {
+	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType) {
 		StringBuilder mime = new StringBuilder();
 		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
 		if( mime.toString().isEmpty() ) {
@@ -303,25 +329,77 @@ public class WARCIndexer {
 	 */
 	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException {
 		
-		if( !( args.length > 1 ) ) {
-			System.out.println( "Arguments required are 1) Output directory 2) List of WARC files 3) Optionally --update-solr-server=url" );
-			System.exit( 0 );
-
-		}
-
-		String outputDir = args[0];
-		if(outputDir.endsWith("/")||outputDir.endsWith("\\")){
-			outputDir = outputDir.substring(0, outputDir.length()-1);
-		}
+		CommandLineParser parser = new PosixParser();
+		String outputDir = null;
+		String solrUrl = null;
+		boolean isTextRequired = false;
 		
-		outputDir = outputDir + "//";
-		System.out.println("Output Directory is: " + outputDir);
-		File dir = new File(outputDir);
-		if(!dir.exists()){
-			FileUtils.forceMkdir(dir);
-		}
+		Options options = new Options();
+		options.addOption("o", "output directory", true, "The directory to contain the output XML files");
+		options.addOption("s", "Solr URL", true, "The URL of the required Solr Instance");
+		options.addOption("t", "Include text in XML", false, "Include text in XML in output files");
 		
-		parseWarcFiles(outputDir, args);
+		try {
+		    // parse the command line arguments
+		    CommandLine line = parser.parse( options, args );
+		   	String cli_args[] = line.getArgs();
+		   
+		
+		   	// Check that a mandatory Archive file(s) has been supplied
+		   	if( !( cli_args.length > 0 ) ) {
+				//System.out.println( "Arguments required are 1) Output directory 2) List of WARC files 3) Optionally --update-solr-server=url" );
+		   		printUsage(options);
+				System.exit( 0 );
+		   	}
+
+		   	// Get the output directory, if set
+		   	if(line.hasOption("o")){
+		   		outputDir = line.getOptionValue("o");
+		   		if(outputDir.endsWith("/")||outputDir.endsWith("\\")){
+		   			outputDir = outputDir.substring(0, outputDir.length()-1);
+		   		}
+		
+		   		outputDir = outputDir + "//";
+		   		System.out.println("Output Directory is: " + outputDir);
+		   		File dir = new File(outputDir);
+		   		if(!dir.exists()){
+		   			FileUtils.forceMkdir(dir);
+		   		}
+		   	}
+		   	
+		   	// Get the Solr Url, if set
+		   	if(line.hasOption("s")){
+		   		solrUrl = line.getOptionValue("s");
+		   		if(solrUrl.contains("\"")){
+		   			solrUrl  = solrUrl.replaceAll("\"", "");
+				}
+		   	}
+		   	
+		   	// Check if the text field is required in the XML output
+		   	if(line.hasOption("t") || line.hasOption("s")){
+		   		isTextRequired = true;
+		   	}
+		   	
+		   	// Check that either an output dir or Solr URL is supplied
+		   	if(outputDir == null && solrUrl == null){
+		   		System.out.println( "A Solr URL or an Output Directory must be supplied" );
+		   		printUsage(options);
+		   		System.exit( 0 );
+		   	}
+		   	
+		   	// Check that both an output dir and Solr URL are not supplied
+		   	if(outputDir != null && solrUrl != null){
+		   		System.out.println( "A Solr URL and an Output Directory cannot both be specified" );
+		   		printUsage(options);
+		   		System.exit( 0 );
+		   	}
+	   	
+		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired);
+		
+		} catch (org.apache.commons.cli.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	
 	
 	}
@@ -335,32 +413,31 @@ public class WARCIndexer {
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles(String outputDir, String[] args) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
+	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
 		
 		WARCIndexer windex = new WARCIndexer();
-		int argCount = 0;
-		
-		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
-		String solrUrl = null;
 				
-		// Loop through each Warc file
-		argLoop:for( String inputFile : args ) {
-			if(argCount == 0){
-				// Skip the output directory arg
-				argCount++;
-				continue argLoop;
-			}
-			
-			// If the Update Solr paramter is used then extract the URL
-			if(inputFile.startsWith(UPDATE_SOLR_PARM)){
-				String[] strParts = inputFile.split("=");
-				String url = strParts[1];
-				if(url.contains("\"")){
-					url  = url.replaceAll("\"", "");
-				}
-				solrUrl = new String(url);
-				continue argLoop;
-			}
+		SolrWebServer solrWeb = null;
+		
+		// If the Solr URL is set initiate a connections
+		if(solrUrl != null) {		
+			solrWeb = new SolrWebServer(solrUrl);
+		}
+		
+		int totInputFile = args.length;
+		int curInputFile = 1;
+					
+		// Loop through each Warc files
+		for( String inputFile : args ) {
+								
+			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
+			File inFile = new File(inputFile);
+			String fileName = inFile.getName();
+			String outputWarcDir = outputDir + fileName + "//";
+			File dir = new File(outputWarcDir);
+	   		if(!dir.exists() && solrUrl == null){
+	   			FileUtils.forceMkdir(dir);
+	   		}
 			
 			ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
 			Iterator<ArchiveRecord> ir = reader.iterator();
@@ -369,26 +446,28 @@ public class WARCIndexer {
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
-				WritableSolrRecord doc = windex.extract("",rec);
+				WritableSolrRecord doc = windex.extract("",rec, isTextRequired);
+
 				if( doc != null ) {
-					File fileOutput = new File(outputDir + "FILE_" + argCount + "_" + recordCount + ".xml");
+					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
+					
 					// Write XML to file if not posting straight to the server.
 					if(solrUrl == null) {
 						writeXMLToFile(doc.toXml(), fileOutput);
+					}else{
+						// Post to Solr
+						solrWeb.updateSolrDoc(doc.doc);
 					}
 					recordCount++;
-					
-					docs.add(doc.doc);
-				}
-				
+
+				}			
 			}
-			argCount++;
+			curInputFile++;
 		}
 		
-		// If the Solr URL is set then update it with the Docs
-		if(solrUrl != null) {		
-			SolrWebServer solrWeb = new SolrWebServer(solrUrl);
-			solrWeb.updateSolr(docs);
+		// Commit any Solr Updates
+		if(solrWeb != null) {		
+			solrWeb.commit();
 		}
 		
 		System.out.println("WARC Indexer Finished");
@@ -425,4 +504,13 @@ public class WARCIndexer {
 		transformer.transform(source, result);
 	  
 	}
+	
+	/**
+	 * @param options
+	 */
+	private static void printUsage(Options options) {
+	      HelpFormatter helpFormatter = new HelpFormatter( );
+	      helpFormatter.setWidth( 80 );
+	      helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
+	    }
 }

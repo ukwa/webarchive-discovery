@@ -39,6 +39,8 @@ public class SolrWebServer {
 	}
 
 	/**
+	 * Post and Commit
+	 * 
 	 * @param solrDoc
 	 * @throws SolrServerException
 	 * @throws IOException
@@ -46,6 +48,31 @@ public class SolrWebServer {
 	public void updateSolr(List<SolrInputDocument> docs) throws SolrServerException, IOException{
 		
 			solrServer.add(docs);	
+			solrServer.commit();
+		
+	}
+	
+	/**
+	 * Post without Committing
+	 * 
+	 * @param solrDoc
+	 * @throws SolrServerException
+	 * @throws IOException
+	 */
+	public void updateSolrDoc(SolrInputDocument doc) throws SolrServerException, IOException{
+		
+			solrServer.add(doc);	
+		
+	}
+	
+	/**
+	 * Post and Commit
+	 * 
+	 * @throws SolrServerException
+	 * @throws IOException
+	 */
+	public void commit() throws SolrServerException, IOException{
+		
 			solrServer.commit();
 		
 	}
