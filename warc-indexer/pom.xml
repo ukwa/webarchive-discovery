@@ -39,6 +39,11 @@
                <descriptorRefs>
                   <descriptorRef>jar-with-dependencies</descriptorRef>
                </descriptorRefs>
+			   <archive>
+					<manifest>
+						<mainClass>uk.bl.wap.indexer.WARCIndexer</mainClass>
+					</manifest>
+				</archive>
             </configuration>
             <executions>
                <execution>
