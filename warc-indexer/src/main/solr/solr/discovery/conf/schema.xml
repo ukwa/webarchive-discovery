@@ -235,6 +235,11 @@
    <!-- The software generators or creator tools, that can be determined from the item: -->
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
 
+   <!-- Any Parse Error encountered while attempting to extract metadata and text: -->
+   <!-- 
+   <field name="parse_error" type="string" indexed="true" stored="true" multiValued="false"/>
+    -->
+
    <!-- Content-oriented fields -->
    
    <!-- The size of images, in pixels? or tags/ranges? -->

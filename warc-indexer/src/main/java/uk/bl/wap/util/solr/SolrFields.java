@@ -28,6 +28,7 @@ public interface SolrFields {
 	public static final String CONTENT_TYPE_SERVED = "content_type_served";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
 	public static final String GENERATOR = "generator";
+	public static final String PARSE_ERROR = "parse_error";
 	
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";

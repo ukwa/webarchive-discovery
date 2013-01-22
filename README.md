@@ -29,7 +29,7 @@ Currently, we are refactoring the code, in order to make our current indexes con
 Once the basic features are tested and working, we start to explore new, richer indexing techniques.
 
 ### Ideas ###
-
+* Add error code as facet for large-scale bug analysis.
 * Switch to Nanite/Extended Tika to extract
     * Software and format versions, integrate DROID, etc.
     * Published, Company, Keywords? Subject? Last Modified?

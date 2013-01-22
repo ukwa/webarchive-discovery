@@ -8,6 +8,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
 
+import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -32,6 +33,8 @@ import org.xml.sax.ContentHandler;
  */
 public class TikaExtractor {
 	
+	public static final String TIKA_PARSE_EXCEPTION = "Tika-Parse-Exception";
+
 	private static Log log = LogFactory.getLog(TikaExtractor.class);
 	
 	/** Time to wait for Tika to complete before giving up: */
@@ -157,9 +160,16 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				parseThread.interrupt();
 			} catch( OutOfMemoryError o ) {
 				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() );
+				addExceptionMetadata(metadata, new Exception("OutOfMemoryError"));
 			} catch( RuntimeException r ) {
 				log.error( "TikaExtractor.parse() - RuntimeException: " + r.getMessage() );
+				addExceptionMetadata(metadata, r);
 			}
+			
+			// If there was a parse error, report it:
+			//solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
+
+			// Copy the body text:
 			String output = content.toString();
 			if( runner.complete || !output.equals( "" ) ) {
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
@@ -241,11 +251,24 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				this.complete = true;
 			} catch( InterruptedIOException i ) {
 				this.complete = false;
-				log.error( "ParseRunner.run(): " + i.getMessage() );
+				log.error( "ParseRunner.run() Interrupted: " + i.getMessage() );
+				addExceptionMetadata(metadata, i);
 			} catch( Exception e ) {
-				log.error( "ParseRunner.run(): " + e.getMessage() );
+				log.error( "ParseRunner.run() Exception: " + ExceptionUtils.getRootCauseMessage(e));
+				addExceptionMetadata(metadata, e);
 			}
 		}
+		
+	}
+	
+	/**
+	 * Support storing the error message for analysis:
+	 * 
+	 * @param e
+	 */
+	public static void addExceptionMetadata( Metadata metadata, Exception e ) {
+		Throwable t = ExceptionUtils.getRootCause(e);
+	    metadata.set(TikaExtractor.TIKA_PARSE_EXCEPTION, t.getClass().getName()+"-"+t.getMessage());
 	}
 
 	public ContentHandler getHandler( Writer out ) {
