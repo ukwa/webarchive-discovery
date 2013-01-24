@@ -53,3 +53,9 @@ Once the basic features are tested and working, we start to explore new, richer 
     * If that worked, one could train Eigenfaces (e.g. faint.sf.net) using proper nouns associated with images and then use that for matching, perhaps?
     * TEI aware indexing? Annotated text with grammatical details.
 * Hyphenation for syllable counting, e.g. sonnet spotting http://sourceforge.net/projects/texhyphj/
+
+* Support a publication_date?
+BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
+Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
+PDF, can use: creation date?
+
