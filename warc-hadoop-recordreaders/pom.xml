@@ -4,7 +4,7 @@
     <parent>
       <groupId>uk.bl.wa.discovery</groupId>
       <artifactId>warc-discovery</artifactId>
-      <version>1.0.0</version>
+      <version>1.0.1-SNAPSHOT</version>
       <relativePath>..</relativePath>
     </parent>
 	<build>
@@ -42,7 +42,7 @@
 		<dependency>
 		   <groupId>uk.bl.wa.discovery</groupId>
 		   <artifactId>warc-indexer</artifactId>
-		   <version>1.0.0</version>
+		   <version>1.0.1-SNAPSHOT</version>
 		</dependency>
 	</dependencies>
 </project>
