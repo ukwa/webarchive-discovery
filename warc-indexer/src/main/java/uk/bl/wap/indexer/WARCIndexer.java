@@ -5,6 +5,8 @@ package uk.bl.wap.indexer;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
+import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS;
+import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -66,7 +68,7 @@ public class WARCIndexer {
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
-	
+	private static final int BUFFER_SIZE = 104857600;
 	
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5 = null;
@@ -160,7 +162,7 @@ public class WARCIndexer {
 			String serverType = null;
 			if( record instanceof WARCRecord ) {
 				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
-				statusCode = firstLine[1];
+				statusCode = firstLine[1].trim();
 				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
 				for( Header h : headers ) {
 					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
@@ -187,7 +189,6 @@ public class WARCIndexer {
 				}
 				arcr.skipHttpHeader();
 				tikainput = arcr;
-				
 			} else {
 				System.err.println("FAIL! Unsupported archive record type.");
 				return solr;
@@ -204,7 +205,7 @@ public class WARCIndexer {
 			// Parse payload using Tika:
 			
 			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BufferedInputStream( tikainput );
+			tikainput = new BufferedInputStream( tikainput, BUFFER_SIZE );
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 			// Derive normalised/simplified content type:
@@ -214,12 +215,22 @@ public class WARCIndexer {
 			if( !isTextIncluded){ 
 				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
 			}
-			
+
 			// Pass on to other extractors as required, resetting the stream before each:
-			//tikainput.reset();
 			// Entropy, compressibility, fussy hashes, etc.
-			// JSoup link extractor for (x)html, deposit in 'links' field.
-			
+			try {
+				tikainput.reset();
+				// JSoup link extractor for (x)html, deposit in 'links' field.
+				String mime = ( String ) solr.doc.getField( SOLR_CONTENT_TYPE ).getValue();
+				if( mime.startsWith( "text" ) ) {
+					Iterator<String> links = LinkExtractor.extractLinks( tikainput, "UTF-8", header.getUrl(), true ).iterator();
+					while( links.hasNext() ) {
+						solr.addField( SOLR_LINKS, links.next() );
+					}
+				}
+			} catch( IOException i ) {
+				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
+			}
 			// These extractors don't need to re-read the payload:
 			// Postcode Extractor (based on text extracted by Tika)
 			// Named entity detection

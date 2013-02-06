@@ -17,8 +17,9 @@ public interface SolrFields {
 	public static final String SOLR_DESCRIPTION = "description";
 	public static final String SOLR_COMMENTS = "comments";
 	public static final String SOLR_AUTHOR = "author";
-	public static final String SOLR_KEYWORDS = "keywords"; 
+	public static final String SOLR_KEYWORDS = "keywords";
 	public static final String SOLR_CATEGORY = "category";
+	public static final String SOLR_LINKS = "links";
 	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";

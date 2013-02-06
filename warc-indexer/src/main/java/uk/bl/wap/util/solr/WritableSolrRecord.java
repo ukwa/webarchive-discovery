@@ -13,7 +13,6 @@ import org.apache.hadoop.io.Writable;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
-import org.apache.tika.metadata.DublinCore;
 
 public class WritableSolrRecord implements Writable {
 	public SolrInputDocument doc = new SolrInputDocument();

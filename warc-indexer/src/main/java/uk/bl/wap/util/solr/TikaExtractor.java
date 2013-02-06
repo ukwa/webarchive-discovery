@@ -130,6 +130,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	 * @return
 	 * @throws IOException
 	 */
+	@SuppressWarnings( "deprecation" )
 	public WritableSolrRecord extract( WritableSolrRecord solr, InputStream is, String url ) throws IOException {
 		
 		TikaInputStream tikainput = TikaInputStream.get(is);
