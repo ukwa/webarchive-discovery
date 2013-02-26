@@ -20,8 +20,8 @@ public interface SolrFields {
 	public static final String SOLR_KEYWORDS = "keywords";
 	public static final String SOLR_CATEGORY = "category";
 	public static final String SOLR_LINKS = "links";
-	public static final String SOLR_LINKS_HOSTS = "hosts";
-	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "public_suffixes";
+	public static final String SOLR_LINKS_HOSTS = "links_hosts";
+	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
 	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";
@@ -30,6 +30,7 @@ public interface SolrFields {
 	public static final String CONTENT_TYPE_DROID = "content_type_droid";
 	public static final String CONTENT_TYPE_SERVED = "content_type_served";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
+	public static final String CONTENT_FFB = "content_ffb";
 	public static final String GENERATOR = "generator";
 	public static final String PARSE_ERROR = "parse_error";
 	

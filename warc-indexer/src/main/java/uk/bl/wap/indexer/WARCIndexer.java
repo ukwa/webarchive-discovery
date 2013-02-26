@@ -37,6 +37,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.URI;
@@ -259,6 +260,15 @@ public class WARCIndexer {
 			} catch( IOException i ) {
 				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
 			}
+
+			// Pull out the first four bytes, to hunt for new format by magic:
+			tikainput.reset();
+			byte[] ffb = new byte[4];
+			int read = tikainput.read(ffb);
+			if( read == 4 ) {
+				solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
+			}
+			
 			// These extractors don't need to re-read the payload:
 			// Postcode Extractor (based on text extracted by Tika)
 			// Named entity detection
