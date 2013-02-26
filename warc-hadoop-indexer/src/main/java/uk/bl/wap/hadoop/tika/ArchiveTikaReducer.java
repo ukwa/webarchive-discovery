@@ -10,17 +10,19 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.http.HttpHost;
+import org.apache.http.conn.params.ConnRoutePNames;
+import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.solr.client.solrj.SolrServerException;
 
 import uk.bl.wap.solr.QueueingHttpSolrServer;
-import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.WctEnricher;
+import uk.bl.wap.util.solr.WctFields;
 import uk.bl.wap.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
-	private QueueingHttpSolrServer solrDefault;
-	private QueueingHttpSolrServer solrImage;
-	private QueueingHttpSolrServer solrMedia;
+	private QueueingHttpSolrServer solrServer;
 	private int batchSize;
 
 	public ArchiveTikaReducer() {}
@@ -29,9 +31,15 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 	public void configure( JobConf job ) {
 		this.batchSize = job.getInt( "solr.batch.size", 50 );
 		try {
-			this.solrDefault = new QueueingHttpSolrServer( job.get( "solr.default", "http://explorer-private:8080/solr/" ), this.batchSize );
-			this.solrImage = new QueueingHttpSolrServer( job.get( "solr.image", "http://explorer-private:6092/solr/" ), this.batchSize );
-			this.solrMedia = new QueueingHttpSolrServer( job.get( "solr.media", "http://explorer-private:6093/solr/" ), this.batchSize );
+			if( job.get( "http.proxy.host" ) != null && job.get( "http.proxy.port" ) != null ) {
+				DefaultHttpClient httpclient = new DefaultHttpClient();
+				HttpHost proxy = new HttpHost( job.get( "http.proxy.host" ), Integer.parseInt( job.get( "http.proxy.port" ) ), "http" );
+				httpclient.getParams().setParameter( ConnRoutePNames.DEFAULT_PROXY, proxy );
+				System.out.println( "Using proxy: " + proxy.toURI() );
+				this.solrServer = new QueueingHttpSolrServer( job.get( "solr.server" ), this.batchSize, httpclient );
+			} else {
+				this.solrServer = new QueueingHttpSolrServer( job.get( "solr.server" ), this.batchSize );
+			}
 		} catch( MalformedURLException e ) {
 			e.printStackTrace();
 		}
@@ -40,34 +48,26 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void reduce( Text key, Iterator<WritableSolrRecord> values, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
 		WritableSolrRecord solr;
-		String mime;
-		WctEnricher wct = new WctEnricher( key.toString() );
+		WctEnricher wct;
 
 		while( values.hasNext() ) {
 			solr = values.next();
-			wct.addWctMetadata( solr );
-			mime = ( String ) solr.doc.getFieldValue( SolrFields.SOLR_NORMALISED_CONTENT_TYPE );
+			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
+				wct = new WctEnricher( key.toString() );
+				wct.addWctMetadata( solr );
+			}
 			try {
-				if( mime.equals( "image" ) ) {
-					this.solrImage.add( solr.doc );
-				} else if( mime.equals( "media" ) ) {
-					this.solrMedia.add( solr.doc );
-				} else {
-					this.solrDefault.add( solr.doc );
-				}
-			} catch( Exception e ) {
+				this.solrServer.add( solr.doc );
+			} catch( SolrServerException e ) {
 				e.printStackTrace();
 			}
-			// output.collect( new Text( "" ), new Text( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
 		}
 	}
 
 	@Override
 	public void close() {
 		try {
-			this.solrDefault.flush();
-			this.solrImage.flush();
-			this.solrMedia.flush();
+			this.solrServer.flush();
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}

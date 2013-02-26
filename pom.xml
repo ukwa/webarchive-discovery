@@ -88,8 +88,18 @@
 	            <artifactId>poi</artifactId>
 	            <groupId>poi</groupId>
 	         </exclusion>
+	         <exclusion>
+	         	<artifactId>hadoop-core</artifactId>
+	         	<groupId>org.apache.hadoop</groupId>
+	         </exclusion>
 	      </exclusions>
 	   </dependency>
+        <dependency>
+            <groupId>org.apache.hadoop</groupId>
+            <artifactId>hadoop-core</artifactId>
+            <version>0.20.2</version>
+            <scope>provided</scope>
+        </dependency>
 	   <dependency>
 	      <groupId>org.apache.solr</groupId>
 	      <artifactId>solr-core</artifactId>
@@ -99,6 +109,10 @@
 	            <artifactId>guava</artifactId>
 	            <groupId>com.google.guava</groupId>
 	         </exclusion>
+             <exclusion>
+                <artifactId>jcl-over-slf4j</artifactId>
+                <groupId>org.slf4j</groupId>
+             </exclusion>
 	      </exclusions>
 	   </dependency>
 	</dependencies>

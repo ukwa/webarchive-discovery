@@ -1,11 +1,10 @@
-/**
- * 
- */
 package uk.bl.wap.indexer;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
-import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS;
+//import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS;
+import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_HOSTS;
+import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES;
 import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
 
 import java.io.BufferedInputStream;
@@ -19,6 +18,7 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Iterator;
 
 import javax.xml.transform.OutputKeys;
@@ -68,6 +68,7 @@ public class WARCIndexer {
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
+	private static final String MALFORMED_HOST = "malformed.host";
 	private static final int BUFFER_SIZE = 104857600;
 	
 	TikaExtractor tika = new TikaExtractor();
@@ -128,7 +129,14 @@ public class WARCIndexer {
 			if( !"0000".equals(year))
 				solr.doc.setField( SolrFields.CRAWL_YEAR, year );
 			try {
-				solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
+				// Some ARC records only have 12-digit dates
+				if( waybackDate.length() == 12 ) {
+					solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse12DigitDate( waybackDate ) ) );
+				} else {
+					if( waybackDate.length() == 14 ) {
+						solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
+					}
+				}
 			} catch( ParseException p ) {
 				p.printStackTrace();
 			}
@@ -222,10 +230,30 @@ public class WARCIndexer {
 				tikainput.reset();
 				// JSoup link extractor for (x)html, deposit in 'links' field.
 				String mime = ( String ) solr.doc.getField( SOLR_CONTENT_TYPE ).getValue();
+				HashMap<String,String> hosts = new HashMap<String,String>();
+				HashMap<String,String> suffixes = new HashMap<String,String>();
 				if( mime.startsWith( "text" ) ) {
 					Iterator<String> links = LinkExtractor.extractLinks( tikainput, "UTF-8", header.getUrl(), true ).iterator();
+					String host, link, suffix;
 					while( links.hasNext() ) {
-						solr.addField( SOLR_LINKS, links.next() );
+//						solr.addField( SOLR_LINKS, links.next() );
+						link = links.next();
+						host = WARCIndexer.extractHost( link );
+						if( !host.equals( MALFORMED_HOST ) ) {
+							hosts.put( host, "" );
+						}
+						suffix = LinkExtractor.extractPublicSuffix( link );
+						if( suffix != null ) {
+							suffixes.put( suffix, "" );
+						}
+					}
+					Iterator<String> iterator = hosts.keySet().iterator();
+					while( iterator.hasNext() ) {
+						solr.addField( SOLR_LINKS_HOSTS, iterator.next() );
+					}
+					iterator = suffixes.keySet().iterator();
+					while( iterator.hasNext() ) {
+						solr.addField( SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
 					}
 				}
 			} catch( IOException i ) {
@@ -266,9 +294,11 @@ public class WARCIndexer {
 			uri = new URI(url,false);
 			// Extract domain:
 			host = uri.getHost();
+			if( host == null )
+				host = MALFORMED_HOST;
 		} catch ( Exception e ) {
 			// Return a special hostname if parsing failed:
-			host = "malformed.host";
+			host = MALFORMED_HOST;
 		}
 		return host;
 	}

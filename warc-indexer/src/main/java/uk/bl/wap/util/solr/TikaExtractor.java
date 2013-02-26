@@ -137,7 +137,16 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		// Also pass URL as metadata to allow extension hints to work:
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
-		String detected = tika.detect( tikainput, metadata );
+
+		String detected = null;
+		try {
+			detected = tika.detect( tikainput, metadata );
+		} catch( NoSuchFieldError e ) {
+			// Apache POI version issue?
+			log.error( "Tika.detect(): " + e.getMessage() );
+		} catch( Exception e ) {
+			log.error( "Tika.detect(): " + e.getMessage() );
+		}
 		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected ) ) {
@@ -322,6 +331,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 	
 	private boolean checkMime( String mime ) {
+		if( mime == null )
+			return false;
+
 		for( String exclude : excludes ) {
 			if( mime.matches( ".*" +  exclude + ".*" ) ) {
 				return false;

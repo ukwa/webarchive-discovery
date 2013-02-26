@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.apache.http.client.HttpClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
@@ -15,6 +16,11 @@ public class QueueingHttpSolrServer extends HttpSolrServer {
 	private static final long serialVersionUID = 2827955704705820516L;
 	private int queueSize = 50;
 	Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+
+	public QueueingHttpSolrServer( String solrServerUrl, int queueSize, HttpClient client ) throws MalformedURLException {
+		super( solrServerUrl, client );
+		this.queueSize = queueSize;
+	}
 
 	public QueueingHttpSolrServer( String solrServerUrl, int queueSize ) throws MalformedURLException {
 		super( solrServerUrl );

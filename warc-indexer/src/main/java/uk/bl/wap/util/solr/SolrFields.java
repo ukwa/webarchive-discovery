@@ -20,6 +20,8 @@ public interface SolrFields {
 	public static final String SOLR_KEYWORDS = "keywords";
 	public static final String SOLR_CATEGORY = "category";
 	public static final String SOLR_LINKS = "links";
+	public static final String SOLR_LINKS_HOSTS = "hosts";
+	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "public_suffixes";
 	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";

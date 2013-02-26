@@ -195,6 +195,8 @@
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
    <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The hostnames of discovered outlinks -->
+   <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
