@@ -233,6 +233,8 @@
    <field name="content_type_droid" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The content type, as supplied by the original server: -->
    <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The first four bytes of the bitstream, suitably encoded as a string: -->
+   <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The software generators or creator tools, that can be determined from the item: -->
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
