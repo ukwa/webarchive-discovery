@@ -25,6 +25,8 @@ Currently, we are refactoring the code, in order to make our current indexes con
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
 * Facets like log(size), or small, medium, large, to boost longer texts
 * Move issues to GitHub issue tracker.
+* Add first-four-bytes field.
+* Add language field.
 
 Once the basic features are tested and working, we start to explore new, richer indexing techniques.
 
@@ -58,4 +60,9 @@ Once the basic features are tested and working, we start to explore new, richer 
 BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
 Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
 PDF, can use: creation date?
+http://wiki.creativecommons.org/RDFa
+http://wiki.creativecommons.org/XMP
+http://wiki.creativecommons.org/CC_REL
+http://wiki.creativecommons.org/WebStatement
+
 
