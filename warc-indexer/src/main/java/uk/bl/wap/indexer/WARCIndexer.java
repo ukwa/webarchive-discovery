@@ -144,7 +144,7 @@ public class WARCIndexer {
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			if( fullUrl.length() > 2000 ) fullUrl = fullUrl.substring(0, 2000);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
-			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].startsWith("index") ) ) 
+			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].matches("^index\\.[a-z]+$") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Record the domain (strictly, the host): 
 			String domain = urlParts[ 0 ];
