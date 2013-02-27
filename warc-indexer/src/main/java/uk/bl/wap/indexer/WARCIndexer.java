@@ -226,11 +226,15 @@ public class WARCIndexer {
 			}
 
 			// Pull out the first four bytes, to hunt for new format by magic:
+			try {
 			tikainput.reset();
 			byte[] ffb = new byte[4];
 			int read = tikainput.read(ffb);
 			if( read == 4 ) {
 				solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
+			}
+			} catch( IOException i ) {
+				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
 			}
 			
 			
