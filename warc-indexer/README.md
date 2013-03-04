@@ -5,9 +5,12 @@ This code runs Apache Tika on WARC and ARC records and extracts suitable metadat
 
 It is set up to work with Apache Solr, and our schema is provided in src/main/solr. The tests are able to spin-up an embedded Solr instance to verify the configuration and regression-test the indexer at the query level.
 
-It also builds a suitable command-line tool for generating/posting Solr records from web archive files.
+Using this command, it can also builds a suitable command-line tool for generating/posting Solr records from web archive files.
+<pre>
+    mvn clean install -Pcli-util
+</pre>
 
-It runs like this:
+Which runs like this:
 
 <pre>
     java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target \
