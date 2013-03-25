@@ -89,6 +89,11 @@
       	<artifactId>commons-lang</artifactId>
       	<version>2.6</version>
       </dependency>
+      <dependency>
+         <groupId>uk.bl.wa.sentimentalj</groupId>
+         <artifactId>sentimentalj</artifactId>
+         <version>1.0.1</version>
+      </dependency>
    </dependencies>
    <repositories>
       <repository>

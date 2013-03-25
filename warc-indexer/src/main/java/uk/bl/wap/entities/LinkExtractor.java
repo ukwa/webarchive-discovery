@@ -150,6 +150,38 @@ public class LinkExtractor {
 		return suffix.name();
 	}
 	
+	public static String extractPrivateSuffix( String url ) {
+		String host;
+		try {
+			host = new URI(url).getHost();
+		} catch (URISyntaxException e) {
+			return null;
+		}
+		return extractPrivateSuffixFromHost(host);
+	}
+	
+    public static String extractPrivateSuffixFromHost( String host ) {
+		if( host == null ) return null;
+		// Parse out the public suffix:
+		InternetDomainName domainName;
+		try {
+			domainName = InternetDomainName.fromLenient(host);
+		} catch( Exception e ) {
+			return null;
+		}
+		InternetDomainName suffix = null;
+		if( host.endsWith(".uk")) {
+			ImmutableList<String> parts = domainName.parts();
+			if( parts.size() >= 3 ) {
+				suffix = InternetDomainName.fromLenient( parts.get(parts.size()-3) +"."+parts.get(parts.size()-2) +"."+ parts.get(parts.size()-1) );
+			}
+		} else {
+			suffix = domainName.topPrivateDomain();
+		}
+		// Return a value:
+		if( suffix == null ) return null;
+		return suffix.name();    	
+    }
 	
 	public static void main( String[] args ) {
 		System.out.println("TEST: "+extractPublicSuffix("http://www.google.com/test.html"));

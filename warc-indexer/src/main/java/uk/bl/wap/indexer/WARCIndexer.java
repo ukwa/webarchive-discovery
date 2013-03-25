@@ -20,6 +20,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -42,6 +44,8 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.archive.io.ArchiveReader;
@@ -54,6 +58,8 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
+import uk.bl.wa.sentimentalj.Sentiment;
+import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wap.entities.LinkExtractor;
 import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.SolrWebServer;
@@ -66,11 +72,14 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
  */
 public class WARCIndexer {
 	
+	private static Log log = LogFactory.getLog(WARCIndexer.class);
+	
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
 	private static final String MALFORMED_HOST = "malformed.host";
 	private static final int BUFFER_SIZE = 104857600;
+	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5 = null;
@@ -152,6 +161,14 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
 			// Spot 'slash pages':
 			String fullUrl = header.getUrl();
+			// Also pull out the file extension, if any:
+			if( fullUrl.lastIndexOf("/") != -1 ) {
+				String path = fullUrl.substring(fullUrl.lastIndexOf("/"));
+				if( path.lastIndexOf(".") != -1 ) {
+					String ext = fullUrl.substring(fullUrl.lastIndexOf("."));
+					solr.doc.addField(SolrFields.CONTENT_TYPE_EXT, ext);
+				}
+			}
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			if( fullUrl.length() > 2000 ) fullUrl = fullUrl.substring(0, 2000);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
@@ -160,6 +177,7 @@ public class WARCIndexer {
 			// Record the domain (strictly, the host): 
 			String domain = urlParts[ 0 ];
 			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
+			solr.doc.setField( SolrFields.PRIVATE_SUFFIX, LinkExtractor.extractPrivateSuffixFromHost(domain) );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
 			// TOOD Add Private Suffix?
 
@@ -219,24 +237,19 @@ public class WARCIndexer {
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 			// Derive normalised/simplified content type:
 			processContentType(solr, header, serverType);
-			
-			// Remove the Text Field if required
-			if( !isTextIncluded){ 
-				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
-			}
-
+						
 			// Pull out the first four bytes, to hunt for new format by magic:
 			try {
-			tikainput.reset();
-			byte[] ffb = new byte[4];
-			int read = tikainput.read(ffb);
-			if( read == 4 ) {
-				solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
-			}
+				tikainput.reset();
+				byte[] ffb = new byte[4];
+				int read = tikainput.read(ffb);
+				if( read == 4 ) {
+					solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
+				}
 			} catch( IOException i ) {
 				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
 			}
-			
+
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			// Entropy, compressibility, fussy hashes, etc.
@@ -246,6 +259,7 @@ public class WARCIndexer {
 				String mime = ( String ) solr.doc.getField( SOLR_CONTENT_TYPE ).getValue();
 				HashMap<String,String> hosts = new HashMap<String,String>();
 				HashMap<String,String> suffixes = new HashMap<String,String>();
+				HashMap<String,String> domains = new HashMap<String,String>();
 				if( mime.startsWith( "text" ) ) {
 					Iterator<String> links = LinkExtractor.extractLinks( tikainput, "UTF-8", header.getUrl(), true ).iterator();
 					String host, link, suffix;
@@ -260,6 +274,10 @@ public class WARCIndexer {
 						if( suffix != null ) {
 							suffixes.put( suffix, "" );
 						}
+						domain = LinkExtractor.extractPrivateSuffix( link );
+						if( domain != null ) {
+							domains.put( suffix, "" );
+						}
 					}
 					Iterator<String> iterator = hosts.keySet().iterator();
 					while( iterator.hasNext() ) {
@@ -269,16 +287,64 @@ public class WARCIndexer {
 					while( iterator.hasNext() ) {
 						solr.addField( SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
 					}
+					iterator = domains.keySet().iterator();
+					while( iterator.hasNext() ) {
+						solr.addField( SolrFields.SOLR_LINKS_PRIVATE_SUFFIXES, iterator.next() );
+					}
+				} else if( mime.startsWith("image") ) {
+					// TODO Extract image properties.
+					
+				} else if( mime.startsWith("application/pdf") ) {
+					// TODO e.g. Use PDFBox Preflight to analyse? https://pdfbox.apache.org/userguide/preflight.html
+
 				}
 			} catch( IOException i ) {
 				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
 			}
-
-			// These extractors don't need to re-read the payload:
-			// Postcode Extractor (based on text extracted by Tika)
-			// Named entity detection
-			// WctEnricher, currently invoked in the reduce stage to lower query hits.
 			
+			// --- The following extractors don't need to re-read the payload ---
+			
+			// Pull out the text:
+			if (solr.doc.getField(SolrFields.SOLR_EXTRACTED_TEXT) != null) {
+				String text = (String) solr.doc.getField(
+						SolrFields.SOLR_EXTRACTED_TEXT).getFirstValue();
+				text = text.trim();
+				if (! "".equals(text) ) {
+
+					// Sentiment Analysis:
+					int sentilen = 500;
+					if (sentilen > text.length())
+						sentilen = text.length();
+					SentimentalJ sentij = new SentimentalJ();
+					Sentiment senti = sentij.analyze(text
+							.substring(0, sentilen));
+					int sentii = (int) (SolrFields.SENTIMENTS.length * (senti.getComparative()+1.0)/2.0);
+					//log.info("Got sentiment: " + sentii+" "+ SolrFields.SENTIMENTS[sentii]
+					//		+ " from " + text.substring(0, sentilen));
+					// Map to sentiment scale:
+					solr.addField(SolrFields.SENTIMENT, SolrFields.SENTIMENTS[sentii]);
+
+					// Postcode Extractor (based on text extracted by Tika)
+					Matcher pcm = postcodePattern.matcher(text);
+					while (pcm.find()) {
+						String pc = pcm.group();
+					//	log.info("Got Postcode: " + pc);
+						solr.addField(SolrFields.POSTCODE, pc);
+						solr.addField(SolrFields.POSTCODE_DISTRICT, pc.substring(0, pc.lastIndexOf(" ")));
+					}
+
+					// TODO Named entity extraction
+
+				}
+			}
+			
+			// TODO ACT/WctEnricher, currently invoked in the reduce stage to lower query hits.
+			
+			// Remove the Text Field if required
+			if( !isTextIncluded){ 
+				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+			}
+
 		}
 		return solr;
 	}

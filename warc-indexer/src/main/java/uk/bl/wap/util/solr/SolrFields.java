@@ -11,6 +11,7 @@ public interface SolrFields {
 	
 	public static final String SOLR_DOMAIN = "domain";
 	public static final String PUBLIC_SUFFIX = "public_suffix";
+	public static final String PRIVATE_SUFFIX = "private_suffix";
 	public static final String SOLR_DIGEST = "hash";
 	public static final String SOLR_TITLE = "title";
 	public static final String SOLR_SUBJECT = "subject";
@@ -22,6 +23,7 @@ public interface SolrFields {
 	public static final String SOLR_LINKS = "links";
 	public static final String SOLR_LINKS_HOSTS = "links_hosts";
 	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
+	public static final String SOLR_LINKS_PRIVATE_SUFFIXES = "links_private_suffixes";
 	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";
@@ -29,6 +31,7 @@ public interface SolrFields {
 	public static final String CONTENT_TYPE_TIKA = "content_type_tika";
 	public static final String CONTENT_TYPE_DROID = "content_type_droid";
 	public static final String CONTENT_TYPE_SERVED = "content_type_served";
+	public static final String CONTENT_TYPE_EXT = "content_type_ext";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
 	public static final String CONTENT_FFB = "content_ffb";
 	public static final String GENERATOR = "generator";
@@ -43,4 +46,11 @@ public interface SolrFields {
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String CRAWL_DATE = "crawl_date";
 	public static final String CRAWL_YEAR = "crawl_year";
+	
+	public static final String POSTCODE = "postcode";
+	public static final String POSTCODE_DISTRICT = "postcode_district";
+	public static final String LOCATION = "location";
+	
+	public static final String SENTIMENT = "sentiment";
+	public static final String[] SENTIMENTS = new String[] {"Very Negative", "Negative", "Mildly Negative" ,"Neutral", "Mildly Positive", "Positive", "Very Positive"};
 }
