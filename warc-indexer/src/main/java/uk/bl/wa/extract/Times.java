@@ -27,7 +27,8 @@ public class Times {
 	    String hour = null;
 	    String minute = null;
 	    String second = null;
-	    String ampm = null;
+	    @SuppressWarnings("unused")
+		String ampm = null;
 
 	    String regexDelimiter = "[-:\\/.,]";
 	    String regexDay = "((?:[0-2]?\\d{1})|(?:[3][01]{1}))";

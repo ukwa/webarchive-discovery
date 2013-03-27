@@ -2,7 +2,6 @@ package uk.bl.wap.util.solr;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 

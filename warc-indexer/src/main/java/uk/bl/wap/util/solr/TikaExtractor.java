@@ -7,7 +7,6 @@ import java.io.InterruptedIOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Date;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
