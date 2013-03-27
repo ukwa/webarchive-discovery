@@ -54,7 +54,7 @@ public interface SolrFields {
 	
 	public static final String POSTCODE = "postcode";
 	public static final String POSTCODE_DISTRICT = "postcode_district";
-	public static final String LOCATION = "location";
+	public static final String LOCATIONS = "locations";
 	
 	public static final String SENTIMENT = "sentiment";
 	public static final String[] SENTIMENTS = new String[] {"Very Negative", "Negative", "Mildly Negative" ,"Neutral", "Mildly Positive", "Positive", "Very Positive"};

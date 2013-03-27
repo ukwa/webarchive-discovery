@@ -19,7 +19,9 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -63,6 +65,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
+import uk.bl.wap.util.PostcodeGeomapper;
 import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.SolrWebServer;
 import uk.bl.wap.util.solr.TikaExtractor;
@@ -86,6 +89,16 @@ public class WARCIndexer {
 	MessageDigest md5 = null;
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+
+	/** */
+	LanguageDetector ld = new LanguageDetector();
+	/** */
+	HtmlFeatureParser hfp = new HtmlFeatureParser();
+	/** */
+	SentimentalJ sentij = new SentimentalJ();
+	/** */
+	PostcodeGeomapper pcg = new PostcodeGeomapper();
+
 
 	public WARCIndexer() throws NoSuchAlgorithmException {
 		md5 = MessageDigest.getInstance( "MD5" );
@@ -271,7 +284,6 @@ public class WARCIndexer {
 				HashMap<String,String> suffixes = new HashMap<String,String>();
 				HashMap<String,String> domains = new HashMap<String,String>();
 				if( mime.startsWith( "text" ) ) {
-					HtmlFeatureParser hfp = new HtmlFeatureParser();
 					metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
 					hfp.parse(tikainput, null, metadata, null);
 					String links_list = metadata.get(HtmlFeatureParser.LINK_LIST);
@@ -323,10 +335,13 @@ public class WARCIndexer {
 						SolrFields.SOLR_EXTRACTED_TEXT).getFirstValue();
 				text = text.trim();
 				if (! "".equals(text) ) {
-					LanguageDetector ld = new LanguageDetector();
-					String li = ld.detectLanguage(text);
-					if( li != null )
-					  solr.addField(SolrFields.CONTENT_LANGUAGE, li);
+					if( metadata.get(Metadata.CONTENT_LANGUAGE) == null ) {
+						String li = ld.detectLanguage(text);
+						if( li != null )
+							solr.addField(SolrFields.CONTENT_LANGUAGE, li);
+					} else {
+						solr.addField(SolrFields.CONTENT_LANGUAGE, metadata.get(Metadata.CONTENT_LANGUAGE) );
+					}
 					
 					// Sentiment Analysis:
 					int sentilen = 5000;
@@ -335,7 +350,6 @@ public class WARCIndexer {
 					String sentitext = text.substring(0, sentilen);
 					//	metadata.get(HtmlFeatureParser.FIRST_PARAGRAPH);
 						
-					SentimentalJ sentij = new SentimentalJ();
 					Sentiment senti = sentij.analyze( sentitext );
 					int sentii = (int) (SolrFields.SENTIMENTS.length * ((senti.getComparative()+2.0)/4.0));
 					if( sentii < 0 ) {
@@ -352,11 +366,15 @@ public class WARCIndexer {
 
 					// Postcode Extractor (based on text extracted by Tika)
 					Matcher pcm = postcodePattern.matcher(text);
-					while (pcm.find()) {
-						String pc = pcm.group();
-					//	log.info("Got Postcode: " + pc);
+					Set<String> pcs = new HashSet<String>();
+					while (pcm.find()) pcs.add(pcm.group());
+					for( String pc : pcs ) {
 						solr.addField(SolrFields.POSTCODE, pc);
-						solr.addField(SolrFields.POSTCODE_DISTRICT, pc.substring(0, pc.lastIndexOf(" ")));
+						String pcd = pc.substring(0, pc.lastIndexOf(" "));
+						solr.addField(SolrFields.POSTCODE_DISTRICT, pcd);
+						String location = pcg.getLatLogForPostcodeDistrict(pcd);
+						if( location != null ) 
+							solr.addField(SolrFields.LOCATIONS, location);
 					}
 
 					// TODO Named entity extraction
@@ -388,6 +406,12 @@ public class WARCIndexer {
 		return waybackYear;
 	}
 	
+	/**
+	 * 
+	 * @param solr
+	 * @param header
+	 * @param serverType
+	 */
 	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType) {
 		StringBuilder mime = new StringBuilder();
 		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );

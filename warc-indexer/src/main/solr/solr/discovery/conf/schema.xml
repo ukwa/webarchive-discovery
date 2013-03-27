@@ -266,6 +266,9 @@
    <field name="postcode" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The postcode district, e.g. LS11. -->
    <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The locations mentioned in each page. -->
+   <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
+
    
    <!-- Sentiment analysis,  -->
    <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
