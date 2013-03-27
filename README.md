@@ -18,22 +18,24 @@ Currently, we are refactoring the code, in order to make our current indexes con
 
 ### TODO ###
 
+* Canonicalize outlinks, or strip www from links_host at least.
 * Deduplicating solr indexer: keys on content hash, populate solr once per hash, with multiple crawl dates? That requires URL+content hash. Also hash only and cross reference? Same as <list url>?
 * Add a test ARC file to go alongside the WARC one.
 * Get ACT/WCTEnricher working again.
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
+    * Noting that there may be more exclusion here, to allow collection merging.
 * Facets like log(size), or small, medium, large, to boost longer texts
-* Add language field.
 * Move issues to GitHub issue tracker.
 
 Once the basic features are tested and working, we start to explore new, richer indexing techniques.
 
 ### Ideas ###
-* Support a publication_date? Or published_after, published_before?
+* Support a publication_date? Or an interval: published_after, published_before?
     * BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
     * Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
     * PDF, can use: creation date as lower bound.
     * Full temporal realignment. Using crawl date, embedded date, and relationships, to rebuild the temporal history of a web archive.
+* Add Welsh and other language or dialect detection?
 * Support license extraction.
     * http://wiki.creativecommons.org/RDFa
     * http://wiki.creativecommons.org/XMP

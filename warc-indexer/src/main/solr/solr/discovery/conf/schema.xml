@@ -131,6 +131,7 @@
    <field name="url" type="text_general" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
+   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Main body of document extracted by SolrCell.
@@ -177,6 +178,8 @@
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <!-- The content encoding: -->
    <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content language - ISO 639 Language Codes: -->
+   <field name="content_language" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
@@ -208,6 +211,12 @@
    <!-- Core fields to be removed? -->
    <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
    <field name="text_ns" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   
+     <!-- The publication date, as a date -->
+   <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <!-- The publication year, for faceting -->
+   <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
+   
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    

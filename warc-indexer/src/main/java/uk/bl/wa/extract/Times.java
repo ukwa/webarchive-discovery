@@ -1,4 +1,4 @@
-package uk.bl.wap.entities;
+package uk.bl.wa.extract;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -16,7 +16,7 @@ public class Times {
 	 * @return Date object
 	 * @throws ParseException 
 	 */
-	public Date extractDate(String text) throws ParseException {
+	public static Date extractDate(String text) throws ParseException {
 	    Date date = null;
 	    boolean dateFound = false;
 
@@ -131,7 +131,7 @@ public class Times {
 	    return date;
 	}
 
-	private Matcher checkDatePattern(String regex, String text) {
+	private static Matcher checkDatePattern(String regex, String text) {
 	    Pattern p = Pattern.compile(regex, Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 	    return p.matcher(text);
 	}

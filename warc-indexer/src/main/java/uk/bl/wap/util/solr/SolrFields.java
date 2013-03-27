@@ -27,6 +27,7 @@ public interface SolrFields {
 	
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";
+	public static final String CONTENT_LANGUAGE = "content_language";
 	public static final String FULL_CONTENT_TYPE = "content_type_full";
 	public static final String CONTENT_TYPE_TIKA = "content_type_tika";
 	public static final String CONTENT_TYPE_DROID = "content_type_droid";
@@ -46,6 +47,10 @@ public interface SolrFields {
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String CRAWL_DATE = "crawl_date";
 	public static final String CRAWL_YEAR = "crawl_year";
+	public static final String PUBLICATION_DATE = "publication_date";
+	public static final String PUBLICATION_YEAR = "publication_year";
+	public static final String LAST_MODIFIED = "last_modified";
+	public static final String LAST_MODIFIED_YEAR = "last_modified_year";
 	
 	public static final String POSTCODE = "postcode";
 	public static final String POSTCODE_DISTRICT = "postcode_district";
