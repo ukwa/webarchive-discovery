@@ -131,6 +131,7 @@
    <field name="url" type="text_general" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
+   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Main body of document extracted by SolrCell.
@@ -177,6 +178,8 @@
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <!-- The content encoding: -->
    <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content language - ISO 639 Language Codes: -->
+   <field name="content_language" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
@@ -193,8 +196,12 @@
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The private suffix of the host domain, i.e. example.co.uk, example.org, etc: -->
+   <field name="private_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
    <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The private suffixs of the target domains of any links, i.e. example.co.uk, example.org, etc: -->
+   <field name="links_private_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The hostnames of discovered outlinks -->
    <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
@@ -204,6 +211,12 @@
    <!-- Core fields to be removed? -->
    <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
    <field name="text_ns" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   
+     <!-- The publication date, as a date -->
+   <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <!-- The publication year, for faceting -->
+   <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
+   
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
@@ -233,6 +246,8 @@
    <field name="content_type_droid" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The content type, as supplied by the original server: -->
    <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The content type, as supplied by the URI extension: -->
+   <field name="content_type_ext" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The first four bytes of the bitstream, suitably encoded as a string: -->
    <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false"/>
    
@@ -244,7 +259,19 @@
    <field name="parse_error" type="string" indexed="true" stored="true" multiValued="false"/>
     -->
 
-   <!-- Content-oriented fields -->
+   <!-- Content-based fields -->
+   
+   <!-- Postcode fields: -->
+   <!-- The full postcode, e.g. LS11 5RR. -->
+   <field name="postcode" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The postcode district, e.g. LS11. -->
+   <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The locations mentioned in each page. -->
+   <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
+
+   
+   <!-- Sentiment analysis,  -->
+   <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The size of images, in pixels? or tags/ranges? -->
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>

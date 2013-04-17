@@ -17,9 +17,10 @@ import org.apache.log4j.Logger;
 import org.apache.tika.Tika;
 import org.archive.io.ArchiveRecordHeader;
 
+import uk.bl.wa.extract.LinkExtractor;
+import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wap.hadoop.WritableArchiveRecord;
 import uk.bl.wap.indexer.WARCIndexer;
-import uk.bl.wap.entities.LinkExtractor;
 
 @SuppressWarnings( { "deprecation" } )
 public class EntityMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
@@ -72,7 +73,7 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		if( sourceSuffix == null ) sourceSuffix = "null";
 		Set<String> destSuffixes = null;
 		try {
-			destSuffixes= LinkExtractor.extractPublicSuffixes(value.getRecord(), false);
+			destSuffixes= LinkExtractor.extractPublicSuffixes(HtmlFeatureParser.extractMetadata(value.getRecord(), base_url));
 		} catch( java.nio.charset.UnsupportedCharsetException e ) {
 			log.error("Could not parse record! "+e);
 			return;

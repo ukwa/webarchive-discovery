@@ -7,6 +7,7 @@ import java.io.InterruptedIOException;
 import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Arrays;
+import java.util.Date;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
@@ -22,7 +23,13 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.sax.ToTextContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.xml.sax.ContentHandler;
+
+import uk.bl.wa.extract.Times;
 
 
 /**
@@ -182,8 +189,11 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			// Copy the body text:
 			String output = content.toString();
 			if( runner.complete || !output.equals( "" ) ) {
+				//log.debug("Extracted text from: "+url);				
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
+			} else {
+				//log.debug("Failed to extract any text from: "+url);
 			}
 			
 			/*
@@ -200,6 +210,33 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			solr.addField( SolrFields.SOLR_AUTHOR, metadata.get( DublinCore.CREATOR) );
 			solr.addField( SolrFields.CONTENT_ENCODING, metadata.get( Metadata.CONTENT_ENCODING ) );
 
+			// Parse out any embedded date that can act as a created/modified date.
+			String date = null;
+			if( metadata.get( Metadata.CREATION_DATE ) != null)
+				date = metadata.get( Metadata.CREATION_DATE );
+			if( metadata.get( Metadata.DATE ) != null)
+				date = metadata.get( Metadata.DATE );
+			if( metadata.get( Metadata.MODIFIED ) != null)
+				date = metadata.get( Metadata.MODIFIED );
+			if( date != null ) {
+				DateTimeFormatter df = ISODateTimeFormat.dateTimeParser();
+				DateTime edate = null;
+				try {
+					edate = df.parseDateTime(date);
+				} catch( IllegalArgumentException e ) {
+					log.error( "Could not parse: "+ date );
+				}
+				if( edate == null ) {
+					Date javadate = Times.extractDate(date);
+					if( javadate != null )
+						edate = new org.joda.time.DateTime( javadate );
+				}
+				if( edate != null ) {
+					solr.addField( SolrFields.LAST_MODIFIED_YEAR, ""+edate.getYear() );
+					DateTimeFormatter iso_df = ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC);
+					solr.addField( SolrFields.LAST_MODIFIED, iso_df.print( edate ) );
+				}
+			}
 			
 			// Also look to record the software:
 			String software = null;

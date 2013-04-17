@@ -1,19 +1,17 @@
 /**
  * 
  */
-package uk.bl.wap.entities;
+package uk.bl.wa.extract;
 
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.archive.io.ArchiveRecord;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
+import org.apache.tika.metadata.Metadata;
+
+import uk.bl.wa.parsers.HtmlFeatureParser;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
@@ -24,71 +22,30 @@ import com.google.common.net.InternetDomainName;
  */
 public class LinkExtractor {
 	
-
-	/**
-	 * Extract a href links from the given WritableArchiveRecord.
-	 * 
-	 * @param rec
-	 * @return
-	 * @throws IOException
-	 */
-	public static Set<String> extractLinks( ArchiveRecord rec, boolean includeImgLinks ) throws IOException {
-		return extractLinks( 
-				rec, 
-				null, 
-				rec.getHeader().getUrl(),
-				includeImgLinks );
-	}
-	
-	/**
-	 * Use a tolerant parser to extract all of the absolute a href links from a document.
-	 * 
-	 * Does not extract other links, e.g. stylesheets, etc. etc. Image links optional.
-	 * 
-	 * @param input The InputStream
-	 * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
-	 * @param baseUri base URI for the page, for resolving relative links. e.g. "http://www.example.com/"
-	 * @return
-	 * @throws IOException
-	 */
-	public static Set<String> extractLinks( InputStream input, String charset, String baseUri, boolean includeImgLinks ) throws IOException {
-		Set<String> linkset = new HashSet<String>();
-		
-		Document doc = Jsoup.parse(input, charset, baseUri );
-
-		// All a with href
-		for( Element link : doc.select("a[href]") ) {
-			linkset.add( link.attr("abs:href") );
-		}
-		// All images:
-		if( includeImgLinks ) {
-			for( Element link : doc.select("img[src]") ) {
-				linkset.add( link.attr("abs:src") );
-			}
-		}
-		// Example of use: all PNG references...
-		//Elements pngs = doc.select("img[src$=.png]");
-
-		//Element masthead = doc.select("div.masthead").first();
-		return linkset;
-	}
+	public static final String MALFORMED_HOST = "malformed.host";
 	
 	/**
 	 * 
-	 * @param rec
-	 * @param includeImgLinks
+	 * @param url
 	 * @return
-	 * @throws IOException
 	 */
-	public static Set<String> extractPublicSuffixes( ArchiveRecord rec, boolean includeImgLinks ) throws IOException {
-		return extractPublicSuffixes(
-				rec, 
-				null, 
-				rec.getHeader().getUrl(),
-				includeImgLinks 
-				);
+	public static String extractHost(String url) {
+		String host = "unknown.host";
+		org.apache.commons.httpclient.URI uri = null;
+		// Attempt to parse:
+		try {
+			uri = new org.apache.commons.httpclient.URI(url,false);
+			// Extract domain:
+			host = uri.getHost();
+			if( host == null )
+				host = MALFORMED_HOST;
+		} catch ( Exception e ) {
+			// Return a special hostname if parsing failed:
+			host = MALFORMED_HOST;
+		}
+		return host;
 	}
-
+	
 	/**
 	 * 
 	 * @param input
@@ -98,8 +55,8 @@ public class LinkExtractor {
 	 * @return
 	 * @throws IOException
 	 */
-	public static Set<String> extractPublicSuffixes( InputStream input, String charset, String baseUri, boolean includeImgLinks ) throws IOException {
-		Set<String> links = extractLinks(input, charset, baseUri, includeImgLinks);
+	public static Set<String> extractPublicSuffixes( Metadata metadata ) throws IOException {
+		String[] links = metadata.get(HtmlFeatureParser.LINK_LIST).split(" ");
 		Set<String> suffixes = new HashSet<String>();
 		for( String link : links ) {
 			String suffix = extractPublicSuffix(link);
@@ -150,6 +107,38 @@ public class LinkExtractor {
 		return suffix.name();
 	}
 	
+	public static String extractPrivateSuffix( String url ) {
+		String host;
+		try {
+			host = new URI(url).getHost();
+		} catch (URISyntaxException e) {
+			return null;
+		}
+		return extractPrivateSuffixFromHost(host);
+	}
+	
+    public static String extractPrivateSuffixFromHost( String host ) {
+		if( host == null ) return null;
+		// Parse out the public suffix:
+		InternetDomainName domainName;
+		try {
+			domainName = InternetDomainName.fromLenient(host);
+		} catch( Exception e ) {
+			return null;
+		}
+		InternetDomainName suffix = null;
+		if( host.endsWith(".uk")) {
+			ImmutableList<String> parts = domainName.parts();
+			if( parts.size() >= 3 ) {
+				suffix = InternetDomainName.fromLenient( parts.get(parts.size()-3) +"."+parts.get(parts.size()-2) +"."+ parts.get(parts.size()-1) );
+			}
+		} else {
+			suffix = domainName.topPrivateDomain();
+		}
+		// Return a value:
+		if( suffix == null ) return null;
+		return suffix.name();    	
+    }
 	
 	public static void main( String[] args ) {
 		System.out.println("TEST: "+extractPublicSuffix("http://www.google.com/test.html"));

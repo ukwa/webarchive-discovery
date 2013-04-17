@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.entities;
+package uk.bl.wa.extract;
 
 import java.util.ArrayList;
 import java.util.regex.Matcher;
