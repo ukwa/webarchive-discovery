@@ -45,6 +45,7 @@ public class EntityExtractor extends Configured implements Tool {
 		while( ( line = br.readLine() ) != null ) {
 			paths.add( new Path( line ) );
 		}
+		br.close();
 		log.info("Setting paths...");
 		FileInputFormat.setInputPaths( conf, paths.toArray(new Path[] {}) );
 		log.info("Set "+paths.size()+" InputPaths");

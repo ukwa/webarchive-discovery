@@ -39,6 +39,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		while( ( line = br.readLine() ) != null ) {
 			FileInputFormat.addInputPath( conf, new Path( line ) );
 		}
+		br.close();
 
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 

@@ -28,7 +28,6 @@ public class PostcodeGeomapper {
 				postcodes.put(nextLine[1], nextLine[2]+","+nextLine[3]);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}		
 	}

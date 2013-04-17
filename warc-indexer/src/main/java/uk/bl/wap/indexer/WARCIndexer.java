@@ -72,6 +72,11 @@ import uk.bl.wap.util.solr.TikaExtractor;
 import uk.bl.wap.util.solr.WritableSolrRecord;
 
 /**
+ * 
+ * Core indexer class that takes a web archive record and generates a Solr record.
+ * 
+ * TODO Currently a rather crude, monolithic code structure. Should pull the different metadata generation logic out into separate classes or at least methods.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
@@ -119,7 +124,7 @@ public class WARCIndexer {
 	
 	/**
 	 * This extracts metadata from the ArchiveRecord and creates a suitable SolrRecord.
-	 * Removes the text field if flag set
+	 * Removes the text field if flag set.
 	 * 
 	 * @param archiveName
 	 * @param record
