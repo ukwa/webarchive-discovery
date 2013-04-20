@@ -31,8 +31,6 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
 
-import uk.bl.wap.nanite.ExtendedMimeType;
-
 
 
 /**
@@ -98,7 +96,7 @@ public class TikaDeepIdentifier {
 		} catch( Throwable e ) {
 			log.error( "Tika.detect failed:" + e.getMessage() );
 			//e.printStackTrace();
-			return ExtendedMimeType.OCTET_STREAM.toString();
+			return MediaType.OCTET_STREAM.toString();
 		}
 
 		// Now perform full parse, to find a more detailed tikaType

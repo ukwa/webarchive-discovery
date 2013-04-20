@@ -15,6 +15,7 @@ import javax.activation.MimeTypeParseException;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.CompositeParser;
 import org.apache.tika.parser.ParseContext;
 import org.junit.Before;
@@ -22,7 +23,6 @@ import org.junit.Test;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import uk.bl.wap.nanite.ExtendedMimeType;
 import uk.bl.wap.tika.PreservationParser;
 
 /**
@@ -96,9 +96,9 @@ public class PreservationParserTest {
 		System.out.println("----");
 
 		// Recover the extended MIME Type:
-		ExtendedMimeType tikaType = new ExtendedMimeType(metadata.get(PreservationParser.EXT_MIME_TYPE) );
+		MediaType tikaType = MediaType.parse(metadata.get(PreservationParser.EXT_MIME_TYPE) );
 		// Assert equality:
-		assertEquals( true, tikaType.match( new ExtendedMimeType( expected )) );
+		assertEquals( true, tikaType.equals( MediaType.parse( expected )) );
 
 }
 

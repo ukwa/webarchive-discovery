@@ -27,7 +27,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 
-import uk.bl.wap.nanite.ExtendedMimeType;
 import uk.bl.wap.tika.detect.HighlightJSDetector;
 import uk.bl.wap.tika.parser.iso9660.ISO9660Parser;
 import uk.bl.wap.tika.parser.warc.ARCParser;
@@ -91,10 +90,12 @@ public class PreservationParser extends AutoDetectParser {
 	public void init(ParseContext context) {
 		if( this.initialised ) return;
 		// Add the HighlightJS detector:
+		/*
 		CompositeDetector detect = (CompositeDetector) this.getDetector();
 		List<Detector> detectors = detect.getDetectors();
 		detectors.add( new HighlightJSDetector() );
 		this.setDetector( new CompositeDetector(detectors));
+		*/
 		// Override the built-in PDF parser (based on PDFBox) with our own (based in iText):
 		MediaType pdf = MediaType.parse("application/pdf");
 		Map<MediaType, Parser> parsers = getParsers();
@@ -122,7 +123,7 @@ public class PreservationParser extends AutoDetectParser {
 
 		// Pick up the detected MIME Type passed in from above:
 		String providedType = metadata.get( Metadata.CONTENT_TYPE );
-		log.warn("providedType = " + providedType);
+		log.warn("Supplied hint, providedType = " + providedType);
 		
 		/* */
 		String[] names = metadata.names();
@@ -141,41 +142,33 @@ public class PreservationParser extends AutoDetectParser {
 		}
 		/* */
 		// Build the extended MIME Type, incorporating version and creator software etc.
-		ExtendedMimeType tikaType = null;
+		MediaType tikaType = null;
 		try {
 			if( providedType == null ) {
-				tikaType = new ExtendedMimeType( metadata.get( Metadata.CONTENT_TYPE ) );
+				tikaType = MediaType.parse( metadata.get( Metadata.CONTENT_TYPE ) );
 			} else {
-				tikaType = new ExtendedMimeType( providedType );
+				tikaType = MediaType.parse( providedType );
 			}
 		} catch ( Exception e) {
 			// Stop here and return if this failed:
 			log.error("Could not parse MIME Type: "+metadata.get( Metadata.CONTENT_TYPE ));
-			tikaType = ExtendedMimeType.OCTET_STREAM;
+			tikaType = MediaType.OCTET_STREAM;
 			metadata.remove( Metadata.CONTENT_TYPE );
 		}
 		
 		// Content encoding, if any:
 		String encoding = metadata.get( Metadata.CONTENT_ENCODING );
+		/*
 		if( encoding != null ) {
-			if ( "text".equals( tikaType.getPrimaryType() ) ) {
+			if ( "text".equals( tikaType.getType() ) ) {
 				tikaType.setParameter( "charset", encoding.toLowerCase() );
 			} else {
 				tikaType.setParameter( "encoding", encoding );
 			}
 		}
-		// PDF Version, if any:
-		if( metadata.get("pdf:version") != null ) tikaType.setVersion( metadata.get("pdf:version") );
+		*/
 		// Also look to record the software:
 		String software = null;
-		// For PDF, create separate tags:
-		if( "application/pdf".equals(tikaType.getBaseType()) ) {
-			// PDF has Creator and Producer application properties:
-			String creator = metadata.get("pdf:creator");
-			if( creator != null ) tikaType.setParameter("source", creator);
-			String producer = metadata.get("pdf:producer");
-			if( producer != null) tikaType.setSoftware(producer);
-		}
 		// Application ID, MS Office only AFAICT, and the VERSION is only doc
 		if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
 		if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
@@ -192,15 +185,15 @@ Jpeg Comment: CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality
 comment: CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality
 		 */
 		if( software != null ) {
-			tikaType.setSoftware(software);
+			metadata.set(Metadata.SOFTWARE, software);
 		}
 		// Also, if there is any trace of any hardware, record it here:
 		if( metadata.get( Metadata.EQUIPMENT_MODEL ) != null )
-			tikaType.setHardware( metadata.get( Metadata.EQUIPMENT_MODEL));
+			metadata.set("hardware", metadata.get( Metadata.EQUIPMENT_MODEL));
 		
 		// Fall back on special type for empty resources:
 		if( "0".equals(metadata.get(Metadata.CONTENT_LENGTH)) ) {
-			tikaType = ExtendedMimeType.EMPTY;
+			metadata.set(Metadata.CONTENT_TYPE, "application/x-empty");
 		}
 		
 		// Return extended MIME Type:
