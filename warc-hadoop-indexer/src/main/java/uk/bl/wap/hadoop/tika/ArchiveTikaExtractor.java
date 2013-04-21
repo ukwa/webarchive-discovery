@@ -57,7 +57,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		conf.setNumReduceTasks( numReducers );
 		JobClient client = new JobClient( conf );
 		client.submitJob( conf );
-//		 JobClient.runJob( conf );
+//		JobClient.runJob( conf );
 		return 0;
 	}
 
@@ -75,6 +75,8 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 	private void setProperties( JobConf conf ) throws IOException {
 		Properties properties = new Properties();
 		properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
+		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
+
 		conf.set( "solr.server", properties.getProperty( "solr_server" ) );
 		conf.set( "solr.batch.size", properties.getProperty( "solr_batch_size" ) );
 		conf.set( "solr.threads", properties.getProperty( "solr_threads" ) );
