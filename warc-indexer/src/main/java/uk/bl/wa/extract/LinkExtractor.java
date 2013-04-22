@@ -133,7 +133,11 @@ public class LinkExtractor {
 				suffix = InternetDomainName.fromLenient( parts.get(parts.size()-3) +"."+parts.get(parts.size()-2) +"."+ parts.get(parts.size()-1) );
 			}
 		} else {
-			suffix = domainName.topPrivateDomain();
+			if( domainName.isTopPrivateDomain() || domainName.isUnderPublicSuffix() ) {
+				suffix = domainName.topPrivateDomain();
+			} else {
+				suffix = domainName;
+			}
 		}
 		// Return a value:
 		if( suffix == null ) return null;
