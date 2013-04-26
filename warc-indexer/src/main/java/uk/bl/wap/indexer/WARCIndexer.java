@@ -191,6 +191,7 @@ public class WARCIndexer {
 				}				
 				if( path.indexOf(".") != -1 ) {
 					String ext = path.substring(path.lastIndexOf("."));
+					ext = ext.toLowerCase();
 					solr.doc.addField(SolrFields.CONTENT_TYPE_EXT, ext);
 				}
 			}
