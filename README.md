@@ -14,7 +14,11 @@ Structure
 Roadmap
 -------
 
-Currently, we are refactoring the code, in order to make our current indexes consistent.
+There are two development strands, held on distinct branches:
+
+* master: This is our production version, which does full-text indexing but does not extract many facets.
+* adda-discovery: This is our development version, where we are experimenting with new facets and features to see what other useful aspects of the content we can make available for indexing.
+
 
 ### TODO ###
 
