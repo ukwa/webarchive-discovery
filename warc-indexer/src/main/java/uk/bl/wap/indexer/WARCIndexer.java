@@ -60,6 +60,9 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
+import eu.scape_project.bitwiser.utils.FuzzyHash;
+import eu.scape_project.bitwiser.utils.SSDeep;
+
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
@@ -292,6 +295,7 @@ public class WARCIndexer {
 				if( mime.startsWith( "text" ) ) {
 					metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
 					hfp.parse(tikainput, null, metadata, null);
+					// Process links:
 					String links_list = metadata.get(HtmlFeatureParser.LINK_LIST);
 					if( links_list != null ) {
 						String host, suffix;
@@ -322,6 +326,14 @@ public class WARCIndexer {
 							solr.addField( SolrFields.SOLR_LINKS_PRIVATE_SUFFIXES, iterator.next() );
 						}
 					}
+					// Process element usage:
+					String de = metadata.get(HtmlFeatureParser.DISTINCT_ELEMENTS);
+					if( de != null ) {
+						for( String e : de.split(" ") ) {
+							solr.addField(SolrFields.ELEMENTS_USED, e);
+						}
+					}
+					
 				} else if( mime.startsWith("image") ) {
 					// TODO Extract image properties.
 
@@ -382,6 +394,19 @@ public class WARCIndexer {
 						if( location != null ) 
 							solr.addField(SolrFields.LOCATIONS, location);
 					}
+					
+					// Canonicalize the text - strip newlines etc.
+					Pattern whitespace = Pattern.compile("\\s+");
+					Matcher matcher = whitespace.matcher(text);
+					text = matcher.replaceAll(" ").toLowerCase().trim();
+					
+					// Add SSDeep hash for the text, to spot similar texts.
+					SSDeep ssd = new SSDeep();
+					FuzzyHash tfh = ssd.fuzzy_hash_buf(text.getBytes("UTF-8"));
+					solr.addField( SolrFields.SSDEEP_PREFIX+tfh.getBlocksize(), tfh.getHash() );
+					solr.addField( SolrFields.SSDEEP_PREFIX+(tfh.getBlocksize()*2), tfh.getHash2() );
+					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX+tfh.getBlocksize(), tfh.getHash() );
+					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX+(tfh.getBlocksize()*2), tfh.getHash2() );
 
 					// TODO Named entity extraction
 

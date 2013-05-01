@@ -16,6 +16,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
+import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
@@ -140,7 +141,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	@SuppressWarnings( "deprecation" )
 	public WritableSolrRecord extract( WritableSolrRecord solr, InputStream is, String url ) throws IOException {
 		
-		TikaInputStream tikainput = TikaInputStream.get(is);
+		// Set up the TikaInputStream:
+		TikaInputStream tikainput = TikaInputStream.get( new CloseShieldInputStream(is) );
+		
 		// Also pass URL as metadata to allow extension hints to work:
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
@@ -184,7 +187,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			}
 			
 			// If there was a parse error, report it:
-			//solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
+			solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
 
 			// Copy the body text:
 			String output = content.toString();

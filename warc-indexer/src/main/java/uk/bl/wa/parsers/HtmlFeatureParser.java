@@ -30,6 +30,7 @@ public class HtmlFeatureParser extends AbstractParser {
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
 	public static final String LINK_LIST = "LinkList";
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
+	public static final String DISTINCT_ELEMENTS = "DistinctElements";
 	
 	@Override
 	public Set<MediaType> getSupportedTypes(ParseContext context) {
@@ -70,6 +71,15 @@ public class HtmlFeatureParser extends AbstractParser {
 				}
 			}
 		}
+		
+		// Grab the list of distinct elements used in the page:
+		Set<String> de = new HashSet<String>();
+		for( Element e : doc.select("*") ) {
+			if( !"#root".equals(e.tag().getName()) )
+					de.add(e.tag().getName());
+		}
+		metadata.set(DISTINCT_ELEMENTS, StringUtils.join(de, " "));
+		
 	}
 	
 

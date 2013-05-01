@@ -255,9 +255,7 @@
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Any Parse Error encountered while attempting to extract metadata and text: -->
-   <!-- 
    <field name="parse_error" type="string" indexed="true" stored="true" multiValued="false"/>
-    -->
 
    <!-- Content-based fields -->
    
@@ -268,7 +266,6 @@
    <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The locations mentioned in each page. -->
    <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
-
    
    <!-- Sentiment analysis,  -->
    <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
@@ -276,10 +273,13 @@
    <!-- The size of images, in pixels? or tags/ranges? -->
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
 
-   <!-- Fuzzy hashing for detecting similar content. -->
-   <field name="ssdeep_hash_block_size" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="ssdeep_hash_short" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="ssdeep_hash_long" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The different HTML elements used by the document -->
+   <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true"/>
+
+   <!-- Fuzzy hashing for detecting similar content.
+        Uses a dynamic field definition to allow for variations in block sizes. -->
+   <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
+   <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
    
    <!-- wa.bl.uk fields end -->
 
@@ -439,6 +439,12 @@
          <filter class="solr.RemoveDuplicatesTokenFilterFactory" />
       </analyzer>
    </fieldType>
+   <fieldtype name="literal_ngram" stored="false" indexed="true" class="solr.TextField" >
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.NGramFilterFactory" minGramSize="2" maxGramSize="5" />
+      </analyzer>
+    </fieldtype>
    <!-- wa.bl.uk fieldTypes end -->  
   
     <!-- field type definitions. The "name" attribute is

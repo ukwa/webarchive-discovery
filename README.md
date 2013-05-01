@@ -24,22 +24,21 @@ There are two development strands, held on distinct branches:
 
 * Canonicalize outlinks, or strip www from links_host at least.
 * Deduplicating solr indexer: keys on content hash, populate solr once per hash, with multiple crawl dates? That requires URL+content hash. Also hash only and cross reference? Same as <list url>?
-* Add a test ARC file to go alongside the WARC one.
+    * NOTE that this only work when all sources are processed in the same Hadoop job.
 * Get ACT/WCTEnricher working again.
+    * Pull the exclusion list (below) and the metadata in the Reducer constructor.
+    * Filter and match the domains and enrich as required. 
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
     * Noting that there may be more exclusion here, to allow collection merging.
-* Facets like log(size), or small, medium, large, to boost longer texts
-* Move issues to GitHub issue tracker.
-
-Once the basic features are tested and working, we start to explore new, richer indexing techniques.
 
 ### Ideas ###
+* Move issues to GitHub issue tracker.
+* Add a test ARC file to go alongside the WARC one.
 * Support a publication_date? Or an interval: published_after, published_before?
     * BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
     * Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
     * PDF, can use: creation date as lower bound.
     * Full temporal realignment. Using crawl date, embedded date, and relationships, to rebuild the temporal history of a web archive.
-* Add Welsh and other language or dialect detection?
 * Support license extraction.
     * http://wiki.creativecommons.org/RDFa
     * http://wiki.creativecommons.org/XMP
@@ -51,9 +50,11 @@ Once the basic features are tested and working, we start to explore new, richer 
     * Software and format versions, integrate DROID, etc.
     * Published, Company, Keywords? Subject? Last Modified?
     * Higher quality XMP metadata?
+* Add Welsh and other language or dialect detection?
+* Require >= 3-grams for ssdeep to reduce hits/false positives.
 * Deadness (Active, Empty, Gone)
-* Fussy hashes of the text.
-* Compression ratio/entropy or other info content measure?
+* Facets like log(size), or small, medium, large, to boost longer texts
+* Compression ratio/entropy or other info content measure? Actually very difficult as decompression happens inline and so re-compression would be needed!
 * Events integration with SOLR.
 * Image analysis, sizes, pixel thumb to spot rescaled versions, sift features plus fuzzy hash?
     * Create reduced size image, and run clever algorithms on it...
@@ -67,6 +68,19 @@ Once the basic features are tested and working, we start to explore new, richer 
 * Hyphenation for syllable counting, e.g. sonnet spotting http://sourceforge.net/projects/texhyphj/
 * Detect text and even handwriting in images (http://manuscripttranscription.blogspot.co.uk/2013/02/detecting-handwriting-in-ocr-text.html)
 * By dominant colour (http://stephenslighthouse.com/2013/02/22/friday-fun-the-two-ronnies-the-confusing-library/)
+
+
+Notes
+=====
+
+Similarity measures. Two approaches: N-Gram Matching and Fuzzy Search. Both seem to work rather well, but the overall goal is to see which performs better at scale.
+
+http://localhost:8080/discovery/select?rows=20&q.op=OR&fl=*,score&q=ssdeep_hash_ngram_bs_96%3Ar9G3voQkYXUgT97rm1GWnhNZL0%2BoQVpWRIE4PoZ5QbWjW5WiIj7Y7cXyTuWFFcyj+OR+ssdeep_hash_ngram_bs_192%3ArapkEUgpag%2BHtE4Pbhc24s3&wt=json&indent=true
+
+http://localhost:8080/discovery/select?rows=20&q.op=OR&fl=*,score&q=ssdeep_hash_bs_192%3ArapkEUgpag%2BHtE4Pbhc24s3~&wt=json&indent=true
+
+NOTE that the N-Gram approach may also be useful for spotting similar binaries.
+
 
 
 
