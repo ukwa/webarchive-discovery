@@ -318,6 +318,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	 */
 	public static void addExceptionMetadata( Metadata metadata, Exception e ) {
 		Throwable t = ExceptionUtils.getRootCause(e);
+		if ( t == null ) t = e;
+		if ( t == null ) return;
 	    metadata.set(TikaExtractor.TIKA_PARSE_EXCEPTION, t.getClass().getName()+"-"+t.getMessage());
 	}
 

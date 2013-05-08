@@ -58,6 +58,7 @@ public interface SolrFields {
 	
 	public static final String SENTIMENT = "sentiment";
 	public static final String[] SENTIMENTS = new String[] {"Very Negative", "Negative", "Mildly Negative" ,"Neutral", "Mildly Positive", "Positive", "Very Positive"};
+	public static final String SENTIMENT_SCORE = "sentiment_score";
 	
 	public static final String SSDEEP_PREFIX = "ssdeep_hash_bs_";
 	public static final String SSDEEP_NGRAM_PREFIX = "ssdeep_hash_ngram_bs_";

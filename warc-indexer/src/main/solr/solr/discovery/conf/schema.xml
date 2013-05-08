@@ -267,8 +267,9 @@
    <!-- The locations mentioned in each page. -->
    <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
    
-   <!-- Sentiment analysis,  -->
+   <!-- Sentiment analysis, as facets and as score: -->
    <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The size of images, in pixels? or tags/ranges? -->
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
