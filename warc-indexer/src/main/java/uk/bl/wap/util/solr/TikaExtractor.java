@@ -320,7 +320,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		Throwable t = ExceptionUtils.getRootCause(e);
 		if ( t == null ) t = e;
 		if ( t == null ) return;
-	    metadata.set(TikaExtractor.TIKA_PARSE_EXCEPTION, t.getClass().getName()+"-"+t.getMessage());
+	    metadata.set(TikaExtractor.TIKA_PARSE_EXCEPTION, t.getClass().getName()+": "+t.getMessage());
 	}
 
 	public ContentHandler getHandler( Writer out ) {
