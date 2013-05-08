@@ -107,7 +107,7 @@
       <dependency>
          <groupId>uk.bl.wa.bitwiser</groupId>
          <artifactId>bitwiser</artifactId>
-         <version>0.0.2-SNAPSHOT</version>
+         <version>0.0.2</version>
       </dependency>
    </dependencies>
    <repositories>
