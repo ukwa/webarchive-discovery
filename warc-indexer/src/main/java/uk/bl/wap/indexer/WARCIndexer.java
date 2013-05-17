@@ -144,7 +144,7 @@ public class WARCIndexer {
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			if( fullUrl.length() > 2000 ) fullUrl = fullUrl.substring(0, 2000);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
-			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].matches("^index\\.[a-z]+$") ) ) 
+			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].matches("^index\\.[a-z]+$") ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Record the domain (strictly, the host): 
 			String domain = urlParts[ 0 ];
@@ -333,11 +333,13 @@ public class WARCIndexer {
 		String outputDir = null;
 		String solrUrl = null;
 		boolean isTextRequired = false;
+		boolean slashPages = false;
 		
 		Options options = new Options();
-		options.addOption("o", "output directory", true, "The directory to contain the output XML files");
-		options.addOption("s", "Solr URL", true, "The URL of the required Solr Instance");
-		options.addOption("t", "Include text in XML", false, "Include text in XML in output files");
+		options.addOption("o", "output", true, "The directory to contain the output XML files");
+		options.addOption("s", "solr", true, "The URL of the required Solr Instance");
+		options.addOption("t", "text", false, "Include text in XML in output files");
+		options.addOption("r", "slash", false, "Only process slash (root) pages.");
 		
 		try {
 		    // parse the command line arguments
@@ -379,6 +381,10 @@ public class WARCIndexer {
 		   	if(line.hasOption("t") || line.hasOption("s")){
 		   		isTextRequired = true;
 		   	}
+
+		   	if( line.hasOption( "r" ) ) {
+		   		slashPages = true;
+		   	}
 		   	
 		   	// Check that either an output dir or Solr URL is supplied
 		   	if(outputDir == null && solrUrl == null){
@@ -394,7 +400,7 @@ public class WARCIndexer {
 		   		System.exit( 0 );
 		   	}
 	   	
-		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired);
+		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired, slashPages);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			// TODO Auto-generated catch block
@@ -413,7 +419,7 @@ public class WARCIndexer {
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
+	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
 		
 		WARCIndexer windex = new WARCIndexer();
 				
@@ -451,14 +457,17 @@ public class WARCIndexer {
 				if( doc != null ) {
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
-					// Write XML to file if not posting straight to the server.
-					if(solrUrl == null) {
-						writeXMLToFile(doc.toXml(), fileOutput);
-					}else{
-						// Post to Solr
-						solrWeb.updateSolrDoc(doc.doc);
+					if( !slashPages || ( doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
+									     doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
+						// Write XML to file if not posting straight to the server.
+						if(solrUrl == null) {
+							writeXMLToFile(doc.toXml(), fileOutput);
+						}else{
+							// Post to Solr
+							solrWeb.updateSolrDoc(doc.doc);
+						}
+						recordCount++;
 					}
-					recordCount++;
 
 				}			
 			}
