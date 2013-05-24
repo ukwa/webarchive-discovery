@@ -15,6 +15,7 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
+import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
@@ -132,11 +133,22 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	 */
 	public WritableSolrRecord extract( WritableSolrRecord solr, InputStream is, String url ) throws IOException {
 		
-		TikaInputStream tikainput = TikaInputStream.get(is);
+		// Set up the TikaInputStream:
+		TikaInputStream tikainput = TikaInputStream.get( new CloseShieldInputStream(is) );
+		
 		// Also pass URL as metadata to allow extension hints to work:
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
-		String detected = tika.detect( tikainput, metadata );
+
+		String detected = null;
+		try {
+			detected = tika.detect( tikainput, metadata );
+		} catch( NoSuchFieldError e ) {
+			// Apache POI version issue?
+			log.error( "Tika.detect(): " + e.getMessage() );
+		} catch( Exception e ) {
+			log.error( "Tika.detect(): " + e.getMessage() );
+		}
 		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected ) ) {

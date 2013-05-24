@@ -39,6 +39,9 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.URI;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.archive.io.ArchiveReader;
@@ -63,18 +66,25 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
  */
 public class WARCIndexer {
 	
+	private static Log log = LogFactory.getLog(WARCIndexer.class);
+	
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
 	
 	
-	TikaExtractor tika = new TikaExtractor();
+	TikaExtractor tika = null;
 	MessageDigest md5 = null;
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
 
 	public WARCIndexer() throws NoSuchAlgorithmException {
+		this( new Configuration() );
+	}
+
+	public WARCIndexer( Configuration conf ) throws NoSuchAlgorithmException {
 		md5 = MessageDigest.getInstance( "MD5" );
+		tika = new TikaExtractor( conf );
 	}
 	
 	/**
@@ -159,22 +169,25 @@ public class WARCIndexer {
 			String statusCode = null;
 			String serverType = null;
 			if( record instanceof WARCRecord ) {
-				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
-				statusCode = firstLine[1];
-				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
-				for( Header h : headers ) {
-					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					// FIXME This can't work, because the Referer is in the Request, not the Response.
-					// TODO Generally, need to think about ensuring the request and response are brought together.
-					if( h.getName().equals(HttpHeaders.REFERER))
-						referrer = h.getValue();
-					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
-						serverType = h.getValue();
-				}
-				// No need for this, as the headers have already been read from the InputStream:
-				// WARCRecordUtils.getPayload(record);
-				tikainput = record;
-			
+//				try {
+//					String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
+//					statusCode = firstLine[1];
+//					Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
+//					for( Header h : headers ) {
+//						//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+//						// FIXME This can't work, because the Referer is in the Request, not the Response.
+//						// TODO Generally, need to think about ensuring the request and response are brought together.
+//						if( h.getName().equals(HttpHeaders.REFERER))
+//							referrer = h.getValue();
+//						if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
+//							serverType = h.getValue();
+//					}
+//					// No need for this, as the headers have already been read from the InputStream:
+//					// WARCRecordUtils.getPayload(record);
+					tikainput = record;
+//				} catch( Exception e ) {
+//					log.warn( e.getMessage() + "; " + fullUrl );
+//				}
 			} else if ( record instanceof ARCRecord ) {
 				ARCRecord arcr = (ARCRecord) record;
 				statusCode = ""+arcr.getStatusCode();
@@ -199,20 +212,24 @@ public class WARCIndexer {
 			solr.addField(SolrFields.CONTENT_TYPE_SERVED, serverType);			
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
-			if( statusCode == null || !statusCode.startsWith("2") ) return null;
+//			if( statusCode == null || !statusCode.startsWith("2") ) return null;
 			
 			// Parse payload using Tika:
 			
 			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BufferedInputStream( tikainput );
-			tikainput.mark((int) header.getLength());
-			solr = tika.extract( solr, tikainput, header.getUrl() );
-			// Derive normalised/simplified content type:
-			processContentType(solr, header, serverType);
-			
-			// Remove the Text Field if required
-			if( !isTextIncluded){ 
-				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+			try {
+				tikainput = new BufferedInputStream( tikainput );
+				tikainput.mark((int) header.getLength());
+				solr = tika.extract( solr, tikainput, header.getUrl() );
+				// Derive normalised/simplified content type:
+				processContentType(solr, header, serverType);
+				
+				// Remove the Text Field if required
+				if( !isTextIncluded){ 
+					solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+				}
+			} catch( Exception e ) {
+				log.warn( e.getMessage() + "; " + fullUrl );
 			}
 			
 			// Pass on to other extractors as required, resetting the stream before each:
