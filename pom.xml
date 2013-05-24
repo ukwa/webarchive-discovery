@@ -88,18 +88,20 @@
 	            <artifactId>poi</artifactId>
 	            <groupId>poi</groupId>
 	         </exclusion>
+	         <exclusion>
+	         	<artifactId>hadoop-core</artifactId>
+	         	<groupId>org.apache.hadoop</groupId>
+	         </exclusion>
+	         <exclusion>
+	            <artifactId>guava</artifactId>
+	            <groupId>com.google.guava</groupId>
+	         </exclusion>
 	      </exclusions>
 	   </dependency>
 	   <dependency>
 	      <groupId>org.apache.solr</groupId>
 	      <artifactId>solr-core</artifactId>
 	      <version>${solr.version}</version>
-	      <exclusions>
-	         <exclusion>
-	            <artifactId>guava</artifactId>
-	            <groupId>com.google.guava</groupId>
-	         </exclusion>
-	      </exclusions>
 	   </dependency>
 	</dependencies>
 </project>
