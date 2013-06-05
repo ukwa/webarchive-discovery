@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika;
+package uk.bl.wa.tika;
 
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;

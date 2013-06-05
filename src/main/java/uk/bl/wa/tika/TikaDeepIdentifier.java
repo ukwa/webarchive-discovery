@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika;
+package uk.bl.wa.tika;
 
 import java.io.ByteArrayInputStream;
 import java.io.File;

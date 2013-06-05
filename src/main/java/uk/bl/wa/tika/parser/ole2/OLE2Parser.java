@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika.parser.ole2;
+package uk.bl.wa.tika.parser.ole2;
 
 import java.io.EOFException;
 import java.io.File;

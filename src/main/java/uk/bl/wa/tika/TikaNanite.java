@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika;
+package uk.bl.wa.tika;
 
 import java.io.File;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import uk.bl.wap.tika.parser.pdf.itext.PDFParser;
+import uk.bl.wa.tika.parser.pdf.itext.PDFParser;
 
 /**
  * Base on http://wiki.apache.org/tika/RecursiveMetadata

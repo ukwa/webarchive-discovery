@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika.parser.iso9660;
+package uk.bl.wa.tika.parser.iso9660;
 
 import java.io.File;
 import java.io.FileOutputStream;

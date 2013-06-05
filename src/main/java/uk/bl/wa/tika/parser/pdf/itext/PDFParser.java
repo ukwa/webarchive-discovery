@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License
  */
-package uk.bl.wap.tika.parser.pdf.itext;
+package uk.bl.wa.tika.parser.pdf.itext;
 
 import java.io.ByteArrayInputStream;
 import java.io.FileInputStream;
@@ -37,7 +37,7 @@ import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-import uk.bl.wap.tika.parser.pdf.XMPSchemaPDFA;
+import uk.bl.wa.tika.parser.pdf.XMPSchemaPDFA;
 
 import com.itextpdf.text.pdf.PdfDictionary;
 import com.itextpdf.text.pdf.PdfName;

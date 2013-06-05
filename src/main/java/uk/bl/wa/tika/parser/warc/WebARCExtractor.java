@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika.parser.warc;
+package uk.bl.wa.tika.parser.warc;
 
 import java.io.IOException;
 import java.io.InputStream;

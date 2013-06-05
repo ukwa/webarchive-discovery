@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika.parser.pdf;
+package uk.bl.wa.tika.parser.pdf;
 
 import java.io.IOException;
 import java.io.InputStream;

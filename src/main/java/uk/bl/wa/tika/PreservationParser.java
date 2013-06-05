@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wap.tika;
+package uk.bl.wa.tika;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -27,10 +27,10 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 
-import uk.bl.wap.tika.detect.HighlightJSDetector;
-import uk.bl.wap.tika.parser.iso9660.ISO9660Parser;
-import uk.bl.wap.tika.parser.warc.ARCParser;
-import uk.bl.wap.tika.parser.warc.WARCParser;
+import uk.bl.wa.tika.detect.HighlightJSDetector;
+import uk.bl.wa.tika.parser.iso9660.ISO9660Parser;
+import uk.bl.wa.tika.parser.warc.ARCParser;
+import uk.bl.wa.tika.parser.warc.WARCParser;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -99,7 +99,7 @@ public class PreservationParser extends AutoDetectParser {
 		// Override the built-in PDF parser (based on PDFBox) with our own (based in iText):
 		MediaType pdf = MediaType.parse("application/pdf");
 		Map<MediaType, Parser> parsers = getParsers();
-		parsers.put( pdf, new uk.bl.wap.tika.parser.pdf.pdfbox.PDFParser() );
+		parsers.put( pdf, new uk.bl.wa.tika.parser.pdf.pdfbox.PDFParser() );
 		parsers.put( MediaType.parse("application/x-iso9660-image"), new ISO9660Parser() );
 		parsers.put( MediaType.parse("application/x-internet-archive"), new ARCParser() );
 		parsers.put( MediaType.parse("application/warc"), new WARCParser() );

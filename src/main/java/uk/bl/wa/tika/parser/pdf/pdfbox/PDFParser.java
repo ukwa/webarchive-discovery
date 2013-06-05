@@ -14,7 +14,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package uk.bl.wap.tika.parser.pdf.pdfbox;
+package uk.bl.wa.tika.parser.pdf.pdfbox;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -58,7 +58,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import uk.bl.wap.tika.parser.pdf.XMPSchemaPDFA;
+import uk.bl.wa.tika.parser.pdf.XMPSchemaPDFA;
 
 /**
  * PDF parser.

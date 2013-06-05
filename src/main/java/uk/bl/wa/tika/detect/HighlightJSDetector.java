@@ -1,4 +1,4 @@
-package uk.bl.wap.tika.detect;
+package uk.bl.wa.tika.detect;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;

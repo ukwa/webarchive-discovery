@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.tika.parsers.imagefeatures;
+package uk.bl.wa.tika.parser.imagefeatures;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;

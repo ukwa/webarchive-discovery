@@ -1,4 +1,4 @@
-package uk.bl.wap.tika.parser.pdf;
+package uk.bl.wa.tika.parser.pdf;
 
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchema;

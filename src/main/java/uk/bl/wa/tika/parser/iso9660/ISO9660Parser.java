@@ -34,7 +34,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package uk.bl.wap.tika.parser.warc;
+package uk.bl.wa.tika.parser.iso9660;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -55,7 +55,7 @@ import org.xml.sax.SAXException;
  * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  */
-public class ARCParser extends AbstractParser {
+public class ISO9660Parser extends AbstractParser {
 
 	/**  */
 	private static final long serialVersionUID = 7346851876221749615L;
@@ -63,7 +63,7 @@ public class ARCParser extends AbstractParser {
 	/** */
 	private static final Set<MediaType> SUPPORTED_TYPES =
 		Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
-				MediaType.application("x-internet-archive"))));
+				MediaType.application("x-iso9660-image"))));
 
 	@Override
 	public Set<MediaType> getSupportedTypes(ParseContext context) {
@@ -75,7 +75,7 @@ public class ARCParser extends AbstractParser {
 	public void parse(InputStream stream, ContentHandler handler,
 			Metadata metadata, ParseContext context) throws IOException,
 			SAXException, TikaException {
-		new WebARCExtractor(handler, metadata, context, false).parse(stream);
+		new ISO9660Extractor(handler, metadata, context).parse(stream);
 	}
 
 }

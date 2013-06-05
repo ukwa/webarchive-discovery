@@ -14,6 +14,8 @@ import org.apache.tika.parser.ParseContext;
 import org.junit.Test;
 import org.xml.sax.helpers.DefaultHandler;
 
+import uk.bl.wa.tika.parser.pdf.pdfbox.PDFParser;
+
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
@@ -21,7 +23,7 @@ import org.xml.sax.helpers.DefaultHandler;
 public class PDFParserTest {
 
 	/**
-	 * Test method for {@link uk.bl.wap.tika.parser.pdf.pdfbox.PDFParser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)}.
+	 * Test method for {@link uk.bl.wa.tika.parser.pdf.pdfbox.PDFParser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)}.
 	 */
 	@Test
 	public void testParseInputStreamContentHandlerMetadataParseContext() {
