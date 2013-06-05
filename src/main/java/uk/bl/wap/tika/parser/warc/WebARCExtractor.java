@@ -6,6 +6,9 @@ package uk.bl.wap.tika.parser.warc;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
+
+import org.apache.commons.httpclient.Header;
+import org.apache.commons.httpclient.HttpParser;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
@@ -20,8 +23,6 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.UncompressedARCReader;
 import org.archive.io.warc.UncompressedWARCReader;
 import org.archive.io.warc.WARCRecord;
-
-import uk.bl.wap.util.warc.WARCRecordUtils;
 
 
 /**
@@ -83,12 +84,12 @@ public class WebARCExtractor {
 
 			while (it.hasNext()) {
 				ArchiveRecord entry = it.next();
-				InputStream is = entry;
-				WARCRecord wr = (WARCRecord) entry;
+				InputStream is = (WARCRecord) entry;
 				if( this.isWARC ) {
-					is = WARCRecordUtils.getPayload(wr);
+					String firstLine[] = HttpParser.readLine(is, "UTF-8").split(" ");
+					String statusCode = firstLine[1].trim();
+					Header[] headers = HttpParser.parseHeaders(is, "UTF-8");
 				}
-
 				String name = entry.getHeader().getUrl();
 				name = entry.getHeader().getHeaderValue(WARCRecord.HEADER_KEY_TYPE)+":"+name;
 				// Now parse it...
