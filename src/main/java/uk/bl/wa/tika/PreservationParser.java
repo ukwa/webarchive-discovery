@@ -6,6 +6,7 @@ package uk.bl.wa.tika;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -155,6 +156,7 @@ public class PreservationParser extends AutoDetectParser {
 			tikaType = MediaType.OCTET_STREAM;
 			metadata.remove( Metadata.CONTENT_TYPE );
 		}
+		HashMap<String, String> hm = new HashMap<String,String>();
 		
 		// Content encoding, if any:
 		String encoding = metadata.get( Metadata.CONTENT_ENCODING );
@@ -173,6 +175,7 @@ public class PreservationParser extends AutoDetectParser {
 		if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
 		if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
 		// Images, e.g. JPEG and TIFF, can have 'Software', 'tiff:Software',
+		if( metadata.get("pdf:producer") != null ) software = metadata.get("pdf:producer");
 		if( metadata.get( "Software" ) != null ) software = metadata.get( "Software" );
 		if( metadata.get( Metadata.SOFTWARE ) != null ) software = metadata.get( Metadata.SOFTWARE );
 		if( metadata.get( "generator" ) != null ) software = metadata.get( "generator" );
@@ -186,17 +189,29 @@ comment: CREATOR: gd-jpeg v1.0 (using IJG JPEG v62), default quality
 		 */
 		if( software != null ) {
 			metadata.set(Metadata.SOFTWARE, software);
+			hm.put("software", software);
 		}
 		// Also, if there is any trace of any hardware, record it here:
 		if( metadata.get( Metadata.EQUIPMENT_MODEL ) != null )
 			metadata.set("hardware", metadata.get( Metadata.EQUIPMENT_MODEL));
+		
+		// If there is any trace of the source document, add it here:
+		if( metadata.get("pdf:creator") != null ) {
+			hm.put("source",metadata.get("pdf:creator") );
+		}
 		
 		// Fall back on special type for empty resources:
 		if( "0".equals(metadata.get(Metadata.CONTENT_LENGTH)) ) {
 			metadata.set(Metadata.CONTENT_TYPE, "application/x-empty");
 		}
 		
+		// Version:
+		if( metadata.get("pdf:version") != null ) {
+			hm.put("version",metadata.get("pdf:version") );
+		}
+		
 		// Return extended MIME Type:
+		tikaType = new MediaType(tikaType, hm);
 		metadata.set(EXT_MIME_TYPE, tikaType.toString());
 		
 		// Other sources of modification time?

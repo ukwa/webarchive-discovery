@@ -59,7 +59,7 @@ public class PreservationParserTest {
 				"application/pdf; version=\"1.4\"; software=\"OpenOffice.org 3.2\"; source=Writer");
 		// ODT
 		this.testExtendedMIMEType( "/simple.odt", 
-				"application/vnd.oasis.opendocument.text; software=\"OpenOffice.org/3.2$Win32 OpenOffice.org_project/320m12$Build-9483\"");
+				"application/vnd.oasis.opendocument.text; software=\"OpenOffice.org\\/3.2$Win32 OpenOffice.org_project\\/320m12$Build-9483\"");
 		// PNG
 		//this.testExtendedMIMEType( "/Users/andy/Documents/workspace/nanite/nanite-tika/src/test/resources/variatio-ipsius/apple-pages-09-4.1-923/convert-6.7.5-7/test.png", 
 		//		"image/png; software=\"ImageMagick\"");
@@ -98,7 +98,7 @@ public class PreservationParserTest {
 		// Recover the extended MIME Type:
 		MediaType tikaType = MediaType.parse(metadata.get(PreservationParser.EXT_MIME_TYPE) );
 		// Assert equality:
-		assertEquals( true, tikaType.equals( MediaType.parse( expected )) );
+		assertEquals( MediaType.parse( expected ), tikaType );
 
 }
 
