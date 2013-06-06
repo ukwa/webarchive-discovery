@@ -5,8 +5,6 @@ package eu.scape_project.pc.cc.nanite.tika;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
