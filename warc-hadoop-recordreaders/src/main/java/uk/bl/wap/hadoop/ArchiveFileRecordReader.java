@@ -24,8 +24,6 @@ import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
-import uk.bl.wap.util.WARCRecordUtils;
-
 @SuppressWarnings( "deprecation" )
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
 	private static Logger log = Logger.getLogger(ArchiveFileRecordReader.class.getName());

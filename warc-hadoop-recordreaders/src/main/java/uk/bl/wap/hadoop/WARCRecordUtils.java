@@ -1,4 +1,4 @@
-package uk.bl.wap.util;
+package uk.bl.wap.hadoop;
 
 import java.io.BufferedInputStream;
 import java.io.ByteArrayOutputStream;

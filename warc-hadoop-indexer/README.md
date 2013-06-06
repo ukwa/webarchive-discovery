@@ -5,3 +5,6 @@ This project contains those classes used to run text-extraction jobs on Hadoop u
 
 Additional bespoke metadata are too added from the Web Curator Tool (WctEnricher), per ID, in the reduce stage.
 
+
+
+For 1000 files, 17.25 GB. 1.5 hrs indexing, six (!) hours in the reducer!
