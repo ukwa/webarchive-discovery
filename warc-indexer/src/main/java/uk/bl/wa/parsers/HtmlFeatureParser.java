@@ -2,6 +2,7 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.HashSet;
 import java.util.Set;
@@ -80,6 +81,18 @@ public class HtmlFeatureParser extends AbstractParser {
 		}
 		metadata.set(DISTINCT_ELEMENTS, StringUtils.join(de, " "));
 		
+		// Licence field, following:
+		// http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#link-type-license
+		for( Element a : doc.select("a[rel=license]") )  {
+			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+		}
+		for( Element a : doc.select("link[rel=license]") )  {
+			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+		}
+		for( Element a : doc.select("area[rel=license]") )  {
+			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+		}
+		
 	}
 	
 
@@ -119,15 +132,18 @@ public class HtmlFeatureParser extends AbstractParser {
 	 * @throws TikaException 
 	 * @throws SAXException 
 	 * @throws IOException 
+	 * @throws URISyntaxException 
 	 */
-	public static void main( String[] argv ) throws IOException, SAXException, TikaException  {
+	public static void main( String[] argv ) throws IOException, SAXException, TikaException, URISyntaxException  {
 		URL url = new URL("http://www.bbc.co.uk/news/magazine-21351017");
+		url = new URL("http://labs.creativecommons.org/2011/ccrel-guide/examples/moremetadata.html");
 		HtmlFeatureParser hfp = new HtmlFeatureParser();
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url.toString());
 		hfp.parse(url.openStream(), null, metadata, null);
-
+		System.out.println("RESULT: " + metadata );
 	}
+	
 	
 	public static Metadata extractMetadata( InputStream in, String url ) {
 		HtmlFeatureParser hfp = new HtmlFeatureParser();

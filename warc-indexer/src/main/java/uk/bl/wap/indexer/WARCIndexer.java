@@ -333,6 +333,9 @@ public class WARCIndexer {
 							solr.addField(SolrFields.ELEMENTS_USED, e);
 						}
 					}
+					for( String lurl : metadata.getValues(Metadata.LICENSE_URL)) {
+						solr.addField(SolrFields.LICENSE_URL, lurl);
+					}
 					
 				} else if( mime.startsWith("image") ) {
 					// TODO Extract image properties.

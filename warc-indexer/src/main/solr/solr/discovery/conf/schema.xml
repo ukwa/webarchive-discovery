@@ -282,6 +282,9 @@
    <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
    <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
    
+   <!-- Details of any embedded licenses: -->
+   <field name="license_url" type="string" indexed="true" stored="true" multiValued="true"/>
+
    <!-- wa.bl.uk fields end -->
 
 
