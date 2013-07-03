@@ -1,5 +1,7 @@
 # Django settings for shine project.
 
+DEFAULT_CHARSET = 'utf-8'
+
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
@@ -124,6 +126,7 @@ INSTALLED_APPS = (
     # 'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
     # 'django.contrib.admindocs',
+    'shine_solr',
 )
 
 # A sample logging configuration. The only tangible logging
