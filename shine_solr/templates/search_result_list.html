@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}{{ r.numFound }} results{% endblock %}
+
+{% block content %}
+<h1>{{ r.numFound }} results</h1>
+
+{% for doc in r.results %}
+    <p>
+        {{ doc.title.pop }}<br/>
+        {{ doc.url }}<br/>
+        Crawled {{ doc.crawl_date|date:"F j, Y" }}
+        <ul>
+        {% for key, value in doc.items %}
+        <li>{{ key }}: {{ value }}</li>  
+        {% endfor %}
+        </ul>
+    </p>
+{% endfor %}
+
+{% for ft,fvs in facets.items %}
+<h3>{{ ft }}</h3>
+<ul>
+  {% for fv,fc in fvs.items %}
+    <li>{{ fv }} ({{ fc }})</li>
+  {% endfor %}
+</ul>
+{% endfor %}
+
+{% endblock %}
