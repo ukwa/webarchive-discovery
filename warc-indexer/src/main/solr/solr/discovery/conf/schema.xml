@@ -128,7 +128,7 @@
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
    <field name="category" type="text_general" indexed="true" stored="true"/>
    <field name="resourcename" type="text_general" indexed="true" stored="true"/>
-   <field name="url" type="text_general" indexed="true" stored="true"/>
+   <field name="url" type="string" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
    <field name="last_modified_year" type="string" indexed="true" stored="true"/>
@@ -217,6 +217,8 @@
    <!-- The publication year, for faceting -->
    <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
    
+   <!-- Collections this item belongs to -->
+   <field name="collections" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
@@ -373,6 +375,7 @@
    <copyField source="description" dest="text"/>
    <copyField source="wct_title" dest="text"/>
    <copyField source="wct_description" dest="text"/>
+   <copyField source="url" dest="text"/>
    
    <!-- Old fields to remove? -->
 <!--    <copyField source="text" dest="spell"/> Selective -->

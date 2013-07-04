@@ -63,6 +63,7 @@ There are two development strands, held on distinct branches:
     * Interesting regions http://news.ycombinator.com/item?id=4968364
     * Faces, and missing faces, ones that used to re-appear and are now gone? Could record ratios of key points, or just the number of faces. Would be fun to play with. See http://www.openimaj.org/tutorial/finding-faces.html which gives keypoints, or https://code.google.com/p/jviolajones/
     * Also, look for emotional connections http://discontents.com.au/archives-of-emotion/
+    * Index by histogram entropy? http://labs.cooperhewitt.org/2013/default-sort-or-what-would-shannon-do/
 * Similarly, audio fingerprints etc.
 * Named entities or other NLP features, based on text from Tika.
     * If that worked, one could train Eigenfaces (e.g. faint.sf.net) using proper nouns associated with images and then use that for matching, perhaps?
