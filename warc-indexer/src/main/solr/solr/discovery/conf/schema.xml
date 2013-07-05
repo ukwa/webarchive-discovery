@@ -361,7 +361,7 @@
   required or optional, assuming the clause isn't already marked by some operator.
   The default is OR, which is generally assumed so it is not a good idea to change it
   globally here.  The "q.op" request parameter takes precedence over this.
- <solrQueryParser defaultOperator="OR"/> -->
+ --> <solrQueryParser defaultOperator="AND"/>
 
   <!-- copyField commands copy one field to another at the time a document
         is added to the index.  It's used either to index the same field differently,
