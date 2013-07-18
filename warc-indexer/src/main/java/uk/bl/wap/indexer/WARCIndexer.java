@@ -2,12 +2,10 @@ package uk.bl.wap.indexer;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
-//import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS;
+import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
 import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_HOSTS;
 import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES;
-import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
 
-import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -45,6 +43,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -60,9 +59,6 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
-import eu.scape_project.bitwiser.utils.FuzzyHash;
-import eu.scape_project.bitwiser.utils.SSDeep;
-
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
@@ -73,6 +69,8 @@ import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.SolrWebServer;
 import uk.bl.wap.util.solr.TikaExtractor;
 import uk.bl.wap.util.solr.WritableSolrRecord;
+import eu.scape_project.bitwiser.utils.FuzzyHash;
+import eu.scape_project.bitwiser.utils.SSDeep;
 
 /**
  * 
@@ -90,7 +88,7 @@ public class WARCIndexer {
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
-	private static final int BUFFER_SIZE = 104857600;
+	private static final long BUFFER_SIZE = 104857600L;
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
 	TikaExtractor tika = new TikaExtractor();
@@ -263,7 +261,7 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			
 			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BufferedInputStream( tikainput, BUFFER_SIZE );
+			tikainput = new BoundedInputStream( tikainput, BUFFER_SIZE );
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 			// Derive normalised/simplified content type:
