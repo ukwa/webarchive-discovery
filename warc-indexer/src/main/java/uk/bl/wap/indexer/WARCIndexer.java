@@ -6,6 +6,7 @@ import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
 import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_HOSTS;
 import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES;
 
+import java.io.BufferedInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -261,7 +262,7 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			
 			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BoundedInputStream( tikainput, BUFFER_SIZE );
+			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, BUFFER_SIZE ), (int) BUFFER_SIZE );
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 			// Derive normalised/simplified content type:
