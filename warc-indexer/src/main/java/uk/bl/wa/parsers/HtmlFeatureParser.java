@@ -47,7 +47,13 @@ public class HtmlFeatureParser extends AbstractParser {
 		String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
 		
 		// Parse it using JSoup
-		Document doc = Jsoup.parse(stream, null, url );
+		Document doc = null;
+		try {
+			doc = Jsoup.parse(stream, null, url );
+		} catch( Exception e ) {
+			log.error("Jsoup parse failed: "+e);
+			if( doc == null ) return;
+		}
 
 		// Get the links (no image links):
 		Set<String> links = this.extractLinks(doc, false);
