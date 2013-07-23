@@ -39,8 +39,8 @@
    </scm>
    <properties>
      <solr.version>4.3.0</solr.version>
-     <tika.version>1.3</tika.version>
-      <jdk.version>1.6</jdk.version>
+     <tika.version>1.4</tika.version>
+     <jdk.version>1.6</jdk.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
    </properties>
@@ -85,6 +85,11 @@
 		</repository>
 	</repositories>
 	<dependencies>
+        <dependency>
+            <groupId>org.archive.wayback</groupId>
+            <artifactId>wayback-hadoop-java</artifactId>
+            <version>1.7.0</version>
+        </dependency>
 	   <dependency>
 	      <groupId>org.archive.wayback</groupId>
 	      <artifactId>wayback-core</artifactId>

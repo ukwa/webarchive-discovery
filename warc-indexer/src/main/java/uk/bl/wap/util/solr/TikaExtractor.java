@@ -148,9 +148,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		Metadata metadata = new Metadata();
 		metadata.set( Metadata.RESOURCE_NAME_KEY, url);
 
-		String detected = null;
+		StringBuilder detected = new StringBuilder();
 		try {
-			detected = tika.detect( tikainput, metadata );
+			DetectRunner detect = new DetectRunner( tika, tikainput, detected );
+			Thread detectThread = new Thread( detect, Long.toString( System.currentTimeMillis() ) );
+			detectThread.start();
+			detectThread.join( 10000L );
+			detectThread.interrupt();
 		} catch( NoSuchFieldError e ) {
 			// Apache POI version issue?
 			log.error( "Tika.detect(): " + e.getMessage() );
@@ -159,7 +163,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		}
 		
 		// Only proceed if we have a suitable type:
-		if( !this.checkMime( detected ) ) {
+		if( !this.checkMime( detected.toString() ) ) {
 			return solr;
 		}
 
@@ -309,6 +313,27 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			}
 		}
 		
+	}
+
+	private class DetectRunner implements Runnable {
+		private Tika tika;
+		private InputStream input;
+		private StringBuilder mime;
+
+		public DetectRunner( Tika tika, InputStream input, StringBuilder mime ) {
+			this.tika = tika;
+			this.input = input;
+			this.mime = mime;
+		}
+
+		@Override
+		public void run() {
+			try {
+				mime.append( this.tika.detect( this.input ) );
+			} catch( IOException e ) {
+				log.equals( e.getMessage() );
+			}
+		}	
 	}
 	
 	/**
