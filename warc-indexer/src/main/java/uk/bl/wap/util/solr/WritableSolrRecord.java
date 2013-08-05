@@ -48,4 +48,16 @@ public class WritableSolrRecord implements Writable, Serializable {
 		if( value != null )
 			doc.addField( solr_property, value.trim().replaceAll( "\\p{Cntrl}", "" ) );
 	}
+
+
+	/**
+	 * Set instead of adding fields.
+	 * 
+	 * @param solr_property
+	 * @param value
+	 */
+	public void setField( String solr_property, String value ) {
+		if( value != null )
+			doc.setField( solr_property, value.trim().replaceAll( "\\p{Cntrl}", "" ) );
+	}
 }

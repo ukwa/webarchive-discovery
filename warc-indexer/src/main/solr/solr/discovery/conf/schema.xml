@@ -257,7 +257,7 @@
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Any Parse Error encountered while attempting to extract metadata and text: -->
-   <field name="parse_error" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="parse_error" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Content-based fields -->
    

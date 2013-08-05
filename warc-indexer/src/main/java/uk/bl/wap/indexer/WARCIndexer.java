@@ -216,17 +216,23 @@ public class WARCIndexer {
 			String statusCode = null;
 			String serverType = null;
 			if( record instanceof WARCRecord ) {
+				// FIXME There are not always headers! This code should check first.
 				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
 				statusCode = firstLine[1].trim();
-				Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
-				for( Header h : headers ) {
-					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					// FIXME This can't work, because the Referer is in the Request, not the Response.
-					// TODO Generally, need to think about ensuring the request and response are brought together.
-					if( h.getName().equals(HttpHeaders.REFERER))
-						referrer = h.getValue();
-					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
-						serverType = h.getValue();
+				try {
+					Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
+					for( Header h : headers ) {
+						//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+						// FIXME This can't work, because the Referer is in the Request, not the Response.
+						// TODO Generally, need to think about ensuring the request and response are brought together.
+						if( h.getName().equals(HttpHeaders.REFERER))
+							referrer = h.getValue();
+						if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
+							serverType = h.getValue();
+					}
+				} catch( Exception e ) {
+					log.error("Exception when parsing headers: "+e);
+					solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()+": "+e.getMessage());
 				}
 				// No need for this, as the headers have already been read from the InputStream:
 				// WARCRecordUtils.getPayload(record);

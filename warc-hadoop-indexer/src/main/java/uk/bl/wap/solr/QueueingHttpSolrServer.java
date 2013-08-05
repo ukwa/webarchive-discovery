@@ -49,7 +49,7 @@ public class QueueingHttpSolrServer extends HttpSolrServer {
 
 	public UpdateResponse flush() throws SolrServerException, IOException {
 		UpdateResponse response;
-		if( this.docs.size() > 0 ) {
+		if( this.docs.size() > 0 ) { // This occasionally throws a RemoteSolrException (extends SolrException)
 			response = super.add( docs );
 			this.docs.clear();
 		} else {

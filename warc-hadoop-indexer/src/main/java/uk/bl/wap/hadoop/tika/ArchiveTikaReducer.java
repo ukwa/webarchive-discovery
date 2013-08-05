@@ -14,6 +14,7 @@ import org.apache.http.HttpHost;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.common.SolrException;
 
 import uk.bl.wap.solr.QueueingHttpSolrServer;
 import uk.bl.wap.util.solr.WctEnricher;
@@ -59,6 +60,9 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 			try {
 				this.solrServer.add( solr.doc );
 			} catch( SolrServerException e ) {
+				e.printStackTrace();
+			} catch( SolrException e ) {
+				// To catch the protected RemoteSolrException (which extends SolrException).
 				e.printStackTrace();
 			}
 		}
