@@ -299,7 +299,16 @@ public class WARCIndexer {
 				HashMap<String,String> domains = new HashMap<String,String>();
 				if( mime.startsWith( "text" ) ) {
 					metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
-					hfp.parse(tikainput, null, metadata, null);
+					ParseRunner parser = new ParseRunner( hfp, tikainput, metadata );
+					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
+					try {
+						thread.start();
+						thread.join( 30000L );
+						thread.interrupt();
+					} catch( Exception e ) {
+						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+					}
+
 					// Process links:
 					String links_list = metadata.get(HtmlFeatureParser.LINK_LIST);
 					if( links_list != null ) {
@@ -698,9 +707,31 @@ public class WARCIndexer {
 	/**
 	 * @param options
 	 */
-	private static void printUsage(Options options) {
-	      HelpFormatter helpFormatter = new HelpFormatter( );
-	      helpFormatter.setWidth( 80 );
-	      helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
-	    }
+	private static void printUsage( Options options ) {
+		HelpFormatter helpFormatter = new HelpFormatter();
+		helpFormatter.setWidth( 80 );
+		helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
+	}
+
+	private class ParseRunner implements Runnable {
+		HtmlFeatureParser hfp;
+		Metadata metadata;
+		InputStream input;
+
+		public ParseRunner( HtmlFeatureParser parser, InputStream tikainput, Metadata metadata ) {
+			this.hfp = parser;
+			this.metadata = metadata;
+			this.input = tikainput;
+		}
+
+		@Override
+		public void run() {
+			try {
+				hfp.parse( input, null, metadata, null );
+			} catch( Exception e ) {
+				log.error( "HtmlFeatureParser.parse(): " + e.getMessage() );
+			}
+		}
+
+	}
 }
