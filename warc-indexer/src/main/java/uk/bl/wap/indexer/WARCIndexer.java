@@ -160,12 +160,16 @@ public class WARCIndexer {
 			if( !"0000".equals(year))
 				solr.doc.setField( SolrFields.CRAWL_YEAR, year );
 			try {
-				// Some ARC records only have 12-digit dates
+				// Some ARC records have 12-, 16- or 17-digit dates
 				if( waybackDate.length() == 12 ) {
 					solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse12DigitDate( waybackDate ) ) );
+					waybackDate = waybackDate + "00";
 				} else {
 					if( waybackDate.length() == 14 ) {
 						solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
+					} else if( waybackDate.length() > 14 ) {
+						solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse17DigitDate( waybackDate ) ) );
+						waybackDate = waybackDate.substring( 0, 14 );
 					}
 				}
 			} catch( ParseException p ) {
