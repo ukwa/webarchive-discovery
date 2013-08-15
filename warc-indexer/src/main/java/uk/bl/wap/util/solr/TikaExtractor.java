@@ -330,10 +330,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		public void run() {
 			try {
 				mime.append( this.tika.detect( this.input ) );
-			} catch( IOException e ) {
-				log.equals( e.getMessage() );
+			} catch( NoSuchFieldError e ) {
+				// Apache POI version issue?
+				log.error( "Tika.detect(): " + e.getMessage() );
+			} catch( Exception e ) {
+				log.error( "Tika.detect(): " + e.getMessage() );
 			}
-		}	
+		}
 	}
 	
 	/**

@@ -61,7 +61,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		conf.setNumReduceTasks( numReducers );
 		JobClient client = new JobClient( conf );
 		client.submitJob( conf );
-		// JobClient.runJob( conf );
+//		 JobClient.runJob( conf );
 		return 0;
 	}
 
@@ -81,8 +81,8 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		Properties properties = new Properties();
 		properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
 		conf.setBoolean( "mapred.reduce.tasks.speculative.execution", false );
-		conf.setCompressMapOutput( true );
-		conf.setMapOutputCompressorClass( GzipCodec.class );
+//		conf.setCompressMapOutput( true );
+//		conf.setMapOutputCompressorClass( GzipCodec.class );
 
 		// set() throws exceptions when getProperty() returns null; just
 		// assign values for those properties found.
