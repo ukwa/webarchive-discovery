@@ -15,14 +15,13 @@ import org.apache.solr.common.SolrInputDocument;
 public class QueueingHttpSolrServer extends HttpSolrServer {
 	private static final long serialVersionUID = 2827955704705820516L;
 	private static final int MEM_FACTOR = 3;
-	private Runtime runtime;
+	private Runtime runtime = Runtime.getRuntime();
 	private int queueSize = 50;
 	Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
 	public QueueingHttpSolrServer( String solrServerUrl, int queueSize, HttpClient client ) throws MalformedURLException {
 		super( solrServerUrl, client );
 		this.queueSize = queueSize;
-		runtime = Runtime.getRuntime();
 	}
 
 	public QueueingHttpSolrServer( String solrServerUrl, int queueSize ) throws MalformedURLException {
