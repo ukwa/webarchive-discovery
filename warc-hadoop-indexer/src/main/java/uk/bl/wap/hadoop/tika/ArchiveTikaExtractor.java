@@ -3,11 +3,15 @@ package uk.bl.wap.hadoop.tika;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -57,7 +61,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		conf.setNumReduceTasks( numReducers );
 		JobClient client = new JobClient( conf );
 		client.submitJob( conf );
-//		JobClient.runJob( conf );
+		// JobClient.runJob( conf );
 		return 0;
 	}
 
@@ -72,30 +76,27 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		System.exit( ret );
 	}
 
+	@SuppressWarnings( "rawtypes" )
 	private void setProperties( JobConf conf ) throws IOException {
 		Properties properties = new Properties();
 		properties.load( this.getClass().getResourceAsStream( ( CONFIG ) ) );
-		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
+		conf.setBoolean( "mapred.reduce.tasks.speculative.execution", false );
+		conf.setCompressMapOutput( true );
+		conf.setMapOutputCompressorClass( GzipCodec.class );
 
-		conf.set( "solr.server", properties.getProperty( "solr_server" ) );
-		conf.set( "solr.batch.size", properties.getProperty( "solr_batch_size" ) );
-		conf.set( "solr.threads", properties.getProperty( "solr_threads" ) );
-
-		conf.set( "record.exclude.mime", properties.getProperty( "mime_exclude" ) );
-		conf.set( "record.exclude.url", properties.getProperty( "url_exclude" ) );
-		conf.set( "record.size.max", properties.getProperty( "max_payload_size" ) );
-		conf.set( "record.include.response", properties.getProperty( "response_include" ) );
-		conf.set( "record.include.protocol", properties.getProperty( "protocol_include" ) );
-
-		conf.set( "tika.exclude.mime", properties.getProperty( "mime_exclude" ) );
-		conf.set( "tika.timeout", properties.getProperty( "parse_timeout" ) );
-
-		conf.set( "http.proxy.host", properties.getProperty( "http_proxy_host" ) );
-		conf.set( "http.proxy.port", properties.getProperty( "http_proxy_port" ) );
+		// set() throws exceptions when getProperty() returns null; just
+		// assign values for those properties found.
+		Set keys = properties.keySet();
+		Iterator iterator = keys.iterator();
+		String property;
+		while( iterator.hasNext() ) {
+			property = ( String ) iterator.next();
+			conf.set( property, properties.getProperty( property ) );
+		}
 
 		// Reducer count dependent on concurrent HTTP connections to Solr server.
 		try {
-			numReducers = Integer.parseInt( properties.getProperty( "hadoop_reducers" ) );
+			numReducers = Integer.parseInt( conf.get( "hadoop.reducers" ) );
 		} catch( NumberFormatException n ) {
 			numReducers = 10;
 		}

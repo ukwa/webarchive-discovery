@@ -14,12 +14,15 @@ import org.apache.solr.common.SolrInputDocument;
 
 public class QueueingHttpSolrServer extends HttpSolrServer {
 	private static final long serialVersionUID = 2827955704705820516L;
+	private static final int MEM_FACTOR = 3;
+	private Runtime runtime;
 	private int queueSize = 50;
 	Collection<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
 	public QueueingHttpSolrServer( String solrServerUrl, int queueSize, HttpClient client ) throws MalformedURLException {
 		super( solrServerUrl, client );
 		this.queueSize = queueSize;
+		runtime = Runtime.getRuntime();
 	}
 
 	public QueueingHttpSolrServer( String solrServerUrl, int queueSize ) throws MalformedURLException {
@@ -29,20 +32,29 @@ public class QueueingHttpSolrServer extends HttpSolrServer {
 
 	@Override
 	public UpdateResponse add( SolrInputDocument doc ) throws SolrServerException, IOException {
+		if( checkMemory( doc ) )
+			flush();
 		this.docs.add( doc );
 		return checkQueue();
 	}
 
 	@Override
 	public UpdateResponse add( Collection<SolrInputDocument> docs ) throws SolrServerException, IOException {
-		this.docs.addAll( docs );
+		for( SolrInputDocument doc : docs ) {
+			if( checkMemory( doc ) )
+				flush();
+			this.docs.add( doc );
+		}
 		return checkQueue();
 	}
 
 	@Override
 	public UpdateResponse add( Iterator<SolrInputDocument> docIterator ) throws SolrServerException, IOException {
 		while( docIterator.hasNext() ) {
-			this.docs.add( docIterator.next() );
+			SolrInputDocument doc = docIterator.next();
+			if( checkMemory( doc ) )
+				flush();
+			this.docs.add( doc );
 		}
 		return checkQueue();
 	}
@@ -64,5 +76,9 @@ public class QueueingHttpSolrServer extends HttpSolrServer {
 		} else {
 			return new UpdateResponse();
 		}
+	}
+
+	private boolean checkMemory( SolrInputDocument doc ) {
+		return( ( doc.size() * MEM_FACTOR ) > runtime.freeMemory() );
 	}
 }
