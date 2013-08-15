@@ -105,24 +105,6 @@
 			<version>0.0.2</version>
 		</dependency>
 	</dependencies>
-	<repositories>
-		<repository>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>fail</checksumPolicy>
-			</snapshots>
-			<id>internetarchive</id>
-			<name>Internet Archive Maven Repository</name>
-			<url>http://builds.archive.org:8080/maven2</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
 	<profiles>
 		<profile>
 			<id>cli-util</id>
