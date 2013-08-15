@@ -68,6 +68,10 @@ There are two development strands, held on distinct branches:
 * Named entities or other NLP features, based on text from Tika.
     * If that worked, one could train Eigenfaces (e.g. faint.sf.net) using proper nouns associated with images and then use that for matching, perhaps?
     * TEI aware indexing? Annotated text with grammatical details.
+    * Related: http://hassetukda.wordpress.com/2013/03/25/automatic-evaluation-recommendations-report/
+* Integration with DBPedia Spotlight for concept identification:
+    * https://github.com/dbpedia-spotlight/dbpedia-spotlight/wiki/Installation
+    * Like Serendipomatic https://github.com/chnm/serendipomatic/search?q=dbpedia&ref=cmdform
 * Hyphenation for syllable counting, e.g. sonnet spotting http://sourceforge.net/projects/texhyphj/
 * Detect text and even handwriting in images (http://manuscripttranscription.blogspot.co.uk/2013/02/detecting-handwriting-in-ocr-text.html)
 * By dominant colour (http://stephenslighthouse.com/2013/02/22/friday-fun-the-two-ronnies-the-confusing-library/)

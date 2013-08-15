@@ -62,6 +62,11 @@
 			<artifactId>warc-indexer</artifactId>
 			<version>1.1.1-SNAPSHOT</version>
 		</dependency>
+		<dependency>
+		   <groupId>org.archive.wayback</groupId>
+		   <artifactId>wayback-hadoop-java</artifactId>
+		   <version>1.7.0</version>
+		</dependency>
 	</dependencies>
 	<repositories>
 		<repository>
