@@ -110,9 +110,34 @@
 <artifactId>faces</artifactId>
 <version>1.1</version>
 <scope>compile</scope>
-</dependency>      
+</dependency>
+	   <dependency>
+	      <groupId>org.apache.commons</groupId>
+	      <artifactId>commons-imaging</artifactId>
+	      <version>1.1-SNAPSHOT</version>
+	   </dependency>
 	</dependencies>
 	<repositories>
+        <repository>
+            <id>weka</id>
+            <name>Weka unofficial repository</name>
+            <layout>default</layout>
+            <url>http://maven.ch.cam.ac.uk/m2repo/</url>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>apache-snapshots</id>
+            <name>Apache Snapshot Repository</name>
+            <url>https://repository.apache.org/snapshots/</url>
+            <releases>
+                <enabled>false</enabled>
+            </releases>
+            <snapshots>
+                <enabled>true</enabled>
+            </snapshots>
+        </repository>
 		<repository>
 			<releases>
 				<enabled>true</enabled>

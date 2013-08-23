@@ -19,9 +19,6 @@ import java.util.Map.Entry;
 
 import org.apache.commons.imaging.Imaging;
 
-import uk.bl.wap.util.ColourMatcher;
-
-
 /**
  * 
  * Prototype colour extractor.
