@@ -1,3 +1,4 @@
+{% load staticfiles %}
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
    "http://www.w3.org/TR/html4/strict.dtd">
 
@@ -7,6 +8,7 @@
         <title>{% block title %}{% endblock %}</title>
 </head>
 <body id="{% block body_id %}{% endblock %}">
+  <img src="{% static "my_app/myexample.jpg" %}" alt="My image"/>
   <div id="body">
     {% block body %}
       <div>
