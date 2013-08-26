@@ -5,12 +5,13 @@ import play.Project._
 object ApplicationBuild extends Build {
 
   val appName         = "shine"
-  val appVersion      = "1.0-SNAPSHOT"
+  val appVersion      = "1.0.0-SNAPSHOT"
 
   val appDependencies = Seq(
     // Add your project dependencies here,
     jdbc,
-    anorm
+    anorm,
+    "org.xerial" % "sqlite-jdbc" % "3.7.2"
   )
 
 

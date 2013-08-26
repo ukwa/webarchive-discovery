@@ -2,3 +2,36 @@ This is your new Play 2.1 application
 =====================================
 
 This file will be packaged with your application, when using `play dist`.
+
+
+http://stackoverflow.com/questions/17270393/call-solr-asynchronous-from-play-framework/17315047#17315047
+
+val itselfNodeFuture = Statix.doParams( Statix.SolrSelectWSReq, 
+    List(
+    "wt"     -> "json", 
+    "q"      -> "*:*",
+    "fq"     -> "node_type:collection",
+    "fq"     -> "id:%d".format( nodeId),
+    "indent" -> "true",
+    "rows"   -> "1",
+    "fl"     -> "id,parent_id,title",
+    "fl"     -> "date_created,date_about,date_modified")
+).get()
+
+//Use the first Await after the last future
+val itselfJson = Await.result(
+    itselfNodeFuture, Duration("2 sec")).json
+
+val mainRow = (itselfJson \ "response" \ "docs").as[ Seq[JsValue]]
+val mainNodeParent = (mainRow(0) \ "parent_id").as[Long]
+val mainNodeTitle = (mainRow(0) \ "title").as[String]
+
+
+object Statix { //Noder must extend this
+    def SolrSelectWSReq = WS.url("http://127.0.0.1:8080/solr-store/collection1/select/")
+    def SolrUpdateWSReq = WS.url("http://127.0.0.1:8080/solr-store/collection1/update/json/")
+
+    def doParams(request: WS.WSRequestHolder, params: List[(String, String)]) = {
+        params.foldLeft( request){
+            (wsReq, tuple) => wsReq.withQueryString( tuple)}}
+}
