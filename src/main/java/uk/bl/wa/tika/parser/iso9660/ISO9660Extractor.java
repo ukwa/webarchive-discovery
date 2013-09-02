@@ -4,6 +4,7 @@
 package uk.bl.wa.tika.parser.iso9660;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,7 +86,7 @@ public class ISO9660Extractor {
 	public void parse(InputStream stream) throws IOException, SAXException, TikaException {
 		XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
 		xhtml.startDocument();
-
+		
 		/* Use the loopy Java ISO9660 classes to retrieve the (possibly)
 		 * compressed entries as individual source units.
 		 */
@@ -210,6 +211,7 @@ public class ISO9660Extractor {
 			}  
 			finally {
 				iso.close();
+				tmp.close();
 			}
 		}
 		xhtml.endDocument();
