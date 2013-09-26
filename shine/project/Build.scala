@@ -11,7 +11,8 @@ object ApplicationBuild extends Build {
     // Add your project dependencies here,
     jdbc,
     anorm,
-    "org.xerial" % "sqlite-jdbc" % "3.7.2"
+    "org.xerial" % "sqlite-jdbc" % "3.7.2",
+    "org.apache.solr" % "solr-solrj" % "4.4.0"
   )
 
 
