@@ -4,8 +4,11 @@
 package uk.bl.wa.shine;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
@@ -13,6 +16,8 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.SolrQuery.ORDER;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+
+import com.typesafe.config.ConfigValue;
 
 import play.Logger;
 
@@ -25,26 +30,29 @@ public class SolrShine {
 
 	private HttpSolrServer solr = null;
 	
-	private String[] facets = {
-			"content_encoding",
-			"content_ffb",
-			"content_language",
-			"domain",
-			"author",
-			"content_type",
-			"content_type_norm",
-			"crawl_year",
-			"content_type_ext",
-			"links_public_suffixes",
-			"generator",
-			"last_modified_year",
-			"content_type_full",
-			"postcode_district",
-			"sentiment",
-			"public_suffix" };
+	private List<String> facets = null;
 	
-	public SolrShine(String host) {
+	private Map<String,String> facet_names = null;
+	
+	private Map<String,List<String>> facets_tree = null;
+	
+	public SolrShine(String host, play.Configuration config ) {
 		 solr = new HttpSolrServer(host);
+		 this.facets = new ArrayList<String>();
+		 this.facet_names = new HashMap<String,String>();
+		 this.facets_tree = new LinkedHashMap<String,List<String>>();
+		 for( String fc : config.getConfig("facets").subKeys() ) {
+			 List<String> fl = new ArrayList<String>();
+			 for( String f : config.getConfig("facets."+fc).subKeys() ) {
+				 fl.add(f);
+				 // Also store in a flat list:
+				 this.facets.add(f);
+				 // Also store the name:
+				 this.facet_names.put(f,config.getString("facets."+fc+"."+f));
+			 }
+			 Logger.info("Putting "+fc+" > "+fl);
+			 this.facets_tree.put(fc, fl);
+		 }
     }
 	
 	public QueryResponse search( String query, Map<String,List<String>> params ) throws SolrServerException {
@@ -67,6 +75,7 @@ public class SolrShine {
 		}
 		// Sorts:
 		parameters.setSort("crawl_date", ORDER.asc);
+		//parameters.setSort("sentiment_score", ORDER.asc);
 		// Perform the query:
 		QueryResponse res = solr.query(parameters);
 		Logger.info("QTime: "+res.getQTime());
@@ -77,6 +86,7 @@ public class SolrShine {
 		QueryResponse res = this.search(query, null);
 		res.getFacetFields().get(0).getValues().get(0).getName();
 		res.getResults().get(0).getFirstValue("title");
+		res.getResults().getNumFound();
 		return null;
 	}
 
