@@ -11,6 +11,7 @@
         <link rel="shortcut icon" type="image/png" href='@routes.Assets.at("images/favicon.png")'>
         <script src='@routes.Assets.at("javascripts/jquery-1.9.0.min.js")' type="text/javascript"></script>
         <script src='@routes.Assets.at("javascripts/bootstrap.min.js")' type="text/javascript"></script>
+        <script src="https://raw.github.com/carhartl/jquery-cookie/master/jquery.cookie.js"></script>
     </head>
     <body>
 
@@ -55,6 +56,24 @@
       @content
     
     </div>
+    
+    <script>
+    $(document).ready(function() {
+        var last=$.cookie('activeAccordionGroup');
+        if (last!=null) {
+            //remove default collapse settings
+            $("#accordion .collapse").removeClass('in');
+            //show the last visible group
+            $("#"+last).collapse("show");
+        }
+    });
+
+    //when a group is shown, save it as the active accordion group
+    $("#accordion").bind('shown', function() {
+        var active=$("#accordion .in").attr('id');
+        $.cookie('activeAccordionGroup', active)
+    });
+    </script>
     
   </body>
 </html>
