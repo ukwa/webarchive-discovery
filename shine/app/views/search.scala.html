@@ -1,19 +1,11 @@
 @(q: uk.bl.wa.shine.Query)
 
 @main(q.query) {
-    
-   <h1>@(q.query)</h1>
-   
-   <form action="@(routes.Application.search(""))" method="get">
-     <input type="text" name="query" value="@(q.query)"/>
-     <input type="submit"/>
 
-<ul> 
-@for(d <- q.res.getResults()) {
-  <li><a href="http://web.archive.org/web/@(d.getFirstValue("wayback_date"))/@(d.getFirstValue("url"))">@d.getFirstValue("title")</a><br/>
-   @d.getFirstValue("crawl_date"), @d.getFirstValue("content_type_norm"), @d.getFirstValue("content_type_full")</li>
-}
-</ul>
+   <form action="@(routes.Application.search(""))" method="get">
+
+<div class="row">
+  <div class="col-md-5">
 
 
 @for(fc <- q.res.getFacetFields()) {
@@ -31,5 +23,31 @@
     </ul>
 }
 
-   </form>
+   </div>
+
+  <div class="col-md-7">
+   
+   
+    
+<div class="panel panel-default">
+  <div class="panel-body">
+     <input type="text" name="query" value="@(q.query)"/>
+     <input type="submit"/>
+  </div>
+</div>
+   
+
+<ul> 
+@for(d <- q.res.getResults()) {
+  <li><a href="http://web.archive.org/web/@(d.getFirstValue("wayback_date"))/@(d.getFirstValue("url"))">@d.getFirstValue("title")</a><br/>
+   @d.getFirstValue("crawl_date"), @d.getFirstValue("content_type_norm"), @d.getFirstValue("content_type_full")</li>
+}
+</ul>
+
+  </div>
+
+   </div>
+
+   </form>   
+
 }
