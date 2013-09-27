@@ -60,7 +60,7 @@ public class SolrShine {
 		for( String param : params.keySet() ) {
 			String field = param;
 			if( field.startsWith("-")) field = field.replaceFirst("-", "");
-			fq.add("{!tag="+field+"}"+param+":"+params.get(param).get(0));
+			fq.add("{!tag="+field+"}"+param+":"+params.get(param).get(0));// FIXME Not get(0)
 		}
 		if( fq.size() > 0 ) {
 			parameters.setFilterQueries(fq.toArray(new String[fq.size()]));
@@ -69,7 +69,7 @@ public class SolrShine {
 		parameters.setSort("crawl_date", ORDER.asc);
 		// Perform the query:
 		QueryResponse res = solr.query(parameters);
-		Logger.info("Q: "+res.getRequestUrl());
+		Logger.info("QTime: "+res.getQTime());
 		return res;
 	}
 	

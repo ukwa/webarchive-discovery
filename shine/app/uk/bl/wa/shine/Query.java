@@ -37,7 +37,7 @@ public class Query {
 	
 	public String getCheckedInString(String facet_name, String value ) {
 		for( String fc : filters.keySet() ) {
-			if( fc.equals(facet_name) && filters.get(fc).contains(value)) return "checked=\"\"";
+			if( fc.equals(facet_name) && filters.get(fc).contains("\""+value+"\"")) return "checked=\"\"";
 		}
 		return "";
 	}
