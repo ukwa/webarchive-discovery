@@ -17,6 +17,11 @@ object Application extends Controller {
     Ok(views.html.index("Your new application is ready."))
   }
   
+  def halflife = Action {
+    solr.halflife();
+    Ok(views.html.index("Half-life..."))
+  }
+  
   def search ( query: String ) = Action { implicit request =>
     val map = request.queryString;
     val javaMap = map.map { case (k,v) => (k, v.asJava) }.asJava;
