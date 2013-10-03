@@ -21,14 +21,15 @@ Which runs like this:
 
 TODO
 * In AADDA: Check if the 'null' content types have matching 'parse_errors'.
+
 * Clean all data! Strip nasty chars and limit all but TEXT to e.g. 200 chars.
-* Also ID with DROID and add that to the results and the 'best guess'.
-* Only keep the 'sentiment score', not the facet.
 * Also shingle/n-gram the first few bytes, for stronger signature generation.
 * Sanitise parse_errors a bit?
 * Allow resource url through for DROID and TIKA, or not?
-                // FIXME There are not always headers! This code should check first.
-            // TODO Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
+
+* There are not always headers! This code should check first.
+* Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
+* Only keep the 'sentiment score', not the facet.
 
 
 

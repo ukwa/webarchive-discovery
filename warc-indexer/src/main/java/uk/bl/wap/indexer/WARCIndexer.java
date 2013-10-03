@@ -259,8 +259,6 @@ public class WARCIndexer {
 			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, BUFFER_SIZE ), (int) BUFFER_SIZE );
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
-			// Derive normalised/simplified content type:
-			processContentType(solr, header, serverType);
 						
 			// Pull out the first four bytes, to hunt for new format by magic:
 			try {
@@ -288,6 +286,8 @@ public class WARCIndexer {
 				}
 			}
 
+			// Derive normalised/simplified content type:
+			processContentType(solr, header, serverType);
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			// Entropy, compressibility, fussy hashes, etc.
@@ -387,9 +387,11 @@ public class WARCIndexer {
 						sentilen = text.length();
 					String sentitext = text.substring(0, sentilen);
 					//	metadata.get(HtmlFeatureParser.FIRST_PARAGRAPH);
-						
+					
 					Sentiment senti = sentij.analyze( sentitext );
-					int sentii = (int) (SolrFields.SENTIMENTS.length * ((senti.getComparative()+10000.0)/20000.0));
+					double sentilog = Math.signum( senti.getComparative() ) * 
+							(Math.sqrt(Math.abs( senti.getComparative() ))/Math.sqrt(1000.0) );
+					int sentii = (int) (SolrFields.SENTIMENTS.length * ( 0.5 + sentilog  ));
 					if( sentii < 0 ) {
 						log.warn("Caught a sentiment rating less than zero: "+sentii+" built from "+senti.getComparative());
 						sentii = 0;
@@ -398,7 +400,8 @@ public class WARCIndexer {
 						log.warn("Caught a sentiment rating too large to be in range: "+sentii+" built from "+senti.getComparative());
 						sentii = SolrFields.SENTIMENTS.length - 1;
 					}
-					//log.debug("Got sentiment: " + sentii+" "+ SolrFields.SENTIMENTS[sentii] + " from " +text.substring(0, sentilen) );
+					//if( sentii != 3 )
+					//	log.debug("Got sentiment: " + sentii+" "+sentilog+" "+ SolrFields.SENTIMENTS[sentii] );
 					// Map to sentiment scale:
 					solr.addField(SolrFields.SENTIMENT, SolrFields.SENTIMENTS[sentii]);
 					solr.addField(SolrFields.SENTIMENT_SCORE, ""+senti.getComparative());
@@ -536,7 +539,7 @@ public class WARCIndexer {
 		MediaType mt_tika = MediaType.parse(contentType);
 		if( solr.doc.get(SolrFields.CONTENT_TYPE_DROID) != null ) {
 			MediaType mt_droid = MediaType.parse((String)solr.doc.get(SolrFields.CONTENT_TYPE_DROID).getFirstValue());
-			if( mt_tika.equals(MediaType.OCTET_STREAM ) ) {
+			if( mt_tika == null || mt_tika.equals(MediaType.OCTET_STREAM ) ) {
 				contentType = mt_droid.toString();
 			} else if( mt_droid.getBaseType().equals(mt_tika.getBaseType()) 
 					&& mt_droid.getParameters().get("version") != null ) {

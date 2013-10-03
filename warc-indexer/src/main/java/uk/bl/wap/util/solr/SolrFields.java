@@ -37,7 +37,7 @@ public interface SolrFields {
 	public static final String CONTENT_LANGUAGE = "content_language";
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";
-	public static final String CONTENT_VERSION = "content_version";
+	public static final String CONTENT_VERSION = "content_type_version";
 	public static final String FULL_CONTENT_TYPE = "content_type_full";
 	public static final String CONTENT_TYPE_TIKA = "content_type_tika";
 	public static final String CONTENT_TYPE_DROID = "content_type_droid";
