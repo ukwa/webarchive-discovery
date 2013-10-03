@@ -21,9 +21,11 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.print.Doc;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -95,7 +97,6 @@ public class WARCIndexer {
 	TikaExtractor tika = new TikaExtractor();
 	MessageDigest md5 = null;
 	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
-	SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
 
 	/** */
 	LanguageDetector ld = new LanguageDetector();
@@ -156,26 +157,8 @@ public class WARCIndexer {
 			// Dates
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
-			String year = extractYear(header.getDate());
-			if( !"0000".equals(year))
-				solr.doc.setField( SolrFields.CRAWL_YEAR, year );
-			try {
-				// Some ARC records have 12-, 16- or 17-digit dates
-				if( waybackDate.length() == 12 ) {
-					solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse12DigitDate( waybackDate ) ) );
-					waybackDate = waybackDate + "00";
-				} else {
-					if( waybackDate.length() == 14 ) {
-						solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) ) );
-					} else if( waybackDate.length() > 14 ) {
-						solr.doc.setField( SolrFields.CRAWL_DATE, formatter.format( ArchiveUtils.parse17DigitDate( waybackDate ) ) );
-						waybackDate = waybackDate.substring( 0, 14 );
-					}
-				}
-			} catch( ParseException p ) {
-				p.printStackTrace();
-			}
-			
+			solr.doc.setField( SolrFields.CRAWL_YEAR,  extractYear(header.getDate()) );
+			solr.doc.setField(SolrFields.CRAWL_DATE, parseCrawlDate(waybackDate));			
 			
 			// 
 			byte[] md5digest = md5.digest( header.getUrl().getBytes( "UTF-8" ) );
@@ -184,33 +167,20 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
-			// Spot 'slash pages':
 			String fullUrl = header.getUrl();
 			// Also pull out the file extension, if any:
-			if( fullUrl.lastIndexOf("/") != -1 ) {
-				String path = fullUrl.substring(fullUrl.lastIndexOf("/"));
-				if( path.indexOf("?") != -1 ) {
-					path = path.substring(0, path.indexOf("?"));
-				}
-				if( path.indexOf("&") != -1 ) {
-					path = path.substring(0, path.indexOf("&"));
-				}				
-				if( path.indexOf(".") != -1 ) {
-					String ext = path.substring(path.lastIndexOf("."));
-					ext = ext.toLowerCase();
-					solr.doc.addField(SolrFields.CONTENT_TYPE_EXT, ext);
-				}
-			}
+			solr.doc.addField(SolrFields.CONTENT_TYPE_EXT, parseExtension(fullUrl) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			if( fullUrl.length() > 2000 ) fullUrl = fullUrl.substring(0, 2000);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
+			// Spot 'slash pages':
 			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].matches("^index\\.[a-z]+$") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Record the domain (strictly, the host): 
-			String domain = urlParts[ 0 ];
-			solr.doc.setField( SolrFields.SOLR_DOMAIN, domain );
-			solr.doc.setField( SolrFields.PRIVATE_SUFFIX, LinkExtractor.extractPrivateSuffixFromHost(domain) );
-			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(domain) );
+			String host = urlParts[ 0 ];
+			solr.doc.setField( SolrFields.SOLR_HOST, host );
+			solr.doc.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost(host) );
+			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(host) );
 			// TOOD Add Private Suffix?
 
 			// Parse HTTP headers:
@@ -316,19 +286,19 @@ public class WARCIndexer {
 					// Process links:
 					String links_list = metadata.get(HtmlFeatureParser.LINK_LIST);
 					if( links_list != null ) {
-						String host, suffix;
+						String lhost, ldomain, lsuffix;
 						for( String link : links_list.split(" ") ) {
-							host = LinkExtractor.extractHost( link );
-							if( !host.equals( LinkExtractor.MALFORMED_HOST ) ) {
-								hosts.put( host, "" );
+							lhost = LinkExtractor.extractHost( link );
+							if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
+								hosts.put( lhost, "" );
 							}
-							suffix = LinkExtractor.extractPublicSuffix( link );
-							if( suffix != null ) {
-								suffixes.put( suffix, "" );
+							lsuffix = LinkExtractor.extractPublicSuffix( link );
+							if( lsuffix != null ) {
+								suffixes.put( lsuffix, "" );
 							}
-							domain = LinkExtractor.extractPrivateSuffix( link );
-							if( domain != null ) {
-								domains.put( domain, "" );
+							ldomain = LinkExtractor.extractPrivateSuffix( link );
+							if( ldomain != null ) {
+								domains.put( ldomain, "" );
 							}
 						}
 						Iterator<String> iterator = hosts.keySet().iterator();
@@ -448,14 +418,75 @@ public class WARCIndexer {
 	
 	/**
 	 * 
+	 * @param fullUrl
+	 * @return
+	 */
+	protected static String parseExtension(String fullUrl) {
+		if( fullUrl.lastIndexOf("/") != -1 ) {
+			String path = fullUrl.substring(fullUrl.lastIndexOf("/"));
+			if( path.indexOf("?") != -1 ) {
+				path = path.substring(0, path.indexOf("?"));
+			}
+			if( path.indexOf("&") != -1 ) {
+				path = path.substring(0, path.indexOf("&"));
+			}				
+			if( path.indexOf(".") != -1 ) {
+				String ext = path.substring(path.lastIndexOf("."));
+				ext = ext.toLowerCase();
+				//ext = ext.substring(path.indexOf("%"));
+				ext = ext.replaceAll( "[^0-9a-z]", "" );
+				return ext;
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Timestamp parsing, for the Crawl Date.
+	 */
+	
+	private static SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+	static {
+		formatter.setTimeZone(TimeZone.getTimeZone("GMT"));
+	}
+	
+	/**
+	 * 
+	 * @param waybackDate
+	 * @return
+	 */
+	protected static String parseCrawlDate(String waybackDate) {
+		try {
+			// Some ARC records have 12-, 16- or 17-digit dates
+			if( waybackDate.length() == 12 ) {
+				return formatter.format( ArchiveUtils.parse12DigitDate( waybackDate ) );
+			} else if( waybackDate.length() == 14 ) {
+				return formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) );
+			} else if( waybackDate.length() == 16 ) {
+				return formatter.format( ArchiveUtils.parse17DigitDate( waybackDate+"0" ) );
+			} else if( waybackDate.length() >= 17 ) {
+				return formatter.format( ArchiveUtils.parse17DigitDate( waybackDate.substring( 0, 17 ) ) );
+			}
+		} catch( ParseException p ) {
+			p.printStackTrace();
+		}
+		return null;
+	}
+
+	/**
+	 * 
 	 * @param timestamp
 	 * @return
 	 */
-	public static String extractYear(String timestamp) {
-		String waybackYear = "unknown-year";
+	protected static String extractYear(String timestamp) {
+		// Default to 'unknown':
+		String waybackYear = "unknown";
 		String waybackDate = timestamp.replaceAll( "[^0-9]", "" );
 		if( waybackDate != null ) 
 			waybackYear = waybackDate.substring(0,4);
+		// Reject bad values by resetting to 'unknown':
+		if( "0000".equals(waybackYear)) waybackYear="unknown";
+		// Return
 		return waybackYear;
 	}
 	

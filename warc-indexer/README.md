@@ -19,6 +19,18 @@ Which runs like this:
 </pre>
 
 
+TODO
+* Store host and domain properly. Rename private_suffix to domain and name host properly.
+* Clean all data! Strip nasty chars and limit all but TEXT to e.g. 200 chars.
+* Populate tool-based type fields correctly.
+* Also ID with DROID and add that to the results and the 'best guess'.
+* Only keep the 'sentiment score', not the facet.
+* Also shingle/n-gram the first few bytes, for stronger signature generation.
+* Sanitise parse_errors a bit?
+                // FIXME There are not always headers! This code should check first.
+            // TODO Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
+
+
 EntityIndexer
 -------------
 

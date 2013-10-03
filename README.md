@@ -110,7 +110,7 @@ http://192.168.45.10:8983/solr/aadda-discovery/select?q=*%3A*&wt=json&indent=tru
 
 Mining for Signatures
 ---------------------
-Starting with unidentified formats: http://www.webarchive.org.uk/aadda-discovery/formats?f[0]=content_type%3A%22application/octet-stream%22, we can script a series of queries for different extensions that attempt to build plausible signatures for each, based on the FFB.
+Starting with unidentified formats: http://www.webarchive.org.uk/aadda-discovery/formats?f[0]=content_type%3A%22application/octet-stream%22, we can script a series of queries for different extensions that attempt to build plausible signatures for each, based on the FFB. More details elsewhere...
 
 Mining old software
 -------------------
@@ -118,12 +118,18 @@ Use this basic infastructure to index the old software and FTP sites etc. held b
 
 * e.g. http://archive.org/details/On_Hand_From_Softbank_1994_Release_2_Disc_2_1994
 
-Mining for signatures
----------------------
-Starting with unidentified formats: http://www.webarchive.org.uk/aadda-discovery/formats?f[0]=content_type%3A%22application/octet-stream%22, we can script a series of queries for different extensions that attempt to build plausible signatures for each, based on the FFB.
 
-YOLOminus15
+YOLO-15
 -----------
 Use the Solr index to find pages from 15 years ago, and publish as a twitter feed (e.g. daily). Could be basic search with screenshots, or perhaps a bit more meaningful if we hook in a search for the test 'you only live once'.
 
 * http://solr1.bl.uk:8080/solr/select?sort=harvest_date+asc&indent=on&version=2.2&q=harvest_date%3A%5BNOW-17YEAR+TO+NOW-17YEAR%2B1MONTH%5D&fq=&start=0&rows=10&fl=*%2Cscore&wt=&explainOther=&hl.fl=
+
+Other Systems
+-------------
+
+Other approaches to look at/compare against:
+ * [HDFS (W)ARC-to-HBase](http://docs.lucidworks.com/display/bigdata/Custom+Ingestion+Implementation).
+ * [Behemoth](https://github.com/DigitalPebble/behemoth)
+     * [Note indexing logic](https://github.com/DigitalPebble/behemoth/blob/master/solr/src/main/java/com/digitalpebble/behemoth/solr/SOLRWriter.java)
+

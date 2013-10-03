@@ -79,7 +79,10 @@ public class LanguageDetector {
 		// Only return that result if it's credible:
 		if( li.isReasonablyCertain() ) return li.getLanguage();
 		// Otherwise, fall back to the langdetect approach (should be better for short texts)
-		return this.getLangdetectLanguage(text);
+		// (Having found that (very) short texts are not likely to be classified sensibly.)
+		if( text.length() > 200 )
+			return this.getLangdetectLanguage(text);
+		return null;
 	}
 	/**
 	 * @param args

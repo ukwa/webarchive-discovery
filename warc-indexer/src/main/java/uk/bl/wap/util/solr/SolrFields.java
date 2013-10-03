@@ -9,9 +9,9 @@ public interface SolrFields {
 	public static final String SOLR_URL_TYPE_SLASHPAGE = "slashpage";
 	public static final String SOLR_URL_TYPE_EMBED = "embed";
 	
-	public static final String SOLR_DOMAIN = "domain";
+	public static final String SOLR_HOST = "domain";
 	public static final String PUBLIC_SUFFIX = "public_suffix";
-	public static final String PRIVATE_SUFFIX = "private_suffix";
+	public static final String DOMAIN = "private_suffix";
 	public static final String SOLR_DIGEST = "hash";
 	public static final String SOLR_TITLE = "title";
 	public static final String SOLR_SUBJECT = "subject";
