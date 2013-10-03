@@ -52,6 +52,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -64,6 +65,7 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
+import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
@@ -72,6 +74,7 @@ import uk.bl.wap.util.solr.SolrFields;
 import uk.bl.wap.util.solr.SolrWebServer;
 import uk.bl.wap.util.solr.TikaExtractor;
 import uk.bl.wap.util.solr.WritableSolrRecord;
+import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
 
@@ -94,22 +97,33 @@ public class WARCIndexer {
 	private static final long BUFFER_SIZE = 10485760L; // 10485760 bytes = 10MB.
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
-	TikaExtractor tika = new TikaExtractor();
-	MessageDigest md5 = null;
-	AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
+	private TikaExtractor tika = new TikaExtractor();
+	private DroidDetector dd = null;
+	private boolean runDroid = true;
+	private MessageDigest md5 = null;
+	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	/** */
-	LanguageDetector ld = new LanguageDetector();
+	private LanguageDetector ld = new LanguageDetector();
 	/** */
-	HtmlFeatureParser hfp = new HtmlFeatureParser();
+	private HtmlFeatureParser hfp = new HtmlFeatureParser();
 	/** */
-	SentimentalJ sentij = new SentimentalJ();
+	private SentimentalJ sentij = new SentimentalJ();
 	/** */
-	PostcodeGeomapper pcg = new PostcodeGeomapper();
+	private PostcodeGeomapper pcg = new PostcodeGeomapper();
 
 
 	public WARCIndexer() throws NoSuchAlgorithmException {
 		md5 = MessageDigest.getInstance( "MD5" );
+		// Attempt to set up Droid:
+		try {
+			dd = new DroidDetector();
+			dd.setBinarySignaturesOnly(true);
+			dd.setMaxBytesToScan(512*1024l);
+		} catch (CommandExecutionException e) {
+			e.printStackTrace();
+			dd = null;
+		}
 	}
 	
 	/**
@@ -163,7 +177,7 @@ public class WARCIndexer {
 			// 
 			byte[] md5digest = md5.digest( header.getUrl().getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
-			solr.doc.setField( SolrFields.SOLR_ID, waybackDate + "/" + md5hex);
+			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex);
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
 			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
 			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
@@ -225,7 +239,7 @@ public class WARCIndexer {
 				arcr.skipHttpHeader();
 				tikainput = arcr;
 			} else {
-				System.err.println("FAIL! Unsupported archive record type.");
+				log.error("FAIL! Unsupported archive record type.");
 				return solr;
 			}
 			
@@ -257,7 +271,21 @@ public class WARCIndexer {
 					solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
 				}
 			} catch( IOException i ) {
-				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
+				log.error( i + ": " +i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
+			}
+			
+			// Also run DROID (restricted range):
+			if( dd != null && runDroid == true ) {
+				try {
+					tikainput.reset();
+					Metadata metadata = new Metadata();
+					// Note that DROID complains about some URLs with an IllegalArgumentException.
+					//metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
+					MediaType mt = dd.detect(tikainput, metadata);
+					solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
+				} catch( Exception i ) {
+					log.error( i + ": " +i.getMessage() + ";dd; " + header.getUrl() + "@" + header.getOffset() );
+				}
 			}
 
 			
@@ -272,6 +300,7 @@ public class WARCIndexer {
 				HashMap<String,String> suffixes = new HashMap<String,String>();
 				HashMap<String,String> domains = new HashMap<String,String>();
 				if( mime.startsWith( "text" ) ) {
+					// JSoup NEEDS the URL to function:
 					metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
 					ParseRunner parser = new ParseRunner( hfp, tikainput, metadata );
 					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
@@ -311,7 +340,7 @@ public class WARCIndexer {
 						}
 						iterator = domains.keySet().iterator();
 						while( iterator.hasNext() ) {
-							solr.addField( SolrFields.SOLR_LINKS_PRIVATE_SUFFIXES, iterator.next() );
+							solr.addField( SolrFields.SOLR_LINKS_DOMAINS, iterator.next() );
 						}
 					}
 					// Process element usage:
@@ -333,7 +362,7 @@ public class WARCIndexer {
 
 				}
 			} catch( Exception i ) {
-				System.err.println( i.getMessage() + "; " + header.getUrl() + "@" + header.getOffset() );
+				log.error( i + ": " +i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
 			}
 			
 			// --- The following extractors don't need to re-read the payload ---
@@ -353,14 +382,14 @@ public class WARCIndexer {
 					}
 					
 					// Sentiment Analysis:
-					int sentilen = 5000;
+					int sentilen = 10000;
 					if (sentilen > text.length())
 						sentilen = text.length();
 					String sentitext = text.substring(0, sentilen);
 					//	metadata.get(HtmlFeatureParser.FIRST_PARAGRAPH);
 						
 					Sentiment senti = sentij.analyze( sentitext );
-					int sentii = (int) (SolrFields.SENTIMENTS.length * ((senti.getComparative()+100.0)/200.0));
+					int sentii = (int) (SolrFields.SENTIMENTS.length * ((senti.getComparative()+10000.0)/20000.0));
 					if( sentii < 0 ) {
 						log.warn("Caught a sentiment rating less than zero: "+sentii+" built from "+senti.getComparative());
 						sentii = 0;
@@ -497,18 +526,39 @@ public class WARCIndexer {
 	 * @param serverType
 	 */
 	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType) {
-		StringBuilder mime = new StringBuilder();
-		mime.append( ( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE ) ) );
-		if( mime.toString().isEmpty() ) {
+		// Get the current content-type:
+		String contentType =  (String) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
+		
+		// Store the raw content type from Tika:
+		solr.doc.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
+		
+		// Also get the other content types:
+		MediaType mt_tika = MediaType.parse(contentType);
+		if( solr.doc.get(SolrFields.CONTENT_TYPE_DROID) != null ) {
+			MediaType mt_droid = MediaType.parse((String)solr.doc.get(SolrFields.CONTENT_TYPE_DROID).getFirstValue());
+			if( mt_tika.equals(MediaType.OCTET_STREAM ) ) {
+				contentType = mt_droid.toString();
+			} else if( mt_droid.getBaseType().equals(mt_tika.getBaseType()) 
+					&& mt_droid.getParameters().get("version") != null ) {
+				// Union of results:
+				mt_tika = new MediaType(mt_tika, mt_droid.getParameters());	
+				contentType = mt_tika.toString();
+			}
+			if( mt_droid.getParameters().get("version") != null ) {
+				solr.doc.addField(SolrFields.CONTENT_VERSION, mt_droid.getParameters().get("version") );
+			}
+		}
+
+		// Allow header MIME
+		if( contentType.isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
-				mime.append( ( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) ) );
+				contentType =  ( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) );
 			} else {
-				mime.append( header.getMimetype() );
+				contentType = header.getMimetype();
 			}
 		}
 		
 		// Determine content type:
-		String contentType = mime.toString();
 		solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
 		
 		// Fall back on serverType for plain text:
@@ -523,21 +573,21 @@ public class WARCIndexer {
 
 		// Also add a more general, simplified type, as appropriate:
 		// FIXME clean up this messy code:
-		if( mime.toString().matches( "^image/.*$" ) ) {
+		if( contentType.matches( "^image/.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
-		} else if( mime.toString().matches( "^(audio|video)/.*$" ) ) {
+		} else if( contentType.matches( "^(audio|video)/.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
-		} else if( mime.toString().matches( "^text/htm.*$" ) ) {
+		} else if( contentType.matches( "^text/htm.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
-		} else if( mime.toString().matches( "^application/pdf.*$" ) ) {
+		} else if( contentType.matches( "^application/pdf.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
-		} else if( mime.toString().matches( "^.*word$" ) ) {
+		} else if( contentType.matches( "^.*word$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
-		} else if( mime.toString().matches( "^.*excel$" ) ) {
+		} else if( contentType.matches( "^.*excel$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
-		} else if( mime.toString().matches( "^.*powerpoint$" ) ) {
+		} else if( contentType.matches( "^.*powerpoint$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
-		} else if( mime.toString().matches( "^text/plain.*$" ) ) {
+		} else if( contentType.matches( "^text/plain.*$" ) ) {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
 		} else {
 			solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );

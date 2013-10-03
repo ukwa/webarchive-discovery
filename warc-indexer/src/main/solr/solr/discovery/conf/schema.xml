@@ -138,8 +138,11 @@
         NOTE: This field is not indexed by default, since it is also copied to "text"
         using copyField below. This is to save space. Use this field for returning and
         highlighting document content. Use the "text" field to search the content. -->
-   <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
+   <field name="content_text" type="text_general" indexed="false" stored="true" multiValued="true"/>
+   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    
+   <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
+   <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
@@ -182,7 +185,8 @@
    <field name="content_language" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
-   <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
+   
+   <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->   
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl date, as a date -->
    <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
@@ -192,22 +196,26 @@
    <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl year, month and day, for faceting -->
    <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false"/>
-   <!-- The domain (or more accurately, the host) for this URL: -->
+   
+   <!-- The domain for this URL: -->
+   <field name="host" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The private suffix a.k.a domain for this host: -->
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
-   <!-- The private suffix of the host domain, i.e. example.co.uk, example.org, etc: -->
-   <field name="private_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
-   <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
-   <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
-   <!-- The private suffixs of the target domains of any links, i.e. example.co.uk, example.org, etc: -->
-   <field name="links_private_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
+   
    <!-- The hostnames of discovered outlinks -->
    <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The private suffixs of the target domains of any links, i.e. example.co.uk, example.org, etc: -->
+   <field name="links_domains" type="string" indexed="true" stored="true" multiValued="true"/>
+   <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
+   <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
+   
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+   
    <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
+   
    <!-- Core fields to be removed? -->
    <field name="spell" type="textSpell" indexed="true" stored="false" multiValued="true"/>
    <field name="text_ns" type="text_general" indexed="true" stored="false" multiValued="true"/>
