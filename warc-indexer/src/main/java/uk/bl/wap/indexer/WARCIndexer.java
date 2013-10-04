@@ -390,7 +390,7 @@ public class WARCIndexer {
 					
 					Sentiment senti = sentij.analyze( sentitext );
 					double sentilog = Math.signum( senti.getComparative() ) * 
-							(Math.sqrt(Math.abs( senti.getComparative() ))/Math.sqrt(1000.0) );
+							(Math.log(1.0+Math.abs( senti.getComparative() ))/100.0 );
 					int sentii = (int) (SolrFields.SENTIMENTS.length * ( 0.5 + sentilog  ));
 					if( sentii < 0 ) {
 						log.warn("Caught a sentiment rating less than zero: "+sentii+" built from "+senti.getComparative());
@@ -405,6 +405,7 @@ public class WARCIndexer {
 					// Map to sentiment scale:
 					solr.addField(SolrFields.SENTIMENT, SolrFields.SENTIMENTS[sentii]);
 					solr.addField(SolrFields.SENTIMENT_SCORE, ""+senti.getComparative());
+					
 
 					// Postcode Extractor (based on text extracted by Tika)
 					Matcher pcm = postcodePattern.matcher(text);
