@@ -63,6 +63,8 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
+import com.google.common.base.Splitter;
+
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
@@ -260,13 +262,21 @@ public class WARCIndexer {
 			tikainput.mark((int) header.getLength());
 			solr = tika.extract( solr, tikainput, header.getUrl() );
 						
-			// Pull out the first four bytes, to hunt for new format by magic:
+			// Pull out the first few bytes, to hunt for new format by magic:
+			int MAX_FIRST_BYTES = 32;
 			try {
 				tikainput.reset();
-				byte[] ffb = new byte[4];
+				byte[] ffb = new byte[MAX_FIRST_BYTES];
 				int read = tikainput.read(ffb);
-				if( read == 4 ) {
-					solr.addField(SolrFields.CONTENT_FFB, Hex.encodeHexString(ffb));
+				if( read >= 4 ) {
+					String hexBytes = Hex.encodeHexString(ffb);
+					solr.addField(SolrFields.CONTENT_FFB, hexBytes.substring(0,2*4));
+					StringBuilder separatedHexBytes = new StringBuilder();
+					for( String hexByte : Splitter.fixedLength(2).split(hexBytes) ) {
+						separatedHexBytes.append(hexByte);
+						separatedHexBytes.append(" ");
+					}
+					solr.addField(SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim());
 				}
 			} catch( IOException i ) {
 				log.error( i + ": " +i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
@@ -373,6 +383,8 @@ public class WARCIndexer {
 						SolrFields.SOLR_EXTRACTED_TEXT).getFirstValue();
 				text = text.trim();
 				if (! "".equals(text) ) {
+					/* ---------------------------------------------------------- */
+					
 					if( metadata.get(Metadata.CONTENT_LANGUAGE) == null ) {
 						String li = ld.detectLanguage(text);
 						if( li != null )
@@ -380,6 +392,8 @@ public class WARCIndexer {
 					} else {
 						solr.addField(SolrFields.CONTENT_LANGUAGE, metadata.get(Metadata.CONTENT_LANGUAGE) );
 					}
+					
+					/* ---------------------------------------------------------- */
 					
 					// Sentiment Analysis:
 					int sentilen = 10000;
@@ -390,14 +404,14 @@ public class WARCIndexer {
 					
 					Sentiment senti = sentij.analyze( sentitext );
 					double sentilog = Math.signum( senti.getComparative() ) * 
-							(Math.log(1.0+Math.abs( senti.getComparative() ))/100.0 );
+							(Math.log(1.0+Math.abs( senti.getComparative() ))/40.0 );
 					int sentii = (int) (SolrFields.SENTIMENTS.length * ( 0.5 + sentilog  ));
 					if( sentii < 0 ) {
-						log.warn("Caught a sentiment rating less than zero: "+sentii+" built from "+senti.getComparative());
+						log.debug("Caught a sentiment rating less than zero: "+sentii+" from "+sentilog);
 						sentii = 0;
 					}
 					if( sentii >= SolrFields.SENTIMENTS.length ) {
-						log.warn("Caught a sentiment rating too large to be in range: "+sentii+" built from "+senti.getComparative());
+						log.debug("Caught a sentiment rating too large to be in range: "+sentii+" from "+sentilog);
 						sentii = SolrFields.SENTIMENTS.length - 1;
 					}
 					//if( sentii != 3 )
@@ -406,6 +420,7 @@ public class WARCIndexer {
 					solr.addField(SolrFields.SENTIMENT, SolrFields.SENTIMENTS[sentii]);
 					solr.addField(SolrFields.SENTIMENT_SCORE, ""+senti.getComparative());
 					
+					/* ---------------------------------------------------------- */
 
 					// Postcode Extractor (based on text extracted by Tika)
 					Matcher pcm = postcodePattern.matcher(text);
@@ -420,11 +435,17 @@ public class WARCIndexer {
 							solr.addField(SolrFields.LOCATIONS, location);
 					}
 					
+					// TODO Named entity extraction
+
+					/* ---------------------------------------------------------- */
+					
 					// Canonicalize the text - strip newlines etc.
 					Pattern whitespace = Pattern.compile("\\s+");
 					Matcher matcher = whitespace.matcher(text);
 					text = matcher.replaceAll(" ").toLowerCase().trim();
 					
+					/* ---------------------------------------------------------- */
+
 					// Add SSDeep hash for the text, to spot similar texts.
 					SSDeep ssd = new SSDeep();
 					FuzzyHash tfh = ssd.fuzzy_hash_buf(text.getBytes("UTF-8"));
@@ -432,8 +453,6 @@ public class WARCIndexer {
 					solr.addField( SolrFields.SSDEEP_PREFIX+(tfh.getBlocksize()*2), tfh.getHash2() );
 					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX+tfh.getBlocksize(), tfh.getHash() );
 					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX+(tfh.getBlocksize()*2), tfh.getHash2() );
-
-					// TODO Named entity extraction
 
 				}
 			}

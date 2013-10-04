@@ -39,4 +39,6 @@ public class WARCIndexerTest {
 		// FIXME Get some bad extensions from the current Solr server and check we can deal with them
 		//fail("Not implemented yet!");
 	}
+	
+	
 }

@@ -69,7 +69,7 @@ public class WARCIndexerEmbeddedSolrTest {
 	}
 
 	@Test
-	public void test() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
+	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
 		// Fire up a SOLR:
 		SolrInputDocument document = new SolrInputDocument();
         document.addField("id", "1");

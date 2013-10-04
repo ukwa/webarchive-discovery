@@ -50,11 +50,15 @@ public class HtmlFeatureParser extends AbstractParser {
 		Document doc = null;
 		try {
 			doc = Jsoup.parse(stream, null, url );
+		} catch (java.nio.charset.IllegalCharsetNameException e ) {
+			log.warn("Jsoup parse had to assume UTF-8: "+e);
+			doc = Jsoup.parse(stream, "UTF-8", url );
 		} catch( Exception e ) {
 			log.error("Jsoup parse failed: "+e);
+		} finally {
 			if( doc == null ) return;
 		}
-
+		
 		// Get the links (no image links):
 		Set<String> links = this.extractLinks(doc, false);
 		if( links != null && links.size() > 0 )

@@ -258,8 +258,10 @@
    <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The content type, as supplied by the URI extension: -->
    <field name="content_type_ext" type="string" indexed="true" stored="true" multiValued="false"/>
-   <!-- The first four bytes of the bitstream, suitably encoded as a string: -->
+   <!-- The first four bytes of the bitstream, suitably hex-encoded as a string ('xxxxxxxx'): -->
    <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The binary n-grams first few bytes of the bitstream, hex-encoded and space separated ('xx xx xx xx'): -->
+   <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The software generators or creator tools, that can be determined from the item: -->
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -460,6 +462,13 @@
         <filter class="solr.NGramFilterFactory" minGramSize="2" maxGramSize="5" />
       </analyzer>
     </fieldtype>
+    <fieldType name="hex_text_shingle" class="solr.TextField" positionIncrementGap="100">
+      <analyzer>
+        <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <filter class="solr.ShingleFilterFactory" minShingleSize="4" maxShingleSize="8"
+             outputUnigrams="false" outputUnigramsIfNoShingles="false" tokenSeparator=" "/>
+      </analyzer>
+   </fieldType>
    <!-- wa.bl.uk fieldTypes end -->  
   
     <!-- field type definitions. The "name" attribute is
