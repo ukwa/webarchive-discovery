@@ -22,6 +22,7 @@ Which runs like this:
 TODO
 
 * Allow resource url through for DROID and TIKA, or not?
+* Change Nanite-Core version to include Droid sig file version
 
 * There are not always headers! This code should check first.
 * Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?

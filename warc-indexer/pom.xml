@@ -107,7 +107,7 @@
         <dependency>
             <groupId>eu.scape-project.nanite</groupId>
             <artifactId>nanite-core</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
+            <version>1.0.0-SNAPSHOT-70</version>
             <exclusions>
                 <exclusion>
                     <artifactId>slf4j-log4j12</artifactId>
