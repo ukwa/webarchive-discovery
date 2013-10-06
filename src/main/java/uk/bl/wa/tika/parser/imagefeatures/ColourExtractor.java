@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.imaging.Imaging;
+import org.apache.sanselan.Sanselan;
 
 /**
  * 
@@ -39,7 +39,7 @@ public class ColourExtractor {
 	public static void main(String args[]) throws Exception {
 		File file = new File("src/test/resources/16px-photo.jpg");
 
-		BufferedImage image = Imaging.getBufferedImage(file);
+		BufferedImage image = Sanselan.getBufferedImage(file);
 
 		int height = image.getHeight();
 		int hstep = Math.max(1, height/100);
