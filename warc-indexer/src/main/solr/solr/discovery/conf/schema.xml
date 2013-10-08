@@ -263,6 +263,9 @@
    <!-- The binary n-grams first few bytes of the bitstream, hex-encoded and space separated ('xx xx xx xx'): -->
    <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
    
+   <!-- The identification of the server that produced the response: -->
+   <field name="server" type="string" indexed="true" stored="true" multiValued="true"/>
+
    <!-- The software generators or creator tools, that can be determined from the item: -->
    <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
 
@@ -465,6 +468,7 @@
     <fieldType name="hex_text_shingle" class="solr.TextField" positionIncrementGap="100">
       <analyzer>
         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+        <!-- TODO Determine if larger shingle sizes are worth using, given there will be post-hoc stitching anyway. -->
         <filter class="solr.ShingleFilterFactory" minShingleSize="4" maxShingleSize="8"
              outputUnigrams="false" outputUnigramsIfNoShingles="false" tokenSeparator=" "/>
       </analyzer>

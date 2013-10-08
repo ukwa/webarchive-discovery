@@ -197,33 +197,17 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.SOLR_HOST, host );
 			solr.doc.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost(host) );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(host) );
-			// TOOD Add Private Suffix?
 
 			// Parse HTTP headers:
-			// TODO Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
 			String referrer = null;
 			InputStream tikainput = null;
 			String statusCode = null;
 			String serverType = null;
 			if( record instanceof WARCRecord ) {
-				// FIXME There are not always headers! This code should check first.
+				// There are not always headers! The code should check first.
 				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
 				statusCode = firstLine[1].trim();
-				try {
-					Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
-					for( Header h : headers ) {
-						//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-						// FIXME This can't work, because the Referer is in the Request, not the Response.
-						// TODO Generally, need to think about ensuring the request and response are brought together.
-						if( h.getName().equals(HttpHeaders.REFERER))
-							referrer = h.getValue();
-						if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
-							serverType = h.getValue();
-					}
-				} catch( Exception e ) {
-					log.error("Exception when parsing headers: "+e);
-					solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()+": "+e.getMessage());
-				}
+				this.processHeaders(solr, statusCode, HttpParser.parseHeaders(record, "UTF-8"));
 				// No need for this, as the headers have already been read from the InputStream:
 				// WARCRecordUtils.getPayload(record);
 				tikainput = record;
@@ -231,24 +215,13 @@ public class WARCIndexer {
 			} else if ( record instanceof ARCRecord ) {
 				ARCRecord arcr = (ARCRecord) record;
 				statusCode = ""+arcr.getStatusCode();
-				for( Header h : arcr.getHttpHeaders() ) {
-					//System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-					if( h.getName().equals(HttpHeaders.REFERER))
-						referrer = h.getValue();
-					if( h.getName().equals(HttpHeaders.CONTENT_TYPE))
-						serverType = h.getValue();
-				}
+				this.processHeaders(solr, statusCode, arcr.getHttpHeaders());
 				arcr.skipHttpHeader();
 				tikainput = arcr;
 			} else {
 				log.error("FAIL! Unsupported archive record type.");
 				return solr;
 			}
-			
-			// Fields from Http headers:
-			solr.addField( SolrFields.SOLR_REFERRER_URI, referrer );
-			// Get the type from the server
-			solr.addField(SolrFields.CONTENT_TYPE_SERVED, serverType);			
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
 			if( statusCode == null || !statusCode.startsWith("2") ) return null;
@@ -468,6 +441,29 @@ public class WARCIndexer {
 		return solr;
 	}
 	
+	private void processHeaders(WritableSolrRecord solr, String statusCode, Header[] httpHeaders) {
+		try {
+			// This is a simple test that the status code setting worked:
+			int statusCodeInt = Integer.parseInt(statusCode);
+			if( statusCodeInt < 0 || statusCodeInt > 1000 ) 
+				throw new Exception("Status code out of range: "+statusCodeInt); 
+			// Get the other headers:
+			for( Header h : httpHeaders ) {
+				// Get the type from the server
+				if( h.getName().equals(HttpHeaders.CONTENT_TYPE)) 
+					solr.addField(SolrFields.CONTENT_TYPE_SERVED, h.getValue());
+				// Also, grab the X-Powered-By or Server headers if present:
+				if( h.getName().equals("X-Powered-By") ) 
+					solr.addField(SolrFields.GENERATOR, h.getValue() );
+				if( h.getName().equals(HttpHeaders.SERVER) ) 
+					solr.addField(SolrFields.SERVER, h.getValue() );
+			}
+		} catch( Exception e ) {
+			log.error("Exception when parsing headers: "+e);
+			solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()+": "+e.getMessage());
+		}
+	}
+
 	/**
 	 * 
 	 * @param fullUrl
@@ -530,7 +526,7 @@ public class WARCIndexer {
 	 * @param timestamp
 	 * @return
 	 */
-	protected static String extractYear(String timestamp) {
+	public static String extractYear(String timestamp) {
 		// Default to 'unknown':
 		String waybackYear = "unknown";
 		String waybackDate = timestamp.replaceAll( "[^0-9]", "" );

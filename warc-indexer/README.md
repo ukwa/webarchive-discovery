@@ -22,13 +22,17 @@ Which runs like this:
 TODO
 
 * Allow resource url through for DROID and TIKA, or not?
-* Change Nanite-Core version to include Droid sig file version
 
 * There are not always headers! This code should check first.
-* Add X-Powered-By, Server as generators? Maybe Server as served_by? Or just server?
 
 * In AADDA: Check if the 'null' content types have matching 'parse_errors'.
 
+
+                        //System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
+                        // FIXME This can't work, because the Referer is in the Request, not the Response.
+                        // TODO Generally, need to think about ensuring the request and response are brought together.
+                        if( h.getName().equals(HttpHeaders.REFERER))
+                            referrer = h.getValue();
 
 EntityIndexer
 -------------

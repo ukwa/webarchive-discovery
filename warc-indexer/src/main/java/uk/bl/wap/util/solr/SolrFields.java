@@ -48,6 +48,7 @@ public interface SolrFields {
 	public static final String CONTENT_FFB = "content_ffb"; /* The first four bytes */
 	public static final String CONTENT_FIRST_BYTES = "content_first_bytes";
 	public static final String GENERATOR = "generator";
+	public static final String SERVER = "server";
 	public static final String PARSE_ERROR = "parse_error";
 	public static final String CONTENT_WARNING = "content_warning";
 	
