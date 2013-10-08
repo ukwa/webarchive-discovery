@@ -146,8 +146,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		
 		// Also pass URL as metadata to allow extension hints to work:
 		Metadata metadata = new Metadata();
-		// FIXME For now, no extension hints to Tika either.
-		//metadata.set( Metadata.RESOURCE_NAME_KEY, url);
+		if( url != null )
+			metadata.set( Metadata.RESOURCE_NAME_KEY, url);
 
 		StringBuilder detected = new StringBuilder();
 		try {

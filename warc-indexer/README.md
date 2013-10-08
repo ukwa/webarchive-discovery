@@ -19,21 +19,6 @@ Which runs like this:
 </pre>
 
 
-TODO
-
-* Allow resource url through for DROID and TIKA, or not?
-
-* There are not always headers! This code should check first.
-
-* In AADDA: Check if the 'null' content types have matching 'parse_errors'.
-
-
-                        //System.out.println("HttpHeader: "+h.getName()+" -> "+h.getValue());
-                        // FIXME This can't work, because the Referer is in the Request, not the Response.
-                        // TODO Generally, need to think about ensuring the request and response are brought together.
-                        if( h.getName().equals(HttpHeaders.REFERER))
-                            referrer = h.getValue();
-
 EntityIndexer
 -------------
 

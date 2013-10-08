@@ -60,6 +60,8 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCConstants;
 import org.archive.io.warc.WARCRecord;
+import org.archive.net.UURI;
+import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
@@ -96,12 +98,14 @@ public class WARCIndexer {
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
-	private static final long BUFFER_SIZE = 10485760L; // 10485760 bytes = 10MB.
+	private static final long BUFFER_SIZE = 1024*1024l; // 10485760 bytes = 10MB.
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
 	private TikaExtractor tika = null;
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
+	private boolean droidUseBinarySignaturesOnly = false;
+	private boolean passUriToFormatTools = false;
 	private MessageDigest md5 = null;
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
@@ -123,8 +127,8 @@ public class WARCIndexer {
 		// Attempt to set up Droid:
 		try {
 			dd = new DroidDetector();
-			dd.setBinarySignaturesOnly(true);
-			dd.setMaxBytesToScan(512*1024l);
+			dd.setBinarySignaturesOnly(droidUseBinarySignaturesOnly);
+			dd.setMaxBytesToScan(BUFFER_SIZE);
 		} catch (CommandExecutionException e) {
 			e.printStackTrace();
 			dd = null;
@@ -234,7 +238,11 @@ public class WARCIndexer {
 			// Mark the start of the payload, and then run Tika on it:
 			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, BUFFER_SIZE ), (int) BUFFER_SIZE );
 			tikainput.mark((int) header.getLength());
-			solr = tika.extract( solr, tikainput, header.getUrl() );
+			if( passUriToFormatTools ) {
+				solr = tika.extract( solr, tikainput, header.getUrl() );
+			} else {
+				solr = tika.extract( solr, tikainput, null );
+			}
 						
 			// Pull out the first few bytes, to hunt for new format by magic:
 			int MAX_FIRST_BYTES = 32;
@@ -260,13 +268,20 @@ public class WARCIndexer {
 			if( dd != null && runDroid == true ) {
 				try {
 					tikainput.reset();
+					// Pass the URL in so DROID can fall back on that:
 					Metadata metadata = new Metadata();
-					// Note that DROID complains about some URLs with an IllegalArgumentException.
-					//metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
+					if( passUriToFormatTools ) {
+						UURI uuri = UURIFactory.getInstance(fullUrl);
+						// Droid seems unhappy about spaces in filenames, so hack to avoid:
+						String cleanUrl = uuri.getName().replace(" ", "+");
+						metadata.set(Metadata.RESOURCE_NAME_KEY, cleanUrl);
+					}
+					// Run Droid:
 					MediaType mt = dd.detect(tikainput, metadata);
 					solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
 				} catch( Exception i ) {
-					log.error( i + ": " +i.getMessage() + ";dd; " + header.getUrl() + "@" + header.getOffset() );
+					// Note that DROID complains about some URLs with an IllegalArgumentException.
+					log.error( i + ": " +i.getMessage() + ";dd; " + fullUrl + " @" + header.getOffset() );
 				}
 			}
 
@@ -482,7 +497,9 @@ public class WARCIndexer {
 			if( path.indexOf(".") != -1 ) {
 				String ext = path.substring(path.lastIndexOf("."));
 				ext = ext.toLowerCase();
-				//ext = ext.substring(path.indexOf("%"));
+				// Avoid odd/malformed extensions:
+				//if( ext.contains("%") )
+				//	ext = ext.substring(0, path.indexOf("%"));
 				ext = ext.replaceAll( "[^0-9a-z]", "" );
 				return ext;
 			}

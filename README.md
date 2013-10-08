@@ -22,24 +22,31 @@ There are two development strands, held on distinct branches:
 
 ### TODO ###
 
-* Canonicalize outlinks, or strip www from links_host at least.
-* Deduplicating solr indexer: keys on content hash, populate solr once per hash, with multiple crawl dates? That requires URL+content hash. Also hash only and cross reference? Same as <list url>?
-    * NOTE that this only work when all sources are processed in the same Hadoop job.
+* In AADDA: Check if the 'null' content types have matching 'parse_errors'.
+* Add in enhanced Tika features as used in the format profiler (e.g. DOC generator app, PDF issues, no recursion, etc.)
+* Make 'heavy' features configurable, and merge into MASTER.
+    * DROID extraction (none, binary, full), droid.max_bytes_to_scan.
+    * LINK extraction (none, domain, host, full)
+    * Hash determination (none, ssdeep)
+    * Sentiment analysis (none, simple)
+    * Language identification (none, tika, langdetect?)
+    * First bytes extraction (none, ffb, all) first_bytes_max = 32.
+    * Postcode extraction (none, district, code, geocode)
+* Extract Resource-level links for AADDA?
+* Explicitly handler crawl referrers somehow? (i.e. do we want SolrFields.REFERRER?)
+* Canonicalize outlinks and hosts?
 * Get ACT/WCTEnricher working again.
     * Pull the exclusion list (below) and the metadata in the Reducer constructor.
     * Filter and match the domains and enrich as required. 
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
     * Noting that there may be more exclusion here, to allow collection merging.
 
-Once the basic features are tested and working, we start to explore new, richer indexing techniques.
-
 ### Ideas ###
 * Move issues to GitHub issue tracker.
-* Get ACT/WCTEnricher working again.
-* Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
-    * Noting that there may be more exclusion here, to allow collection merging.
+* Deduplicating solr indexer: keys on content hash, populate solr once per hash, with multiple crawl dates? That requires URL+content hash. Also hash only and cross reference? Same as <list url>?
+    * NOTE that this only work when all sources are processed in the same Hadoop job.
+    * And therefore not really scaleable. Nor easily scaleable in Solr as grouping does not work across shards.
 * Facets like log(size), or small, medium, large, to boost longer texts
-* Move issues to GitHub issue tracker.
 * Support a publication_date? Or an interval: published_after, published_before?
     * BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
     * Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
@@ -47,7 +54,7 @@ Once the basic features are tested and working, we start to explore new, richer 
     * Full temporal realignment. Using crawl date, embedded date, and relationships, to rebuild the temporal history of a web archive.
     * See also http://ws-dl.blogspot.co.uk/2013/04/2013-04-19-carbon-dating-web.html
 * Add Welsh and other language or dialect detection?
-* Support license extraction.
+* Extend license extraction support. Ensure target is specified, and support other forms of embedded metadata.
     * http://wiki.creativecommons.org/RDFa
     * http://wiki.creativecommons.org/XMP
     * http://wiki.creativecommons.org/CC_REL
