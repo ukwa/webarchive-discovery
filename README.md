@@ -31,15 +31,22 @@ There are two development strands, held on distinct branches:
 * Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
     * Noting that there may be more exclusion here, to allow collection merging.
 
+Once the basic features are tested and working, we start to explore new, richer indexing techniques.
+
 ### Ideas ###
 * Move issues to GitHub issue tracker.
-* Add a test ARC file to go alongside the WARC one.
+* Get ACT/WCTEnricher working again.
+* Reuse the Wayback exclusion list and prevent indexing of inappropriate content.
+    * Noting that there may be more exclusion here, to allow collection merging.
+* Facets like log(size), or small, medium, large, to boost longer texts
+* Move issues to GitHub issue tracker.
 * Support a publication_date? Or an interval: published_after, published_before?
     * BBC Use: <meta name="OriginalPublicationDate" content="2006/09/12 16:42:45" />
     * Other publisher-based examples may be found here: http://en.wikipedia.org/wiki/User:Rjwilmsi/CiteCompletion
     * PDF, can use: creation date as lower bound.
     * Full temporal realignment. Using crawl date, embedded date, and relationships, to rebuild the temporal history of a web archive.
     * See also http://ws-dl.blogspot.co.uk/2013/04/2013-04-19-carbon-dating-web.html
+* Add Welsh and other language or dialect detection?
 * Support license extraction.
     * http://wiki.creativecommons.org/RDFa
     * http://wiki.creativecommons.org/XMP
@@ -57,6 +64,8 @@ There are two development strands, held on distinct branches:
 * Deadness (Active, Empty, Gone)
 * Facets like log(size), or small, medium, large, to boost longer texts
 * Compression ratio/entropy or other info content measure? Actually very difficult as decompression happens inline and so re-compression would be needed!
+* Fussy hashes of the text.
+* Compression ratio/entropy or other info content measure?
 * Events integration with SOLR.
 * Image analysis, sizes, pixel thumb to spot rescaled versions, sift features plus fuzzy hash?
     * Create reduced size image, and run clever algorithms on it...
@@ -124,6 +133,7 @@ YOLO-15
 Use the Solr index to find pages from 15 years ago, and publish as a twitter feed (e.g. daily). Could be basic search with screenshots, or perhaps a bit more meaningful if we hook in a search for the test 'you only live once'.
 
 * http://solr1.bl.uk:8080/solr/select?sort=harvest_date+asc&indent=on&version=2.2&q=harvest_date%3A%5BNOW-17YEAR+TO+NOW-17YEAR%2B1MONTH%5D&fq=&start=0&rows=10&fl=*%2Cscore&wt=&explainOther=&hl.fl=
+=======
 
 Other Systems
 -------------

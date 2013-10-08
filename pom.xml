@@ -41,8 +41,8 @@
      <solr.version>4.3.0</solr.version>
      <tika.version>1.4</tika.version>
      <jdk.version>1.6</jdk.version>
-      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <ram>512</ram>
+     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+     <ram>512</ram>
    </properties>
 	<build>
 		<plugins>

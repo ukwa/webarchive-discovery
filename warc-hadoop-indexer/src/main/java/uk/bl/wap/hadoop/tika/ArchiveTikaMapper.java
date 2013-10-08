@@ -5,6 +5,7 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
@@ -19,11 +20,12 @@ import uk.bl.wap.util.solr.WritableSolrRecord;
 public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	private WARCIndexer windex;
 
-	public ArchiveTikaMapper() throws IOException {
+	@Override
+	public void configure( JobConf conf ) {
 		try {
-			this.windex = new WARCIndexer();
+			this.windex = new WARCIndexer( conf );
 		} catch( NoSuchAlgorithmException e ) {
-			System.err.println( "ArchiveTikaMapper(): " + e.getMessage() );
+			System.err.println( "ArchiveTikaMapper.configure(): " + e.getMessage() );
 		}
 	}
 

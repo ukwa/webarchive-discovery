@@ -49,6 +49,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.metadata.Metadata;
@@ -99,7 +100,7 @@ public class WARCIndexer {
 	private static final long BUFFER_SIZE = 10485760L; // 10485760 bytes = 10MB.
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
-	private TikaExtractor tika = new TikaExtractor();
+	private TikaExtractor tika = null;
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
 	private MessageDigest md5 = null;
@@ -114,8 +115,11 @@ public class WARCIndexer {
 	/** */
 	private PostcodeGeomapper pcg = new PostcodeGeomapper();
 
-
 	public WARCIndexer() throws NoSuchAlgorithmException {
+		this( new Configuration() );
+	}
+
+	public WARCIndexer( Configuration conf ) throws NoSuchAlgorithmException {
 		md5 = MessageDigest.getInstance( "MD5" );
 		// Attempt to set up Droid:
 		try {
@@ -126,6 +130,7 @@ public class WARCIndexer {
 			e.printStackTrace();
 			dd = null;
 		}
+		tika = new TikaExtractor( conf );
 	}
 	
 	/**
@@ -211,7 +216,6 @@ public class WARCIndexer {
 				// No need for this, as the headers have already been read from the InputStream:
 				// WARCRecordUtils.getPayload(record);
 				tikainput = record;
-			
 			} else if ( record instanceof ARCRecord ) {
 				ARCRecord arcr = (ARCRecord) record;
 				statusCode = ""+arcr.getStatusCode();
@@ -224,7 +228,7 @@ public class WARCIndexer {
 			}
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
-			if( statusCode == null || !statusCode.startsWith("2") ) return null;
+//			if( statusCode == null || !statusCode.startsWith("2") ) return null;
 			
 			// -----------------------------------------------------
 			// Parse payload using Tika: 
@@ -636,11 +640,13 @@ public class WARCIndexer {
 		String outputDir = null;
 		String solrUrl = null;
 		boolean isTextRequired = false;
+		boolean slashPages = false;
 		
 		Options options = new Options();
-		options.addOption("o", "output directory", true, "The directory to contain the output XML files");
-		options.addOption("s", "Solr URL", true, "The URL of the required Solr Instance");
-		options.addOption("t", "Include text in XML", false, "Include text in XML in output files");
+		options.addOption("o", "output", true, "The directory to contain the output XML files");
+		options.addOption("s", "solr", true, "The URL of the required Solr Instance");
+		options.addOption("t", "text", false, "Include text in XML in output files");
+		options.addOption("r", "slash", false, "Only process slash (root) pages.");
 		
 		try {
 		    // parse the command line arguments
@@ -682,6 +688,10 @@ public class WARCIndexer {
 		   	if(line.hasOption("t") || line.hasOption("s")){
 		   		isTextRequired = true;
 		   	}
+
+		   	if( line.hasOption( "r" ) ) {
+		   		slashPages = true;
+		   	}
 		   	
 		   	// Check that either an output dir or Solr URL is supplied
 		   	if(outputDir == null && solrUrl == null){
@@ -697,7 +707,7 @@ public class WARCIndexer {
 		   		System.exit( 0 );
 		   	}
 	   	
-		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired);
+		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired, slashPages);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			// TODO Auto-generated catch block
@@ -716,7 +726,7 @@ public class WARCIndexer {
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
+	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
 		
 		WARCIndexer windex = new WARCIndexer();
 				
@@ -754,14 +764,17 @@ public class WARCIndexer {
 				if( doc != null ) {
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
-					// Write XML to file if not posting straight to the server.
-					if(solrUrl == null) {
-						writeXMLToFile(doc.toXml(), fileOutput);
-					}else{
-						// Post to Solr
-						solrWeb.updateSolrDoc(doc.doc);
+					if( !slashPages || ( doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
+									     doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
+						// Write XML to file if not posting straight to the server.
+						if(solrUrl == null) {
+							writeXMLToFile(doc.toXml(), fileOutput);
+						}else{
+							// Post to Solr
+							solrWeb.updateSolrDoc(doc.doc);
+						}
+						recordCount++;
 					}
-					recordCount++;
 
 				}			
 			}
