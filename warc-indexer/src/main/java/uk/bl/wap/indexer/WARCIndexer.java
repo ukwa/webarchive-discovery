@@ -25,7 +25,6 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.print.Doc;
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
 import javax.xml.transform.Source;
@@ -204,10 +203,8 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost(host) );
 
 			// Parse HTTP headers:
-			String referrer = null;
 			InputStream tikainput = null;
 			String statusCode = null;
-			String serverType = null;
 			if( record instanceof WARCRecord ) {
 				// There are not always headers! The code should check first.
 				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
@@ -274,7 +271,7 @@ public class WARCIndexer {
 			}
 
 			// Derive normalised/simplified content type:
-			processContentType(solr, header, serverType);
+			processContentType(solr, header);
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			// Entropy, compressibility, fussy hashes, etc.
@@ -548,9 +545,10 @@ public class WARCIndexer {
 	 * @param header
 	 * @param serverType
 	 */
-	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header, String serverType) {
+	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header) {
 		// Get the current content-type:
 		String contentType =  (String) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
+		String serverType =  (String) solr.doc.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
 		
 		// Store the raw content type from Tika:
 		solr.doc.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
