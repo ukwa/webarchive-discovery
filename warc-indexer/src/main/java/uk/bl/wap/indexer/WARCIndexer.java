@@ -2,9 +2,6 @@ package uk.bl.wap.indexer;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
-import static uk.bl.wap.util.solr.SolrFields.SOLR_CONTENT_TYPE;
-import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_HOSTS;
-import static uk.bl.wap.util.solr.SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -106,6 +103,7 @@ public class WARCIndexer {
 	private boolean runDroid = true;
 	private boolean droidUseBinarySignaturesOnly = false;
 	private boolean passUriToFormatTools = false;
+	
 	private MessageDigest md5 = null;
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
@@ -113,16 +111,37 @@ public class WARCIndexer {
 	private LanguageDetector ld = new LanguageDetector();
 	/** */
 	private HtmlFeatureParser hfp = new HtmlFeatureParser();
+	private boolean extractLinkDomains = true;
+	private boolean extractLinkHosts = true;
+	private boolean extractLinks = false;
+	private boolean extractElementsUsed = true;
+	
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
+
 	/** */
 	private PostcodeGeomapper pcg = new PostcodeGeomapper();
 
+	/** 
+	 * Default constructor, with empty configuration.
+	 */
 	public WARCIndexer() throws NoSuchAlgorithmException {
 		this( new Configuration() );
 	}
 
+	/** 
+	 * Preferred constructor, allows passing in configuration from execution environment.
+	 */
 	public WARCIndexer( Configuration conf ) throws NoSuchAlgorithmException {
+		// Optional configurations:
+		this.extractLinks                 = conf.getBoolean("warc.index.extract.links", false );
+		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.link.hosts", true );
+		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.link.domains", true );
+		this.runDroid                     = conf.getBoolean("warc.index.id.runDroid", true);
+		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly", false);
+		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.passUriToFormatTools", false);
+		
+		// Instanciate required helpers:
 		md5 = MessageDigest.getInstance( "MD5" );
 		// Attempt to set up Droid:
 		try {
@@ -145,7 +164,6 @@ public class WARCIndexer {
 	 * @throws IOException
 	 */
 	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
-		
 		return extract(archiveName, record, true);
 	}
 	
@@ -294,7 +312,7 @@ public class WARCIndexer {
 			try {
 				tikainput.reset();
 				// JSoup link extractor for (x)html, deposit in 'links' field.
-				String mime = ( String ) solr.doc.getField( SOLR_CONTENT_TYPE ).getValue();
+				String mime = ( String ) solr.doc.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
 				HashMap<String,String> hosts = new HashMap<String,String>();
 				HashMap<String,String> suffixes = new HashMap<String,String>();
 				HashMap<String,String> domains = new HashMap<String,String>();
@@ -328,25 +346,36 @@ public class WARCIndexer {
 							if( ldomain != null ) {
 								domains.put( ldomain, "" );
 							}
+							// Also store actual resource-level links:
+							if( this.extractLinks )
+								solr.addField( SolrFields.SOLR_LINKS, link );
 						}
-						Iterator<String> iterator = hosts.keySet().iterator();
-						while( iterator.hasNext() ) {
-							solr.addField( SOLR_LINKS_HOSTS, iterator.next() );
+						// Store the data from the links:
+						Iterator<String> iterator = null;
+						if( this.extractLinkHosts ) {
+							iterator = hosts.keySet().iterator();
+							while( iterator.hasNext() ) {
+								solr.addField( SolrFields.SOLR_LINKS_HOSTS, iterator.next() );
+							}
+						}
+						if( this.extractLinkDomains ) {
+							iterator = domains.keySet().iterator();
+							while( iterator.hasNext() ) {
+								solr.addField( SolrFields.SOLR_LINKS_DOMAINS, iterator.next() );
+							}
 						}
 						iterator = suffixes.keySet().iterator();
 						while( iterator.hasNext() ) {
-							solr.addField( SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
-						}
-						iterator = domains.keySet().iterator();
-						while( iterator.hasNext() ) {
-							solr.addField( SolrFields.SOLR_LINKS_DOMAINS, iterator.next() );
+							solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
 						}
 					}
 					// Process element usage:
-					String de = metadata.get(HtmlFeatureParser.DISTINCT_ELEMENTS);
-					if( de != null ) {
-						for( String e : de.split(" ") ) {
-							solr.addField(SolrFields.ELEMENTS_USED, e);
+					if( this.extractElementsUsed ) {
+						String de = metadata.get(HtmlFeatureParser.DISTINCT_ELEMENTS);
+						if( de != null ) {
+							for( String e : de.split(" ") ) {
+								solr.addField(SolrFields.ELEMENTS_USED, e);
+							}
 						}
 					}
 					for( String lurl : metadata.getValues(Metadata.LICENSE_URL)) {
@@ -456,6 +485,8 @@ public class WARCIndexer {
 		}
 		return solr;
 	}
+	
+	/* ----------------------------------- */
 	
 	private void processHeaders(WritableSolrRecord solr, String statusCode, Header[] httpHeaders) {
 		try {
