@@ -216,8 +216,11 @@ public class WARCIndexer {
 			if( fullUrl.length() > 2000 ) fullUrl = fullUrl.substring(0, 2000);
 			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
 			// Spot 'slash pages':
-			if( urlParts.length == 1 || (urlParts.length == 2 && urlParts[1].matches("^index\\.[a-z]+$") ) ) 
+			if( urlParts.length == 1 || (urlParts.length >= 2 && urlParts[1].matches("^index\\.[a-z]+$") ) ) 
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
+			// Spot 'robots.txt':
+			if( urlParts.length >= 2 && urlParts[1].equalsIgnoreCase("robots.txt") ) 
+				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
 			// Record the domain (strictly, the host): 
 			String host = urlParts[ 0 ];
 			solr.doc.setField( SolrFields.SOLR_HOST, host );
