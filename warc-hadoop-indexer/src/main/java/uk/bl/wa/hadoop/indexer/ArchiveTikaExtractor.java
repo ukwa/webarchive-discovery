@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.tika;
+package uk.bl.wa.hadoop.indexer;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
