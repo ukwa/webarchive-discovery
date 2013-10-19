@@ -29,14 +29,14 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
  */
 
 @SuppressWarnings( { "deprecation" } )
-public class ArchiveTikaExtractor extends Configured implements Tool {
+public class WARCIndexerRunner extends Configured implements Tool {
 
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 	
 	private int numReducers;
 
 	public int run( String[] args ) throws IOException {
-		JobConf conf = new JobConf( getConf(), ArchiveTikaExtractor.class );
+		JobConf conf = new JobConf( getConf(), WARCIndexerRunner.class );
 		String line = null;
 
 		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
@@ -50,8 +50,8 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 		this.setProperties( conf );
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
-		conf.setMapperClass( ArchiveTikaMapper.class );
-		conf.setReducerClass( ArchiveTikaReducer.class );
+		conf.setMapperClass( WARCIndexerMapper.class );
+		conf.setReducerClass( WARCIndexerReducer.class );
 		conf.setOutputFormat( TextOutputFormat.class );
 		conf.set( "map.output.key.field.separator", "" );
 
@@ -71,7 +71,7 @@ public class ArchiveTikaExtractor extends Configured implements Tool {
 			System.exit( 0 );
 
 		}
-		int ret = ToolRunner.run( new ArchiveTikaExtractor(), args );
+		int ret = ToolRunner.run( new WARCIndexerRunner(), args );
 
 		System.exit( ret );
 	}

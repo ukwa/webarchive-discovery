@@ -20,7 +20,7 @@ import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
-public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
+public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	
 	private WARCIndexer windex;
 
@@ -28,7 +28,7 @@ public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, Wri
 	public void configure( JobConf job ) {
 		try {
 			// Get config from job property:
-			Config config = ConfigFactory.parseString(job.get(ArchiveTikaExtractor.CONFIG_PROPERTIES));
+			Config config = ConfigFactory.parseString(job.get(WARCIndexerRunner.CONFIG_PROPERTIES));
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
 		} catch( NoSuchAlgorithmException e ) {

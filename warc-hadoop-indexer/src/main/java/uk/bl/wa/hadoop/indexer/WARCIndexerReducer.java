@@ -25,16 +25,16 @@ import uk.bl.wa.util.solr.WctFields;
 import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
-public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
+public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
 	private QueueingHttpSolrServer solrServer;
 	private int batchSize;
 
-	public ArchiveTikaReducer() {}
+	public WARCIndexerReducer() {}
 
 	@Override
 	public void configure( JobConf job ) {
 		// Get config from job property:
-		Config conf = ConfigFactory.parseString(job.get(ArchiveTikaExtractor.CONFIG_PROPERTIES));
+		Config conf = ConfigFactory.parseString(job.get(WARCIndexerRunner.CONFIG_PROPERTIES));
 		
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
