@@ -84,7 +84,7 @@
 <div class="panel panel-default">
     <div class="panel-heading">
       <h4 class="panel-title">
-      Results
+      Results 1 - @(q.res.getResults().size()) of @(q.res.getResults().getNumFound())
       </h4>
     </div>
   <div class="panel-body">
@@ -92,7 +92,7 @@
 <ul> 
 @for(d <- q.res.getResults()) {
   <li><a href="http://web.archive.org/web/@(d.getFirstValue("wayback_date"))/@(d.getFirstValue("url"))">"@d.getFirstValue("title")"</a><br/>
-   @d.getFirstValue("crawl_date"), @d.getFirstValue("content_type_norm"), @d.getFirstValue("domain")</li>
+   @d.getFirstValue("crawl_date"), @d.getFirstValue("content_type_norm"), @d.getFirstValue("domain"), @d.getFirstValue("sentiment_score")</li>
 }
 </ul>
 
