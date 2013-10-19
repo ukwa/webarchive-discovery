@@ -45,7 +45,6 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.metadata.Metadata;
@@ -63,6 +62,8 @@ import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import com.google.common.base.Splitter;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
@@ -126,20 +127,20 @@ public class WARCIndexer {
 	 * Default constructor, with empty configuration.
 	 */
 	public WARCIndexer() throws NoSuchAlgorithmException {
-		this( new Configuration() );
+		this( ConfigFactory.load() );
 	}
 
 	/** 
 	 * Preferred constructor, allows passing in configuration from execution environment.
 	 */
-	public WARCIndexer( Configuration conf ) throws NoSuchAlgorithmException {
+	public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
 		// Optional configurations:
-		this.extractLinks                 = conf.getBoolean("warc.index.extract.links", false );
-		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.link.hosts", true );
-		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.link.domains", true );
-		this.runDroid                     = conf.getBoolean("warc.index.id.runDroid", true);
-		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly", false);
-		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.passUriToFormatTools", false);
+		this.extractLinks                 = conf.getBoolean("warc.index.extract.linked.resources" );
+		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.linked.hosts" );
+		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.linked.domains" );
+		this.runDroid                     = conf.getBoolean("warc.index.id.droid.enabled" );
+		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.useResourceURI");
+		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly" );
 		
 		// Instanciate required helpers:
 		md5 = MessageDigest.getInstance( "MD5" );

@@ -12,18 +12,25 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.archive.io.ArchiveRecordHeader;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import uk.bl.wap.hadoop.WritableArchiveRecord;
 import uk.bl.wap.indexer.WARCIndexer;
 import uk.bl.wap.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class ArchiveTikaMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
+	
 	private WARCIndexer windex;
 
 	@Override
-	public void configure( JobConf conf ) {
+	public void configure( JobConf job ) {
 		try {
-			this.windex = new WARCIndexer( conf );
+			// Get config from job property:
+			Config config = ConfigFactory.parseString(job.get(ArchiveTikaExtractor.CONFIG_PROPERTIES));
+			// Initialise indexer:
+			this.windex = new WARCIndexer( config );
 		} catch( NoSuchAlgorithmException e ) {
 			System.err.println( "ArchiveTikaMapper.configure(): " + e.getMessage() );
 		}

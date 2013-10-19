@@ -6,13 +6,12 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.List;
 
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.conf.Configuration;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
@@ -29,6 +28,9 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 import org.xml.sax.ContentHandler;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.extract.Times;
 
@@ -56,34 +58,34 @@ public class TikaExtractor {
 mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image,video,audio
      *
      */
-	private String[] excludes;
+	private List<String> excludes;
 	
 	/** The actual Tika instance */
 	private Tika tika;
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
-	private int max_text_length; 
+	private Long max_text_length; 
 
 	/* --- --- --- --- */
 	
 	public TikaExtractor() {
-		this( new Configuration() );
+		this( ConfigFactory.load() );
 	}
 
 	/**
 	 * 
 	 * @param conf
 	 */
-	public TikaExtractor( Configuration conf ) {
+	public TikaExtractor( Config conf ) {
 		this.tika = new Tika();
 		
-		this.excludes = conf.getStrings( "tika.exclude.mime", new String[ 0 ] );
-		log.info("Config: MIME exclude list: " + Arrays.toString(this.excludes));
+		this.excludes = conf.getStringList( "warc.index.tika.exclude_mime" );
+		log.info("Config: MIME exclude list: " + this.excludes);
 		
-		this.parseTimeout = conf.getLong( "tika.timeout", 300000L );
+		this.parseTimeout = conf.getLong( "warc.index.tika.parse_timeout");
 		log.info("Config: Parser timeout (ms) " + parseTimeout);
 		
-		this.max_text_length = conf.getInt( "tika.max_text_length", 1024*1024 ); // 1MB ~= 1024 * 1KB
+		this.max_text_length = conf.getBytes( "warc.index.tika.max_text_length");
 		log.info("Config: Maximum length of text to extract (characters) "+ this.max_text_length);
 	}
 
@@ -353,7 +355,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length );
+		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length.intValue() );
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter

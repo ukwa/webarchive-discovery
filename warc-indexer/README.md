@@ -19,6 +19,13 @@ Which runs like this:
 </pre>
 
 
+Issues
+------
+
+- Dependency on org.apache.hadoop: 
+    - These classes depend directly on Hadoop for Configuration and for the Writable interface that the WritableSolrRecord uses. This is rather clumsy. It would be preferable if there were no Hadoop dependencies here.
+
+
 EntityIndexer
 -------------
 

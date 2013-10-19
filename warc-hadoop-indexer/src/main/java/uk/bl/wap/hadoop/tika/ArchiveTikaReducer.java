@@ -16,6 +16,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrException;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import uk.bl.wap.solr.QueueingHttpSolrServer;
 import uk.bl.wap.util.solr.WctEnricher;
 import uk.bl.wap.util.solr.WctFields;
@@ -30,16 +33,19 @@ public class ArchiveTikaReducer extends MapReduceBase implements Reducer<Text, W
 
 	@Override
 	public void configure( JobConf job ) {
-		this.batchSize = job.getInt( "solr.batch.size", 50 );
+		// Get config from job property:
+		Config conf = ConfigFactory.parseString(job.get(ArchiveTikaExtractor.CONFIG_PROPERTIES));
+		
+		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
-			if( job.get( "http.proxy.host" ) != null && job.get( "http.proxy.port" ) != null ) {
+			if( conf.getString( "http.proxy.host" ) != null && conf.hasPath( "http.proxy.port" ) ) {
 				DefaultHttpClient httpclient = new DefaultHttpClient();
-				HttpHost proxy = new HttpHost( job.get( "http.proxy.host" ), Integer.parseInt( job.get( "http.proxy.port" ) ), "http" );
+				HttpHost proxy = new HttpHost( conf.getString( "http.proxy.host" ), conf.getInt( "http.proxy.port" ), "http" );
 				httpclient.getParams().setParameter( ConnRoutePNames.DEFAULT_PROXY, proxy );
 				System.out.println( "Using proxy: " + proxy.toURI() );
-				this.solrServer = new QueueingHttpSolrServer( job.get( "solr.server" ), this.batchSize, httpclient );
+				this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize, httpclient );
 			} else {
-				this.solrServer = new QueueingHttpSolrServer( job.get( "solr.server" ), this.batchSize );
+				this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize );
 			}
 		} catch( MalformedURLException e ) {
 			e.printStackTrace();
