@@ -17,8 +17,7 @@ We use [Typesafe config][1], so to override the settings, add this parameter whe
 
 e.g.
 
-    hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer inputs outputs -Dconfig.file=configs/jisc.conf
-
+    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wa.hadoop.indexer.WARCIndexerRunner input_list.txt hdfs_output_folder -Dconfig.file=configs/jisc.conf
 
 
 [1]: https://github.com/typesafehub/config
