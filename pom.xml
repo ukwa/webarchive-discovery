@@ -38,7 +38,7 @@
       <url>git@github.com:ukwa/warc-discovery.git</url>
    </scm>
    <properties>
-     <solr.version>4.3.0</solr.version>
+     <solr.version>4.4.0</solr.version>
      <tika.version>1.4</tika.version>
      <jdk.version>1.6</jdk.version>
      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

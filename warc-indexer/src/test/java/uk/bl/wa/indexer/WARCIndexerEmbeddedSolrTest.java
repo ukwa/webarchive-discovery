@@ -54,8 +54,8 @@ public class WARCIndexerEmbeddedSolrTest {
 		// Note that the following property could be set through JVM level arguments too
 		  System.setProperty("solr.solr.home", "src/main/solr/solr");
 		  System.setProperty("solr.data.dir", "target/solr-test-home");
-		  CoreContainer.Initializer initializer = new CoreContainer.Initializer();
-		  CoreContainer coreContainer = initializer.initialize();
+		  CoreContainer coreContainer = new CoreContainer();
+		  coreContainer.load();
 		  server = new EmbeddedSolrServer(coreContainer, "");
 		  // Remove any items from previous executions:
 		  server.deleteByQuery("*:*");
