@@ -81,7 +81,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		// Store application properties where the mappers/reducers can access them
 		Config index_conf = ConfigFactory.load();
 		conf.set( CONFIG_PROPERTIES, 
-				index_conf.root().render(ConfigRenderOptions.concise()) );
+				index_conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()) );
 
 		// Also set mapred speculative execution off:
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
