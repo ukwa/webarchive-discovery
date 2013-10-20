@@ -64,6 +64,7 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
@@ -127,7 +128,7 @@ public class WARCIndexer {
 	 * Default constructor, with empty configuration.
 	 */
 	public WARCIndexer() throws NoSuchAlgorithmException {
-		this( ConfigFactory.load() );
+		this( ConfigFactory.parseString( ConfigFactory.load().root().render(ConfigRenderOptions.concise()) ) );
 	}
 
 	/** 

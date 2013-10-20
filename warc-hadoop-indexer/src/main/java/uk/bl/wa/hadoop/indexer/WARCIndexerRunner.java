@@ -16,6 +16,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
@@ -79,7 +80,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	private void setProperties( JobConf conf ) throws IOException {
 		// Store application properties where the mappers/reducers can access them
 		Config index_conf = ConfigFactory.load();
-		conf.set( CONFIG_PROPERTIES, index_conf.toString());
+		conf.set( CONFIG_PROPERTIES, 
+				index_conf.root().render(ConfigRenderOptions.concise()) );
 
 		// Also set mapred speculative execution off:
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
