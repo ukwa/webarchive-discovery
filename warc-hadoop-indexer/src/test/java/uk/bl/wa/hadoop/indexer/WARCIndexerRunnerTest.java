@@ -68,7 +68,7 @@ public class WARCIndexerRunnerTest {
 		
 		//
 		Configuration conf = new Configuration();
-		dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+		dfsCluster = new MiniDFSCluster(conf, 1, true, new String[] { "localhost" } );
 		dfsCluster.getFileSystem().makeQualified(input);
 		dfsCluster.getFileSystem().makeQualified(output);
 		//
@@ -97,7 +97,7 @@ public class WARCIndexerRunnerTest {
 		InputStream is = new FileInputStream(source);
 		IOUtils.copy(is, os);
 		is.close();
-		os.close();
+		os.flush();
 	}
 
 	@Test
