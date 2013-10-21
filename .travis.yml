@@ -8,6 +8,6 @@ before_script:
  - "ulimit -a"
  - "ulimit -u 2048"
  - "ulimit -a"
- - "mkdir input"
+ - "umask 022"
  - "mkdir inputs"
 
