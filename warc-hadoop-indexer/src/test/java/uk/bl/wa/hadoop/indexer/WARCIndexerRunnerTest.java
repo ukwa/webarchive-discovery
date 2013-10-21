@@ -13,6 +13,7 @@ import java.io.Writer;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -48,8 +49,8 @@ public class WARCIndexerRunnerTest {
 	
 	private final String testWarc = "../warc-indexer/src/test/resources/variations.warc.gz";
 
-	private final Path input = new Path("inputs");
-	private final Path output = new Path("outputs");
+	private final Path input = new Path("/inputs");
+	private final Path output = new Path("/outputs");
 
 	@Before
 	public void setUp() throws Exception {
@@ -68,7 +69,7 @@ public class WARCIndexerRunnerTest {
 		
 		//
 		Configuration conf = new Configuration();
-		dfsCluster = new MiniDFSCluster(conf, 1, true, new String[] { "localhost" } );
+		dfsCluster = new MiniDFSCluster(conf, 1, true, null );
 		dfsCluster.getFileSystem().makeQualified(input);
 		dfsCluster.getFileSystem().makeQualified(output);
 		//
@@ -93,11 +94,12 @@ public class WARCIndexerRunnerTest {
 	
 	private void copyFileToTestCluster(String source, String target) throws IOException {
 		LOG.info("Copying "+source+" into cluster at input/"+target+"...");
-		OutputStream os = getFileSystem().create(new Path(input, target));
+		FSDataOutputStream os = getFileSystem().create(new Path(input, target));
 		InputStream is = new FileInputStream(source);
 		IOUtils.copy(is, os);
 		is.close();
 		os.flush();
+		LOG.info("Copy completed.");
 	}
 
 	@Test

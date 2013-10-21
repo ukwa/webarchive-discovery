@@ -1,1 +1,1 @@
-inputs/variations.warc.gz
+/inputs/variations.warc.gz
