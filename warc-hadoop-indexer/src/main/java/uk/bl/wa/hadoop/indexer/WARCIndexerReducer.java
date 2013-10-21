@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.Iterator;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -19,6 +21,7 @@ import org.apache.solr.common.SolrException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.QueueingHttpSolrServer;
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
@@ -26,6 +29,8 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
+	private static Log log = LogFactory.getLog(WARCIndexerReducer.class);	
+	
 	private QueueingHttpSolrServer solrServer;
 	private int batchSize;
 	private boolean dummyRun;
@@ -34,6 +39,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 	@Override
 	public void configure( JobConf job ) {
+		log.info("Configuring...");
 		// Get config from job property:
 		Config conf = ConfigFactory.parseString(job.get(WARCIndexerRunner.CONFIG_PROPERTIES));
 		
@@ -72,6 +78,8 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 			try {
 				if( !dummyRun ) {
 					this.solrServer.add( solr.doc );
+				} else {
+					log.info("DUMMY_RUN: Skipping addition of doc: "+solr.doc);
 				}
 			} catch( SolrServerException e ) {
 				e.printStackTrace();
@@ -87,6 +95,8 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		try {
 			if( !dummyRun ) {		
 				this.solrServer.flush();
+			} else {
+				log.info("DUMMY_RUN: Skipping solrServer.flush().");
 			}
 		} catch( Exception e ) {
 			e.printStackTrace();

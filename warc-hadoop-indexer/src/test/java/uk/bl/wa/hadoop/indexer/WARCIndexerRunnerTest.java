@@ -45,19 +45,20 @@ public class WARCIndexerRunnerTest {
 	
 	private final String testWarc = "../warc-indexer/src/test/resources/variations.warc.gz";
 
-	private final Path input = new Path("input");
-	private final Path output = new Path("output");
+	private final Path input = new Path("inputs");
+	private final Path output = new Path("outputs");
 
 	@Before
 	public void setUp() throws Exception {
 
 		// make sure the log folder exists,
 		// otherwise the test fill fail
-		new File("test-logs").mkdirs();
+		new File("target/test-logs").mkdirs();
 		//
-		System.setProperty("hadoop.log.dir", "test-logs");
+		System.setProperty("hadoop.log.dir", "target/test-logs");
 		System.setProperty("javax.xml.parsers.SAXParserFactory",
 				"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+		
 		//
 		Configuration conf = new Configuration();
 		dfsCluster = new MiniDFSCluster(conf, 1, true, null);
@@ -95,7 +96,7 @@ public class WARCIndexerRunnerTest {
 		copyFileToTestCluster(testWarc, "variations.warc.gz");
 		
 		// Set up arguments for the job:
-		String[] args = {"src/test/resources/test-inputs.txt", "output"};
+		String[] args = {"src/test/resources/test-inputs.txt", this.output.getName()};
 		
 		// Set up the WARCIndexerRunner
 		WARCIndexerRunner wir = new WARCIndexerRunner();
