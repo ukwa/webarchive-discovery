@@ -28,6 +28,7 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
 public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
 	private QueueingHttpSolrServer solrServer;
 	private int batchSize;
+	private boolean dummyRun;
 
 	public WARCIndexerReducer() {}
 
@@ -37,15 +38,20 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		Config conf = ConfigFactory.parseString(job.get(WARCIndexerRunner.CONFIG_PROPERTIES));
 		
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
+		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		try {
-			if( conf.getString( "http.proxy.host" ) != null && conf.hasPath( "http.proxy.port" ) ) {
+			if( conf.hasPath( "warc.http_proxy.host" ) && conf.hasPath( "warc.http_proxy.port" ) ) {
 				DefaultHttpClient httpclient = new DefaultHttpClient();
-				HttpHost proxy = new HttpHost( conf.getString( "http.proxy.host" ), conf.getInt( "http.proxy.port" ), "http" );
+				HttpHost proxy = new HttpHost( conf.getString( "warc.http_proxy.host" ), conf.getInt( "warc.http_proxy.port" ), "http" );
 				httpclient.getParams().setParameter( ConnRoutePNames.DEFAULT_PROXY, proxy );
 				System.out.println( "Using proxy: " + proxy.toURI() );
-				this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize, httpclient );
+				if( !dummyRun ) {
+					this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize, httpclient );
+				}
 			} else {
-				this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize );
+				if( !dummyRun ) {
+					this.solrServer = new QueueingHttpSolrServer( conf.getString( "warc.solr.server" ), this.batchSize );
+				}
 			}
 		} catch( MalformedURLException e ) {
 			e.printStackTrace();
@@ -64,7 +70,9 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 				wct.addWctMetadata( solr );
 			}
 			try {
-				this.solrServer.add( solr.doc );
+				if( !dummyRun ) {
+					this.solrServer.add( solr.doc );
+				}
 			} catch( SolrServerException e ) {
 				e.printStackTrace();
 			} catch( SolrException e ) {
@@ -77,7 +85,9 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void close() {
 		try {
-			this.solrServer.flush();
+			if( !dummyRun ) {		
+				this.solrServer.flush();
+			}
 		} catch( Exception e ) {
 			e.printStackTrace();
 		}

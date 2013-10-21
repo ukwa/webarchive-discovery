@@ -234,9 +234,14 @@ public class WARCIndexer {
 			String statusCode = null;
 			if( record instanceof WARCRecord ) {
 				// There are not always headers! The code should check first.
-				String firstLine[] = HttpParser.readLine(record, "UTF-8").split(" ");
-				statusCode = firstLine[1].trim();
-				this.processHeaders(solr, statusCode, HttpParser.parseHeaders(record, "UTF-8"));
+				String line = HttpParser.readLine(record, "UTF-8");
+				String firstLine[] = line.split(" ");
+				if( firstLine.length > 1 ) {
+					statusCode = firstLine[1].trim();
+					this.processHeaders(solr, statusCode, HttpParser.parseHeaders(record, "UTF-8"));
+				} else {
+					log.warn("Could not parse status line: "+line);
+				}
 				// No need for this, as the headers have already been read from the InputStream:
 				// WARCRecordUtils.getPayload(record);
 				tikainput = record;
@@ -510,6 +515,9 @@ public class WARCIndexer {
 				if( h.getName().equals(HttpHeaders.SERVER) ) 
 					solr.addField(SolrFields.SERVER, h.getValue() );
 			}
+		} catch( NumberFormatException e ) {
+			log.error("Exception when parsing status code: "+statusCode+": "+e);
+			solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()+" when parsing statusCode: "+e.getMessage());
 		} catch( Exception e ) {
 			log.error("Exception when parsing headers: "+e);
 			solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()+": "+e.getMessage());

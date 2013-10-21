@@ -2,6 +2,7 @@ package uk.bl.wa.hadoop.indexer;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -20,6 +21,7 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
+import org.apache.pdfbox.io.IOUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -40,6 +42,8 @@ public class WARCIndexerRunnerTest {
 
 	private MiniDFSCluster dfsCluster = null;
 	private MiniMRCluster mrCluster = null;
+	
+	private final String testWarc = "../warc-indexer/src/test/resources/variations.warc.gz";
 
 	private final Path input = new Path("input");
 	private final Path output = new Path("output");
@@ -73,12 +77,22 @@ public class WARCIndexerRunnerTest {
 		wr.write("b a a\n");
 		wr.close();
 	}
+	
+	private void copyFileToTestCluster(String source, String target) throws IOException {
+		LOG.info("Copying "+source+" into cluster at input/"+target+"...");
+		OutputStream os = getFileSystem().create(new Path(input, target));
+		InputStream is = new FileInputStream(source);
+		IOUtils.copy(is, os);
+		is.close();
+		os.close();
+	}
 
 	@Test
 	public void testCount() throws Exception {
 
 		// prepare for test
 		createTextInputFile();
+		copyFileToTestCluster(testWarc, "variations.warc.gz");
 		
 		// Set up arguments for the job:
 		String[] args = {"src/test/resources/test-inputs.txt", "output"};
@@ -98,12 +112,15 @@ public class WARCIndexerRunnerTest {
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
 		Assert.assertEquals(1, outputFiles.length);
-		InputStream is = getFileSystem().open(outputFiles[0]);
-		BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-		Assert.assertEquals("a\t2", reader.readLine());
-		Assert.assertEquals("b\t1", reader.readLine());
-		Assert.assertNull(reader.readLine());
-		reader.close();
+		
+		// Check the server has the documents? Requires an local Solr during testing.
+		
+		//InputStream is = getFileSystem().open(outputFiles[0]);
+		//BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+		//Assert.assertEquals("a\t2", reader.readLine());
+		//Assert.assertEquals("b\t1", reader.readLine());
+		//Assert.assertNull(reader.readLine());
+		//reader.close();
 	}
 
 	@After
