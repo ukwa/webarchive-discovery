@@ -11,7 +11,7 @@
 
   <!--  Increase logging from this code  -->
   <logger name="uk.bl.wa">
-    <level value="info"/> 
+    <level value="debug"/> 
   </logger>
 	
   <root> 
