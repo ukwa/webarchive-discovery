@@ -33,7 +33,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private FileSystem filesystem;
 	private long maxPayloadSize;
 	private String[] url_excludes;
-	private String[] response_includes;
 	private String[] protocol_includes;
 	private Path[] paths;
 	int currentPath = -1;
@@ -50,9 +49,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		
 		this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
 		log.warn("url_excludes="+this.printList(url_excludes));
-		
-		this.response_includes = conf.getStrings( "record.include.response", new String[] { "200" } );
-		log.warn("response_includes="+this.printList(response_includes));
 		
 		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
 		log.warn("protocol_includes="+this.printList(protocol_includes));
@@ -91,7 +87,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			try {
 				datainputstream.close();
 			} catch( IOException e ) {
-				System.err.println( "close(): " + e.getMessage() );
+				log.error( "close(): " + e.getMessage() );
 			}
 		}
 	}
@@ -139,14 +135,9 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 					if( header.getLength() <= maxPayloadSize &&
 						this.checkUrl( url ) &&
 						this.checkProtocol( url ) ) {
-							//String http = WARCRecordUtils.getHeaders( record, true );
-							//value.setHttpHeaders( http );
-							//if( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ) != null &&
-							//		this.checkResponse( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ).split( " " )[ 1 ] ) ) {
-								found = true;
-								key.set( this.archiveName );
-								value.setRecord( record );
-							//}
+							found = true;
+							key.set( this.archiveName );
+							value.setRecord( record );
 					} else {
 						log.warn("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
 					}
@@ -156,7 +147,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			} catch( Throwable e ) {
 				found = false;
 				log.error( "ERROR reading "+this.archiveName+": "+ e.toString() );
-				//e.printStackTrace();
 			}
 		}
 		return found;
@@ -193,15 +183,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private boolean checkProtocol( String url ) {
 		for( String include : protocol_includes ) {
 			if( "".equals(include) || url.startsWith( include ) ) {
-				return true;
-			}
-		}
-		return false;
-	}
-
-	private boolean checkResponse( String response ) {
-		for( String include : response_includes ) {
-			if( "".equals(include) || response.matches( include ) ) {
 				return true;
 			}
 		}

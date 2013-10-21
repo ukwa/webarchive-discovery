@@ -112,19 +112,15 @@ public class WARCIndexerRunnerTest {
 	}
 
 	@Test
-	public void testFileLoadWorked() throws Exception {
+	public void testFullIndexerJob() throws Exception {
+		// prepare for test
+		//createTextInputFile();
+
 		LOG.info("Checking input file is present...");
 		// Check that the input file is present:
 		Path[] inputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				input, new OutputLogFilter()));
-		Assert.assertEquals(3, inputFiles.length);
-	}
-	
-	@Test
-	public void testFullIndexerJob() throws Exception {
-
-		// prepare for test
-		//createTextInputFile();
+		Assert.assertEquals(2, inputFiles.length);
 		
 		// Set up arguments for the job:
 		// FIXME The input file could be written by this test.

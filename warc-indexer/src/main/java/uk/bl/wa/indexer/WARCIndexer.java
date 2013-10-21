@@ -193,6 +193,7 @@ public class WARCIndexer {
 			// Check the record type:
 			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
 			// FIXME This is a duplicate of logic in the WARC record readers, but it should really be here:
+			// Note that by checking if KEY_TYPE is there, we also accept ARCs.
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
