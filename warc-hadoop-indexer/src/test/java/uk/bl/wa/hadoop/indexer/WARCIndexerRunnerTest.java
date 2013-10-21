@@ -1,11 +1,9 @@
 package uk.bl.wa.hadoop.indexer;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
@@ -28,9 +26,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 /**
  * 
  * 
@@ -44,10 +39,20 @@ public class WARCIndexerRunnerTest {
 	
 	private static final Log LOG = LogFactory.getLog(WARCIndexerRunnerTest.class);
 
+	// Test cluster:
 	private MiniDFSCluster dfsCluster = null;
 	private MiniMRCluster mrCluster = null;
 	
-	private final String testWarc = "../warc-indexer/src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+	// Input files: 
+	// 1. The variations.warc.gz example is rather large, and there are mysterious problems parsing the statusCode.
+	// 2. System can't cope with uncompressed inputs right now.
+	private final String[] testWarcs = new String[] {
+			//"variations.warc.gz",
+			//"IAH-20080430204825-00000-blackbook-truncated.arc",
+			"IAH-20080430204825-00000-blackbook-truncated.arc.gz",
+			//"IAH-20080430204825-00000-blackbook-truncated.warc",
+			"IAH-20080430204825-00000-blackbook-truncated.warc.gz"
+			};
 
 	private final Path input = new Path("inputs");
 	private final Path output = new Path("outputs");
@@ -76,7 +81,9 @@ public class WARCIndexerRunnerTest {
 		mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
 		
 		// prepare for tests
-		copyFileToTestCluster(testWarc, "test.warc.gz");
+		for( String filename : testWarcs ) {
+			copyFileToTestCluster(filename);
+		}
 		
 		LOG.warn("Spun up test cluster.");
 	}
@@ -92,11 +99,12 @@ public class WARCIndexerRunnerTest {
 		wr.close();
 	}
 	
-	private void copyFileToTestCluster(String source, String target) throws IOException {
-		Path targetPath = new Path(input, target);
-		LOG.info("Copying "+source+" into cluster at "+targetPath.toUri()+"...");
+	private void copyFileToTestCluster(String filename) throws IOException {
+		Path targetPath = new Path(input, filename);
+		File sourceFile = new File("../warc-indexer/src/test/resources/"+filename);
+		LOG.info("Copying "+filename+" into cluster at "+targetPath.toUri()+"...");
 		FSDataOutputStream os = getFileSystem().create(targetPath);
-		InputStream is = new FileInputStream(source);
+		InputStream is = new FileInputStream(sourceFile);
 		IOUtils.copy(is, os);
 		is.close();
 		os.close();
@@ -109,7 +117,7 @@ public class WARCIndexerRunnerTest {
 		// Check that the input file is present:
 		Path[] inputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				input, new OutputLogFilter()));
-		Assert.assertEquals(1, inputFiles.length);
+		Assert.assertEquals(3, inputFiles.length);
 	}
 	
 	@Test
@@ -119,6 +127,7 @@ public class WARCIndexerRunnerTest {
 		//createTextInputFile();
 		
 		// Set up arguments for the job:
+		// FIXME The input file could be written by this test.
 		String[] args = {"src/test/resources/test-inputs.txt", this.output.getName()};
 		
 		// Set up the WARCIndexerRunner

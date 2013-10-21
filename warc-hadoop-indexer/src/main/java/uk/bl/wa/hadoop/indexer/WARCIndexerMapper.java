@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -21,7 +23,9 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
-	
+
+	private static final Log LOG = LogFactory.getLog(WARCIndexerMapper.class);
+
 	private WARCIndexer windex;
 
 	@Override
@@ -32,7 +36,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
 		} catch( NoSuchAlgorithmException e ) {
-			System.err.println( "ArchiveTikaMapper.configure(): " + e.getMessage() );
+			LOG.error( "ArchiveTikaMapper.configure(): " + e.getMessage() );
 		}
 	}
 
@@ -43,6 +47,10 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			solr = windex.extract( key.toString(), value.getRecord() );
+			
+			if( solr == null ) {
+				LOG.debug("WARCIndexer returned NULL for: "+ header.getUrl());
+			}
 
 			String oKey = null;
 			try {
@@ -51,7 +59,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				if( oKey != null )
 					output.collect( new Text( oKey ), solr );
 			} catch( Exception e ) {
-				System.err.println( e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
+				LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}
 		}
 	}
