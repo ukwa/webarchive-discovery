@@ -79,7 +79,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 				if( !dummyRun ) {
 					this.solrServer.add( solr.doc );
 				} else {
-					log.info("DUMMY_RUN: Skipping addition of doc: "+solr.doc);
+					log.info("DUMMY_RUN: Skipping addition of doc: "+solr.doc.getField("id").getFirstValue());
 				}
 			} catch( SolrServerException e ) {
 				e.printStackTrace();

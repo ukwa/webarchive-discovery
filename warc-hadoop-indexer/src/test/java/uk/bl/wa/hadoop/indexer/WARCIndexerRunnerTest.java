@@ -47,16 +47,16 @@ public class WARCIndexerRunnerTest {
 	private MiniDFSCluster dfsCluster = null;
 	private MiniMRCluster mrCluster = null;
 	
-	private final String testWarc = "../warc-indexer/src/test/resources/variations.warc.gz";
+	private final String testWarc = "../warc-indexer/src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
 
-	private final Path input = new Path("/inputs");
-	private final Path output = new Path("/outputs");
+	private final Path input = new Path("inputs");
+	private final Path output = new Path("outputs");
 
 	@Before
 	public void setUp() throws Exception {
 		// Print out the full config for debugging purposes:
-		Config index_conf = ConfigFactory.load();
-		LOG.debug(index_conf.root().render());
+		//Config index_conf = ConfigFactory.load();
+		//LOG.debug(index_conf.root().render());
 		
 		LOG.warn("Spinning up test cluster...");
 		// make sure the log folder exists,
@@ -76,7 +76,7 @@ public class WARCIndexerRunnerTest {
 		mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
 		
 		// prepare for tests
-		copyFileToTestCluster(testWarc, "variations.warc.gz");
+		copyFileToTestCluster(testWarc, "test.warc.gz");
 		
 		LOG.warn("Spun up test cluster.");
 	}
@@ -99,7 +99,7 @@ public class WARCIndexerRunnerTest {
 		InputStream is = new FileInputStream(source);
 		IOUtils.copy(is, os);
 		is.close();
-		//os.flush();
+		os.close();
 		LOG.info("Copy completed.");
 	}
 
@@ -112,8 +112,8 @@ public class WARCIndexerRunnerTest {
 		Assert.assertEquals(1, inputFiles.length);
 	}
 	
-	//@Test
-	public void testFullJob() throws Exception {
+	@Test
+	public void testFullIndexerJob() throws Exception {
 
 		// prepare for test
 		//createTextInputFile();

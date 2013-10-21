@@ -190,10 +190,17 @@ public class WARCIndexer {
 			
 			if( header.getUrl() == null ) return null;
 			
-			//for( String h : header.getHeaderFields().keySet()) {
-			//	System.out.println("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
-			//}
+			// Check the record type:
+			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
+			// FIXME This is a duplicate of logic in the WARC record readers, but it should really be here:
+			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
+				return null;
+			}
 			
+			for( String h : header.getHeaderFields().keySet()) {
+				log.debug("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
+			}
+						
 			if( ! record.hasContentHeaders() ) return null;
 			
 			// Basic headers
@@ -234,15 +241,17 @@ public class WARCIndexer {
 			String statusCode = null;
 			if( record instanceof WARCRecord ) {
 				// There are not always headers! The code should check first.
-				String line = HttpParser.readLine(record, "UTF-8");
-				String firstLine[] = line.split(" ");
-				if( firstLine.length > 1 ) {
-					statusCode = firstLine[1].trim();
-					this.processHeaders(solr, statusCode, HttpParser.parseHeaders(record, "UTF-8"));
-				} else {
-					log.warn("Could not parse status line: "+line);
+				String statusLine = HttpParser.readLine(record, "UTF-8");
+				if( statusLine != null ) {
+					String firstLine[] = statusLine.split(" ");
+					if( firstLine.length > 1 ) {
+						statusCode = firstLine[1].trim();
+						this.processHeaders(solr, statusCode, HttpParser.parseHeaders(record, "UTF-8"));
+					} else {
+						log.warn("Could not parse status line: "+statusLine);
+					}
 				}
-				// No need for this, as the headers have already been read from the InputStream:
+				// No need for this, as the headers have already been read from the InputStream (above):
 				// WARCRecordUtils.getPayload(record);
 				tikainput = record;
 			} else if ( record instanceof ARCRecord ) {
@@ -257,7 +266,10 @@ public class WARCIndexer {
 			}
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
-//			if( statusCode == null || !statusCode.startsWith("2") ) return null;
+			if( statusCode == null || !statusCode.startsWith("2") ) {
+				log.error("Skipping this record as statusCode != 2xx: "+header.getUrl());
+				return null;
+			}
 			
 			// -----------------------------------------------------
 			// Parse payload using Tika: 

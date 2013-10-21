@@ -139,14 +139,14 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 					if( header.getLength() <= maxPayloadSize &&
 						this.checkUrl( url ) &&
 						this.checkProtocol( url ) ) {
-							String http = WARCRecordUtils.getHeaders( record, true );
-							value.setHttpHeaders( http );
-							if( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ) != null &&
-									this.checkResponse( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ).split( " " )[ 1 ] ) ) {
+							//String http = WARCRecordUtils.getHeaders( record, true );
+							//value.setHttpHeaders( http );
+							//if( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ) != null &&
+							//		this.checkResponse( value.getHttpHeader( WritableArchiveRecord.BL_STATUS_CODE_HEADER ).split( " " )[ 1 ] ) ) {
 								found = true;
 								key.set( this.archiveName );
 								value.setRecord( record );
-							}
+							//}
 					} else {
 						log.warn("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
 					}
