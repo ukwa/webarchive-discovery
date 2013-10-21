@@ -1,20 +1,21 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <parent>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <parent>
       <groupId>org.sonatype.oss</groupId>
       <artifactId>oss-parent</artifactId>
       <version>7</version>
-    </parent>
-   	<modelVersion>4.0.0</modelVersion>
-	<groupId>uk.bl.wa.discovery</groupId>
-	<artifactId>warc-discovery</artifactId>
-	<version>1.1.1-SNAPSHOT</version>
-    <packaging>pom</packaging>
+   </parent>
+   <modelVersion>4.0.0</modelVersion>
+   <groupId>uk.bl.wa.discovery</groupId>
+   <artifactId>warc-discovery</artifactId>
+   <version>1.1.1-SNAPSHOT</version>
+   <packaging>pom</packaging>
    <modules>
       <module>warc-hadoop-recordreaders</module>
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
    </modules>
-<licenses>
+   <licenses>
       <license>
          <name>The Apache Software License, Version 2.0</name>
          <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
@@ -38,81 +39,87 @@
       <url>git@github.com:ukwa/warc-discovery.git</url>
    </scm>
    <properties>
-     <solr.version>4.4.0</solr.version>
-     <tika.version>1.4</tika.version>
-     <jdk.version>1.6</jdk.version>
-     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-     <ram>512</ram>
+      <solr.version>4.4.0</solr.version>
+      <tika.version>1.4</tika.version>
+      <jdk.version>1.6</jdk.version>
+      <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+      <ram>512</ram>
    </properties>
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>1.6</source>
-					<target>1.6</target>
-				</configuration>
-			</plugin>
+   <build>
+      <plugins>
          <plugin>
-    <groupId>org.apache.maven.plugins</groupId>
-    <artifactId>maven-surefire-plugin</artifactId>
-    <version>2.5</version>
-    <configuration>
-        <forkMode>once</forkMode>
-        <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
-    </configuration>
-</plugin>
-		</plugins>
-	</build>
-	<repositories>
-		<repository>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<id>internetarchive</id>
-			<name>Internet Archive Maven Repository</name>
-			<url>http://builds.archive.org:8080/maven2</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.3.2</version>
+            <configuration>
+               <source>1.6</source>
+               <target>1.6</target>
+            </configuration>
+         </plugin>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>2.5</version>
+            <configuration>
+               <forkMode>once</forkMode>
+               <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
+            </configuration>
+         </plugin>
+      </plugins>
+   </build>
+   <repositories>
+      <repository>
+         <releases>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+            <checksumPolicy>warn</checksumPolicy>
+         </releases>
+         <snapshots>
+            <enabled>true</enabled>
+            <updatePolicy>daily</updatePolicy>
+            <checksumPolicy>warn</checksumPolicy>
+         </snapshots>
+         <id>internetarchive</id>
+         <name>Internet Archive Maven Repository</name>
+         <url>http://builds.archive.org:8080/maven2</url>
+         <layout>default</layout>
+      </repository>
+   </repositories>
    <dependencies>
-        <dependency>
-          <groupId>org.archive.wayback</groupId>
-          <artifactId>wayback-core</artifactId>
-          <version>1.7.0</version>
-          <exclusions>
-             <exclusion>
-                <artifactId>poi-scratchpad</artifactId>
-                <groupId>poi</groupId>
-             </exclusion>
-             <exclusion>
-                <artifactId>poi</artifactId>
-                <groupId>poi</groupId>
-             </exclusion>
-             <exclusion>
-                <artifactId>hadoop-core</artifactId>
-                <groupId>org.apache.hadoop</groupId>
-             </exclusion>
-             <exclusion>
-                <artifactId>guava</artifactId>
-                <groupId>com.google.guava</groupId>
-             </exclusion>
-          </exclusions>
-       </dependency>
-       <dependency>
-            <groupId>org.apache.hadoop</groupId>
-            <artifactId>hadoop-core</artifactId>
-            <version>0.20.2</version>
-            <scope>provided</scope>
-        </dependency>
+      <dependency>
+         <groupId>org.archive.wayback</groupId>
+         <artifactId>wayback-core</artifactId>
+         <version>1.7.0</version>
+         <exclusions>
+            <exclusion>
+               <artifactId>poi-scratchpad</artifactId>
+               <groupId>poi</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>poi</artifactId>
+               <groupId>poi</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>hadoop-core</artifactId>
+               <groupId>org.apache.hadoop</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>guava</artifactId>
+               <groupId>com.google.guava</groupId>
+            </exclusion>
+         </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.hadoop</groupId>
+         <artifactId>hadoop-core</artifactId>
+         <version>0.20.2</version>
+         <scope>provided</scope>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.hadoop</groupId>
+         <artifactId>hadoop-test</artifactId>
+         <version>0.20.2</version>
+         <scope>test</scope>
+      </dependency>
    </dependencies>
 </project>
