@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -31,24 +33,49 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerRunner extends Configured implements Tool {
+	
+	private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
+
 
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 	
-	private int numReducers;
+	/**
+	 * 
+	 * @param args
+	 * @return
+	 * @throws IOException
+	 */
+	protected void createJobConf( JobConf conf, String[] args ) throws IOException {
 
-	public int run( String[] args ) throws IOException {
-		JobConf conf = new JobConf( getConf(), WARCIndexerRunner.class );
+		// Store application properties where the mappers/reducers can access them
+		Config index_conf = ConfigFactory.load();
+		conf.set( CONFIG_PROPERTIES, 
+				index_conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()) );
+		LOG.info("Loaded warc config.");
+
+		// Also set mapred speculative execution off:
+		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
+
+		// Reducer count dependent on concurrent HTTP connections to Solr server.
+		int numReducers = 1;
+		try {
+			numReducers = index_conf.getInt( "warc.hadoop.num_reducers" );
+		} catch( NumberFormatException n ) {
+			numReducers = 10;
+		}
+
+		// Add input paths:
+		LOG.info("Reading input files...");
 		String line = null;
-
 		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
 		while( ( line = br.readLine() ) != null ) {
 			FileInputFormat.addInputPath( conf, new Path( line ) );
 		}
 		br.close();
+		LOG.info("Read input files.");
 
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 
-		this.setProperties( conf );
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
 		conf.setMapperClass( WARCIndexerMapper.class );
@@ -60,12 +87,33 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setOutputValueClass( Text.class );
 		conf.setMapOutputValueClass( WritableSolrRecord.class );
 		conf.setNumReduceTasks( numReducers );
+	}
+
+	/**
+	 * 
+	 * Run the job:
+	 * 
+	 */
+	public int run( String[] args ) throws IOException {
+		
+		// Set up the base conf:
+		JobConf conf = new JobConf( getConf(), WARCIndexerRunner.class );
+		
+		// Get the job configuration:
+		this.createJobConf(conf, args);
+		
+		// Submit it:
 		JobClient client = new JobClient( conf );
 		client.submitJob( conf );
-//		 JobClient.runJob( conf );
+		
 		return 0;
 	}
 
+	/**
+	 * 
+	 * @param args
+	 * @throws Exception
+	 */
 	public static void main( String[] args ) throws Exception {
 		if( !( args.length > 0 ) ) {
 			System.out.println( "Need input file.list and output dir!" );
@@ -77,20 +125,4 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		System.exit( ret );
 	}
 
-	private void setProperties( JobConf conf ) throws IOException {
-		// Store application properties where the mappers/reducers can access them
-		Config index_conf = ConfigFactory.load();
-		conf.set( CONFIG_PROPERTIES, 
-				index_conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()) );
-
-		// Also set mapred speculative execution off:
-		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
-
-		// Reducer count dependent on concurrent HTTP connections to Solr server.
-		try {
-			numReducers = index_conf.getInt( "warc.hadoop.num_reducers" );
-		} catch( NumberFormatException n ) {
-			numReducers = 10;
-		}
-	}
 }
