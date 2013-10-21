@@ -50,6 +50,7 @@ public class WARCIndexerRunnerTest {
 
 	@Before
 	public void setUp() throws Exception {
+		LOG.warn("Spinning up test cluster...");
 
 		// make sure the log folder exists,
 		// otherwise the test fill fail
@@ -66,6 +67,11 @@ public class WARCIndexerRunnerTest {
 		dfsCluster.getFileSystem().makeQualified(output);
 		//
 		mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
+		
+		// prepare for tests
+		copyFileToTestCluster(testWarc, "variations.warc.gz");
+		
+		LOG.warn("Spun up test cluster.");
 	}
 
 	protected FileSystem getFileSystem() throws IOException {
@@ -89,11 +95,19 @@ public class WARCIndexerRunnerTest {
 	}
 
 	@Test
-	public void testCount() throws Exception {
+	public void testFileLoadWorked() throws Exception {
+		LOG.info("Checking input file is present...");
+		// Check that the input file is present:
+		Path[] inputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
+				input, new OutputLogFilter()));
+		Assert.assertEquals(1, inputFiles.length);
+	}
+	
+	//@Test
+	public void testFullJob() throws Exception {
 
 		// prepare for test
-		createTextInputFile();
-		copyFileToTestCluster(testWarc, "variations.warc.gz");
+		//createTextInputFile();
 		
 		// Set up arguments for the job:
 		String[] args = {"src/test/resources/test-inputs.txt", this.output.getName()};
@@ -126,6 +140,7 @@ public class WARCIndexerRunnerTest {
 
 	@After
 	public void tearDown() throws Exception {
+		LOG.warn("Tearing down test cluster...");
 		if (dfsCluster != null) {
 			dfsCluster.shutdown();
 			dfsCluster = null;
@@ -134,6 +149,7 @@ public class WARCIndexerRunnerTest {
 			mrCluster.shutdown();
 			mrCluster = null;
 		}
+		LOG.warn("Torn down test cluster.");
 	}
 
 }
