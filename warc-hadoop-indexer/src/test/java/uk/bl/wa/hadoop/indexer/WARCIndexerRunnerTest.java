@@ -93,12 +93,13 @@ public class WARCIndexerRunnerTest {
 	}
 	
 	private void copyFileToTestCluster(String source, String target) throws IOException {
-		LOG.info("Copying "+source+" into cluster at input/"+target+"...");
-		FSDataOutputStream os = getFileSystem().create(new Path(input, target));
+		Path targetPath = new Path(input, target);
+		LOG.info("Copying "+source+" into cluster at "+targetPath.toUri()+"...");
+		FSDataOutputStream os = getFileSystem().create(targetPath);
 		InputStream is = new FileInputStream(source);
 		IOUtils.copy(is, os);
 		is.close();
-		os.flush();
+		//os.flush();
 		LOG.info("Copy completed.");
 	}
 
