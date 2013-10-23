@@ -123,7 +123,7 @@ public class Times {
 	        }
 
 	        if(!dateFormatPattern.equals("") && !dateString.equals("")) {
-	            //TODO support different locales
+	            //TODO support different locales?
 	            SimpleDateFormat dateFormat = new SimpleDateFormat(dateFormatPattern.trim(), Locale.US);
 	            date = dateFormat.parse(dateString.trim());
 	        }

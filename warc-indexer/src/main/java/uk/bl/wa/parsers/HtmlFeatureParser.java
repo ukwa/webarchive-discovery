@@ -4,6 +4,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -28,6 +30,13 @@ public class HtmlFeatureParser extends AbstractParser {
 
 	private static Log log = LogFactory.getLog(HtmlFeatureParser.class);
 	
+    private static final Set<MediaType> SUPPORTED_TYPES =
+            Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
+            		MediaType.text("html"),
+                  MediaType.application("xhtml")
+            )));
+
+	
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
 	public static final String LINK_LIST = "LinkList";
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
@@ -35,8 +44,7 @@ public class HtmlFeatureParser extends AbstractParser {
 	
 	@Override
 	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		// TODO Auto-generated method stub
-		return null;
+		return SUPPORTED_TYPES;
 	}
 
 	@Override
