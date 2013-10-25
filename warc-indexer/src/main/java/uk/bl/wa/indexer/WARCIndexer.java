@@ -74,9 +74,9 @@ import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wa.util.PostcodeGeomapper;
 import uk.bl.wa.util.solr.SolrFields;
+import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.SolrWebServer;
 import uk.bl.wa.util.solr.TikaExtractor;
-import uk.bl.wa.util.solr.WritableSolrRecord;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
@@ -165,7 +165,7 @@ public class WARCIndexer {
 	 * @return
 	 * @throws IOException
 	 */
-	public WritableSolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
+	public SolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
 		return extract(archiveName, record, true);
 	}
 	
@@ -179,9 +179,9 @@ public class WARCIndexer {
 	 * @return
 	 * @throws IOException
 	 */
-	public WritableSolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
+	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
-		WritableSolrRecord solr = new WritableSolrRecord();
+		SolrRecord solr = new SolrRecord();
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
@@ -511,7 +511,7 @@ public class WARCIndexer {
 	
 	/* ----------------------------------- */
 	
-	private void processHeaders(WritableSolrRecord solr, String statusCode, Header[] httpHeaders) {
+	private void processHeaders(SolrRecord solr, String statusCode, Header[] httpHeaders) {
 		try {
 			// This is a simple test that the status code setting worked:
 			int statusCodeInt = Integer.parseInt(statusCode);
@@ -619,7 +619,7 @@ public class WARCIndexer {
 	 * @param header
 	 * @param serverType
 	 */
-	private void processContentType( WritableSolrRecord solr, ArchiveRecordHeader header) {
+	private void processContentType( SolrRecord solr, ArchiveRecordHeader header) {
 		// Get the current content-type:
 		String contentType =  (String) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
 		String serverType =  (String) solr.doc.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
@@ -829,7 +829,7 @@ public class WARCIndexer {
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
-				WritableSolrRecord doc = windex.extract("",rec, isTextRequired);
+				SolrRecord doc = windex.extract("",rec, isTextRequired);
 
 				if( doc != null ) {
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");

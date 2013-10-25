@@ -22,9 +22,9 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.solr.QueueingHttpSolrServer;
+import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
-import uk.bl.wa.util.solr.WritableSolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
@@ -65,11 +65,11 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 	@Override
 	public void reduce( Text key, Iterator<WritableSolrRecord> values, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
-		WritableSolrRecord solr;
 		WctEnricher wct;
 
 		while( values.hasNext() ) {
-			solr = values.next();
+			WritableSolrRecord wsr = values.next();
+			SolrRecord solr = wsr.getSolrRecord();
 			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
 				wct = new WctEnricher( key.toString() );
 				wct.addWctMetadata( solr );

@@ -19,7 +19,7 @@ import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.util.solr.WritableSolrRecord;
+import uk.bl.wa.util.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
@@ -43,10 +43,9 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	@Override
 	public void map( Text key, WritableArchiveRecord value, OutputCollector<Text, WritableSolrRecord> output, Reporter reporter ) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
-		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			solr = windex.extract( key.toString(), value.getRecord() );
+			SolrRecord solr = windex.extract( key.toString(), value.getRecord() );
 			
 			if( solr == null ) {
 				LOG.debug("WARCIndexer returned NULL for: "+ header.getUrl());
@@ -57,7 +56,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				URI uri = new URI( header.getUrl() );
 				oKey = uri.getHost();
 				if( oKey != null )
-					output.collect( new Text( oKey ), solr );
+					output.collect( new Text( oKey ), new WritableSolrRecord(solr) );
 			} catch( Exception e ) {
 				LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}

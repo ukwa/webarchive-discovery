@@ -3,6 +3,9 @@
  */
 package uk.bl.wa.util.solr;
 
+import java.io.Serializable;
+
+import org.apache.hadoop.io.Writable;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -10,9 +13,10 @@ import org.apache.solr.common.SolrInputDocument;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class SolrRecord {
+public class SolrRecord implements Serializable {
 
-
+	private static final long serialVersionUID = -4556484652176976470L;
+	
 	public SolrInputDocument doc = new SolrInputDocument();
 
 	public String toXml() {

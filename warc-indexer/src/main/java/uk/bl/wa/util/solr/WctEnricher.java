@@ -15,13 +15,13 @@ import org.restlet.resource.ResourceException;
 
 public class WctEnricher {
 	private static final String WctRestletUrl = "http://mosaic-private:9090/wctmeta/instanceInfo/";
-	private WritableSolrRecord solr;
+	private SolrRecord solr;
 	private XMLInputFactory inputFactory = null;
 	private XMLStreamReader xmlReader = null;
 
 	public WctEnricher( String archiveName ) {
 		String wctID = this.getWctTi( archiveName );
-		solr = new WritableSolrRecord();
+		solr = new SolrRecord();
 		solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
 		getWctMetadata( solr );
 	}
@@ -30,7 +30,7 @@ public class WctEnricher {
 		return this.solr.doc;
 	}
 
-	private void getWctMetadata( WritableSolrRecord solr ) {
+	private void getWctMetadata( SolrRecord solr ) {
 		
 		ClientResource cr = new ClientResource( WctRestletUrl + this.solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
 		try {
@@ -42,7 +42,7 @@ public class WctEnricher {
 		}
 	}
 
-	public void addWctMetadata( WritableSolrRecord in ) {
+	public void addWctMetadata( SolrRecord in ) {
 		in.doc.addField( WctFields.WCT_TARGET_ID, this.solr.doc.getFieldValue( WctFields.WCT_TARGET_ID ) );
 		in.doc.addField( WctFields.WCT_TITLE, this.solr.doc.getFieldValue( WctFields.WCT_TITLE ) );
 		in.doc.addField( WctFields.WCT_HARVEST_DATE, this.solr.doc.getFieldValue( WctFields.WCT_HARVEST_DATE ) );

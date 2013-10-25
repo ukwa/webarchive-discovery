@@ -155,14 +155,6 @@
 	<profiles>
 		<profile>
 			<id>cli-util</id>
-            <!-- Change scope of hadoop-core to ensure it's included in the CLI jar -->
-			<dependencies>
-				<dependency>
-					<groupId>org.apache.hadoop</groupId>
-					<artifactId>hadoop-core</artifactId>
-					<version>0.20.2</version>
-				</dependency>
-			</dependencies>
 			<build>
 				<plugins>
 					<plugin>
