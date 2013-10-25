@@ -1,7 +1,7 @@
 WARC Discovery
 ==============
 
-These are the components we use to index our WARC files and make the contents discoverable.
+These are the components we use to data-mine and index our ARC and WARC files and make the contents explorable and discoverable.
 
 Structure
 ---------
@@ -10,7 +10,7 @@ Structure
  * [warc-hadoop-recordreaders](warc-hadoop-recordreaders): The generic code that parses ARC and WARC files for map-reduce jobs.
  * [warc-hadoop-indexer](warc-hadoop-indexer): The map-reduce version of warc-indexer, combining the record readers and the indexer to run large scale indexing jobs.
  * [warc-solr-test-server](warc-solr-test-server): A war overlay project that can be used to fire up a test Solr server using the schema held in warc-indexer/src/main/solr.
-
+ * [warc-discovery-shine](warc-discovery-shine): A very rough prototype web UI for browsing a Solr service that has been populated using this indexer.
 
 Configuration
 -------------
@@ -28,7 +28,7 @@ Until recently, there are two development strands, held on distinct branches
 
 These have been merged into a master, in preparation for a full [1.1.1 release](https://github.com/ukwa/warc-discovery/issues?milestone=1&state=open).
 
-See the [To Do List][TODO.md], the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
+See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
 
 
 Similar Systems

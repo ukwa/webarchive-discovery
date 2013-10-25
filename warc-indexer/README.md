@@ -18,14 +18,16 @@ Which runs like this:
     src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
 </pre>
 
-Also contains short ARC and WARC test files, generated using JWATTools from https://webarchive.jira.com/wiki/pages/viewpage.action?pageId=4817
-(decompress, truncate at Bob image GET, recompress).
+TBA configuration HOW TO.
+
+Also contains short ARC and WARC test files, taken from the [warc-test-corpus]
 
 Issues
 ------
 
 - Dependency on org.apache.hadoop: 
     - These classes depend directly on Hadoop for Configuration and for the Writable interface that the WritableSolrRecord uses. This is rather clumsy. It would be preferable if there were no Hadoop dependencies here.
+- Check the text is stored. Configure the schema so we can store or not-store the text as we like.
 
 
 EntityIndexer

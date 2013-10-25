@@ -16,10 +16,7 @@ import org.archive.io.warc.WARCRecord;
 
 public class WritableArchiveRecord implements Writable {
 	private ArchiveRecord record = null;
-	private HashMap<String, String> headers = new HashMap<String, String>();
 	
-	public static final String BL_STATUS_CODE_HEADER = "bl_status";
-
 	public WritableArchiveRecord() {}
 
 	public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
@@ -34,7 +31,7 @@ public class WritableArchiveRecord implements Writable {
 		return record;
 	}
 
-	public byte[] getPayload() throws IOException {
+	public byte[] getPayload(int max_buffer_size) throws IOException {
 		BufferedInputStream input = new BufferedInputStream( record );
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		int ch;
@@ -51,26 +48,6 @@ public class WritableArchiveRecord implements Writable {
 	
 	public InputStream getPayloadAsStream() {
 		return record;
-	}
-
-	public void setHttpHeaders( String httpHeaders ) {
-		BufferedReader input = new BufferedReader( new StringReader( httpHeaders ) );
-		String line;
-		String[] values;
-		try {
-			headers.put( BL_STATUS_CODE_HEADER, input.readLine() );
-			while( ( line = input.readLine() ) != null ) {
-				values = line.split( ": ", 2 );
-				if( values.length == 2 )
-					headers.put( values[ 0 ].toLowerCase(), values[ 1 ] );
-			}
-		} catch( IOException i ) {
-			i.printStackTrace();
-		}
-	}
-
-	public String getHttpHeader( String header ) {
-		return headers.get( header.toLowerCase() );
 	}
 
 	@Override

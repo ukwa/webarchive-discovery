@@ -1,8 +1,5 @@
 package uk.bl.wa.hadoop;
 
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.io.warc.WARCConstants.RESPONSE;
-
 import java.io.IOException;
 import java.util.Iterator;
 
@@ -22,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
-import org.archive.io.ArchiveRecordHeader;
 
 @SuppressWarnings( "deprecation" )
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
@@ -31,28 +27,26 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private FSDataInputStream datainputstream;
 	private FileStatus status;
 	private FileSystem filesystem;
-	private long maxPayloadSize;
-	private String[] url_excludes;
-	private String[] protocol_includes;
+//	private String[] url_excludes;
+//	private String[] protocol_includes;
 	private Path[] paths;
 	int currentPath = -1;
 	Long offset = 0L;
 	private ArchiveReader arcreader;
 	private Iterator<ArchiveRecord> iterator;
 	private ArchiveRecord record;
-	private ArchiveRecordHeader header;
 	private String archiveName;
 
 	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
-		this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
-		log.warn("maxPayloadSize="+this.maxPayloadSize);
-		
-		this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
-		log.warn("url_excludes="+this.printList(url_excludes));
-		
-		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
-		log.warn("protocol_includes="+this.printList(protocol_includes));
-		
+//		this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
+//		log.warn("maxPayloadSize="+this.maxPayloadSize);
+//		
+//		this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
+//		log.warn("url_excludes="+this.printList(url_excludes));
+//		
+//		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
+//		log.warn("protocol_includes="+this.printList(protocol_includes));
+//		
 		this.filesystem = FileSystem.get( conf );
 
 		if( split instanceof FileSplit ) {
@@ -72,15 +66,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		this.nextFile();
 	}
 	
-	private String printList(String[] set ) {
-		String list = "";
-		for( String item : set ) {
-			if( ! "".equals(list) ) list += ",";
-			list += item;
-		}
-		return list;
-	}
-
 	@Override
 	public void close() throws IOException {
 		if( datainputstream != null ) {
@@ -126,21 +111,9 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			try {
 				if( hasNext ) {
 					record = ( ArchiveRecord ) iterator.next();
-					header = record.getHeader();
-					String url = header.getUrl();
-
-					if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
-						continue;
-					}
-					if( header.getLength() <= maxPayloadSize &&
-						this.checkUrl( url ) &&
-						this.checkProtocol( url ) ) {
-							found = true;
-							key.set( this.archiveName );
-							value.setRecord( record );
-					} else {
-						log.warn("Skipped record, length="+header.getLength()+" checkUrl="+checkUrl(url)+" checkProtocol="+checkProtocol(url));
-					}
+					found = true;
+					key.set( this.archiveName );
+					value.setRecord( record );
 				} else if( !this.nextFile() ) {
 					break;
 				}
@@ -171,6 +144,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		return true;
 	}
 
+	/*
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
 			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
@@ -187,6 +161,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 			}
 		}
 		return false;
-	}
+	*/
 
 }

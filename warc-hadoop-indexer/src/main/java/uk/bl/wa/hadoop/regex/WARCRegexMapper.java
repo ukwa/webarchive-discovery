@@ -63,7 +63,7 @@ public class WARCRegexMapper extends MapReduceBase implements Mapper<Text, Writa
 		}
 		
 		// Collect the matches:
-		Matcher matcher = pattern.matcher( new String( value.getPayload(), "UTF-8" ) );
+		Matcher matcher = pattern.matcher( new String( value.getPayload(1024*1024), "UTF-8" ) );
 		while( matcher.find() ) {
 			output.collect( new Text( newKey ), new Text( matcher.group( 0 ) ) );
 		}

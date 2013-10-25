@@ -21,7 +21,6 @@ import org.apache.solr.common.SolrException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.QueueingHttpSolrServer;
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
