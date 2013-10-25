@@ -27,8 +27,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private FSDataInputStream datainputstream;
 	private FileStatus status;
 	private FileSystem filesystem;
-//	private String[] url_excludes;
-//	private String[] protocol_includes;
 	private Path[] paths;
 	int currentPath = -1;
 	Long offset = 0L;
@@ -38,15 +36,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private String archiveName;
 
 	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
-//		this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
-//		log.warn("maxPayloadSize="+this.maxPayloadSize);
-//		
-//		this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
-//		log.warn("url_excludes="+this.printList(url_excludes));
-//		
-//		this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
-//		log.warn("protocol_includes="+this.printList(protocol_includes));
-//		
+		
 		this.filesystem = FileSystem.get( conf );
 
 		if( split instanceof FileSplit ) {
@@ -143,24 +133,5 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		this.archiveName = paths[ currentPath ].getName();
 		return true;
 	}
-
-	/*
-	private boolean checkUrl( String url ) {
-		for( String exclude : url_excludes ) {
-			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
-				return false;
-			}
-		}
-		return true;
-	}
-
-	private boolean checkProtocol( String url ) {
-		for( String include : protocol_includes ) {
-			if( "".equals(include) || url.startsWith( include ) ) {
-				return true;
-			}
-		}
-		return false;
-	*/
 
 }

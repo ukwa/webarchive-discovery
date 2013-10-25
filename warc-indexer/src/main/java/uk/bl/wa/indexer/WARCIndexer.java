@@ -4,12 +4,8 @@ import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.BufferedInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -22,35 +18,16 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import javax.xml.transform.OutputKeys;
-import javax.xml.transform.Result;
-import javax.xml.transform.Source;
-import javax.xml.transform.Transformer;
-import javax.xml.transform.TransformerException;
-import javax.xml.transform.TransformerFactory;
-import javax.xml.transform.TransformerFactoryConfigurationError;
-import javax.xml.transform.stream.StreamResult;
-import javax.xml.transform.stream.StreamSource;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
-import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
-import org.archive.io.ArchiveReader;
-import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
@@ -75,7 +52,6 @@ import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wa.util.PostcodeGeomapper;
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
-import uk.bl.wa.util.solr.SolrWebServer;
 import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 import eu.scape_project.bitwiser.utils.FuzzyHash;
@@ -94,10 +70,20 @@ public class WARCIndexer {
 	
 	private static Log log = LogFactory.getLog(WARCIndexer.class);
 	
-	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
-	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
-	private static final String CLI_FOOTER = "";
 	private static final long BUFFER_SIZE = 1024*1024l; // 10485760 bytes = 10MB.
+
+//	private String[] url_excludes;
+//	private String[] protocol_includes;
+//	this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
+//	log.warn("maxPayloadSize="+this.maxPayloadSize);
+//	
+//	this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
+//	log.warn("url_excludes="+this.printList(url_excludes));
+//	
+//	this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
+//	log.warn("protocol_includes="+this.printList(protocol_includes));
+//		
+	
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
 	private TikaExtractor tika = null;
@@ -696,209 +682,26 @@ public class WARCIndexer {
 		}
 	}
 
-	
-	/**
-	 * 
-	 * @param args
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws TransformerException 
-	 * @throws TransformerFactoryConfigurationError 
-	 * @throws SolrServerException 
-	 */
-	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException {
-		
-		CommandLineParser parser = new PosixParser();
-		String outputDir = null;
-		String solrUrl = null;
-		boolean isTextRequired = false;
-		boolean slashPages = false;
-		
-		Options options = new Options();
-		options.addOption("o", "output", true, "The directory to contain the output XML files");
-		options.addOption("s", "solr", true, "The URL of the required Solr Instance");
-		options.addOption("t", "text", false, "Include text in XML in output files");
-		options.addOption("r", "slash", false, "Only process slash (root) pages.");
-		
-		try {
-		    // parse the command line arguments
-		    CommandLine line = parser.parse( options, args );
-		   	String cli_args[] = line.getArgs();
-		   
-		
-		   	// Check that a mandatory Archive file(s) has been supplied
-		   	if( !( cli_args.length > 0 ) ) {
-				//System.out.println( "Arguments required are 1) Output directory 2) List of WARC files 3) Optionally --update-solr-server=url" );
-		   		printUsage(options);
-				System.exit( 0 );
-		   	}
-
-		   	// Get the output directory, if set
-		   	if(line.hasOption("o")){
-		   		outputDir = line.getOptionValue("o");
-		   		if(outputDir.endsWith("/")||outputDir.endsWith("\\")){
-		   			outputDir = outputDir.substring(0, outputDir.length()-1);
-		   		}
-		
-		   		outputDir = outputDir + "//";
-		   		System.out.println("Output Directory is: " + outputDir);
-		   		File dir = new File(outputDir);
-		   		if(!dir.exists()){
-		   			FileUtils.forceMkdir(dir);
-		   		}
-		   	}
-		   	
-		   	// Get the Solr Url, if set
-		   	if(line.hasOption("s")){
-		   		solrUrl = line.getOptionValue("s");
-		   		if(solrUrl.contains("\"")){
-		   			solrUrl  = solrUrl.replaceAll("\"", "");
-				}
-		   	}
-		   	
-		   	// Check if the text field is required in the XML output
-		   	if(line.hasOption("t") || line.hasOption("s")){
-		   		isTextRequired = true;
-		   	}
-
-		   	if( line.hasOption( "r" ) ) {
-		   		slashPages = true;
-		   	}
-		   	
-		   	// Check that either an output dir or Solr URL is supplied
-		   	if(outputDir == null && solrUrl == null){
-		   		System.out.println( "A Solr URL or an Output Directory must be supplied" );
-		   		printUsage(options);
-		   		System.exit( 0 );
-		   	}
-		   	
-		   	// Check that both an output dir and Solr URL are not supplied
-		   	if(outputDir != null && solrUrl != null){
-		   		System.out.println( "A Solr URL and an Output Directory cannot both be specified" );
-		   		printUsage(options);
-		   		System.exit( 0 );
-		   	}
-	   	
-		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired, slashPages);
-		
-		} catch (org.apache.commons.cli.ParseException e) {
-			log.error("Parse exception when processing command line arguments: "+e);
-		}
-	
-	}
-	
-	/**
-	 * @param outputDir
-	 * @param args
-	 * @throws NoSuchAlgorithmException
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 * @throws TransformerFactoryConfigurationError
-	 * @throws TransformerException
-	 */
-	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
-		
-		WARCIndexer windex = new WARCIndexer();
-				
-		SolrWebServer solrWeb = null;
-		
-		// If the Solr URL is set initiate a connections
-		if(solrUrl != null) {		
-			solrWeb = new SolrWebServer(solrUrl);
-		}
-		
-		int totInputFile = args.length;
-		int curInputFile = 1;
-					
-		// Loop through each Warc files
-		for( String inputFile : args ) {
-								
-			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
-			File inFile = new File(inputFile);
-			String fileName = inFile.getName();
-			String outputWarcDir = outputDir + fileName + "//";
-			File dir = new File(outputWarcDir);
-	   		if(!dir.exists() && solrUrl == null){
-	   			FileUtils.forceMkdir(dir);
-	   		}
-			
-			ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
-			Iterator<ArchiveRecord> ir = reader.iterator();
-			int recordCount = 1;
-			
-			// Iterate though each record in the WARC file
-			while( ir.hasNext() ) {
-				ArchiveRecord rec = ir.next();
-				SolrRecord doc = windex.extract("",rec, isTextRequired);
-
-				if( doc != null ) {
-					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
-					
-					if( !slashPages || ( doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
-									     doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
-						// Write XML to file if not posting straight to the server.
-						if(solrUrl == null) {
-							writeXMLToFile(doc.toXml(), fileOutput);
-						}else{
-							// Post to Solr
-							solrWeb.updateSolrDoc(doc.doc);
-						}
-						recordCount++;
-					}
-
-				}			
+	/*
+	private boolean checkUrl( String url ) {
+		for( String exclude : url_excludes ) {
+			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
+				return false;
 			}
-			curInputFile++;
 		}
-		
-		// Commit any Solr Updates
-		if(solrWeb != null) {		
-			solrWeb.commit();
+		return true;
+	}
+
+	private boolean checkProtocol( String url ) {
+		for( String include : protocol_includes ) {
+			if( "".equals(include) || url.startsWith( include ) ) {
+				return true;
+			}
 		}
-		
-		System.out.println("WARC Indexer Finished");
-	}
+		return false;
+	*/
+
 	
-	
-	public static void prettyPrintXML( String doc ) throws TransformerFactoryConfigurationError, TransformerException {
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		//initialize StreamResult with File object to save to file
-		StreamResult result = new StreamResult(new StringWriter());
-		StreamSource source = new StreamSource(new StringReader(doc));
-		transformer.transform(source, result);
-		String xmlString = result.getWriter().toString();
-		System.out.println(xmlString);		
-	}
-	
-	/**
-	 * @param xml
-	 * @param file
-	 * @throws IOException
-	 * @throws TransformerFactoryConfigurationError
-	 * @throws TransformerException
-	 */
-	public static void writeXMLToFile( String xml, File file ) throws IOException, TransformerFactoryConfigurationError, TransformerException {
-		
-		Result result = new StreamResult(file);
-		Source source =  new StreamSource(new StringReader(xml));
-		
-		Transformer transformer = TransformerFactory.newInstance().newTransformer();
-		transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-		//FileUtils.writeStringToFile(file, xml);
-		
-		transformer.transform(source, result);
-	  
-	}
-	
-	/**
-	 * @param options
-	 */
-	private static void printUsage( Options options ) {
-		HelpFormatter helpFormatter = new HelpFormatter();
-		helpFormatter.setWidth( 80 );
-		helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
-	}
 
 	private class ParseRunner implements Runnable {
 		HtmlFeatureParser hfp;
