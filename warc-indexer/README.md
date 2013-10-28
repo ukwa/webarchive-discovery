@@ -12,22 +12,24 @@ Using this command, it can also builds a suitable command-line tool for generati
 
 Which runs like this:
 
-<pre>
-    java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target \
+    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar target \
     --update-solr-server=http://localhost:8080/ \
     src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
-</pre>
 
 TBA configuration HOW TO.
 
-Also contains short ARC and WARC test files, taken from the [warc-test-corpus]
+To print the default configuration:
 
-Issues
-------
+    $ java -cp target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar uk.bl.wa.util.ConfigPrinter
 
-- Dependency on org.apache.hadoop: 
-    - These classes depend directly on Hadoop for Configuration and for the Writable interface that the WritableSolrRecord uses. This is rather clumsy. It would be preferable if there were no Hadoop dependencies here.
-- Check the text is stored. Configure the schema so we can store or not-store the text as we like.
+To override the default with a new configuration:
+
+    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar -Dconfig.file=new.conf \
+    target --update-solr-server=http://localhost:8080/ \
+    src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
+
+
+Note that this project also contains short ARC and WARC test files, taken from the [warc-test-corpus]
 
 
 EntityIndexer
