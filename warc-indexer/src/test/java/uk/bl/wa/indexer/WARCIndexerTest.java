@@ -94,7 +94,25 @@ public class WARCIndexerTest {
 		this.testFilterBehaviour(path, url_excludes, 17);		
 		
 	}
-
+	
+	/**
+	 * Test reponse code filtering is working ok.
+	 * 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws IOException 
+	 * @throws MalformedURLException 
+	 */
+	@Test
+	public void testResponseCodeFilters() throws NoSuchAlgorithmException, MalformedURLException, IOException {
+		// Now URL excludes:
+		String path = "warc.index.extract.response_include";
+		List<String> response_includes = new ArrayList<String>();
+		this.testFilterBehaviour(path, response_includes, 23);
+		response_includes.add("2");
+		this.testFilterBehaviour(path, response_includes, 16);
+		response_includes.add("3");
+		this.testFilterBehaviour(path, response_includes, 16);
+	}
 
 	/*
 	 * Internal implementation of filter test core.

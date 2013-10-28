@@ -75,7 +75,7 @@ public class WARCIndexer {
 
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
-
+	private List<String> response_includes;
 	
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
@@ -125,6 +125,8 @@ public class WARCIndexer {
 		this.url_excludes                 = conf.getStringList("warc.index.extract.url_exclude");
 		// Protocols to include:
 		this.protocol_includes            = conf.getStringList("warc.index.extract.protocol_include");
+		// Response codes to include:
+		this.response_includes            = conf.getStringList("warc.index.extract.response_include");
 		
 		
 		// Instanciate required helpers:
@@ -189,8 +191,6 @@ public class WARCIndexer {
 			for( String h : header.getHeaderFields().keySet()) {
 				log.debug("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
 			}
-						
-			if( ! record.hasContentHeaders() ) return null;
 			
 			// Basic headers
 			
@@ -255,8 +255,8 @@ public class WARCIndexer {
 			}
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
-			if( statusCode == null || !statusCode.startsWith("2") ) {
-				log.error("Skipping this record as statusCode "+statusCode+" != 2xx: "+header.getUrl());
+			if( this.checkResponseCode(statusCode) == false ) {
+				log.error("Skipping this record based on status code "+statusCode+": "+header.getUrl());
 				return null;
 			}
 			
@@ -699,6 +699,18 @@ public class WARCIndexer {
 				return true;
 			}
 		}
+		return false;
+	}
+	
+	private boolean checkResponseCode( String statusCode ) {
+		if( statusCode == null ) return false;
+		// Check for match:
+		for( String include : response_includes ) {
+			if( "".equals(include) || statusCode.startsWith( include ) ) {
+				return true;
+			}
+		}
+		// Exclude
 		return false;
 	}
 	
