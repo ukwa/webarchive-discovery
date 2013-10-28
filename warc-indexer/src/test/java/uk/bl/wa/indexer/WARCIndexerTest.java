@@ -72,9 +72,9 @@ public class WARCIndexerTest {
 		List<String> protocols = new ArrayList<String>();
 		protocols.add("http");
 		protocols.add("https");
-		this.testFilterBehaviour(path, protocols, 16);
+		this.testFilterBehaviour(path, protocols, 29);
 		protocols.remove("http");
-		this.testFilterBehaviour(path, protocols, 23);
+		this.testFilterBehaviour(path, protocols, 34);
 	}
 		
 	/**
@@ -89,9 +89,9 @@ public class WARCIndexerTest {
 		// Now URL excludes:
 		String path = "warc.index.extract.url_exclude";
 		List<String> url_excludes = new ArrayList<String>();
-		this.testFilterBehaviour(path, url_excludes, 16);
+		this.testFilterBehaviour(path, url_excludes, 29);
 		url_excludes.add("robots.txt");
-		this.testFilterBehaviour(path, url_excludes, 17);		
+		this.testFilterBehaviour(path, url_excludes, 30);		
 		
 	}
 	
@@ -107,11 +107,11 @@ public class WARCIndexerTest {
 		// Now URL excludes:
 		String path = "warc.index.extract.response_include";
 		List<String> response_includes = new ArrayList<String>();
-		this.testFilterBehaviour(path, response_includes, 23);
+		this.testFilterBehaviour(path, response_includes, 36);
 		response_includes.add("2");
-		this.testFilterBehaviour(path, response_includes, 16);
+		this.testFilterBehaviour(path, response_includes, 29);
 		response_includes.add("3");
-		this.testFilterBehaviour(path, response_includes, 16);
+		this.testFilterBehaviour(path, response_includes, 20);
 	}
 
 	/*
@@ -126,7 +126,7 @@ public class WARCIndexerTest {
 		// Instanciate the indexer:
 		WARCIndexer windex = new WARCIndexer(config2);
 		
-		String inputFile = "src/test/resources/IAH-20080430204825-00000-blackbook-truncated.warc.gz";
+		String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
 		ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		int recordCount = 0;
@@ -143,7 +143,7 @@ public class WARCIndexerTest {
 		}
 		
 		System.out.println("recordCount: "+recordCount);
-		assertEquals(23, recordCount);
+		assertEquals(36, recordCount);
 		
 		System.out.println("nullCount: "+nullCount);
 		assertEquals(expectedNullCount, nullCount);
