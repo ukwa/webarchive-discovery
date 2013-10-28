@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 import java.util.TimeZone;
 import java.util.regex.Matcher;
@@ -72,17 +73,9 @@ public class WARCIndexer {
 	
 	private static final long BUFFER_SIZE = 1024*1024l; // 10485760 bytes = 10MB.
 
-//	private String[] url_excludes;
-//	private String[] protocol_includes;
-//	this.maxPayloadSize = conf.getLong( "archive.size.max", 104857600L );
-//	log.warn("maxPayloadSize="+this.maxPayloadSize);
-//	
-//	this.url_excludes = conf.getStrings( "record.exclude.url", new String[] {} );
-//	log.warn("url_excludes="+this.printList(url_excludes));
-//	
-//	this.protocol_includes = conf.getStrings( "record.include.protocol", new String[] { "http", "https" } ); 
-//	log.warn("protocol_includes="+this.printList(protocol_includes));
-//		
+	private List<String> url_excludes;
+	private List<String> protocol_includes;
+
 	
 	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
 	
@@ -128,6 +121,11 @@ public class WARCIndexer {
 		this.runDroid                     = conf.getBoolean("warc.index.id.droid.enabled" );
 		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.useResourceURI");
 		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly" );
+		// URLs to exclude:
+		this.url_excludes                 = conf.getStringList("warc.index.extract.url_exclude");
+		// Protocols to include:
+		this.protocol_includes            = conf.getStringList("warc.index.extract.protocol_include");
+		
 		
 		// Instanciate required helpers:
 		md5 = MessageDigest.getInstance( "MD5" );
@@ -175,6 +173,10 @@ public class WARCIndexer {
 			}
 			
 			if( header.getUrl() == null ) return null;
+			
+			// Check the filters:
+			if( this.checkProtocol(header.getUrl()) == false ) return null;
+			if( this.checkUrl(header.getUrl()) == false ) return null;
 			
 			// Check the record type:
 			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
@@ -682,7 +684,6 @@ public class WARCIndexer {
 		}
 	}
 
-	/*
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
 			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
@@ -699,8 +700,7 @@ public class WARCIndexer {
 			}
 		}
 		return false;
-	*/
-
+	}
 	
 
 	private class ParseRunner implements Runnable {
