@@ -6,8 +6,9 @@ This code runs Apache Tika on WARC and ARC records and extracts suitable metadat
 It is set up to work with Apache Solr, and our schema is provided in src/main/solr. The tests are able to spin-up an embedded Solr instance to verify the configuration and regression-test the indexer at the query level.
 
 Using this command, it can also builds a suitable command-line tool for generating/posting Solr records from web archive files.
+
 <pre>
-    mvn clean install -Pcli-util
+    mvn clean install
 </pre>
 
 Which runs like this:
@@ -20,7 +21,7 @@ TBA configuration HOW TO.
 
 To print the default configuration:
 
-    $ java -cp target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar uk.bl.wa.util.ConfigPrinter
+    $ java -cp target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar uk.bl.wa.util.ConfigPrinter
 
 To override the default with a new configuration:
 
@@ -39,9 +40,7 @@ Mostly a collection of fragments and ideas for entity extraction.
 
 What does work is the RegEx-based indexer. You can run it like this
 
-<pre>
-hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
-</pre>
+    hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
   
 And it will go through the arc.gz or warc.gz files listed in ia.archive.job.1, extract all references to postcodes (using that generic RegEx), and list them to text files under the postcodes directory. They look like this:
 
