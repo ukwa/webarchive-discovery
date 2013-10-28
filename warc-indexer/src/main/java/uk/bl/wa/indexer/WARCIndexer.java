@@ -256,7 +256,7 @@ public class WARCIndexer {
 			
 			// Skip recording non-content URLs (i.e. 2xx responses only please):
 			if( statusCode == null || !statusCode.startsWith("2") ) {
-				log.error("Skipping this record as statusCode != 2xx: "+header.getUrl());
+				log.error("Skipping this record as statusCode "+statusCode+" != 2xx: "+header.getUrl());
 				return null;
 			}
 			
