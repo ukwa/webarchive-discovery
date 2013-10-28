@@ -484,10 +484,10 @@ public class WARCIndexer {
 				}
 			}
 			
-			// TODO ACT/WctEnricher, currently invoked in the reduce stage to lower query hits.
+			// TODO ACT/WctEnricher, currently invoked in the reduce stage to lower query hits, but should shift here.
 			
 			// Remove the Text Field if required
-			if( !isTextIncluded){ 
+			if( !isTextIncluded ){ 
 				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
 			}
 
