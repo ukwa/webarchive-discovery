@@ -4,6 +4,13 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
@@ -25,33 +32,44 @@ import uk.bl.wa.hadoop.TextOutputFormat;
 import uk.bl.wa.util.solr.WritableSolrRecord;
 
 /**
- * ArchiveTikExtractor
- * Extracts text using Tika from a series of (W)ARC files.
+ * WARCIndexerRunner
+ * Extracts text/metadata using  from a series of Archive files.
  * 
  * @author rcoram
  */
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerRunner extends Configured implements Tool {
-	
-	private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
-
-
+	private static final Log LOG = LogFactory.getLog( WARCIndexerRunner.class );
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-d] [Dump config.]";
+	private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
-	
+
+	private String inputPath;
+	private String outputPath;
+	private boolean dumpConfig;
+
 	/**
 	 * 
 	 * @param args
 	 * @return
 	 * @throws IOException
+	 * @throws ParseException 
 	 */
-	protected void createJobConf( JobConf conf, String[] args ) throws IOException {
+	protected void createJobConf( JobConf conf, String[] args ) throws IOException, ParseException {
+		// Parse the command-line parameters.
+		this.setup( args );
 
 		// Store application properties where the mappers/reducers can access them
 		Config index_conf = ConfigFactory.load();
-		conf.set( CONFIG_PROPERTIES, 
-				index_conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()) );
-		LOG.info("Loaded warc config.");
+		conf.set( CONFIG_PROPERTIES, index_conf.withOnlyPath( "warc" ).root().render( ConfigRenderOptions.concise() ) );
+		LOG.info( "Loaded warc config." );
+
+		if( this.dumpConfig ) {
+			LOG.info( "Dumping warc config." );
+			System.out.println( index_conf.withOnlyPath( "warc" ).root().render() );
+			System.exit( 0 );
+		}
 
 		// Also set mapred speculative execution off:
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
@@ -65,16 +83,16 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		}
 
 		// Add input paths:
-		LOG.info("Reading input files...");
+		LOG.info( "Reading input files..." );
 		String line = null;
-		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
+		BufferedReader br = new BufferedReader( new FileReader( this.inputPath ) );
 		while( ( line = br.readLine() ) != null ) {
 			FileInputFormat.addInputPath( conf, new Path( line ) );
 		}
 		br.close();
-		LOG.info("Read input files.");
+		LOG.info( "Read input files." );
 
-		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
+		FileOutputFormat.setOutputPath( conf, new Path( this.outputPath ) );
 
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
@@ -94,19 +112,39 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	 * Run the job:
 	 * 
 	 */
-	public int run( String[] args ) throws IOException {
-		
+	public int run( String[] args ) throws IOException, ParseException {
 		// Set up the base conf:
 		JobConf conf = new JobConf( getConf(), WARCIndexerRunner.class );
-		
+
 		// Get the job configuration:
-		this.createJobConf(conf, args);
-		
+		this.createJobConf( conf, args );
+
 		// Submit it:
 		JobClient client = new JobClient( conf );
 		client.submitJob( conf );
-		
+
 		return 0;
+	}
+
+	@SuppressWarnings( "static-access" )
+	private void setup( String[] args ) throws ParseException {
+		Options options = new Options();
+		options.addOption( "i", true, "input file list" );
+		options.addOption( "o", true, "output directory" );
+		options.addOption( "d", false, "dump configuration" );
+		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
+
+		CommandLineParser parser = new PosixParser();
+		CommandLine cmd = parser.parse( options, args );
+		if( !cmd.hasOption( "i" ) || !cmd.hasOption( "o" ) ) {
+			HelpFormatter helpFormatter = new HelpFormatter();
+			helpFormatter.setWidth( 80 );
+			helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, "" );
+			System.exit( 1 );
+		}
+		this.inputPath = cmd.getOptionValue( "i" );
+		this.outputPath = cmd.getOptionValue( "o" );
+		this.dumpConfig = cmd.hasOption( "d" );
 	}
 
 	/**
@@ -115,13 +153,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main( String[] args ) throws Exception {
-		if( !( args.length > 0 ) ) {
-			System.out.println( "Need input file.list and output dir!" );
-			System.exit( 0 );
-
-		}
 		int ret = ToolRunner.run( new WARCIndexerRunner(), args );
-
 		System.exit( ret );
 	}
 

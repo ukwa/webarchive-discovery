@@ -111,6 +111,7 @@ public class WARCIndexerRunnerTest {
 		LOG.info("Copy completed.");
 	}
 
+	@SuppressWarnings( "deprecation" )
 	@Test
 	public void testFullIndexerJob() throws Exception {
 		// prepare for test
@@ -124,7 +125,7 @@ public class WARCIndexerRunnerTest {
 		
 		// Set up arguments for the job:
 		// FIXME The input file could be written by this test.
-		String[] args = {"src/test/resources/test-inputs.txt", this.output.getName()};
+		String[] args = { "-i", "src/test/resources/test-inputs.txt", "-o", this.output.getName()};
 		
 		// Set up the WARCIndexerRunner
 		WARCIndexerRunner wir = new WARCIndexerRunner();
