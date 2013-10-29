@@ -99,6 +99,8 @@ public class WARCIndexer {
 	private boolean extractLinkHosts = true;
 	private boolean extractLinks = false;
 	private boolean extractElementsUsed = true;
+	private boolean extractContentFirstBytes = true;
+	private int firstBytesLength = 32;
 	
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
@@ -126,6 +128,9 @@ public class WARCIndexer {
 		this.extractLinks                 = conf.getBoolean("warc.index.extract.linked.resources" );
 		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.linked.hosts" );
 		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.linked.domains" );
+		this.extractElementsUsed          = conf.getBoolean("warc.index.extract.content.elements_used" );
+		this.extractContentFirstBytes     = conf.getBoolean("warc.index.extract.content.first_bytes.enabled" );
+		this.firstBytesLength             = conf.getInt("warc.index.extract.content.first_bytes.num_bytes" );
 		this.runDroid                     = conf.getBoolean("warc.index.id.droid.enabled" );
 		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.useResourceURI");
 		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly" );
@@ -294,10 +299,9 @@ public class WARCIndexer {
 			}
 						
 			// Pull out the first few bytes, to hunt for new format by magic:
-			int MAX_FIRST_BYTES = 32;
 			try {
 				tikainput.reset();
-				byte[] ffb = new byte[MAX_FIRST_BYTES];
+				byte[] ffb = new byte[this.firstBytesLength];
 				int read = tikainput.read(ffb);
 				if( read >= 4 ) {
 					String hexBytes = Hex.encodeHexString(ffb);
@@ -307,7 +311,9 @@ public class WARCIndexer {
 						separatedHexBytes.append(hexByte);
 						separatedHexBytes.append(" ");
 					}
-					solr.addField(SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim());
+					if( this.extractContentFirstBytes ) {
+						solr.addField(SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim());
+					}
 				}
 			} catch( IOException i ) {
 				log.error( i + ": " +i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
