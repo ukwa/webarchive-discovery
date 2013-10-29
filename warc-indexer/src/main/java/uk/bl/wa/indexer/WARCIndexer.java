@@ -204,18 +204,11 @@ public class WARCIndexer {
 			if( this.checkExclusionFilter(fullUrl) == false) return null;
 			
 			// Check the record type:
-			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
-			
+			log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
 			// By checking if KEY_TYPE is there, we accept all ARC records, or WARC records of type response.
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
-			
-			/*
-			for( String h : header.getHeaderFields().keySet()) {
-				log.debug("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
-			}
-			*/
 			
 			// Basic headers
 			

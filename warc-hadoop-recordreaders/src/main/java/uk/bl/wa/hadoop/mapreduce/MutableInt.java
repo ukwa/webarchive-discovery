@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop;
+package uk.bl.wa.hadoop.mapreduce;
 
 /**
  * 
