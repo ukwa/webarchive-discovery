@@ -115,6 +115,12 @@ public class WARCIndexerTest {
 		this.testFilterBehaviour(path, response_includes, 20);
 	}
 	
+	/**
+	 * 
+	 * @throws MalformedURLException
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
 	@Test
 	public void testExclusionFilter() throws MalformedURLException, NoSuchAlgorithmException, IOException {
 		Config config = ConfigFactory.load();

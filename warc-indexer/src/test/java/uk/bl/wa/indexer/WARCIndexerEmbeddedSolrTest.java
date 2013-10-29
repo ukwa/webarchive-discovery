@@ -69,6 +69,14 @@ public class WARCIndexerEmbeddedSolrTest {
 		server.shutdown();
 	}
 
+	/**
+	 * 
+	 * @throws SolrServerException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
 	@Test
 	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
 		// Fire up a SOLR:

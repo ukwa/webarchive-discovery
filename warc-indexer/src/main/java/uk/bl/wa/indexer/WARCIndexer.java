@@ -196,11 +196,12 @@ public class WARCIndexer {
 			}
 			
 			if( header.getUrl() == null ) return null;
+			String fullUrl = header.getUrl();
 			
 			// Check the filters:
-			if( this.checkProtocol(header.getUrl()) == false ) return null;
-			if( this.checkUrl(header.getUrl()) == false ) return null;
-			if( this.checkExclusionFilter(header.getUrl()) == false) return null;
+			if( this.checkProtocol(fullUrl) == false ) return null;
+			if( this.checkUrl(fullUrl) == false ) return null;
+			if( this.checkExclusionFilter(fullUrl) == false) return null;
 			
 			// Check the record type:
 			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
@@ -224,14 +225,16 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.CRAWL_YEAR,  extractYear(header.getDate()) );
 			solr.doc.setField(SolrFields.CRAWL_DATE, parseCrawlDate(waybackDate));			
 			
-			// 
-			byte[] md5digest = md5.digest( header.getUrl().getBytes( "UTF-8" ) );
+			// Basic metadata:
+			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex);
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
-			solr.doc.setField( SolrFields.SOLR_DIGEST, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
-			solr.doc.setField( SolrFields.SOLR_URL, header.getUrl() );
-			String fullUrl = header.getUrl();
+			solr.doc.setField( SolrFields.HASH, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
+			solr.doc.setField( SolrFields.SOLR_URL, fullUrl);
+			solr.doc.setField( SolrFields.HASH_AND_URL, 
+					header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) + "_" + fullUrl );
+			
 			// Also pull out the file extension, if any:
 			solr.doc.addField(SolrFields.CONTENT_TYPE_EXT, parseExtension(fullUrl) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"

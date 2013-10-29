@@ -215,7 +215,11 @@
    
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
    <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
-   
+
+   <!-- The combined hash and url of the content, so allow us to identify unchanged resources. Populated by copying. -->
+   <field name="hash_and_url" type="string" indexed="false" stored="true" multiValued="false"/>
+
+   <!-- The referring URL - not actually populated at present. -->   
    <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
    
    <!-- Core fields to be removed? -->
