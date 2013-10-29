@@ -37,6 +37,9 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.net.UURI;
 import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
+import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
+import org.archive.wayback.core.CaptureSearchResult;
+import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import com.google.common.base.Splitter;
@@ -102,6 +105,11 @@ public class WARCIndexer {
 
 	/** */
 	private PostcodeGeomapper pcg = new PostcodeGeomapper();
+	
+	/** Wayback-style URI filtering: */
+	StaticMapExclusionFilterFactory smef = null;
+
+	/* ------------------------------------------------------------ */
 
 	/** 
 	 * Default constructor, with empty configuration.
@@ -127,6 +135,19 @@ public class WARCIndexer {
 		this.protocol_includes            = conf.getStringList("warc.index.extract.protocol_include");
 		// Response codes to include:
 		this.response_includes            = conf.getStringList("warc.index.extract.response_include");
+		
+		// URL Filtering options:
+		if( conf.getBoolean("warc.index.exclusions.enabled")) {
+			smef = new StaticMapExclusionFilterFactory();
+			smef.setFile(conf.getString("warc.index.exclusions.file"));
+			smef.setCheckInterval(conf.getInt("warc.index.exclusions.check_interval"));
+			try {
+				smef.init();
+			} catch (IOException e) {
+				log.error("Failed to load exclusions file.");
+				throw new RuntimeException("StaticMapExclusionFilterFactory failed with IOException when loading "+smef.getFile());
+			}
+		}
 		
 		
 		// Instanciate required helpers:
@@ -179,6 +200,7 @@ public class WARCIndexer {
 			// Check the filters:
 			if( this.checkProtocol(header.getUrl()) == false ) return null;
 			if( this.checkUrl(header.getUrl()) == false ) return null;
+			if( this.checkExclusionFilter(header.getUrl()) == false) return null;
 			
 			// Check the record type:
 			log.info("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ) );			
@@ -188,9 +210,11 @@ public class WARCIndexer {
 				return null;
 			}
 			
+			/*
 			for( String h : header.getHeaderFields().keySet()) {
 				log.debug("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
 			}
+			*/
 			
 			// Basic headers
 			
@@ -711,6 +735,27 @@ public class WARCIndexer {
 			}
 		}
 		// Exclude
+		return false;
+	}
+	
+	private boolean checkExclusionFilter( String uri ) {
+		// Default to no exclusions:
+		if( smef == null ) return true;
+		// Otherwise:
+		ExclusionFilter ef = smef.get();
+		CaptureSearchResult r = new CaptureSearchResult();
+		//r.setOriginalUrl(uri);
+		r.setUrlKey(uri);
+		try {
+			if( ef.filterObject(r) == ExclusionFilter.FILTER_INCLUDE ) {
+				return true;
+			}
+		} catch( Exception e ) {
+			log.error("Exclusion filtering failed with exception: "+e);
+			e.printStackTrace();
+		}
+		log.debug("EXCLUDING this URL due to filter: "+uri);
+		// Exclude:
 		return false;
 	}
 	

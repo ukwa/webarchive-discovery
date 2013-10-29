@@ -7,9 +7,7 @@ It is set up to work with Apache Solr, and our schema is provided in src/main/so
 
 Using this command, it can also builds a suitable command-line tool for generating/posting Solr records from web archive files.
 
-<pre>
-    mvn clean install
-</pre>
+    $ mvn clean install
 
 Which runs like this:
 
@@ -40,7 +38,7 @@ Mostly a collection of fragments and ideas for entity extraction.
 
 What does work is the RegEx-based indexer. You can run it like this
 
-    hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
+    $ hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
   
 And it will go through the arc.gz or warc.gz files listed in ia.archive.job.1, extract all references to postcodes (using that generic RegEx), and list them to text files under the postcodes directory. They look like this:
 

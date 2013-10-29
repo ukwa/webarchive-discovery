@@ -2,6 +2,7 @@ package uk.bl.wa.indexer;
 
 import static org.junit.Assert.*;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
@@ -113,16 +114,46 @@ public class WARCIndexerTest {
 		response_includes.add("3");
 		this.testFilterBehaviour(path, response_includes, 20);
 	}
+	
+	@Test
+	public void testExclusionFilter() throws MalformedURLException, NoSuchAlgorithmException, IOException {
+		Config config = ConfigFactory.load();
+		// Enable excusion:
+		config = this.modifyValueAt(config, "warc.index.exclusions.enabled", true);
+		// config exclusion file:
+		File exclusions_file = new File("src/test/resources/exclusion_test.txt");
+		assertEquals( true, exclusions_file.exists());
+		config = this.modifyValueAt(config, "warc.index.exclusions.file", 
+				exclusions_file.getAbsolutePath() );
+		// config check interval:
+		config = this.modifyValueAt(config, "warc.index.exclusions.check_interval", 600);
 
+		// And run the trial:
+		this.testFilterBehaviourWithConfig(config, 32);		
+	}
+
+	/* ------------------------------------------------------------ */
+	
 	/*
-	 * Internal implementation of filter test core.
+	 * Internal implementations of filter test core methods.
 	 */
+	
+	/* ------------------------------------------------------------ */
+	
 	private void testFilterBehaviour(String path, Object newValue, int expectedNullCount ) throws MalformedURLException, IOException, NoSuchAlgorithmException {
 		// Override the config:
 		Config config = ConfigFactory.load();
+		Config config2 = this.modifyValueAt(config, path, newValue);
+		// And invoke:
+		this.testFilterBehaviourWithConfig(config2, expectedNullCount);
+	}
+	
+	private Config modifyValueAt(Config config, String path, Object newValue ) {
 		ConfigValue value = ConfigValueFactory.fromAnyRef( newValue );
-		Config config2 = config.withValue(path, value);
-		
+		return config.withValue(path, value);
+	}
+	
+	private void testFilterBehaviourWithConfig(Config config2, int expectedNullCount ) throws MalformedURLException, IOException, NoSuchAlgorithmException {
 		// Instanciate the indexer:
 		WARCIndexer windex = new WARCIndexer(config2);
 		
