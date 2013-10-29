@@ -144,7 +144,7 @@ public class WARCIndexerEmbeddedSolrTest {
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract("",rec, true);
+			SolrRecord doc = windex.extract("",rec);
 			if( doc != null ) {
 				//WARCIndexer.prettyPrintXML(ClientUtils.toXML(doc.doc));
 				//break;

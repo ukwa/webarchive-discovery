@@ -172,7 +172,7 @@ public class WARCIndexerTest {
 		// Iterate though each record in the WARC file
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract("",rec, false);
+			SolrRecord doc = windex.extract("",rec);
 			recordCount++;
 			if( doc == null ) {
 				nullCount++;

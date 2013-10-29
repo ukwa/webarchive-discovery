@@ -98,6 +98,7 @@ public class WARCIndexer {
 	private boolean extractLinkDomains = true;
 	private boolean extractLinkHosts = true;
 	private boolean extractLinks = false;
+	private boolean extractText = true;
 	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
@@ -128,6 +129,7 @@ public class WARCIndexer {
 		this.extractLinks                 = conf.getBoolean("warc.index.extract.linked.resources" );
 		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.linked.hosts" );
 		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.linked.domains" );
+		this.extractText                  = conf.getBoolean("warc.index.extract.content.text" );
 		this.extractElementsUsed          = conf.getBoolean("warc.index.extract.content.elements_used" );
 		this.extractContentFirstBytes     = conf.getBoolean("warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength             = conf.getInt("warc.index.extract.content.first_bytes.num_bytes" );
@@ -178,9 +180,9 @@ public class WARCIndexer {
 	 * @throws IOException
 	 */
 	public SolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
-		return extract(archiveName, record, true);
+		return this.extract(archiveName, record, this.extractText );
 	}
-	
+
 	/**
 	 * This extracts metadata from the ArchiveRecord and creates a suitable SolrRecord.
 	 * Removes the text field if flag set.
@@ -191,7 +193,7 @@ public class WARCIndexer {
 	 * @return
 	 * @throws IOException
 	 */
-	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
+	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		SolrRecord solr = new SolrRecord();
 		
