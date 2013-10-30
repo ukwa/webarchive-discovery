@@ -1,38 +1,23 @@
+/**
+ * 
+ */
 package uk.bl.wa.util.solr;
 
-/**
- * Writable wrapper for SolrInputDocument.
- */
-
-import java.io.DataInput;
-import java.io.DataOutput;
-import java.io.IOException;
 import java.io.Serializable;
 
-import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 
-public class WritableSolrRecord implements Writable, Serializable {
-	private static final long serialVersionUID = -3409886058494054406L;
+/**
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
+public class SolrRecord implements Serializable {
 
+	private static final long serialVersionUID = -4556484652176976470L;
+	
 	public SolrInputDocument doc = new SolrInputDocument();
-
-	@Override
-	public void readFields( DataInput input ) throws IOException {
-		int length = input.readInt();
-		byte[] bytes = new byte[ length ];
-		input.readFully( bytes );
-		this.doc = ( SolrInputDocument ) SerializationUtils.deserialize( bytes );
-	}
-
-	@Override
-	public void write( DataOutput output ) throws IOException {
-		byte[] bytes = SerializationUtils.serialize( doc );
-		output.writeInt( bytes.length );
-		output.write( bytes );
-	}
 
 	public String toXml() {
 		return ClientUtils.toXML( doc );
@@ -86,4 +71,5 @@ public class WritableSolrRecord implements Writable, Serializable {
 		if( value != null )
 			doc.setField( solr_property, sanitizeString(solr_property, value) );
 	}
+	
 }

@@ -6,26 +6,29 @@ This code runs Apache Tika on WARC and ARC records and extracts suitable metadat
 It is set up to work with Apache Solr, and our schema is provided in src/main/solr. The tests are able to spin-up an embedded Solr instance to verify the configuration and regression-test the indexer at the query level.
 
 Using this command, it can also builds a suitable command-line tool for generating/posting Solr records from web archive files.
-<pre>
-    mvn clean install -Pcli-util
-</pre>
+
+    $ mvn clean install
 
 Which runs like this:
 
-<pre>
-    java -jar target/warc-indexer-1.0.0-SNAPSHOT-jar-with-dependencies.jar target \
+    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar target \
     --update-solr-server=http://localhost:8080/ \
     src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
-</pre>
 
-Also contains short ARC and WARC test files, generated using JWATTools from https://webarchive.jira.com/wiki/pages/viewpage.action?pageId=4817
-(decompress, truncate at Bob image GET, recompress).
+TBA configuration HOW TO.
 
-Issues
-------
+To print the default configuration:
 
-- Dependency on org.apache.hadoop: 
-    - These classes depend directly on Hadoop for Configuration and for the Writable interface that the WritableSolrRecord uses. This is rather clumsy. It would be preferable if there were no Hadoop dependencies here.
+    $ java -cp target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar uk.bl.wa.util.ConfigPrinter
+
+To override the default with a new configuration:
+
+    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar -Dconfig.file=new.conf \
+    target --update-solr-server=http://localhost:8080/ \
+    src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
+
+
+Note that this project also contains short ARC and WARC test files, taken from the [warc-test-corpus]
 
 
 EntityIndexer
@@ -35,9 +38,7 @@ Mostly a collection of fragments and ideas for entity extraction.
 
 What does work is the RegEx-based indexer. You can run it like this
 
-<pre>
-hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
-</pre>
+    $ hadoop jar EntityIndexer-0.0.1-SNAPSHOT-job.jar uk.bl.wap.hadoop.regex.WARCRegexIndexer ia.archives.job.1 postcodes "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}"
   
 And it will go through the arc.gz or warc.gz files listed in ia.archive.job.1, extract all references to postcodes (using that generic RegEx), and list them to text files under the postcodes directory. They look like this:
 

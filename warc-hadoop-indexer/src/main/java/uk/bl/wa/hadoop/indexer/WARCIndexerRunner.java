@@ -33,7 +33,6 @@ import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.util.solr.WritableSolrRecord;
 
 /**
  * WARCIndexerRunner

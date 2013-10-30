@@ -1,0 +1,2 @@
+inputs/IAH-20080430204825-00000-blackbook-truncated.arc.gz
+inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz

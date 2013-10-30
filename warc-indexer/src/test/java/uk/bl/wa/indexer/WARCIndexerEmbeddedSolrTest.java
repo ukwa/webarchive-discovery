@@ -31,7 +31,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.util.solr.WritableSolrRecord;
+import uk.bl.wa.util.solr.SolrRecord;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -69,6 +69,14 @@ public class WARCIndexerEmbeddedSolrTest {
 		server.shutdown();
 	}
 
+	/**
+	 * 
+	 * @throws SolrServerException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws TransformerFactoryConfigurationError
+	 * @throws TransformerException
+	 */
 	@Test
 	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
 		// Fire up a SOLR:
@@ -136,7 +144,7 @@ public class WARCIndexerEmbeddedSolrTest {
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
-			WritableSolrRecord doc = windex.extract("",rec, true);
+			SolrRecord doc = windex.extract("",rec);
 			if( doc != null ) {
 				//WARCIndexer.prettyPrintXML(ClientUtils.toXML(doc.doc));
 				//break;

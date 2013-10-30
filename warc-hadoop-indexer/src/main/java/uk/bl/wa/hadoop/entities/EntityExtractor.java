@@ -19,7 +19,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.log4j.Logger;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.FrequencyCountingReducer;
+import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
 
 /**
  * EntityExtractor:

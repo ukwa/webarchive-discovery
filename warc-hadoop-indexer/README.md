@@ -17,7 +17,19 @@ We use [Typesafe config][1], so to override the settings, add this parameter whe
 
 e.g.
 
-    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wa.hadoop.indexer.WARCIndexerRunner input_list.txt hdfs_output_folder -Dconfig.file=configs/jisc.conf
+    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wa.hadoop.indexer.WARCIndexerRunner -Dconfig.file=configs/jisc.conf input_list.txt hdfs_output_folder 
 
+where input_list.txt is the list of HDFS file paths of the ARCs and WARCs you want to index, and hdfs_output_folder is where you would like the logs and summary output to be placed.
+
+Checking the config
+-------------------
+
+To output the default config, you can print the run-time configuration using this:
+
+    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wa.util.ConfigPrinter
+
+or to check your supplied configuration is kicking in:
+
+    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar -Dconfig.file=configs/jisc.conf uk.bl.wa.util.ConfigPrinter 
 
 [1]: https://github.com/typesafehub/config

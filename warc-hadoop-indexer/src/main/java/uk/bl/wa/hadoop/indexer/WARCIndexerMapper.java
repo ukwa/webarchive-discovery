@@ -26,7 +26,7 @@ import org.jdom.input.SAXBuilder;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.WritableSolrRecord;
+import uk.bl.wa.util.solr.SolrRecord;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -85,11 +85,10 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	@Override
 	public void map( Text key, WritableArchiveRecord value, OutputCollector<Text, WritableSolrRecord> output, Reporter reporter ) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
-		WritableSolrRecord solr = new WritableSolrRecord();
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			solr = windex.extract( key.toString(), value.getRecord() );
-
+			SolrRecord solr = windex.extract( key.toString(), value.getRecord() );
+			
 			if( solr == null ) {
 				LOG.debug( "WARCIndexer returned NULL for: " + header.getUrl() );
 				return;
@@ -101,7 +100,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				processCollectionScopes( uri, solr );
 				oKey = uri.getHost();
 				if( oKey != null )
-					output.collect( new Text( oKey ), solr );
+					output.collect( new Text( oKey ), new WritableSolrRecord(solr) );
 			} catch( Exception e ) {
 				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}
@@ -116,7 +115,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	 * @param solr
 	 * @throws URISyntaxException 
 	 */
-	private void processCollectionScopes( URI uri, WritableSolrRecord solr ) throws URISyntaxException {
+	private void processCollectionScopes( URI uri, SolrRecord solr ) throws URISyntaxException {
 		// "Just this URL".
 		if( collections.get( "resource" ).keySet().contains( uri.toString() ) ) {
 			updateCollections( collections.get( "resource" ).get( uri.toString() ), solr );
@@ -137,7 +136,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 		}
 	}
 
-	private void updateCollections( UriCollection collection, WritableSolrRecord solr ) {
+	private void updateCollections( UriCollection collection, SolrRecord solr ) {
 		// Update the single, main collection
 		solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
 		// Iterate over the hierarchical collections
