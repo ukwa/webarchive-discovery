@@ -9,19 +9,15 @@
       <unpack>false</unpack>
       <scope>runtime</scope>
       <outputDirectory>lib</outputDirectory>
-<!--
       <excludes>
-        <exclude>${groupId}:${artifactId}</exclude>
+        <exclude>uk.bl.wa.discovery:warc-hadoop-indexer</exclude>
       </excludes>
--->
     </dependencySet>
-<!--
     <dependencySet>
       <unpack>true</unpack>
       <includes>
-        <include>${groupId}:${artifactId}</include>
+        <include>uk.bl.wa.discovery:warc-hadoop-indexer</include>
       </includes>
     </dependencySet>
--->
   </dependencySets>
 </assembly>

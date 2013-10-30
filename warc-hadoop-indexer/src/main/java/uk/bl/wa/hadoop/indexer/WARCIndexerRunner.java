@@ -3,6 +3,10 @@ package uk.bl.wa.hadoop.indexer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.net.URLConnection;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -33,7 +37,7 @@ import uk.bl.wa.util.solr.WritableSolrRecord;
 
 /**
  * WARCIndexerRunner
- * Extracts text/metadata using  from a series of Archive files.
+ * Extracts text/metadata using from a series of Archive files.
  * 
  * @author rcoram
  */
@@ -47,14 +51,14 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 	private String inputPath;
 	private String outputPath;
-	private boolean dumpConfig;
+	private boolean readAct;
 
 	/**
 	 * 
 	 * @param args
 	 * @return
 	 * @throws IOException
-	 * @throws ParseException 
+	 * @throws ParseException
 	 */
 	protected void createJobConf( JobConf conf, String[] args ) throws IOException, ParseException {
 		// Parse the command-line parameters.
@@ -65,10 +69,9 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.set( CONFIG_PROPERTIES, index_conf.withOnlyPath( "warc" ).root().render( ConfigRenderOptions.concise() ) );
 		LOG.info( "Loaded warc config." );
 
-		if( this.dumpConfig ) {
-			LOG.info( "Dumping warc config." );
-			System.out.println( index_conf.withOnlyPath( "warc" ).root().render() );
-			System.exit( 0 );
+		// Pull in ACT metadata
+		if( this.readAct ) {
+			conf.set( "warc.act.xml", readAct( index_conf ) );
 		}
 
 		// Also set mapred speculative execution off:
@@ -94,7 +97,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 		FileOutputFormat.setOutputPath( conf, new Path( this.outputPath ) );
 
-		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
+		conf.setJobName( this.inputPath + "_" + System.currentTimeMillis() );
 		conf.setInputFormat( ArchiveFileInputFormat.class );
 		conf.setMapperClass( WARCIndexerMapper.class );
 		conf.setReducerClass( WARCIndexerReducer.class );
@@ -105,6 +108,25 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setOutputValueClass( Text.class );
 		conf.setMapOutputValueClass( WritableSolrRecord.class );
 		conf.setNumReduceTasks( numReducers );
+	}
+
+	/**
+	 * Read data from ACT to include curator-specified metadata.
+	 * @param conf
+	 * @return
+	 * @throws MalformedURLException
+	 * @throws IOException
+	 */
+	protected String readAct( Config conf ) throws MalformedURLException, IOException {
+		URL act = new URL( conf.getString( "warc.act.url" ) );
+		URLConnection connection = act.openConnection();
+		BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
+		String inputLine;
+		StringBuilder builder = new StringBuilder();
+		while( ( inputLine = in.readLine() ) != null )
+			builder.append( inputLine );
+		in.close();
+		return builder.toString();
 	}
 
 	/**
@@ -131,7 +153,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		Options options = new Options();
 		options.addOption( "i", true, "input file list" );
 		options.addOption( "o", true, "output directory" );
-		options.addOption( "d", false, "dump configuration" );
+		options.addOption( "a", false, "read data from ACT" );
 		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
@@ -144,7 +166,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		}
 		this.inputPath = cmd.getOptionValue( "i" );
 		this.outputPath = cmd.getOptionValue( "o" );
-		this.dumpConfig = cmd.hasOption( "d" );
+		this.readAct = cmd.hasOption( "a" );
 	}
 
 	/**

@@ -2,7 +2,9 @@ package uk.bl.wa.hadoop.indexer;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -14,7 +16,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.common.SolrException;
+import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
@@ -28,6 +30,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
 	private CloudSolrServer solrServer;
+	private int batchSize;
 	private String collection;
 	private boolean dummyRun;
 
@@ -41,13 +44,14 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 		this.collection = conf.getString( "warc.solr.collection" );
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
+		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
 			if( !dummyRun ) {
 				solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeeper" ) );
 				solrServer.setDefaultCollection( collection );
 			}
 		} catch( MalformedURLException e ) {
-			e.printStackTrace();
+			log.error( "WARCIndexerReducer.configure(): " + e.getMessage() );
 		}
 	}
 
@@ -56,24 +60,44 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		WritableSolrRecord solr;
 		WctEnricher wct;
 
+		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 		while( values.hasNext() ) {
 			solr = values.next();
 			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
 				wct = new WctEnricher( key.toString() );
 				wct.addWctMetadata( solr );
 			}
-			try {
-				if( !dummyRun ) {
-					this.solrServer.add( solr.doc );
-				} else {
-					log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
-				}
-			} catch( SolrServerException e ) {
-				e.printStackTrace();
-			} catch( SolrException e ) {
-				// To catch the protected RemoteSolrException (which extends SolrException).
-				e.printStackTrace();
+			if( !dummyRun ) {
+				docs.add( solr.doc );
+				// Have we exceeded the batchSize?
+				checkSubmission( docs, batchSize );
+			} else {
+				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
 			}
+		}
+		if( !dummyRun ) {
+			// Have we any unsubmitted SolrInputDocuments?
+			checkSubmission( docs, 0 );
+		}
+	}
+
+	/**
+	 * Checks whether a List of docs has exceeded a given limit
+	 * and if so, submits them.
+	 * 
+	 * @param docs
+	 * @param limit
+	 */
+	private void checkSubmission( List<SolrInputDocument> docs, int limit ) {
+		if( docs.size() > 0 && docs.size() >= limit ) {
+			try {
+				solrServer.add( docs );
+			} catch( SolrServerException e ) {
+				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
+			} catch( IOException i ) {
+				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
+			}
+			docs.clear();
 		}
 	}
 }
