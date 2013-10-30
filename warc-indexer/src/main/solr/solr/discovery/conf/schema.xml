@@ -121,7 +121,7 @@
        "resourcename": From SolrCell request param resource.name
    -->
    <field name="title" type="text_general" indexed="true" stored="true" multiValued="true"/>
-   <field name="subject" type="text_general" indexed="true" stored="true"/>
+   <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/> <!-- BL made multi-valued. -->
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
    <field name="author" type="string" indexed="true" stored="true"/>
@@ -231,8 +231,11 @@
    <!-- The publication year, for faceting -->
    <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
    
-   <!-- Collections this item belongs to -->
+   <!-- Collections this item belongs to (top-level, not sub-collections) -->
    <field name="collections" type="string" indexed="true" stored="true" multiValued="true"/>
+   
+   <!-- All collections and sub-collections this item belongs to -->
+   <field name="all_collections" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
