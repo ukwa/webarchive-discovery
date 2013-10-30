@@ -288,15 +288,6 @@ public class WARCIndexer {
 				}
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
-				if( statusCode == null || !statusCode.startsWith( "2" ) ) {
-					log.error( "Skipping this record as statusCode != 2xx: " + header.getUrl() );
-					return null;
-				}
-				// No need for this, as the headers have already been read from the InputStream (above):
-				// WARCRecordUtils.getPayload(record);
-				tikainput = record;
-
-				// Skip recording non-content URLs (i.e. 2xx responses only please):
 				if( this.checkResponseCode(statusCode) == false ) {
 					log.error("Skipping this record based on status code "+statusCode+": "+header.getUrl());
 					return null;
