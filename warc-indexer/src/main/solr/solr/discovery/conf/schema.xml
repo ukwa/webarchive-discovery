@@ -232,10 +232,10 @@
    <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
    
    <!-- Collections this item belongs to (top-level, not sub-collections) -->
-   <field name="collections" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="collection" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- All collections and sub-collections this item belongs to -->
-   <field name="all_collections" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="collections" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
