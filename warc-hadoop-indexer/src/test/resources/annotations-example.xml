@@ -1,52 +1,52 @@
 <nodes>
-<node>
-<title>Yorkshire Cancer Network</title>
-<author>Jennie Grimshaw</author>
-<collectionCategories>Cancer Networks</collectionCategories>
-<allCollections>
-Cancer Networks|NHS|Health and Social Care Act 2012 - NHS Reforms
-</allCollections>
-<subject/>
-<organisation>The British Library</organisation>
-<crawlFrequency>monthly</crawlFrequency>
-<depth>capped</depth>
-<ignoreRobots.txt/>
-<urls>http://www.yorkshire-cancer-net.org.uk</urls>
-<crawlStartDate>2013-04-08T12:00:00</crawlStartDate>
-<crawlEndDate/>
-<actLink>http://www.webarchive.org.uk/act/node/1941</actLink>
-<scope>root</scope>
-</node>
-<node>
-<title>Local Government Association</title>
-<author>admin</author>
-<collectionCategories/>
-<allCollections/>
-<subject>Government, Law & Politics</subject>
-<organisation/>
-<crawlFrequency>monthly</crawlFrequency>
-<depth>capped</depth>
-<ignoreRobots.txt/>
-<urls>http://www.local.gov.uk/</urls>
-<crawlStartDate>2013-07-29T10:00:00</crawlStartDate>
-<crawlEndDate/>
-<actLink>http://www.webarchive.org.uk/act/node/6423</actLink>
-<scope>root</scope>
-</node>
-<node>
-<title>Our Big Energy Challenge</title>
-<author>RMistry</author>
-<collectionCategories/>
-<allCollections/>
-<subject/>
-<organisation/>
-<crawlFrequency>monthly</crawlFrequency>
-<depth>capped</depth>
-<ignoreRobots.txt/>
-<urls>http://www.bigenergychallenge.org/</urls>
-<crawlStartDate>2013-08-08T12:00:00</crawlStartDate>
-<crawlEndDate>2014-03-08T14:00:00</crawlEndDate>
-<actLink>http://www.webarchive.org.uk/act/node/6575</actLink>
-<scope>root</scope>
-</node>
+   <node>
+      <title>Yorkshire Cancer Network</title>
+      <author>Jennie Grimshaw</author>
+      <collectionCategories>Cancer Networks</collectionCategories>
+      <allCollections>
+         Cancer Networks|NHS|Health and Social Care Act 2012 - NHS Reforms
+      </allCollections>
+      <subject />
+      <organisation>The British Library</organisation>
+      <crawlFrequency>monthly</crawlFrequency>
+      <depth>capped</depth>
+      <ignoreRobots.txt />
+      <urls>http://www.yorkshire-cancer-net.org.uk</urls>
+      <crawlStartDate>2013-04-08T12:00:00</crawlStartDate>
+      <crawlEndDate />
+      <actLink>http://www.webarchive.org.uk/act/node/1941</actLink>
+      <scope>root</scope>
+   </node>
+   <node>
+      <title>Local Government Association</title>
+      <author>admin</author>
+      <collectionCategories />
+      <allCollections />
+      <subject>Government, Law & Politics</subject>
+      <organisation />
+      <crawlFrequency>monthly</crawlFrequency>
+      <depth>capped</depth>
+      <ignoreRobots.txt />
+      <urls>http://www.local.gov.uk/</urls>
+      <crawlStartDate>2013-07-29T10:00:00</crawlStartDate>
+      <crawlEndDate />
+      <actLink>http://www.webarchive.org.uk/act/node/6423</actLink>
+      <scope>root</scope>
+   </node>
+   <node>
+      <title>Our Big Energy Challenge</title>
+      <author>RMistry</author>
+      <collectionCategories />
+      <allCollections />
+      <subject />
+      <organisation />
+      <crawlFrequency>monthly</crawlFrequency>
+      <depth>capped</depth>
+      <ignoreRobots.txt />
+      <urls>http://www.bigenergychallenge.org/</urls>
+      <crawlStartDate>2013-08-08T12:00:00</crawlStartDate>
+      <crawlEndDate>2014-03-08T14:00:00</crawlEndDate>
+      <actLink>http://www.webarchive.org.uk/act/node/6575</actLink>
+      <scope>root</scope>
+   </node>
 </nodes>
