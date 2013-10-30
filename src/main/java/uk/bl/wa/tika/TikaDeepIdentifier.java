@@ -151,7 +151,7 @@ public class TikaDeepIdentifier {
 		Metadata md = metadata;
 		try {
 			// Type according to Tiki:
-			tikaType = pika.getDetector().detect( TikaInputStream.get( payload ), metadata ).toString();
+			tikaType = pika.getDetector().detect( TikaInputStream.get( payload ), md ).toString();
 		} catch( Throwable e ) {
 			log.error( "Tika.detect failed:" + e.getMessage() );
 			//e.printStackTrace();
