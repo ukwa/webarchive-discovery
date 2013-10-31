@@ -41,7 +41,7 @@ public class TikaDeepIdentifier {
 	
 	private static Logger log = Logger.getLogger(TikaDeepIdentifier.class.getName());
 	
-	private static int MAX_BUF = 64*1024;
+	private static int MAX_BUF = 1024*1024;
 
 	// Number of milliseconds before timing out. Defaults to 5 mins (5*60*1000 = 300,000 milliseconds).
 	private final long parseTimeout = 5*60*1000L;

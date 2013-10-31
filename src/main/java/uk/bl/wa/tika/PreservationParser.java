@@ -124,24 +124,27 @@ public class PreservationParser extends AutoDetectParser {
 
 		// Pick up the detected MIME Type passed in from above:
 		String providedType = metadata.get( Metadata.CONTENT_TYPE );
-		log.warn("Supplied hint, providedType = " + providedType);
+		log.info("Supplied hint, providedType = " + providedType);
 		
-		/* */
+		/* debug info
 		String[] names = metadata.names();
 		Arrays.sort(names);
 		for( String name : names ) {
 			System.out.println("PPPPre : "+name+" = "+metadata.get(name));
 		}
+		 */
 
 		// Parse:
 		super.parse(stream, handler, metadata, context);
 		
+		/* Debug info
 		names = metadata.names();
 		Arrays.sort(names);
 		for( String name : names ) {
 			System.out.println("PPPPost : "+name+" = "+metadata.get(name));
 		}
-		/* */
+		 */
+		
 		// Build the extended MIME Type, incorporating version and creator software etc.
 		MediaType tikaType = null;
 		try {
