@@ -3,7 +3,7 @@
    <parent>
       <groupId>eu.scape-project.nanite</groupId>
       <artifactId>nanite</artifactId>
-      <version>1.0.70.1</version>
+      <version>1.0.70.2-SNAPSHOT</version>
       <relativePath>..</relativePath>
    </parent>
    <artifactId>nanite-ext</artifactId>
@@ -109,7 +109,7 @@
       <dependency>
          <groupId>eu.scape-project.nanite</groupId>
          <artifactId>nanite-core</artifactId>
-         <version>1.0.70.1</version>
+         <version>1.0.70.2-SNAPSHOT</version>
       </dependency>
       <dependency>
          <groupId>org.openimaj</groupId>
