@@ -672,7 +672,7 @@ public class WARCIndexer {
 		}
 
 		// Allow header MIME
-		if( contentType.isEmpty() ) {
+		if( contentType != null && contentType.isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
 				contentType = ( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) );
 			} else {
