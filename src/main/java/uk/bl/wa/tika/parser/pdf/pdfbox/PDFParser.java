@@ -286,8 +286,8 @@ public class PDFParser extends AbstractParser {
      */
     private void addMetadata(Metadata metadata, String name, COSBase value) {
         if(value instanceof COSArray) {
-            for(COSBase v : ((COSArray)value).toList()) {
-                addMetadata(metadata, name, v);
+            for(Object v : ((COSArray)value).toList()) {
+                addMetadata(metadata, name, (COSBase)v);
             }
         } else if(value instanceof COSString) {
             addMetadata(metadata, name, ((COSString)value).getString());
