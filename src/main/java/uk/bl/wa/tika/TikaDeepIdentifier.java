@@ -30,6 +30,7 @@ import org.apache.tika.parser.CompositeParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.xml.sax.ContentHandler;
+import org.xml.sax.helpers.DefaultHandler;
 
 
 
@@ -173,6 +174,9 @@ public class TikaDeepIdentifier {
 			//parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
 			// One could forcibly limit the size if OOM is still causing problems, like this:
 			//parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
+
+			// Every resource gets it's own write-out buffer:
+			ch = new WriteOutContentHandler(MAX_BUF);
 			
 			// Run the parser in a separate thread:
 			InputStream tikainput = TikaInputStream.get( payload );
