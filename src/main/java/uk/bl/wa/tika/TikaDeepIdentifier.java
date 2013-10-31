@@ -47,7 +47,7 @@ public class TikaDeepIdentifier {
 	private final long parseTimeout = 5*60*1000L;
 
 	// Abort handler, limiting the output size, to avoid OOM:
-	private static WriteOutContentHandler ch = new WriteOutContentHandler(MAX_BUF);
+	private static WriteOutContentHandler ch = null;
 	// Silent handler:
 	//ContentHandler ch = new DefaultHandler();
 	
@@ -111,7 +111,10 @@ public class TikaDeepIdentifier {
 			//parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
 			// One could forcibly limit the size if OOM is still causing problems, like this:
 			//parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
-			
+
+			// Every resource gets it's own write-out buffer:
+			ch = new WriteOutContentHandler(MAX_BUF);
+
 			// Run the parser in a separate thread:
 			InputStream tikainput = TikaInputStream.get( payload, md );
 			ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
