@@ -15,7 +15,7 @@
   </logger>
 	
   <!--  Increase logging from this code  -->
-  <logger name="uk.bl.wap">
+  <logger name="uk.bl.wa">
     <level value="info"/> 
   </logger>
 	
