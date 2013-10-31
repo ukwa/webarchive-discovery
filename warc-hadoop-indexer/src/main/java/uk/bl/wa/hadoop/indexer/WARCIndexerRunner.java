@@ -27,12 +27,12 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import uk.bl.wa.hadoop.ArchiveFileInputFormat;
+import uk.bl.wa.hadoop.TextOutputFormat;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
-
-import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.TextOutputFormat;
 
 /**
  * WARCIndexerRunner
@@ -51,6 +51,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	private String inputPath;
 	private String outputPath;
 	private boolean readAct;
+	private boolean wait;
 
 	/**
 	 * 
@@ -70,10 +71,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 		// Pull in ACT metadata
 		if( this.readAct ) {
+			LOG.info( "Reading from ACT..." );
 			conf.set( "warc.act.xml", readAct( index_conf ) );
+			LOG.info( "Read " + conf.get( "warc.act.xml" ).length() + " bytes." );
 		}
 
-		// Also set mapred speculative execution off:
+		// Also set reduce speculative execution off, avoiding duplicate submissions to Solr.
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 
 		// Reducer count dependent on concurrent HTTP connections to Solr server.
@@ -92,7 +95,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 			FileInputFormat.addInputPath( conf, new Path( line ) );
 		}
 		br.close();
-		LOG.info( "Read input files." );
+		LOG.info( "Read " + FileInputFormat.getInputPaths( conf ).length + " input files." );
 
 		FileOutputFormat.setOutputPath( conf, new Path( this.outputPath ) );
 
@@ -141,9 +144,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		this.createJobConf( conf, args );
 
 		// Submit it:
-		JobClient client = new JobClient( conf );
-		client.submitJob( conf );
-
+		if( this.wait ) {
+			JobClient.runJob( conf );
+		} else {
+			JobClient client = new JobClient( conf );
+			client.submitJob( conf );
+		}
 		return 0;
 	}
 
@@ -153,6 +159,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		options.addOption( "i", true, "input file list" );
 		options.addOption( "o", true, "output directory" );
 		options.addOption( "a", false, "read data from ACT" );
+		options.addOption( "w", false, "wait for job to finish" );
 		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
@@ -166,6 +173,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		this.inputPath = cmd.getOptionValue( "i" );
 		this.outputPath = cmd.getOptionValue( "o" );
 		this.readAct = cmd.hasOption( "a" );
+		this.wait = cmd.hasOption( "w" );
 	}
 
 	/**

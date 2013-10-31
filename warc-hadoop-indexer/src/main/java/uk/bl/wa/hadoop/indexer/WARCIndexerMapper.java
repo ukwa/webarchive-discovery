@@ -6,7 +6,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 
 import org.apache.commons.logging.Log;
@@ -37,6 +36,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 	private WARCIndexer windex;
 	private HashMap<String, HashMap<String, UriCollection>> collections;
+	private boolean processCollections = false;
 
 	private class UriCollection {
 		protected String collectionCategories;
@@ -69,7 +69,9 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			// If we're reading from ACT, parse the XML output into our collection lookup.
 			String xml = job.get( "warc.act.xml" );
 			if( xml != null ) {
-				parseCollections( xml );
+				processCollections = true;
+				LOG.info( "Parsing collection XML..." );
+				parseCollectionXml( xml );
 			}
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
@@ -88,7 +90,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			SolrRecord solr = windex.extract( key.toString(), value.getRecord() );
-			
+
 			if( solr == null ) {
 				LOG.debug( "WARCIndexer returned NULL for: " + header.getUrl() );
 				return;
@@ -97,10 +99,12 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			String oKey = null;
 			try {
 				URI uri = new URI( header.getUrl() );
-				processCollectionScopes( uri, solr );
+				if( processCollections ) {
+					processCollectionScopes( uri, solr );
+				}
 				oKey = uri.getHost();
 				if( oKey != null )
-					output.collect( new Text( oKey ), new WritableSolrRecord(solr) );
+					output.collect( new Text( oKey ), new WritableSolrRecord( solr ) );
 			} catch( Exception e ) {
 				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}
@@ -108,12 +112,12 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	}
 
 	/**
-	 * Runs through the 4 possible scopes, determining the appropriate part
+	 * Runs through the 3 possible scopes, determining the appropriate part
 	 * of the URI to match.
 	 * 
 	 * @param uri
 	 * @param solr
-	 * @throws URISyntaxException 
+	 * @throws URISyntaxException
 	 */
 	private void processCollectionScopes( URI uri, SolrRecord solr ) throws URISyntaxException {
 		// "Just this URL".
@@ -126,31 +130,53 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			updateCollections( collections.get( "root" ).get( prefix ), solr );
 		}
 		// "All URLs that match match this host or any subdomains".
+		String host;
 		String domain = uri.getHost().replaceAll( "^www\\.", "" );
 		HashMap<String, UriCollection> subdomains = collections.get( "subdomains" );
-		Iterator<String> iKeys = subdomains.keySet().iterator();
-		while( iKeys.hasNext() ) {
-			if( new URI( iKeys.next() ).getHost().endsWith( domain ) ) {
-				updateCollections( subdomains.get( iKeys.next() ), solr );
+		for( String key : subdomains.keySet() ) {
+			host = new URI( key ).getHost();
+			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
+				updateCollections( subdomains.get( key ), solr );
 			}
 		}
 	}
 
+	/**
+	 * Updates a given SolrRecord with collections details from a UriCollection.
+	 * @param collection
+	 * @param solr
+	 */
 	private void updateCollections( UriCollection collection, SolrRecord solr ) {
+		LOG.info( "Updating collections for " + solr.doc.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection
-		solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
+		if( collection.collectionCategories != null && collection.collectionCategories.length() > 0 ) {
+			solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
+			LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+		}
 		// Iterate over the hierarchical collections
-		for( String col : collection.allCollections ) {
-			solr.addField( SolrFields.SOLR_COLLECTIONS, col );
+		if( collection.allCollections != null && collection.allCollections.length > 0 ) {
+			for( String col : collection.allCollections ) {
+				solr.addField( SolrFields.SOLR_COLLECTIONS, col );
+				LOG.info( "Added collection '" + col + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+			}
 		}
 		// Iterate over the subjects
-		for( String subject : collection.subject ) {
-			solr.addField( SolrFields.SOLR_SUBJECT, subject );
+		if( collection.subject != null && collection.subject.length > 0 ) {
+			for( String subject : collection.subject ) {
+				solr.addField( SolrFields.SOLR_SUBJECT, subject );
+				LOG.info( "Added collection '" + subject + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+			}
 		}
 	}
 
+	/**
+	 * Parses XML output from ACT into a lookup for further enriching records.
+	 * @param xml
+	 * @throws JDOMException
+	 * @throws IOException
+	 */
 	@SuppressWarnings( "unchecked" )
-	private void parseCollections( String xml ) throws JDOMException, IOException {
+	private void parseCollectionXml( String xml ) throws JDOMException, IOException {
 		SAXBuilder builder = new SAXBuilder();
 		Document document = ( Document ) builder.build( new StringReader( xml ) );
 		Element rootNode = document.getRootElement();
@@ -166,13 +192,18 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			allCollections = node.getChildText( "allCollections" );
 			subject = node.getChildText( "subject" );
 			scope = node.getChildText( "scope" );
+			// As long as one of the fields is populated we have something to do...
 			if( collectionCategories != null || allCollections != null || subject != null ) {
 				UriCollection collection = new UriCollection( collectionCategories, allCollections, subject );
-				for( String url : urls.split( "\\s+" ) ) {
-					relevantCollection = collections.get( scope );
+				// There should be no scope beyond those created in the Constructor.
+				relevantCollection = collections.get( scope );
+				for( String url : urls.split( "\\s+" ) ) {	
 					relevantCollection.put( url, collection );
 				}
 			}
+		}
+		for( String key : collections.keySet() ) {
+			LOG.info( "Processed " + collections.get( key ).size() + " URIs for collection " + key );
 		}
 	}
 }

@@ -23,6 +23,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
+import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -266,7 +267,11 @@ public class WARCIndexer {
 						String firstLine[] = statusLine.split( " " );
 						if( firstLine.length > 1 ) {
 							statusCode = firstLine[ 1 ].trim();
-							this.processHeaders( solr, statusCode, HttpParser.parseHeaders( record, "UTF-8" ) );
+							try {
+								this.processHeaders( solr, statusCode, HttpParser.parseHeaders( record, "UTF-8" ) );
+							} catch( ProtocolException p ) {
+								log.error( "ProtocolException [" + statusCode + "]: " + header.getHeaderValue( WARCConstants.HEADER_KEY_FILENAME ) + "@" + header.getHeaderValue( WARCConstants.ABSOLUTE_OFFSET_KEY ), p );
+							}
 						} else {
 							log.warn( "Could not parse status line: " + statusLine );
 						}
