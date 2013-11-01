@@ -565,7 +565,7 @@ public class WARCIndexer {
 			// Get the other headers:
 			for( Header h : httpHeaders ) {
 				// Get the type from the server
-				if( h.getName().equals( HttpHeaders.CONTENT_TYPE ) )
+				if( h.getName().equals( HttpHeaders.CONTENT_TYPE ) && solr.doc.getField( SolrFields.CONTENT_TYPE_SERVED ) == null )
 					solr.addField( SolrFields.CONTENT_TYPE_SERVED, h.getValue() );
 				// Also, grab the X-Powered-By or Server headers if present:
 				if( h.getName().equals( "X-Powered-By" ) )
@@ -703,7 +703,7 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
 
 		// Fall back on serverType for plain text:
-		if( contentType.startsWith( "text/plain" ) ) {
+		if( contentType != null && contentType.startsWith( "text/plain" ) ) {
 			if( serverType != null ) {
 				contentType = serverType;
 			}
