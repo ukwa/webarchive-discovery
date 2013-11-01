@@ -173,7 +173,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM.toString() );
 			return solr;
 		}
-
+		
+		// Context
 		ParseContext context = new ParseContext();
 		StringWriter content = new StringWriter();
 		
