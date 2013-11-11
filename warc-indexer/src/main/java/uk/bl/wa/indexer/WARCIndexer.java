@@ -26,6 +26,7 @@ import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -242,9 +243,16 @@ public class WARCIndexer {
 			// Also pull out the file extension, if any:
 			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
+			String[] urlParts = null;
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
-			String[] urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
+			try {
+				urlParts = canon.urlStringToKey( fullUrl ).split( "/" );
+			} catch( URIException u ) {
+				// Some URIs still causing problems in canonicalizer.
+				log.error( u.getMessage() );
+				return null;
+			}
 			// Spot 'slash pages':
 			if( urlParts.length == 1 || ( urlParts.length >= 2 && urlParts[ 1 ].matches( "^index\\.[a-z]+$" ) ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
