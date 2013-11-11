@@ -19,6 +19,8 @@ import java.util.TimeZone;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import javax.xml.namespace.QName;
+
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
@@ -29,6 +31,7 @@ import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
+import org.apache.tika.detect.XmlRootExtractor;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecord;
@@ -213,13 +216,13 @@ public class WARCIndexer {
 			if( this.checkExclusionFilter(fullUrl) == false) return null;
 			
 			// Check the record type:
-			log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
+			//log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
 			// By checking if KEY_TYPE is there, we accept all ARC records, or WARC records of type response.
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
 			
-			// Basic headers
+			// --- Basic headers ---
 
 			// Dates
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
@@ -302,7 +305,7 @@ public class WARCIndexer {
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
 				if( this.checkResponseCode(statusCode) == false ) {
-					log.error("Skipping this record based on status code "+statusCode+": "+header.getUrl());
+					log.info("Skipping this record based on status code "+statusCode+": "+header.getUrl());
 					return null;
 				}
 			}
@@ -341,6 +344,20 @@ public class WARCIndexer {
 				log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
 			}
 
+			// Also attempt to grab the XML Root NS:
+			try {
+				tikainput.reset();
+				QName qname = new XmlRootExtractor().extractRootElement(tikainput);
+				if( qname != null ) {
+					if( qname.getNamespaceURI() != null && (! "".equals(qname.getNamespaceURI().trim()) ) ) {
+						log.info("rootXML: "+qname.getLocalPart()+" prefix:"+qname.getPrefix()+" nsURI:"+qname.getNamespaceURI());
+						solr.doc.addField("xml_ns_root_s", qname.getNamespaceURI().toLowerCase()+"#"+qname.getLocalPart().toLowerCase());
+					}
+				}
+			} catch( Exception i ) {
+				log.error( i + ": " + i.getMessage() + ";xmlns; " + fullUrl + " @" + header.getOffset() );
+			}
+			
 			// Also run DROID (restricted range):
 			if( dd != null && runDroid == true ) {
 				try {
@@ -361,7 +378,8 @@ public class WARCIndexer {
 					log.error( i + ": " + i.getMessage() + ";dd; " + fullUrl + " @" + header.getOffset() );
 				}
 			}
-
+			
+			
 			// Derive normalised/simplified content type:
 			processContentType( solr, header );
 

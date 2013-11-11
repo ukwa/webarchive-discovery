@@ -27,6 +27,7 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
 import com.typesafe.config.Config;
@@ -159,17 +160,21 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			detectThread.join( 10000L );
 			detectThread.interrupt();
 		} catch( NoSuchFieldError e ) {
-			// Apache POI version issue?
+			// TODO Is this an Apache POI version issue?
 			log.error( "Tika.detect(): " + e.getMessage() );
+			addExceptionMetadata(metadata, new Exception("detect threw "+e.getClass().getCanonicalName()) );
 		} catch( Exception e ) {
 			log.error( "Tika.detect(): " + e.getMessage() );
+			addExceptionMetadata(metadata, e);
 		}
 		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected.toString() ) ) {
+			solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM.toString() );
 			return solr;
 		}
-
+		
+		// Context
 		ParseContext context = new ParseContext();
 		StringWriter content = new StringWriter();
 		

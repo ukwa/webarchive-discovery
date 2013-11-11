@@ -34,13 +34,16 @@ public class WARCStatsMapper extends MapReduceBase implements Mapper<Text, Writa
 	@Override
 	public void map(Text key, WritableArchiveRecord value,
 			OutputCollector<Text, Text> output, Reporter reporter) throws IOException {
-		ArchiveRecordHeader header = value.getRecord().getHeader();
+		ArchiveRecord record = value.getRecord();
+		ArchiveRecordHeader header = record.getHeader();
 
+		// Logging for debug info:
+		log.debug("Processing @"+header.getOffset()+
+				"+"+record.available()+","+header.getLength()+
+				": "+header.getUrl());		
 		for( String h : header.getHeaderFields().keySet()) {
 			log.debug("ArchiveHeader: "+h+" -> "+header.getHeaderValue(h));
 		}
-		
-		ArchiveRecord record = value.getRecord();
 		
 		// count all records:
 		output.collect( new Text("record-total"), new Text("RECORD-TOTAL"));
