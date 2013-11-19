@@ -3,11 +3,17 @@
  */
 package uk.bl.wa.shine;
 
+import java.io.UnsupportedEncodingException;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.codec.DecoderException;
+import org.apache.commons.codec.binary.Hex;
 import org.apache.solr.client.solrj.response.FacetField;
+import org.apache.solr.client.solrj.response.FacetField.Count;
 import org.apache.solr.client.solrj.response.QueryResponse;
 
 import play.Logger;
@@ -62,5 +68,67 @@ public class Query {
 			}
 		}
 		return qp;
+	}
+
+	// Formatters	
+
+	// Allow for pretty formatting of facet values:
+	public String formatFacet( FacetField fc, Count f ) {
+		if( "content_first_bytes".equals(fc.getName()) )
+			return this.formatHexString(f.getName());
+		if( "content_ffb".equals(fc.getName()) )
+			return this.formatHexString(f.getName());
+		return f.getName();
+	}
+
+	// Format numbers with commas:
+	public String formatNumber( long number ) {
+		NumberFormat numberFormat = new DecimalFormat("#,###");
+		return numberFormat.format(number);
+	}
+	
+	// Hex to string:
+	// TODO Moving the HTML encoding (below) into templates.
+	public String formatHexString( String hex ) {
+		hex = hex.replaceAll(" ", "");
+		try {
+			byte[] bytes = Hex.decodeHex(hex.toCharArray());
+			hex = this.partialHexDecode(bytes);
+		} catch (DecoderException e) {
+			Logger.error("Hex decode failed: "+e);
+		} catch (UnsupportedEncodingException e) {
+			Logger.error("Hex to UTF-8 recoding failed: "+e);
+		}
+		return hex;
+	}
+	
+	private String partialHexDecode( byte[] bytes ) throws UnsupportedEncodingException {
+		String myString = new String( bytes, "ASCII");
+		StringBuilder newString = new StringBuilder(myString.length());
+		for (int offset = 0; offset < myString.length();)
+		{
+		    int codePoint = myString.codePointAt(offset);
+		    offset += Character.charCount(codePoint);
+
+		    // Replace invisible control characters and unused code points
+		    switch (Character.getType(codePoint))
+		    {
+		        case Character.CONTROL:     // \p{Cc}
+		        case Character.FORMAT:      // \p{Cf}
+		        case Character.PRIVATE_USE: // \p{Co}
+		        case Character.SURROGATE:   // \p{Cs}
+		        case Character.UNASSIGNED:  // \p{Cn}
+		            newString.append("<i class=\"hex\">");
+		            newString.append(Hex.encodeHexString(new byte[] {Byte.valueOf((byte) codePoint) } ));
+		            newString.append("</i>");
+		            break;
+		        default:
+		            newString.append("<span class=\"lit\">");
+		            newString.append(Character.toChars(codePoint));
+		            newString.append("</span>");
+		            break;
+		    }
+		}
+		return newString.toString();
 	}
 }
