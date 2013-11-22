@@ -22,7 +22,7 @@ import play.Logger;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class SolrShine extends Solr {
+public class Shine extends Solr {
 
 	private List<String> facets = null;
 	
@@ -30,7 +30,7 @@ public class SolrShine extends Solr {
 	
 	private Map<String,List<String>> facets_tree = null;
 	
-	public SolrShine( play.Configuration config ) {
+	public Shine( play.Configuration config ) {
 		 super(config);
 		 //
 		 this.facets = new ArrayList<String>();
