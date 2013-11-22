@@ -102,6 +102,8 @@ To see if we can leverage the ssdeep hashes to indicate how much a page has chan
 
 c.f. warc-discovery/analysis-tools/ssdiff.py
 
+Example of note: http://web.archive.org/web/20131113083636/http://www.conservatives.com/robots.txt
+
     
 ### Snowflakes ###
 

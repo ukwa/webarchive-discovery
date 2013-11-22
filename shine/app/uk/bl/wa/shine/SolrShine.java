@@ -22,18 +22,17 @@ import play.Logger;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class SolrShine {
+public class SolrShine extends Solr {
 
-	protected HttpSolrServer solr = null;
-	
 	private List<String> facets = null;
 	
 	private Map<String,String> facet_names = null;
 	
 	private Map<String,List<String>> facets_tree = null;
 	
-	public SolrShine(String host, play.Configuration config ) {
-		 solr = new HttpSolrServer(host);
+	public SolrShine( play.Configuration config ) {
+		 super(config);
+		 //
 		 this.facets = new ArrayList<String>();
 		 this.facet_names = new HashMap<String,String>();
 		 this.facets_tree = new LinkedHashMap<String,List<String>>();
@@ -48,12 +47,6 @@ public class SolrShine {
 			 }
 			 Logger.info("Putting "+fc+" > "+fl);
 			 this.facets_tree.put(fc, fl);
-		 }
-		 // Set the proxy up:
-		 Properties systemProperties = System.getProperties();
-		 if( config.getString("http.proxyHost") != null ) {
-			 systemProperties.setProperty("http.proxyHost", config.getString("http.proxyHost") );
-			 systemProperties.setProperty("http.proxyPort", config.getString("http.proxyPort") );
 		 }
     }
 	

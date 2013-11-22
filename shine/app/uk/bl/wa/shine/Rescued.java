@@ -17,6 +17,8 @@ import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 
+import com.typesafe.config.ConfigFactory;
+
 import play.Configuration;
 import play.Logger;
 import uk.bl.wa.shine.URIStatusLookup.URIStatus;
@@ -25,7 +27,7 @@ import uk.bl.wa.shine.URIStatusLookup.URIStatus;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class Rescued extends SolrShine {
+public class Rescued extends Solr {
 	
 	URIStatusLookup usl = new URIStatusLookup();
 
@@ -38,8 +40,8 @@ SolrQuery.addFilterQuery("yourStringField:Cameras\\ \\&\\ Photos")
 	 * 
 	 */
 	
-	public Rescued(String host, Configuration config) {
-		super(host, config);
+	public Rescued(Configuration config) {
+		super(config);
 	}
 
 	public String halflife() throws SolrServerException, MalformedURLException {		
@@ -54,25 +56,26 @@ SolrQuery.addFilterQuery("yourStringField:Cameras\\ \\&\\ Photos")
 			years.add(c.getAsFilterQuery());
 		}
 		Logger.info("YEARS "+years);
-		Random rng = new Random();
-		int total = 20;
-		String[] urls = new String[total];
-		for( int i = 0; i < total; i++ ) {
-			String url = getRandomItemForFacet(years.get(rng.nextInt(years.size())));
-			urls[i] = url;
-			Logger.info("Got URL: "+url);
-		}
-		URIStatus[] statuses = usl.getStatus(urls);
-		Map<URIStatus,Integer> counts = new HashMap<URIStatus,Integer>();
-		for( URIStatus status : statuses ) {
-			if( ! counts.containsKey(status) ) {
-				counts.put(status, 1);
-			} else {
-				counts.put(status, counts.get(status) + 1);
+		for( String year : years ) {
+			int total = 20;
+			String[] urls = new String[total];
+			for( int i = 0; i < total; i++ ) {
+				String url = getRandomItemForFacet(year);
+				urls[i] = url;
+				Logger.info("Got URL: "+url);
 			}
-		}
-		for( URIStatus status : counts.keySet() ) {
-			Logger.info("Status Count: "+status+" "+counts.get(status));
+			URIStatus[] statuses = usl.getStatus(urls);
+			Map<URIStatus,Integer> counts = new HashMap<URIStatus,Integer>();
+			for( URIStatus status : statuses ) {
+				if( ! counts.containsKey(status) ) {
+					counts.put(status, 1);
+				} else {
+					counts.put(status, counts.get(status) + 1);
+				}
+			}
+			for( URIStatus status : counts.keySet() ) {
+				Logger.info("COUNTS "+year+" "+status+" "+counts.get(status));
+			}
 		}
 		return "";
 	}
@@ -110,9 +113,13 @@ SolrQuery.addFilterQuery("yourStringField:Cameras\\ \\&\\ Photos")
 
 	/**
 	 * @param args
+	 * @throws SolrServerException 
+	 * @throws MalformedURLException 
 	 */
-	public static void main(String[] args) {
-
+	public static void main(String[] args) throws MalformedURLException, SolrServerException {
+		Configuration config = new play.Configuration(ConfigFactory.load("conf/application.conf").getConfig("shine"));
+		Rescued r = new Rescued(config);
+		r.halflife();
 	}
 
 }

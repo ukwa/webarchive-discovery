@@ -11,11 +11,10 @@ import uk.bl.wa.shine.Rescued
 object Application extends Controller {
   
   val config = play.Play.application().configuration().getConfig("shine");
-  val solrHost = config.getString("host");
   
-  val solr = new SolrShine(solrHost, config);
+  val solr = new SolrShine(config);
   
-  val rescued = new Rescued(solrHost, config);
+  val rescued = new Rescued(config);
   
   
   def index = Action {
