@@ -254,7 +254,7 @@ public class WARCIndexer {
 				return null;
 			}
 			// Spot 'slash pages':
-			if( urlParts.length == 1 || ( urlParts.length >= 2 && urlParts[ 1 ].matches( "^index\\.[a-z]+$" ) ) )
+			if( urlParts.length == 1 || ( urlParts.length >= 2 && fullUrl.matches( "^https?://[^/]+/index\\.[a-z]+(\\?.*)?$" ) ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
 			if( urlParts.length >= 2 && urlParts[ 1 ].equalsIgnoreCase( "robots.txt" ) )

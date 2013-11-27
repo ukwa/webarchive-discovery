@@ -100,6 +100,8 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			try {
 				URI uri = new URI( header.getUrl() );
 				if( processCollections ) {
+					// TODO: Trac #2243; This should only happen if the record's timestamp is 
+					// within the range set by the Collection.
 					processCollectionScopes( uri, solr );
 				}
 				oKey = uri.getHost();
