@@ -8,6 +8,7 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Iterator;
 
+import org.apache.commons.httpclient.URIException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -135,7 +136,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		}
 	}
 
-	private String warcRecordToCDXLine( WarcRecord record ) {
+	private String warcRecordToCDXLine( WarcRecord record ) throws URIException {
 		WarcHeader header = record.header;
 		// We're only processing response/revisit records and only for HTTP responses.
 		if( !( header.warcTypeStr.equals( WARC_RESPONSE ) || header.warcTypeStr.equals( WARC_REVISIT ) ) || header.warcTargetUriStr.startsWith( DNS ) )
@@ -143,7 +144,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 
 		StringBuilder sb = new StringBuilder();
 		// Canonicalized URL
-		sb.append( canon.canonicalize( header.warcTargetUriStr ) );
+		sb.append( canon.urlStringToKey( header.warcTargetUriStr ) );
 		sb.append( CDX_SEPARATOR );
 		// 14-digit Timestamp
 		sb.append( header.warcDateStr.replaceAll( "[^0-9]", "" ) );
@@ -152,7 +153,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		sb.append( header.warcTargetUriStr );
 		sb.append( CDX_SEPARATOR );
 		// MIME, HTTP Status Code
-		if( header.contentTypeStr.equals( WARC_REVISIT ) ) {
+		if( header.warcTypeStr.equals( WARC_REVISIT ) ) {
 			sb.append( WARC_REVISIT_MIME );
 			sb.append( CDX_SEPARATOR );
 			sb.append( CDX_NULL_VALUE );
@@ -161,14 +162,18 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 			if( header.warcIdentifiedPayloadTypeStr != null && !header.warcIdentifiedPayloadTypeStr.equals( "" ) ) {
 				sb.append( header.warcIdentifiedPayloadTypeStr );
 			} else {
-				record.getHttpHeader().getProtocolContentType();
+				sb.append( record.getHttpHeader().getProtocolContentType().split( ";" )[ 0 ] );
 			}
 			sb.append( CDX_SEPARATOR );
 			sb.append( record.getHttpHeader().getProtocolStatusCodeStr() );
 		}
 		sb.append( CDX_SEPARATOR );
 		// Hash
-		sb.append( header.warcBlockDigestStr );
+		if( header.warcPayloadDigestStr.indexOf( ":" ) != -1 ) {
+			sb.append( header.warcPayloadDigestStr.split( ":" )[ 1 ] );
+		} else {
+			sb.append( header.warcPayloadDigestStr );
+		}
 		sb.append( CDX_SEPARATOR );
 		// '-' or Redirect URL
 		if( !header.warcTypeStr.equals( WARC_REVISIT ) && record.getHttpHeader().getProtocolStatusCodeStr().startsWith( "3" ) ) {
