@@ -1,14 +1,13 @@
 package uk.bl.wa.hadoop.mapreduce.lib;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -23,30 +22,30 @@ import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
 import org.apache.log4j.Logger;
-import org.archive.io.ArchiveReader;
-import org.archive.io.ArchiveReaderFactory;
-import org.archive.io.arc.ARCReader;
-import org.archive.io.warc.WARCReader;
-import org.archive.wayback.core.CaptureSearchResult;
-import org.archive.wayback.resourceindex.cdx.SearchResultToCDXFormatAdapter;
-import org.archive.wayback.resourceindex.cdx.format.CDXFormat;
-import org.archive.wayback.resourceindex.cdx.format.CDXFormatException;
-import org.archive.wayback.resourcestore.indexer.ArcIndexer;
-import org.archive.wayback.resourcestore.indexer.WarcIndexer;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import org.jwat.warc.WarcHeader;
+import org.jwat.warc.WarcReader;
+import org.jwat.warc.WarcReaderFactory;
+import org.jwat.warc.WarcRecord;
 
 public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparable<?>, Value extends Writable> extends RecordReader<Text, Text> {
 	private static final Logger LOGGER = Logger.getLogger( DereferencingArchiveToCDXRecordReader.class.getName() );
+	private static final String DNS =  "dns";
+	private static final String CDX_SEPARATOR = " ";
+	private static final String CDX_NULL_VALUE = "-";
+	private static final String WARC_REVISIT = "revisit";
+	private static final String WARC_RESPONSE = "response";
+	private static final String WARC_REVISIT_MIME = "warc/revisit";
+	private static final String HTTP_LOCATION = "Location";
+
+	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	private LineRecordReader internal = new LineRecordReader();
 	private FSDataInputStream datainputstream;
 	private FileSystem filesystem;
-	private ArchiveReader arcreader;
-	private Iterator<CaptureSearchResult> archiveIterator;
-	private Iterator<String> cdxlines;
-	private WarcIndexer warcIndexer = new WarcIndexer();
-	private ArcIndexer arcIndexer = new ArcIndexer();
+	private WarcReader warcreader;
+	private Iterator<WarcRecord> iwarc;
 	private Text key;
 	private Text value;
-	private CDXFormat cdxFormat;
 	private boolean hdfs;
 	private HashMap<String, String> warcArkLookup = new HashMap<String, String>();
 
@@ -55,12 +54,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		Configuration conf = context.getConfiguration();
 		FileSplit fileSplit = ( FileSplit ) split;
 		this.filesystem = fileSplit.getPath().getFileSystem( conf );
-		try {
-			this.cdxFormat = new CDXFormat( conf.get( "cdx.format", " CDX A b a m s k r M V g" ) );
-			this.hdfs = Boolean.parseBoolean( conf.get( "cdx.hdfs", "false" ) );
-		} catch( CDXFormatException e ) {
-			LOGGER.error( "initialize(): " + e.getMessage() );
-		}
+		this.hdfs = Boolean.parseBoolean( conf.get( "cdx.hdfs", "false" ) );
 		internal.initialize( split, context );
 		this.getLookup( conf );
 	}
@@ -118,27 +112,19 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		String line;
 		while( true ) {
 			try {
-				if( cdxlines != null && cdxlines.hasNext() ) {
-					if( this.hdfs ) {
-						line = hdfsPath( cdxlines.next(), this.internal.getCurrentValue().toString() );
-					} else {
-						line = cdxlines.next();
+				if( iwarc != null && iwarc.hasNext() ) {
+					line = warcRecordToCDXLine( iwarc.next() );
+					if( line != null ) {
+						this.key.set( line );
+						this.value.set( line );
+						return true;
 					}
-					this.key.set( line );
-					this.value.set( line );
-					return true;
 				} else {
 					if( this.internal.nextKeyValue() ) {
 						Path path = new Path( this.internal.getCurrentValue().toString() );
 						datainputstream = this.filesystem.open( path );
-						arcreader = ArchiveReaderFactory.get( path.getName(), datainputstream, true );
-						arcreader.setStrict( false );
-						if( path.getName().matches( "^.+\\.warc(\\.gz)?$" ) ) {
-							archiveIterator = warcIndexer.iterator( ( WARCReader ) arcreader );
-						} else {
-							archiveIterator = arcIndexer.iterator( ( ARCReader ) arcreader );
-						}
-						cdxlines = SearchResultToCDXFormatAdapter.adapt( archiveIterator, cdxFormat );
+						warcreader = WarcReaderFactory.getReader( datainputstream );
+						iwarc = warcreader.iterator();
 					} else {
 						return false;
 					}
@@ -147,6 +133,64 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 				LOGGER.error( "nextKeyValue: " + e.getMessage() );
 			}
 		}
+	}
+
+	private String warcRecordToCDXLine( WarcRecord record ) {
+		WarcHeader header = record.header;
+		// We're only processing response/revisit records and only for HTTP responses.
+		if( !( header.warcTypeStr.equals( WARC_RESPONSE ) || header.warcTypeStr.equals( WARC_REVISIT ) ) || header.warcTargetUriStr.startsWith( DNS ) )
+			return null;
+
+		StringBuilder sb = new StringBuilder();
+		// Canonicalized URL
+		sb.append( canon.canonicalize( header.warcTargetUriStr ) );
+		sb.append( CDX_SEPARATOR );
+		// 14-digit Timestamp
+		sb.append( header.warcDateStr.replaceAll( "[^0-9]", "" ) );
+		sb.append( CDX_SEPARATOR );
+		// URL
+		sb.append( header.warcTargetUriStr );
+		sb.append( CDX_SEPARATOR );
+		// MIME, HTTP Status Code
+		if( header.contentTypeStr.equals( WARC_REVISIT ) ) {
+			sb.append( WARC_REVISIT_MIME );
+			sb.append( CDX_SEPARATOR );
+			sb.append( CDX_NULL_VALUE );
+		} else {
+			// Preferably use the WARC-Identified-Payload-Type header.
+			if( header.warcIdentifiedPayloadTypeStr != null && !header.warcIdentifiedPayloadTypeStr.equals( "" ) ) {
+				sb.append( header.warcIdentifiedPayloadTypeStr );
+			} else {
+				record.getHttpHeader().getProtocolContentType();
+			}
+			sb.append( CDX_SEPARATOR );
+			sb.append( record.getHttpHeader().getProtocolStatusCodeStr() );
+		}
+		sb.append( CDX_SEPARATOR );
+		// Hash
+		sb.append( header.warcBlockDigestStr );
+		sb.append( CDX_SEPARATOR );
+		// '-' or Redirect URL
+		if( !header.warcTypeStr.equals( WARC_REVISIT ) && record.getHttpHeader().getProtocolStatusCodeStr().startsWith( "3" ) ) {
+			// HTTP headers *should* contain a Location line.
+			if( record.getHttpHeader().getHeader( HTTP_LOCATION ) != null ) {
+				sb.append( record.getHttpHeader().getHeader( HTTP_LOCATION ).value );
+			} else {
+				sb.append( CDX_NULL_VALUE );
+			}
+		} else {
+			sb.append( CDX_NULL_VALUE );
+		}
+		sb.append( CDX_SEPARATOR );
+		// -
+		sb.append( CDX_NULL_VALUE );
+		sb.append( CDX_SEPARATOR );
+		// Offset
+		sb.append( Long.toString( header.getStartOffset() ) );
+		sb.append( CDX_SEPARATOR );
+		// Identifier (filename, path or ARK) skipped.
+		sb.append( getIdentifier() );
+		return sb.toString();
 	}
 
 	@Override
@@ -159,13 +203,17 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		return this.value;
 	}
 
-	private String hdfsPath( String cdx, String path ) throws URISyntaxException {
-		String[] fields = cdx.split( " " );
-		if( warcArkLookup.size() != 0 ) {
-			fields[ 9 ] = warcArkLookup.get( fields[ 9 ] );
+	private String getIdentifier() {
+		String fullPath = this.internal.getCurrentValue().toString();
+		if( this.hdfs ) {
+			if( warcArkLookup.size() != 0 ) {
+				new File( fullPath ).getName();
+				return warcArkLookup.get( new File( fullPath ).getName() );
+			} else {
+				return fullPath;
+			}
 		} else {
-			fields[ 9 ] = new URI( path ).getPath() + "?user.name=hadoop&bogus=.warc.gz";
+			return new File( fullPath ).getName();
 		}
-		return StringUtils.join( fields, " " );
 	}
 }
