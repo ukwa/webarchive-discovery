@@ -266,7 +266,7 @@ public class WARCIndexer {
 				return null;
 			}
 			// Spot 'slash pages':
-			if( uri.getPath().equals( "/" ) || uri.getPath().equals( "" ) || uri.getPath().matches( "/index\\.[a-z]+(\\?.+)?" ) )
+			if( uri.getPath().equals( "/" ) || uri.getPath().equals( "" ) || uri.getPath().matches( "/index\\.[a-z]+$" ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
 			if( uri.getPath().equals( "/robots.txt" ) )
