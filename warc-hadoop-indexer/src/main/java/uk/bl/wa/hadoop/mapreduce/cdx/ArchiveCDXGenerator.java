@@ -50,15 +50,15 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 
 	private void setup( String args[], Configuration conf ) throws ParseException, URISyntaxException {
 		Options options = new Options();
-		options.addOption( "i", true, "input file list" );
-		options.addOption( "o", true, "output directory" );
-		options.addOption( "s", true, "split file" );
+		options.addOption( "i", true, "input file list (hdfs://)" );
+		options.addOption( "o", true, "output directory (hdfs://)" );
+		options.addOption( "s", true, "split file (hdfs://)" );
 		options.addOption( "c", true, "CDX format" );
-		options.addOption( "h", false, "HDFS refs." );
+		options.addOption( "h", false, "use HDFS refs." );
 		options.addOption( "w", false, "Wait for completion." );
 		options.addOption( "r", true, "Num. Reducers" );
-		options.addOption( "a", true, "ARK identifier lookup" );
-		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs(2).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
+		options.addOption( "a", true, "ARK identifier lookup (local)" );
+		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse( options, args );

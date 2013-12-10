@@ -37,7 +37,9 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 	private static final String WARC_REVISIT = "revisit";
 	private static final String WARC_RESPONSE = "response";
 	private static final String WARC_REVISIT_MIME = "warc/revisit";
+	private static final String WARC_DNS_MIME = "text/dns";
 	private static final String HTTP_LOCATION = "Location";
+	private static final String HTTP_CONTENT_TYPE = "Content-Type";
 
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	private LineRecordReader internal = new LineRecordReader();
@@ -131,15 +133,15 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 					}
 				}
 			} catch( Exception e ) {
-				LOGGER.error( "nextKeyValue: " + e.getMessage() );
+				LOGGER.error( "nextKeyValue: " + e.getMessage(), e );
 			}
 		}
 	}
 
 	private String warcRecordToCDXLine( WarcRecord record ) throws URIException {
 		WarcHeader header = record.header;
-		// We're only processing response/revisit records and only for HTTP responses.
-		if( !( header.warcTypeStr.equals( WARC_RESPONSE ) || header.warcTypeStr.equals( WARC_REVISIT ) ) || header.warcTargetUriStr.startsWith( DNS ) )
+		// We're only processing response/revisit records.
+		if( !( header.warcTypeStr.equals( WARC_RESPONSE ) || header.warcTypeStr.equals( WARC_REVISIT ) ) )
 			return null;
 
 		StringBuilder sb = new StringBuilder();
@@ -158,25 +160,41 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 			sb.append( CDX_SEPARATOR );
 			sb.append( CDX_NULL_VALUE );
 		} else {
-			// Preferably use the WARC-Identified-Payload-Type header.
-			if( header.warcIdentifiedPayloadTypeStr != null && !header.warcIdentifiedPayloadTypeStr.equals( "" ) ) {
-				sb.append( header.warcIdentifiedPayloadTypeStr );
+			if( header.warcTargetUriStr.startsWith( DNS ) ) {
+				sb.append( WARC_DNS_MIME );
+				sb.append( CDX_SEPARATOR );
+				sb.append( CDX_NULL_VALUE );
 			} else {
-				sb.append( record.getHttpHeader().getProtocolContentType().split( ";" )[ 0 ] );
+				// Preferably use the WARC-Identified-Payload-Type header.
+				if( header.warcIdentifiedPayloadTypeStr != null && !header.warcIdentifiedPayloadTypeStr.equals( "" ) ) {
+					sb.append( header.warcIdentifiedPayloadTypeStr );
+				} else {
+					// If the HTTP response doesn't have a Content-Type we'll have to make do...
+					if( record.getHttpHeader() == null || record.getHttpHeader().getHeader( HTTP_CONTENT_TYPE ) == null ) {
+						sb.append( header.contentTypeStr.split( ";" )[ 0 ] );
+					} else {
+						sb.append( record.getHttpHeader().getHeader( HTTP_CONTENT_TYPE ).value.split( ";" )[ 0 ] );
+					}
+				}
+				sb.append( CDX_SEPARATOR );
+				sb.append( record.getHttpHeader().getProtocolStatusCodeStr() );
 			}
-			sb.append( CDX_SEPARATOR );
-			sb.append( record.getHttpHeader().getProtocolStatusCodeStr() );
 		}
 		sb.append( CDX_SEPARATOR );
 		// Hash
-		if( header.warcPayloadDigestStr.indexOf( ":" ) != -1 ) {
-			sb.append( header.warcPayloadDigestStr.split( ":" )[ 1 ] );
+		if( header.warcTargetUriStr.startsWith( DNS ) ) {
+			//TODO: DNS digest!?
+			sb.append( CDX_NULL_VALUE );
 		} else {
-			sb.append( header.warcPayloadDigestStr );
+			if( header.warcPayloadDigestStr.indexOf( ":" ) != -1 ) {
+				sb.append( header.warcPayloadDigestStr.split( ":" )[ 1 ] );
+			} else {
+				sb.append( header.warcPayloadDigestStr );
+			}
 		}
 		sb.append( CDX_SEPARATOR );
 		// '-' or Redirect URL
-		if( !header.warcTypeStr.equals( WARC_REVISIT ) && record.getHttpHeader().getProtocolStatusCodeStr().startsWith( "3" ) ) {
+		if( header.warcTypeStr.equals( WARC_RESPONSE ) && record.getHttpHeader() != null && record.getHttpHeader().getProtocolStatusCodeStr().startsWith( "3" ) ) {
 			// HTTP headers *should* contain a Location line.
 			if( record.getHttpHeader().getHeader( HTTP_LOCATION ) != null ) {
 				sb.append( record.getHttpHeader().getHeader( HTTP_LOCATION ).value );
@@ -193,7 +211,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		// Offset
 		sb.append( Long.toString( header.getStartOffset() ) );
 		sb.append( CDX_SEPARATOR );
-		// Identifier (filename, path or ARK) skipped.
+		// Identifier (filename, path or ARK).
 		sb.append( getIdentifier() );
 		return sb.toString();
 	}
