@@ -40,6 +40,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 	private static final String WARC_DNS_MIME = "text/dns";
 	private static final String HTTP_LOCATION = "Location";
 	private static final String HTTP_CONTENT_TYPE = "Content-Type";
+	private static final String HDFS_SUFFIX = "?user.name=hadoop&bogus=.warc.gz";
 
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	private LineRecordReader internal = new LineRecordReader();
@@ -230,10 +231,10 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		String fullPath = this.internal.getCurrentValue().toString();
 		if( this.hdfs ) {
 			if( warcArkLookup.size() != 0 ) {
-				new File( fullPath ).getName();
+				new File( fullPath ).getAbsolutePath();
 				return warcArkLookup.get( new File( fullPath ).getName() );
 			} else {
-				return fullPath;
+				return fullPath + HDFS_SUFFIX;
 			}
 		} else {
 			return new File( fullPath ).getName();

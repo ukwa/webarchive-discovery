@@ -2,13 +2,11 @@ package uk.bl.wa.hadoop.indexer;
 
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.List;
-import java.util.zip.CRC32;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
@@ -37,9 +35,6 @@ import com.typesafe.config.ConfigFactory;
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
-
-	private CRC32 crc = new CRC32();
-	private int numReducers;
 
 	private WARCIndexer windex;
 	private HashMap<String, HashMap<String, UriCollection>> collections;
@@ -74,7 +69,6 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 		try {
 			// Get config from job property:
 			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
-			this.numReducers = job.getInt( "warc.hadoop.num_reducers", 1 );
 			// If we're reading from ACT, parse the XML output into our collection lookup.
 			String xml = job.get( "warc.act.xml" );
 			if( xml != null ) {
@@ -120,16 +114,6 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			}
 		}
 	}
-
-	// private Text generateKey( URI uri ) {
-	// crc.reset();
-	// try {
-	// crc.update( uri.toString().getBytes( "UTF-8" ) );
-	// } catch( UnsupportedEncodingException e ) {
-	// LOG.equals( uri + "; " + e.getMessage() );
-	// }
-	// return new Text( Long.toString( crc.getValue() % numReducers ) );
-	// }
 
 	/**
 	 * Runs through the 3 possible scopes, determining the appropriate part
