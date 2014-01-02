@@ -3,6 +3,8 @@ WARC Discovery
 
 These are the components we use to data-mine and index our ARC and WARC files and make the contents explorable and discoverable.
 
+[![Build Status](https://travis-ci.org/ukwa/warc-discovery.png?branch=master)](https://travis-ci.org/ukwa/warc-discovery/)
+
 Structure
 ---------
 
