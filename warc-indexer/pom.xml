@@ -33,7 +33,7 @@
                <archive>
                   <manifest>
                      <addClasspath>true</addClasspath>
-                     <mainClass>uk.bl.wap.indexer.WARCIndexerCommand</mainClass>
+                     <mainClass>uk.bl.wa.indexer.WARCIndexerCommand</mainClass>
                   </manifest>
                </archive>
                <descriptorRefs>
@@ -41,7 +41,7 @@
                </descriptorRefs>
                <archive>
                   <manifest>
-                     <mainClass>uk.bl.wap.indexer.WARCIndexerCommand</mainClass>
+                     <mainClass>uk.bl.wa.indexer.WARCIndexerCommand</mainClass>
                   </manifest>
                </archive>
             </configuration>

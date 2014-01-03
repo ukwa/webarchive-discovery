@@ -6,8 +6,10 @@ import static org.archive.io.warc.WARCConstants.RESPONSE;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -246,33 +248,33 @@ public class WARCIndexer {
 			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			// Trac #2271: replace string-splitting with URI-based methods.
-			URI uri = null;
+			URL url = null;
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
 			try {
-				uri = new URI( canon.urlStringToKey( fullUrl ) );
+				url = new URL( "http://" + canon.urlStringToKey( fullUrl ) );
 			} catch( URIException u ) {
 				// Some URIs still causing problems in canonicalizer; in which case try with the full URL.
 				log.error( u.getMessage() );
 				try {
-					uri = new URI( fullUrl );
-				} catch( URISyntaxException e ) {
+					url = new URL( fullUrl );
+				} catch( MalformedURLException e ) {
 					//If this fails, abandon all hope.
 					log.error( e.getMessage() );
 					return null;
 				}
-			} catch( URISyntaxException e ) {
+			} catch( MalformedURLException e ) {
 				log.error( e.getMessage() );
 				return null;
 			}
 			// Spot 'slash pages':
-			if( uri.getPath().equals( "/" ) || uri.getPath().equals( "" ) || uri.getPath().matches( "/index\\.[a-z]+(\\?.+)?" ) )
+			if( url.getPath().equals( "/" ) || url.getPath().equals( "" ) || url.getPath().matches( "/index\\.[a-z]+$" ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
-			if( uri.getPath().equals( "/robots.txt" ) )
+			if( url.getPath().equals( "/robots.txt" ) )
 				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
 			// Record the domain (strictly, the host):
-			String host = uri.getHost();
+			String host = url.getHost();
 			solr.doc.setField( SolrFields.SOLR_HOST, host );
 			solr.doc.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
 			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
