@@ -11,6 +11,8 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 
+import uk.bl.wa.hadoop.mapreduce.MutableInt;
+
 @SuppressWarnings( { "deprecation" } )
 /**
  * 
