@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.HashMap;
 import java.util.Iterator;
 
@@ -139,7 +140,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		}
 	}
 
-	private String warcRecordToCDXLine( WarcRecord record ) throws URIException {
+	private String warcRecordToCDXLine( WarcRecord record ) throws URIException, URISyntaxException {
 		WarcHeader header = record.header;
 		// We're only processing response/revisit records.
 		if( !( header.warcTypeStr.equals( WARC_RESPONSE ) || header.warcTypeStr.equals( WARC_REVISIT ) ) )
@@ -227,14 +228,14 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 		return this.value;
 	}
 
-	private String getIdentifier() {
+	private String getIdentifier() throws URISyntaxException {
 		String fullPath = this.internal.getCurrentValue().toString();
 		if( this.hdfs ) {
 			if( warcArkLookup.size() != 0 ) {
 				new File( fullPath ).getAbsolutePath();
 				return warcArkLookup.get( new File( fullPath ).getName() );
 			} else {
-				return fullPath + HDFS_SUFFIX;
+				return new URI( fullPath ).getPath() + HDFS_SUFFIX;
 			}
 		} else {
 			return new File( fullPath ).getName();
