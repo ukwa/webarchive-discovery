@@ -7,13 +7,12 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -51,11 +50,6 @@ import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
-import com.google.common.base.Splitter;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
@@ -67,6 +61,12 @@ import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
+
+import com.google.common.base.Splitter;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
 
@@ -80,17 +80,17 @@ import eu.scape_project.bitwiser.utils.SSDeep;
  * 
  */
 public class WARCIndexer {
-	
-	private static Log log = LogFactory.getLog(WARCIndexer.class);
-	
-	private static final long BUFFER_SIZE = 1024*1024l; // 10485760 bytes = 10MB.
+
+	private static Log log = LogFactory.getLog( WARCIndexer.class );
+
+	private static final long BUFFER_SIZE = 1024 * 1024l; // 10485760 bytes = 10MB.
 
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
 	private List<String> response_includes;
-	
-	private static final Pattern postcodePattern = Pattern.compile("[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}");	
-	
+
+	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
+
 	private TikaExtractor tika = null;
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
@@ -111,13 +111,13 @@ public class WARCIndexer {
 	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
-	
+
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
 
 	/** */
 	private PostcodeGeomapper pcg = new PostcodeGeomapper();
-	
+
 	/** Wayback-style URI filtering: */
 	StaticMapExclusionFilterFactory smef = null;
 
@@ -135,37 +135,36 @@ public class WARCIndexer {
 	 */
 	public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
 		// Optional configurations:
-		this.extractLinks                 = conf.getBoolean("warc.index.extract.linked.resources" );
-		this.extractLinkHosts             = conf.getBoolean("warc.index.extract.linked.hosts" );
-		this.extractLinkDomains           = conf.getBoolean("warc.index.extract.linked.domains" );
-		this.extractText                  = conf.getBoolean("warc.index.extract.content.text" );
-		this.extractElementsUsed          = conf.getBoolean("warc.index.extract.content.elements_used" );
-		this.extractContentFirstBytes     = conf.getBoolean("warc.index.extract.content.first_bytes.enabled" );
-		this.firstBytesLength             = conf.getInt("warc.index.extract.content.first_bytes.num_bytes" );
-		this.runDroid                     = conf.getBoolean("warc.index.id.droid.enabled" );
-		this.passUriToFormatTools         = conf.getBoolean("warc.index.id.useResourceURI");
-		this.droidUseBinarySignaturesOnly = conf.getBoolean("warc.index.id.droid.useBinarySignaturesOnly" );
+		this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
+		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
+		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
+		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
+		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
+		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
+		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
+		this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
+		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
 		// URLs to exclude:
-		this.url_excludes                 = conf.getStringList("warc.index.extract.url_exclude");
+		this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
 		// Protocols to include:
-		this.protocol_includes            = conf.getStringList("warc.index.extract.protocol_include");
+		this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
 		// Response codes to include:
-		this.response_includes            = conf.getStringList("warc.index.extract.response_include");
-		
+		this.response_includes = conf.getStringList( "warc.index.extract.response_include" );
+
 		// URL Filtering options:
-		if( conf.getBoolean("warc.index.exclusions.enabled")) {
+		if( conf.getBoolean( "warc.index.exclusions.enabled" ) ) {
 			smef = new StaticMapExclusionFilterFactory();
-			smef.setFile(conf.getString("warc.index.exclusions.file"));
-			smef.setCheckInterval(conf.getInt("warc.index.exclusions.check_interval"));
+			smef.setFile( conf.getString( "warc.index.exclusions.file" ) );
+			smef.setCheckInterval( conf.getInt( "warc.index.exclusions.check_interval" ) );
 			try {
 				smef.init();
-			} catch (IOException e) {
-				log.error("Failed to load exclusions file.");
-				throw new RuntimeException("StaticMapExclusionFilterFactory failed with IOException when loading "+smef.getFile());
+			} catch( IOException e ) {
+				log.error( "Failed to load exclusions file." );
+				throw new RuntimeException( "StaticMapExclusionFilterFactory failed with IOException when loading " + smef.getFile() );
 			}
 		}
-		
-		
+
 		// Instanciate required helpers:
 		md5 = MessageDigest.getInstance( "MD5" );
 		// Attempt to set up Droid:
@@ -189,7 +188,7 @@ public class WARCIndexer {
 	 * @throws IOException
 	 */
 	public SolrRecord extract( String archiveName, ArchiveRecord record ) throws IOException {
-		return this.extract(archiveName, record, this.extractText );
+		return this.extract( archiveName, record, this.extractText );
 	}
 
 	/**
@@ -202,48 +201,51 @@ public class WARCIndexer {
 	 * @return
 	 * @throws IOException
 	 */
-	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded) throws IOException {
+	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		SolrRecord solr = new SolrRecord();
-		
+
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
-			
-			if( header.getUrl() == null ) return null;
+
+			if( header.getUrl() == null )
+				return null;
 			String fullUrl = header.getUrl();
-			
+
 			// Check the filters:
-			if( this.checkProtocol(fullUrl) == false ) return null;
-			if( this.checkUrl(fullUrl) == false ) return null;
-			if( this.checkExclusionFilter(fullUrl) == false) return null;
-			
+			if( this.checkProtocol( fullUrl ) == false )
+				return null;
+			if( this.checkUrl( fullUrl ) == false )
+				return null;
+			if( this.checkExclusionFilter( fullUrl ) == false )
+				return null;
+
 			// Check the record type:
-			//log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
+			// log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
 			// By checking if KEY_TYPE is there, we accept all ARC records, or WARC records of type response.
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
 				return null;
 			}
-			
+
 			// --- Basic headers ---
 
 			// Dates
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
-			solr.doc.setField( SolrFields.CRAWL_YEAR,  extractYear(header.getDate()) );
-			solr.doc.setField(SolrFields.CRAWL_DATE, parseCrawlDate(waybackDate));			
-			
+			solr.doc.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
+			solr.doc.setField( SolrFields.CRAWL_DATE, parseCrawlDate( waybackDate ) );
+
 			// Basic metadata:
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
-			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex);
-			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong(waybackDate + "00") + ( (md5digest[1] << 8) + md5digest[0] ) );
-			solr.doc.setField( SolrFields.HASH, header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) );
-			solr.doc.setField( SolrFields.SOLR_URL, fullUrl);
-			solr.doc.setField( SolrFields.HASH_AND_URL, 
-					header.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST) + "_" + fullUrl );
-			
+			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
+			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong( waybackDate + "00" ) + ( ( md5digest[ 1 ] << 8 ) + md5digest[ 0 ] ) );
+			solr.doc.setField( SolrFields.HASH, header.getHeaderValue( WARCConstants.HEADER_KEY_PAYLOAD_DIGEST ) );
+			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
+			solr.doc.setField( SolrFields.HASH_AND_URL, header.getHeaderValue( WARCConstants.HEADER_KEY_PAYLOAD_DIGEST ) + "_" + fullUrl );
+
 			// Also pull out the file extension, if any:
 			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
@@ -259,7 +261,7 @@ public class WARCIndexer {
 				try {
 					url = new URL( fullUrl );
 				} catch( MalformedURLException e ) {
-					//If this fails, abandon all hope.
+					// If this fails, abandon all hope.
 					log.error( e.getMessage() );
 					return null;
 				}
@@ -318,8 +320,8 @@ public class WARCIndexer {
 				}
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
-				if( this.checkResponseCode(statusCode) == false ) {
-					log.info("Skipping this record based on status code "+statusCode+": "+header.getUrl());
+				if( this.checkResponseCode( statusCode ) == false ) {
+					log.info( "Skipping this record based on status code " + statusCode + ": " + header.getUrl() );
 					return null;
 				}
 			}
@@ -340,8 +342,8 @@ public class WARCIndexer {
 			// Pull out the first few bytes, to hunt for new format by magic:
 			try {
 				tikainput.reset();
-				byte[] ffb = new byte[this.firstBytesLength];
-				int read = tikainput.read(ffb);
+				byte[] ffb = new byte[ this.firstBytesLength ];
+				int read = tikainput.read( ffb );
 				if( read >= 4 ) {
 					String hexBytes = Hex.encodeHexString( ffb );
 					solr.addField( SolrFields.CONTENT_FFB, hexBytes.substring( 0, 2 * 4 ) );
@@ -351,7 +353,7 @@ public class WARCIndexer {
 						separatedHexBytes.append( " " );
 					}
 					if( this.extractContentFirstBytes ) {
-						solr.addField(SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim());
+						solr.addField( SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim() );
 					}
 				}
 			} catch( IOException i ) {
@@ -361,17 +363,17 @@ public class WARCIndexer {
 			// Also attempt to grab the XML Root NS:
 			try {
 				tikainput.reset();
-				QName qname = new XmlRootExtractor().extractRootElement(tikainput);
+				QName qname = new XmlRootExtractor().extractRootElement( tikainput );
 				if( qname != null ) {
-					if( qname.getNamespaceURI() != null && (! "".equals(qname.getNamespaceURI().trim()) ) ) {
-						log.info("rootXML: "+qname.getLocalPart()+" prefix:"+qname.getPrefix()+" nsURI:"+qname.getNamespaceURI());
-						solr.doc.addField("xml_ns_root_s", qname.getNamespaceURI().toLowerCase()+"#"+qname.getLocalPart().toLowerCase());
+					if( qname.getNamespaceURI() != null && ( !"".equals( qname.getNamespaceURI().trim() ) ) ) {
+						log.info( "rootXML: " + qname.getLocalPart() + " prefix:" + qname.getPrefix() + " nsURI:" + qname.getNamespaceURI() );
+						solr.doc.addField( "xml_ns_root_s", qname.getNamespaceURI().toLowerCase() + "#" + qname.getLocalPart().toLowerCase() );
 					}
 				}
 			} catch( Exception i ) {
 				log.error( i + ": " + i.getMessage() + ";xmlns; " + fullUrl + " @" + header.getOffset() );
 			}
-			
+
 			// Also run DROID (restricted range):
 			if( dd != null && runDroid == true ) {
 				try {
@@ -392,8 +394,7 @@ public class WARCIndexer {
 					log.error( i + ": " + i.getMessage() + ";dd; " + fullUrl + " @" + header.getOffset() );
 				}
 			}
-			
-			
+
 			// Derive normalised/simplified content type:
 			processContentType( solr, header );
 
@@ -564,12 +565,12 @@ public class WARCIndexer {
 
 				}
 			}
-			
+
 			// TODO ACT/WctEnricher, currently invoked in the reduce stage to lower query hits, but should shift here.
-			
+
 			// Remove the Text Field if required
-			if( !isTextIncluded ){ 
-				solr.doc.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+			if( !isTextIncluded ) {
+				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
 			}
 
 		}
@@ -577,8 +578,8 @@ public class WARCIndexer {
 	}
 
 	/* ----------------------------------- */
-	
-	private void processHeaders(SolrRecord solr, String statusCode, Header[] httpHeaders) {
+
+	private void processHeaders( SolrRecord solr, String statusCode, Header[] httpHeaders ) {
 		try {
 			// This is a simple test that the status code setting worked:
 			int statusCodeInt = Integer.parseInt( statusCode );
@@ -641,26 +642,36 @@ public class WARCIndexer {
 	}
 
 	/**
+	 * Returns a Java Date object representing the crawled date.
+	 * @param timestamp
+	 * @return
+	 */
+	public static Date getWaybackDate( String timestamp ) {
+		Date date = new Date();
+		try {
+			if( timestamp.length() == 12 ) {
+				date = ArchiveUtils.parse12DigitDate( timestamp );
+			} else if( timestamp.length() == 14 ) {
+				date = ArchiveUtils.parse14DigitDate( timestamp );
+			} else if( timestamp.length() == 16 ) {
+				date = ArchiveUtils.parse17DigitDate( timestamp + "0" );
+			} else if( timestamp.length() >= 17 ) {
+				date = ArchiveUtils.parse17DigitDate( timestamp.substring( 0, 17 ) );
+			}
+		} catch( ParseException p ) {
+			p.printStackTrace();
+		}
+		return date;
+	}
+
+	/**
+	 * Returns a formatted String representing the crawled date.
 	 * 
 	 * @param waybackDate
 	 * @return
 	 */
 	protected static String parseCrawlDate( String waybackDate ) {
-		try {
-			// Some ARC records have 12-, 16- or 17-digit dates
-			if( waybackDate.length() == 12 ) {
-				return formatter.format( ArchiveUtils.parse12DigitDate( waybackDate ) );
-			} else if( waybackDate.length() == 14 ) {
-				return formatter.format( ArchiveUtils.parse14DigitDate( waybackDate ) );
-			} else if( waybackDate.length() == 16 ) {
-				return formatter.format( ArchiveUtils.parse17DigitDate( waybackDate + "0" ) );
-			} else if( waybackDate.length() >= 17 ) {
-				return formatter.format( ArchiveUtils.parse17DigitDate( waybackDate.substring( 0, 17 ) ) );
-			}
-		} catch( ParseException p ) {
-			p.printStackTrace();
-		}
-		return null;
+		return formatter.format( getWaybackDate( waybackDate ) );
 	}
 
 	/**
@@ -687,7 +698,7 @@ public class WARCIndexer {
 	 * @param header
 	 * @param serverType
 	 */
-	private void processContentType( SolrRecord solr, ArchiveRecordHeader header) {
+	private void processContentType( SolrRecord solr, ArchiveRecordHeader header ) {
 		// Get the current content-type:
 		String contentType = ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
 		String serverType = ( String ) solr.doc.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
@@ -735,7 +746,7 @@ public class WARCIndexer {
 		if( contentType != null ) {
 			// Strip parameters out of main type field:
 			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
-	
+
 			// Also add a more general, simplified type, as appropriate:
 			// FIXME clean up this messy code:
 			if( contentType.matches( "^image/.*$" ) ) {
@@ -757,7 +768,7 @@ public class WARCIndexer {
 			} else {
 				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
 			}
-	
+
 			// Remove text from JavaScript, CSS, ...
 			if( contentType.startsWith( "application/javascript" ) || contentType.startsWith( "text/javascript" ) || contentType.startsWith( "text/css" ) ) {
 				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
@@ -765,10 +776,9 @@ public class WARCIndexer {
 		}
 	}
 
-
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
-			if( !"".equals(exclude) && url.matches( ".*" + exclude + ".*" ) ) {
+			if( !"".equals( exclude ) && url.matches( ".*" + exclude + ".*" ) ) {
 				return false;
 			}
 		}
@@ -777,46 +787,48 @@ public class WARCIndexer {
 
 	private boolean checkProtocol( String url ) {
 		for( String include : protocol_includes ) {
-			if( "".equals(include) || url.startsWith( include ) ) {
+			if( "".equals( include ) || url.startsWith( include ) ) {
 				return true;
 			}
 		}
 		return false;
 	}
-	
+
 	private boolean checkResponseCode( String statusCode ) {
-		if( statusCode == null ) return false;
+		if( statusCode == null )
+			return false;
 		// Check for match:
 		for( String include : response_includes ) {
-			if( "".equals(include) || statusCode.startsWith( include ) ) {
+			if( "".equals( include ) || statusCode.startsWith( include ) ) {
 				return true;
 			}
 		}
 		// Exclude
 		return false;
 	}
-	
+
 	private boolean checkExclusionFilter( String uri ) {
 		// Default to no exclusions:
-		if( smef == null ) return true;
+		if( smef == null )
+			return true;
 		// Otherwise:
 		ExclusionFilter ef = smef.get();
 		CaptureSearchResult r = new CaptureSearchResult();
-		//r.setOriginalUrl(uri);
-		r.setUrlKey(uri);
+		// r.setOriginalUrl(uri);
+		r.setUrlKey( uri );
 		try {
-			if( ef.filterObject(r) == ExclusionFilter.FILTER_INCLUDE ) {
+			if( ef.filterObject( r ) == ExclusionFilter.FILTER_INCLUDE ) {
 				return true;
 			}
 		} catch( Exception e ) {
-			log.error("Exclusion filtering failed with exception: "+e);
+			log.error( "Exclusion filtering failed with exception: " + e );
 			e.printStackTrace();
 		}
-		log.debug("EXCLUDING this URL due to filter: "+uri);
+		log.debug( "EXCLUDING this URL due to filter: " + uri );
 		// Exclude:
 		return false;
 	}
-	
+
 	private class ParseRunner implements Runnable {
 		HtmlFeatureParser hfp;
 		Metadata metadata;

@@ -3,10 +3,10 @@ package uk.bl.wa.hadoop.indexer;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLConnection;
+import java.util.Scanner;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -30,6 +30,7 @@ import org.apache.hadoop.util.ToolRunner;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
 
+import com.sun.syndication.io.impl.Base64;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -53,6 +54,38 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	private boolean readAct;
 	private boolean wait;
 
+	private String cookie;
+	private String csrf;
+
+	/**
+	 * Performs login operation to ACT, setting Cookie and CSRF.
+	 * @throws IOException
+	 */
+	protected void actLogin() throws IOException {
+		Config loginConf = ConfigFactory.load( "credentials.conf" );
+		URL login = new URL( loginConf.getString( "act.login" ) );
+
+		HttpURLConnection connection = ( HttpURLConnection ) login.openConnection();
+		StringBuilder credentials = new StringBuilder();
+		credentials.append( "Basic " );
+		credentials.append( loginConf.getString( "act.username" ) );
+		credentials.append( ":" );
+		credentials.append( loginConf.getString( "act.password" ) );
+		connection.setRequestProperty( "Authorization", "Basic " + Base64.encode( credentials.toString() ) );
+
+		Scanner scanner;
+		if( connection.getResponseCode() != 200 ) {
+			scanner = new Scanner( connection.getErrorStream() );
+			scanner.useDelimiter( "\\Z" );
+			throw new IOException( scanner.next() );
+		} else {
+			scanner = new Scanner( connection.getInputStream() );
+		}
+		scanner.useDelimiter( "\\Z" );
+		this.csrf = scanner.next();
+		this.cookie = connection.getHeaderField( "set-cookie" );
+	}
+
 	/**
 	 * 
 	 * @param args
@@ -71,11 +104,13 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 		// Pull in ACT metadata
 		if( this.readAct ) {
-			LOG.info( "Reading from ACT..." );
-			conf.set( "warc.act.xml", readAct( index_conf ) );
+			LOG.info( "Reading records from ACT..." );
+//			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
+			LOG.info( "Reading Collections from ACT..." );
+			conf.set( "warc.collections.xml", readAct( index_conf.getString( "warc.act.collections.url" ) ) );
 			LOG.info( "Read " + conf.get( "warc.act.xml" ).length() + " bytes." );
 		}
-
+System.out.println( conf.get( "warc.collections.xml" ) ); System.exit( 0 );
 		// Also set reduce speculative execution off, avoiding duplicate submissions to Solr.
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 
@@ -119,16 +154,24 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	 * @throws MalformedURLException
 	 * @throws IOException
 	 */
-	protected String readAct( Config conf ) throws MalformedURLException, IOException {
-		URL act = new URL( conf.getString( "warc.act.url" ) );
-		URLConnection connection = act.openConnection();
-		BufferedReader in = new BufferedReader( new InputStreamReader( connection.getInputStream() ) );
-		String inputLine;
-		StringBuilder builder = new StringBuilder();
-		while( ( inputLine = in.readLine() ) != null )
-			builder.append( inputLine );
-		in.close();
-		return builder.toString();
+	protected String readAct( String url ) throws IOException {
+		URL act = new URL( url );
+		HttpURLConnection connection = ( HttpURLConnection ) act.openConnection();
+		if( this.cookie != null ) {
+			connection.setRequestProperty( "Cookie", this.cookie );
+			connection.setRequestProperty( "X-CSRF-TOKEN", this.csrf );
+		}
+
+		Scanner scanner;
+		if( connection.getResponseCode() != 200 ) {
+			scanner = new Scanner( connection.getErrorStream() );
+			scanner.useDelimiter( "\\Z" );
+			throw new IOException( scanner.next() );
+		} else {
+			scanner = new Scanner( connection.getInputStream() );
+		}
+		scanner.useDelimiter( "\\Z" );
+		return scanner.next();
 	}
 
 	/**
