@@ -16,6 +16,20 @@ import org.apache.hadoop.io.Writable;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.warc.WARCRecord;
 
+/**
+ * This is a very clumsy implementation that poorly wraps an InputStream.
+ * 
+ * It would make more sense to store the HDFS location of the source file 
+ * and the offset of the current record.
+ * 
+ * This simple form could be written in and our easily, and used to set-up a 
+ * valid ArchiveRecord on demand. 
+ * 
+ * Not clear how to set up ArchiveRecordHeader for ARC form?
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 public class WritableArchiveRecord implements Writable {
 	private static Log log = LogFactory.getLog(WritableArchiveRecord.class);
 			

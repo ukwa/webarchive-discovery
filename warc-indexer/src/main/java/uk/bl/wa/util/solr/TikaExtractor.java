@@ -255,15 +255,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			
 			// Also look to record the software:
 			String software = null;
+			// Look for generic xmp:CreatorTool
+			String creator = metadata.get("xmp:CreatorTool");
+			if( creator != null ) solr.addField(SolrFields.GENERATOR, creator+ " (xmp:CreatorTool)");
 			// For PDF, create separate tags:
-			if( contentType != null && contentType.startsWith("application/pdf") ) {
-				
-				// PDF has Creator and Producer application properties:
-				String creator = metadata.get("pdf:creator");
-				if( creator != null ) solr.addField(SolrFields.GENERATOR, creator+ " (pdf:creator)");
-				String producer = metadata.get("pdf:producer");
-				if( producer != null) solr.addField(SolrFields.GENERATOR, producer+" (pdf:producer)");
-			}
+			String producer = metadata.get("producer");
+			if( producer != null) solr.addField(SolrFields.GENERATOR, producer);
+			
 			// Application ID, MS Office only AFAICT, and the VERSION is only doc
 			if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
 			if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);

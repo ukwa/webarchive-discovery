@@ -1,16 +1,16 @@
 TODO
 ====
 
-### TODO ###
+The milestones for releases are held as GitHub issues now.
 
-* In AADDA: Check if the 'null' content types have matching 'parse_errors'.
-    * NO, not all content_type=null have parse errors (but some do).
-    * No octet-stream ones have parse errors.
-    * Most parse_errors have a decent content_type.
 
-### Ideas ###
+Ideas
+-----
+
 * Add the Wikipedia-Miner as an entity extractor?
     * https://github.com/dnmilne/wikipediaminer/wiki/A-command-line-document-annotator (GPL2)
+* Apache Stanbol may be a useful base:
+    * http://stanbol.apache.org/docs/trunk/components/enhancer/engines/list.html
 * Add in enhanced Tika features as used in the format profiler (e.g. DOC generator app, PDF issues, no recursion, etc.)
 * Explicitly handler crawl referrers somehow? (i.e. do we want SolrFields.REFERRER?)
 * Canonicalize outlinks and hosts?

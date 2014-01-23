@@ -46,7 +46,7 @@ public class WARCStatsToolTest {
 	// 2. System can't cope with uncompressed inputs right now.
 	private final String[] testWarcs = new String[] {
 			//"variations.warc.gz",
-			//"IAH-20080430204825-00000-blackbook-truncated.arc",
+			//"IAH-20080430204825-00000-blackbook-truncated.arc",			
 			"IAH-20080430204825-00000-blackbook-truncated.arc.gz",
 			//"IAH-20080430204825-00000-blackbook-truncated.warc",
 			"IAH-20080430204825-00000-blackbook-truncated.warc.gz"
@@ -125,6 +125,8 @@ public class WARCStatsToolTest {
 		log.info("Setting up job config...");
 		JobConf conf = this.mrCluster.createJobConf();
 		wir.createJobConf(conf, args);
+		// Disable speculative execution for tests:
+		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 		log.info("Running job...");
 		JobClient.runJob(conf);
 		log.info("Job finished, checking the results...");
@@ -137,16 +139,20 @@ public class WARCStatsToolTest {
 		// Check contents of the output:
 		for( Path output : outputFiles ) {
 			log.info(" --- output : "+output);
-			InputStream is = getFileSystem().open(output);
-			BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-			String line = null;
-			while( ( line = reader.readLine()) != null ) {
-				log.info(line);
-				if( line.startsWith("RECORD-TOTAL")) {
-					assertEquals("RECORD-TOTAL\t32",line);
+			if( getFileSystem().isFile(output) ) {
+				InputStream is = getFileSystem().open(output);
+				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
+				String line = null;
+				while( ( line = reader.readLine()) != null ) {
+					log.info(line);
+					if( line.startsWith("RECORD-TOTAL")) {
+						assertEquals("RECORD-TOTAL\t32",line);
+					}
 				}
+				reader.close();
+			} else {
+				log.info(" --- ...skipping directory...");
 			}
-			reader.close();
 		}
  		//Assert.assertEquals("a\t2", reader.readLine());
 		//Assert.assertEquals("b\t1", reader.readLine());
