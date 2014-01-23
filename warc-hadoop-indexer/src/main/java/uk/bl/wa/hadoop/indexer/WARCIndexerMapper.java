@@ -2,12 +2,18 @@ package uk.bl.wa.hadoop.indexer;
 
 import java.io.IOException;
 import java.io.StringReader;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.zip.CRC32;
 
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
@@ -17,6 +23,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -27,16 +34,56 @@ import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 
+import com.google.common.base.Joiner;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, WritableSolrRecord> {
 	private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
+	private static final String COLLECTION_XML = "taxonomy_term";
+	private static final String OK_PUBLISH = "1";
+	private static final String FIELD_PUBLISH = "field_publish";
+	private static final String FIELD_DATES = "field_dates";
+	private static final String FIELD_NAME = "name";
+	private static final String FIELD_START_DATE = "value";
+	private static final String FIELD_END_DATE = "value2";
+
+	private CRC32 crc = new CRC32();
+	private int numReducers;
 
 	private WARCIndexer windex;
 	private HashMap<String, HashMap<String, UriCollection>> collections;
+	private HashMap<String, DateRange> collectionDateRanges;
 	private boolean processCollections = false;
+	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
+
+	/**
+	 * DateRange: holds a start/end date for mapping Collection timeframes.
+	 * 
+	 * @author rcoram
+	 * 
+	 */
+	private class DateRange {
+		protected Date start;
+		protected Date end;
+
+		public DateRange( String start, String end ) {
+			if( start != null )
+				this.start = new Date( Long.parseLong( start ) * 1000L );
+			else
+				this.start = new Date( 0L );
+
+			if( end != null )
+				this.end = new Date( Long.parseLong( end ) * 1000L );
+			else
+				this.end = new Date( Long.MAX_VALUE );
+		}
+
+		public boolean isInDateRange( Date date ) {
+			return( date.after( start ) && date.before( end ) );
+		}
+	}
 
 	private class UriCollection {
 		protected String collectionCategories;
@@ -66,12 +113,16 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 		try {
 			// Get config from job property:
 			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
+			this.numReducers = job.getInt( "warc.hadoop.num_reducers", 1 );
 			// If we're reading from ACT, parse the XML output into our collection lookup.
-			String xml = job.get( "warc.act.xml" );
-			if( xml != null ) {
+			String recordXml = job.get( "warc.act.xml" );
+			String collectionXml = job.get( "warc.act.collections.xml" );
+			if( recordXml != null ) {
 				processCollections = true;
 				LOG.info( "Parsing collection XML..." );
-				parseCollectionXml( xml );
+				parseCollectionXml( collectionXml );
+				LOG.info( "Parsing record XML..." );
+				parseRecordXml( recordXml );
 			}
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
@@ -96,21 +147,28 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				return;
 			}
 
-			String oKey = null;
+			Text oKey = null;
 			try {
 				URI uri = new URI( header.getUrl() );
 				if( processCollections ) {
-					// TODO: Trac #2243; This should only happen if the record's timestamp is 
-					// within the range set by the Collection.
 					processCollectionScopes( uri, solr );
 				}
-				oKey = uri.getHost();
-				if( oKey != null )
-					output.collect( new Text( oKey ), new WritableSolrRecord( solr ) );
+				oKey = new Text( generateKey( uri ) );
+				output.collect( oKey, new WritableSolrRecord( solr ) );
 			} catch( Exception e ) {
 				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}
 		}
+	}
+
+	private Text generateKey( URI uri ) {
+		crc.reset();
+		try {
+			crc.update( uri.toString().getBytes( "UTF-8" ) );
+		} catch( UnsupportedEncodingException e ) {
+			LOG.equals( uri + "; " + e.getMessage() );
+		}
+		return new Text( Long.toString( crc.getValue() % numReducers ) );
 	}
 
 	/**
@@ -120,10 +178,11 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	 * @param uri
 	 * @param solr
 	 * @throws URISyntaxException
+	 * @throws URIException
 	 */
-	private void processCollectionScopes( URI uri, SolrRecord solr ) throws URISyntaxException {
+	private void processCollectionScopes( URI uri, SolrRecord solr ) throws URISyntaxException, URIException {
 		// "Just this URL".
-		if( collections.get( "resource" ).keySet().contains( uri.toString() ) ) {
+		if( collections.get( "resource" ).keySet().contains( canon.urlStringToKey( uri.toString() ) ) ) {
 			updateCollections( collections.get( "resource" ).get( uri.toString() ), solr );
 		}
 		// "All URLs that start like this".
@@ -145,40 +204,130 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 	/**
 	 * Updates a given SolrRecord with collections details from a UriCollection.
+	 * 
 	 * @param collection
 	 * @param solr
 	 */
 	private void updateCollections( UriCollection collection, SolrRecord solr ) {
+		// Trac #2243; This should only happen if the record's timestamp is
+		// within the range set by the Collection.
+		Date date = WARCIndexer.getWaybackDate( ( String ) solr.doc.getField( SolrFields.CRAWL_DATE ).getValue() );
+
 		LOG.info( "Updating collections for " + solr.doc.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection
 		if( collection.collectionCategories != null && collection.collectionCategories.length() > 0 ) {
-			solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
-			LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+			if( collectionDateRanges.containsKey( collection.collectionCategories ) && collectionDateRanges.get( collection.collectionCategories ).isInDateRange( date ) ) {
+				solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
+				LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+			}
 		}
 		// Iterate over the hierarchical collections
 		if( collection.allCollections != null && collection.allCollections.length > 0 ) {
 			for( String col : collection.allCollections ) {
-				solr.addField( SolrFields.SOLR_COLLECTIONS, col );
-				LOG.info( "Added collection '" + col + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+				if( collectionDateRanges.containsKey( col ) && collectionDateRanges.get( col ).isInDateRange( date ) ) {
+					solr.addField( SolrFields.SOLR_COLLECTIONS, col );
+					LOG.info( "Added collection '" + col + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+				}
 			}
 		}
 		// Iterate over the subjects
 		if( collection.subject != null && collection.subject.length > 0 ) {
 			for( String subject : collection.subject ) {
-				solr.addField( SolrFields.SOLR_SUBJECT, subject );
-				LOG.info( "Added collection '" + subject + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+				if( collectionDateRanges.containsKey( subject ) && collectionDateRanges.get( subject ).isInDateRange( date ) ) {
+					solr.addField( SolrFields.SOLR_SUBJECT, subject );
+					LOG.info( "Added collection '" + subject + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+				}
 			}
 		}
 	}
 
 	/**
-	 * Parses XML output from ACT into a lookup for further enriching records.
-	 * @param xml
-	 * @throws JDOMException
+	 * Parses XML from ACT, mapping collection names to date ranges.
+	 * 
 	 * @throws IOException
+	 * @throws JDOMException
+	 * 
 	 */
 	@SuppressWarnings( "unchecked" )
 	private void parseCollectionXml( String xml ) throws JDOMException, IOException {
+		SAXBuilder builder = new SAXBuilder();
+		Document document = ( Document ) builder.build( new StringReader( xml ) );
+		Element rootNode = document.getRootElement();
+		List<Element> list = rootNode.getChildren( COLLECTION_XML );
+
+		Element node = null;
+		DateRange dateRange;
+		String name, start, end, publish;
+		for( int i = 0; i < list.size(); i++ ) {
+			node = ( Element ) list.get( i );
+			publish = node.getChildText( FIELD_PUBLISH );
+			if( publish != null && publish.equals( OK_PUBLISH ) ) {
+				name = node.getChildText( FIELD_NAME );
+				start = node.getChild( FIELD_DATES ).getChildText( FIELD_START_DATE );
+				end = node.getChild( FIELD_DATES ).getChildText( FIELD_END_DATE );
+				dateRange = new DateRange( start, end );
+				collectionDateRanges.put( name, dateRange );
+			}
+		}
+	}
+
+	/**
+	 * Removes inactive Collections before optionally creating a UriCollection.
+	 * 
+	 * @param collectionCategories
+	 * @param allCollections
+	 * @param subject
+	 * @return
+	 */
+	private UriCollection filterUriCollection( String collectionCategories, String allCollections, String subject ) {
+		UriCollection output = null;
+		Set<String> validCollections = collectionDateRanges.keySet();
+
+		if( collectionCategories != null && !validCollections.contains( collectionCategories ) )
+			collectionCategories = null;
+
+		ArrayList<String> valid = new ArrayList<String>();
+		if( allCollections != null ) {
+			for( String a : allCollections.split( "|" ) ) {
+				if( validCollections.contains( a ) )
+					valid.add( a );
+			}
+			if( valid.size() == 0 ) {
+				allCollections = null;
+			} else {
+				allCollections = Joiner.on( "|" ).join( valid );
+			}
+		}
+
+		valid.clear();
+		if( subject != null ) {
+			for( String s : subject.split( "|" ) ) {
+				if( validCollections.contains( s ) )
+					valid.add( s );
+			}
+			if( valid.size() == 0 ) {
+				subject = null;
+			} else {
+				subject = Joiner.on( "|" ).join( valid );
+			}
+		}
+
+		if( collectionCategories != null && allCollections != null && subject != null )
+			output = new UriCollection( collectionCategories, allCollections, subject );
+
+		return output;
+	}
+
+	/**
+	 * Parses XML output from ACT into a lookup, mapping URLs to collections.
+	 * 
+	 * @param xml
+	 * @throws JDOMException
+	 * @throws IOException
+	 * @throws URISyntaxException
+	 */
+	@SuppressWarnings( "unchecked" )
+	private void parseRecordXml( String xml ) throws JDOMException, IOException {
 		SAXBuilder builder = new SAXBuilder();
 		Document document = ( Document ) builder.build( new StringReader( xml ) );
 		Element rootNode = document.getRootElement();
@@ -186,26 +335,58 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 		Element node = null;
 		String urls, collectionCategories, allCollections, subject, scope;
-		HashMap<String, UriCollection> relevantCollection;
 		for( int i = 0; i < list.size(); i++ ) {
 			node = ( Element ) list.get( i );
 			urls = node.getChildText( "urls" );
 			collectionCategories = node.getChildText( "collectionCategories" );
+			// Trac #2271: Erroneous data in ACT might contain pipe-separated text.
+			if( collectionCategories != null && collectionCategories.indexOf( "|" ) != -1 ) {
+				collectionCategories = collectionCategories.split( "|" )[ 0 ];
+			}
 			allCollections = node.getChildText( "allCollections" );
 			subject = node.getChildText( "subject" );
 			scope = node.getChildText( "scope" );
 			// As long as one of the fields is populated we have something to do...
 			if( collectionCategories != null || allCollections != null || subject != null ) {
-				UriCollection collection = new UriCollection( collectionCategories, allCollections, subject );
+				UriCollection collection = filterUriCollection( collectionCategories, allCollections, subject );
 				// There should be no scope beyond those created in the Constructor.
-				relevantCollection = collections.get( scope );
-				for( String url : urls.split( "\\s+" ) ) {	
-					relevantCollection.put( url, collection );
-				}
+				if( collection != null )
+					addCollection( scope, urls, collection );
 			}
 		}
 		for( String key : collections.keySet() ) {
 			LOG.info( "Processed " + collections.get( key ).size() + " URIs for collection " + key );
+		}
+	}
+
+	private void addCollection( String scope, String urls, UriCollection collection ) {
+		HashMap<String, UriCollection> relevantCollection = collections.get( scope );
+		for( String url : urls.split( "\\s+" ) ) {
+			if( scope.equals( "resource" ) ) {
+				try {
+					// Trac #2271: try keying on canonicalized URL.
+					url = canon.urlStringToKey( url );
+				} catch( URIException u ) {
+					LOG.warn( u.getMessage() + ": " + url );
+				}
+				relevantCollection.put( url, collection );
+			} else {
+				URI uri;
+				try {
+					uri = new URI( url );
+				} catch( URISyntaxException e ) {
+					LOG.warn( e.getMessage() );
+					continue;
+				}
+				if( scope.equals( "root" ) ) {
+					String prefix = uri.getScheme() + "://" + uri.getHost();
+					relevantCollection.put( prefix, collection );
+				}
+				if( scope.equals( "subdomains" ) ) {
+					String host = uri.getHost();
+					relevantCollection.put( host, collection );
+				}
+			}
 		}
 	}
 }

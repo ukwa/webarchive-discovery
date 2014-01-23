@@ -191,7 +191,7 @@
    
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->   
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
-   <!-- The harvest/crawl date, as a date -->
+   <!-- The ealiest harvest/crawl date, as a date -->
    <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl year, for faceting -->
    <field name="crawl_year" type="string" indexed="true" stored="true" multiValued="false"/>
@@ -199,6 +199,8 @@
    <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The harvest/crawl year, month and day, for faceting -->
    <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false"/>
+   <!-- The harvest/crawl dates, as a multivalued series of date -->
+   <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
    
    <!-- The domain for this URL: -->
    <field name="host" type="string" indexed="true" stored="true" multiValued="false"/>

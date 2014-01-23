@@ -14,8 +14,10 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.util.solr.SolrRecord;
@@ -29,9 +31,8 @@ import com.typesafe.config.ConfigFactory;
 public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
-	private CloudSolrServer solrServer;
+	private SolrServer solrServer;
 	private int batchSize;
-	private String collection;
 	private boolean dummyRun;
 
 	public WARCIndexerReducer() {}
@@ -42,13 +43,11 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		// Get config from job property:
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 
-		this.collection = conf.getString( "warc.solr.collection" );
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
 			if( !dummyRun ) {
-				solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeeper" ) );
-				solrServer.setDefaultCollection( collection );
+				solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
 			}
 		} catch( MalformedURLException e ) {
 			log.error( "WARCIndexerReducer.configure(): " + e.getMessage() );
@@ -72,7 +71,8 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 				// Have we exceeded the batchSize?
 				checkSubmission( docs, batchSize );
 			} else {
-				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
+				log.info( "DUMMY_RUN: Skipping addition of doc: " +
+						solr.doc.getField( "id" ).getFirstValue() );
 			}
 		}
 		if( !dummyRun ) {
@@ -89,9 +89,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	 * @param limit
 	 */
 	private void checkSubmission( List<SolrInputDocument> docs, int limit ) {
+		UpdateResponse response;
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			try {
-				solrServer.add( docs );
+				response = solrServer.add( docs );
+				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() +
+						"; " + response.getRequestUrl() + "]" );
 			} catch( SolrServerException e ) {
 				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
 			} catch( IOException i ) {

@@ -1,18 +1,16 @@
 package uk.bl.wa.hadoop;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInput;
 import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
-import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.warc.WARCRecord;
 
@@ -30,11 +28,11 @@ import org.archive.io.warc.WARCRecord;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class WritableArchiveRecord implements Writable {
-	private static Log log = LogFactory.getLog(WritableArchiveRecord.class);
-			
+public class WritableArchiveRecord implements Writable, WritableComparable<WritableArchiveRecord> {
+	private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
+
 	private ArchiveRecord record = null;
-	
+
 	public WritableArchiveRecord() {}
 
 	public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
@@ -46,12 +44,12 @@ public class WritableArchiveRecord implements Writable {
 	}
 
 	public ArchiveRecord getRecord() {
-		log.info("Calling getRecord()...");
+		log.info( "Calling getRecord()..." );
 		return record;
 	}
 
-	public byte[] getPayload(int max_buffer_size) throws IOException {
-		log.info("Calling getPayload(int)...");
+	public byte[] getPayload( int max_buffer_size ) throws IOException {
+		log.info( "Calling getPayload(int)..." );
 		BufferedInputStream input = new BufferedInputStream( record );
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		int ch;
@@ -65,21 +63,21 @@ public class WritableArchiveRecord implements Writable {
 		}
 		return output.toByteArray();
 	}
-	
+
 	public InputStream getPayloadAsStream() {
-		log.info("Calling getPayloadAsStream()...");
+		log.info( "Calling getPayloadAsStream()..." );
 		return record;
 	}
 
 	@Override
 	public void readFields( DataInput input ) throws IOException {
-		log.warn("Calling readField(DataInput)...");
+		log.warn( "Calling readField(DataInput)..." );
 		record = ( WARCRecord ) input;
 	}
 
 	@Override
 	public void write( DataOutput output ) throws IOException {
-		log.warn("Calling write(DataOutput)...");
+		log.warn( "Calling write(DataOutput)..." );
 		if( record != null ) {
 			int ch;
 			byte[] buffer = new byte[ 1048576 ];
@@ -89,4 +87,12 @@ public class WritableArchiveRecord implements Writable {
 		}
 	}
 
+	@Override
+	public int compareTo( WritableArchiveRecord record ) {
+		String toUrl = record.getRecord().getHeader().getUrl();
+		String toHash = record.getRecord().getHeader().getDigest();
+		String thisUrl = this.getRecord().getHeader().getUrl();
+		String thisHash = this.getRecord().getHeader().getDigest();
+		return ( thisHash + "/" + thisUrl ).compareTo( toHash + "/" + toUrl );
+	}
 }
