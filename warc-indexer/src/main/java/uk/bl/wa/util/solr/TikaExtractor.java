@@ -253,22 +253,22 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				}
 			}
 			
-			// Also look to record the software:
-			String software = null;
+			// Also look to record the software identifiers:
+			
 			// Look for generic xmp:CreatorTool
-			String creator = metadata.get("xmp:CreatorTool");
-			if( creator != null ) solr.addField(SolrFields.GENERATOR, creator+ " (xmp:CreatorTool)");
-			// For PDF, create separate tags:
-			String producer = metadata.get("producer");
-			if( producer != null) solr.addField(SolrFields.GENERATOR, producer);
+			solr.addField(SolrFields.GENERATOR, metadata.get("xmp:CreatorTool"));
+			// For PDF, support other metadata tags:
+			solr.addField(SolrFields.GENERATOR, metadata.get( "creator" ));
+			solr.addField(SolrFields.GENERATOR, metadata.get( "producer" ));
+			solr.addField(SolrFields.GENERATOR, metadata.get( Metadata.SOFTWARE ));
+			solr.addField(SolrFields.GENERATOR, metadata.get( "generator" ));
+			solr.addField(SolrFields.GENERATOR, metadata.get( "Software" ));
 			
 			// Application ID, MS Office only AFAICT, and the VERSION is only doc
+			String software = null;
 			if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
 			if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
 			// Images, e.g. JPEG and TIFF, can have 'Software', 'tiff:Software',
-			if( metadata.get( "Software" ) != null ) software = metadata.get( "Software" );
-			if( metadata.get( Metadata.SOFTWARE ) != null ) software = metadata.get( Metadata.SOFTWARE );
-			if( metadata.get( "generator" ) != null ) software = metadata.get( "generator" );
 			// PNGs have a 'tEXt tEXtEntry: keyword=Software, value=GPL Ghostscript 8.71'
 			String png_textentry = metadata.get("tEXt tEXtEntry");
 			if( png_textentry != null && png_textentry.contains("keyword=Software, value=") )
