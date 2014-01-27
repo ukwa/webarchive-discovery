@@ -1,13 +1,16 @@
 package uk.bl.wa.indexer;
 
+import static org.archive.io.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
 import static org.archive.io.warc.WARCConstants.RESPONSE;
+import static org.archive.io.warc.WARCConstants.REVISIT;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -45,6 +48,7 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.net.UURI;
 import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
+import org.archive.util.Base32;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
 import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
@@ -91,6 +95,7 @@ public class WARCIndexer {
 
 	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
 
+	private MessageDigest digest = MessageDigest.getInstance( "SHA-1" );
 	private TikaExtractor tika = null;
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
@@ -206,9 +211,11 @@ public class WARCIndexer {
 		SolrRecord solr = new SolrRecord();
 
 		if( !header.getHeaderFields().isEmpty() ) {
-			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
-				return null;
-			}
+			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
+				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( REVISIT ) ) ) {
+					return null;
+				}
+			} // else we're processing ARCs
 
 			if( header.getUrl() == null )
 				return null;
@@ -221,13 +228,6 @@ public class WARCIndexer {
 				return null;
 			if( this.checkExclusionFilter( fullUrl ) == false )
 				return null;
-
-			// Check the record type:
-			// log.debug("WARC record "+header.getHeaderValue(WARCConstants.HEADER_KEY_ID)+" type: " + header.getHeaderValue( WARCConstants.HEADER_KEY_TYPE ));
-			// By checking if KEY_TYPE is there, we accept all ARC records, or WARC records of type response.
-			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
-				return null;
-			}
 
 			// --- Basic headers ---
 
@@ -242,9 +242,7 @@ public class WARCIndexer {
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong( waybackDate + "00" ) + ( ( md5digest[ 1 ] << 8 ) + md5digest[ 0 ] ) );
-			solr.doc.setField( SolrFields.HASH, header.getHeaderValue( WARCConstants.HEADER_KEY_PAYLOAD_DIGEST ) );
 			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
-			solr.doc.setField( SolrFields.HASH_AND_URL, header.getHeaderValue( WARCConstants.HEADER_KEY_PAYLOAD_DIGEST ) + "_" + fullUrl );
 
 			// Also pull out the file extension, if any:
 			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
@@ -338,6 +336,28 @@ public class WARCIndexer {
 			} else {
 				solr = tika.extract( solr, tikainput, null );
 			}
+
+			// TODO: ArchiveRecordHeader.getDigest() returning null for (W)ARCs.
+			// TODO: At the very least we should calculate the hash on the whole InputStream.
+			String hash = null;
+			try {
+				tikainput.reset();
+				if( header.getHeaderFieldKeys().contains( HEADER_KEY_PAYLOAD_DIGEST ) ) {
+					hash = ( String ) header.getHeaderValue( HEADER_KEY_PAYLOAD_DIGEST );
+				} else {
+					DigestInputStream dinput = new DigestInputStream( tikainput, digest );
+					byte[] dummy = new byte[ 4096 ];
+					while( dinput.read( dummy ) > 0 ) {
+						// Do nothing
+					}
+					hash = "sha1:" + Base32.encode( digest.digest() );
+				}
+			} catch( Exception i ) {
+				log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
+			}
+			// Set these last: ARC records must be read in full to calculate the hash.
+			solr.doc.setField( SolrFields.HASH, hash );
+			solr.doc.setField( SolrFields.HASH_AND_URL, hash + "_" + fullUrl );
 
 			// Pull out the first few bytes, to hunt for new format by magic:
 			try {
@@ -572,7 +592,6 @@ public class WARCIndexer {
 			if( !isTextIncluded ) {
 				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
 			}
-
 		}
 		return solr;
 	}
@@ -643,6 +662,7 @@ public class WARCIndexer {
 
 	/**
 	 * Returns a Java Date object representing the crawled date.
+	 * 
 	 * @param timestamp
 	 * @return
 	 */

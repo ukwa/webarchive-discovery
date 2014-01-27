@@ -54,6 +54,7 @@ public interface SolrFields {
 	public static final String SERVER = "server";
 	public static final String PARSE_ERROR = "parse_error";
 	public static final String CONTENT_WARNING = "content_warning";
+	public static final String SOLR_RECORD_TYPE = "record_type";
 	
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
@@ -63,6 +64,7 @@ public interface SolrFields {
 	public static final String SOLR_TIKA_METADATA = "content_metadata";
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String CRAWL_DATE = "crawl_date";
+	public static final String CRAWL_DATES = "crawl_dates";
 	public static final String CRAWL_YEAR = "crawl_year";
 	public static final String PUBLICATION_DATE = "publication_date";
 	public static final String PUBLICATION_YEAR = "publication_year";

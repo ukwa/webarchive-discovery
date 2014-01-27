@@ -10,7 +10,6 @@ import java.io.InputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Writable;
-import org.apache.hadoop.io.WritableComparable;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.warc.WARCRecord;
 
@@ -28,9 +27,8 @@ import org.archive.io.warc.WARCRecord;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class WritableArchiveRecord implements Writable, WritableComparable<WritableArchiveRecord> {
+public class WritableArchiveRecord implements Writable {
 	private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
-
 	private ArchiveRecord record = null;
 
 	public WritableArchiveRecord() {}
@@ -44,12 +42,12 @@ public class WritableArchiveRecord implements Writable, WritableComparable<Writa
 	}
 
 	public ArchiveRecord getRecord() {
-		log.info( "Calling getRecord()..." );
+		log.debug( "Calling getRecord()..." );
 		return record;
 	}
 
 	public byte[] getPayload( int max_buffer_size ) throws IOException {
-		log.info( "Calling getPayload(int)..." );
+		log.debug( "Calling getPayload( int )..." );
 		BufferedInputStream input = new BufferedInputStream( record );
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		int ch;
@@ -65,19 +63,19 @@ public class WritableArchiveRecord implements Writable, WritableComparable<Writa
 	}
 
 	public InputStream getPayloadAsStream() {
-		log.info( "Calling getPayloadAsStream()..." );
+		log.debug( "Calling getPayloadAsStream()..." );
 		return record;
 	}
 
 	@Override
 	public void readFields( DataInput input ) throws IOException {
-		log.warn( "Calling readField(DataInput)..." );
+		log.debug( "Calling readField( DataInput )..." );
 		record = ( WARCRecord ) input;
 	}
 
 	@Override
 	public void write( DataOutput output ) throws IOException {
-		log.warn( "Calling write(DataOutput)..." );
+		log.debug( "Calling write( DataOutput )..." );
 		if( record != null ) {
 			int ch;
 			byte[] buffer = new byte[ 1048576 ];
@@ -85,14 +83,5 @@ public class WritableArchiveRecord implements Writable, WritableComparable<Writa
 				output.write( buffer, 0, ch );
 			}
 		}
-	}
-
-	@Override
-	public int compareTo( WritableArchiveRecord record ) {
-		String toUrl = record.getRecord().getHeader().getUrl();
-		String toHash = record.getRecord().getHeader().getDigest();
-		String thisUrl = this.getRecord().getHeader().getUrl();
-		String thisHash = this.getRecord().getHeader().getDigest();
-		return ( thisHash + "/" + thisUrl ).compareTo( toHash + "/" + toUrl );
 	}
 }

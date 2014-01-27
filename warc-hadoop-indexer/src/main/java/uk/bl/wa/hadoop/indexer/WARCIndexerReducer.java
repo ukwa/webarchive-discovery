@@ -1,10 +1,11 @@
 package uk.bl.wa.hadoop.indexer;
 
+import static uk.bl.wa.hadoop.indexer.WritableSolrRecord.ARC_TYPE;
+
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
+import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -17,9 +18,10 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
-import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.archive.io.warc.WARCConstants;
 
+import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
@@ -32,7 +34,6 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
 	private SolrServer solrServer;
-	private int batchSize;
 	private boolean dummyRun;
 
 	public WARCIndexerReducer() {}
@@ -44,7 +45,6 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
-		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
 			if( !dummyRun ) {
 				solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
@@ -57,50 +57,56 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void reduce( Text key, Iterator<WritableSolrRecord> values, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
 		WctEnricher wct;
+		TreeSet<String> crawlDates = new TreeSet<String>();
 
-		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+		// Iterate over values, checking if this is a response/revisit, building up a list of timestamps.
+		WritableSolrRecord wsr;
+		SolrRecord solr;
+		String type = null;
+		SolrInputDocument oDoc = null;
 		while( values.hasNext() ) {
-			WritableSolrRecord wsr = values.next();
-			SolrRecord solr = wsr.getSolrRecord();
+			wsr = values.next();
+			solr = wsr.getSolrRecord();
+
+			// Add additional metadata for WCT Instances.
 			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
-				wct = new WctEnricher( key.toString() );
+				wct = new WctEnricher( ( String ) solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
 				wct.addWctMetadata( solr );
 			}
-			if( !dummyRun ) {
-				docs.add( solr.doc );
-				// Have we exceeded the batchSize?
-				checkSubmission( docs, batchSize );
-			} else {
-				log.info( "DUMMY_RUN: Skipping addition of doc: " +
-						solr.doc.getField( "id" ).getFirstValue() );
-			}
-		}
-		if( !dummyRun ) {
-			// Have we any unsubmitted SolrInputDocuments?
-			checkSubmission( docs, 0 );
-		}
-	}
 
-	/**
-	 * Checks whether a List of docs has exceeded a given limit
-	 * and if so, submits them.
-	 * 
-	 * @param docs
-	 * @param limit
-	 */
-	private void checkSubmission( List<SolrInputDocument> docs, int limit ) {
-		UpdateResponse response;
-		if( docs.size() > 0 && docs.size() >= limit ) {
-			try {
-				response = solrServer.add( docs );
-				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() +
-						"; " + response.getRequestUrl() + "]" );
-			} catch( SolrServerException e ) {
-				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
-			} catch( IOException i ) {
-				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
+			// If this is a 'response' or an ARC (i.e. null) record...
+			type = wsr.getType();
+			if( type.equals( ARC_TYPE ) || type.equals( WARCConstants.RESPONSE ) ) {
+				// If oDoc already set, compare dates.
+				if( oDoc != null ) {
+					String currentEarliest = ( String ) oDoc.getFieldValue( SolrFields.WAYBACK_DATE );
+					String toCheck = ( String ) solr.doc.getFieldValue( SolrFields.WAYBACK_DATE );
+					if( currentEarliest.compareTo( toCheck ) == 1 ) {
+						oDoc = solr.doc;
+					}
+				} else {
+					oDoc = solr.doc;
+				}
 			}
-			docs.clear();
+			crawlDates.add( ( String ) solr.doc.getFieldValue( SolrFields.CRAWL_DATE ) );
+		}
+		// If we haven't found a response (i.e. just a lot of revisits) something's wrong.
+		if( oDoc == null ) {
+			log.error( "No appropriate response record found for: " + key + " (" + type + ")" );
+			return;
+		} else {
+			// Set the multivalued field with our (sorted) revisited dates.
+			oDoc.setField( SolrFields.CRAWL_DATES, crawlDates.toArray( new String[ crawlDates.size() ] ) );
+		}
+
+		if( !dummyRun ) {
+			try {
+				solrServer.add( oDoc );
+			} catch( SolrServerException e ) {
+				log.error( "SolrServer.add(): " + e.getMessage(), e );
+			}
+		} else {
+			log.info( "DUMMY_RUN: Skipping addition of doc: " + oDoc.getField( "id" ).getFirstValue() );
 		}
 	}
 }

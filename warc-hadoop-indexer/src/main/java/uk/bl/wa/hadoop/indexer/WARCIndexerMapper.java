@@ -1,8 +1,9 @@
 package uk.bl.wa.hadoop.indexer;
 
+import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
+
 import java.io.IOException;
 import java.io.StringReader;
-import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.security.NoSuchAlgorithmException;
@@ -11,7 +12,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.zip.CRC32;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
@@ -48,9 +48,6 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	private static final String FIELD_NAME = "name";
 	private static final String FIELD_START_DATE = "value";
 	private static final String FIELD_END_DATE = "value2";
-
-	private CRC32 crc = new CRC32();
-	private int numReducers;
 
 	private WARCIndexer windex;
 	private HashMap<String, HashMap<String, UriCollection>> collections;
@@ -113,7 +110,6 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 		try {
 			// Get config from job property:
 			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
-			this.numReducers = job.getInt( "warc.hadoop.num_reducers", 1 );
 			// If we're reading from ACT, parse the XML output into our collection lookup.
 			String recordXml = job.get( "warc.act.xml" );
 			String collectionXml = job.get( "warc.act.collections.xml" );
@@ -147,28 +143,20 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				return;
 			}
 
-			Text oKey = null;
+			Text oKey = new Text( ( String ) solr.doc.getFieldValue( SolrFields.HASH_AND_URL ) );
 			try {
 				URI uri = new URI( header.getUrl() );
 				if( processCollections ) {
 					processCollectionScopes( uri, solr );
 				}
-				oKey = new Text( generateKey( uri ) );
-				output.collect( oKey, new WritableSolrRecord( solr ) );
+				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
+				// Set the record type (null for ARCs).
+				wsolr.setType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) );
+				output.collect( oKey, wsolr );
 			} catch( Exception e ) {
 				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
 			}
 		}
-	}
-
-	private Text generateKey( URI uri ) {
-		crc.reset();
-		try {
-			crc.update( uri.toString().getBytes( "UTF-8" ) );
-		} catch( UnsupportedEncodingException e ) {
-			LOG.equals( uri + "; " + e.getMessage() );
-		}
-		return new Text( Long.toString( crc.getValue() % numReducers ) );
 	}
 
 	/**

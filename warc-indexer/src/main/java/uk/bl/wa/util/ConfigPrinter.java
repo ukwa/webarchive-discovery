@@ -3,6 +3,8 @@
  */
 package uk.bl.wa.util;
 
+import java.io.File;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -33,7 +35,7 @@ public class ConfigPrinter {
 		// Load the config:
 		Config config;
 		if( args.length > 0 ) {
-			config = ConfigFactory.load( args[ 0 ] );
+			config = ConfigFactory.parseFile( new File( args[ 0 ] ) );
 		} else {
 			config = ConfigFactory.load();
 		}

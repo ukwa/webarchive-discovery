@@ -1,6 +1,7 @@
 package uk.bl.wa.hadoop.indexer;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.HttpURLConnection;
@@ -11,7 +12,6 @@ import java.util.Scanner;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
@@ -29,6 +29,7 @@ import org.apache.hadoop.util.ToolRunner;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
+import uk.bl.wa.util.ConfigPrinter;
 
 import com.sun.syndication.io.impl.Base64;
 import com.typesafe.config.Config;
@@ -45,14 +46,16 @@ import com.typesafe.config.ConfigRenderOptions;
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerRunner extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog( WARCIndexerRunner.class );
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-d] [Dump config.]";
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-a] [Read from ACT.] [-d] [Dump config.] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
 	private String inputPath;
 	private String outputPath;
+	private String configPath;
 	private boolean readAct;
 	private boolean wait;
+	private boolean dumpConfig;
 
 	private String cookie;
 	private String csrf;
@@ -98,19 +101,28 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		this.setup( args );
 
 		// Store application properties where the mappers/reducers can access them
-		Config index_conf = ConfigFactory.load();
+		Config index_conf;
+		if( this.configPath != null ) {
+			index_conf = ConfigFactory.parseFile( new File( this.configPath ) );
+		} else {
+			index_conf = ConfigFactory.load();
+		}
+		if( this.dumpConfig ) {
+			ConfigPrinter.print( index_conf );
+			System.exit( 0 );
+		}
 		conf.set( CONFIG_PROPERTIES, index_conf.withOnlyPath( "warc" ).root().render( ConfigRenderOptions.concise() ) );
 		LOG.info( "Loaded warc config." );
+		LOG.info( index_conf.getString( "warc.title" ) );
 
 		// Pull in ACT metadata
 		if( this.readAct ) {
 			LOG.info( "Reading records from ACT..." );
-//			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
+			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
 			LOG.info( "Reading Collections from ACT..." );
 			conf.set( "warc.collections.xml", readAct( index_conf.getString( "warc.act.collections.url" ) ) );
 			LOG.info( "Read " + conf.get( "warc.act.xml" ).length() + " bytes." );
 		}
-System.out.println( conf.get( "warc.collections.xml" ) ); System.exit( 0 );
 		// Also set reduce speculative execution off, avoiding duplicate submissions to Solr.
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 
@@ -196,14 +208,16 @@ System.out.println( conf.get( "warc.collections.xml" ) ); System.exit( 0 );
 		return 0;
 	}
 
-	@SuppressWarnings( "static-access" )
 	private void setup( String[] args ) throws ParseException {
 		Options options = new Options();
 		options.addOption( "i", true, "input file list" );
 		options.addOption( "o", true, "output directory" );
+		options.addOption( "c", true, "path to configuration" );
 		options.addOption( "a", false, "read data from ACT" );
 		options.addOption( "w", false, "wait for job to finish" );
-		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
+		options.addOption( "d", false, "dump configuration" );
+		//TODO: Problematic with "hadoop jar"?
+//		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs( 2 ).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse( options, args );
@@ -217,6 +231,10 @@ System.out.println( conf.get( "warc.collections.xml" ) ); System.exit( 0 );
 		this.outputPath = cmd.getOptionValue( "o" );
 		this.readAct = cmd.hasOption( "a" );
 		this.wait = cmd.hasOption( "w" );
+		if( cmd.hasOption( "c" ) ) {
+			this.configPath = cmd.getOptionValue( "c" );
+		}
+		this.dumpConfig = cmd.hasOption( "d" );
 	}
 
 	/**

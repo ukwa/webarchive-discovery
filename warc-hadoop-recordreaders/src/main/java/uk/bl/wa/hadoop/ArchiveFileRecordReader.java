@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.io.arc.ARCReaderFactory;
 
 @SuppressWarnings( "deprecation" )
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {

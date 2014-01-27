@@ -5,7 +5,6 @@ package uk.bl.wa.util.solr;
 
 import java.io.Serializable;
 
-import org.apache.hadoop.io.Writable;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 

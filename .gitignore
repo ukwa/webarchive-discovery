@@ -3,4 +3,5 @@
 .settings
 build
 target
+credentials.conf
 
