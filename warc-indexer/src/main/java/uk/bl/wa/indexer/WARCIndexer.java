@@ -444,6 +444,7 @@ public class WARCIndexer {
 						thread.interrupt();
 					} catch( Exception e ) {
 						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+						solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing as HTML: " + e.getMessage() );
 					}
 
 					// Process links:
@@ -512,6 +513,7 @@ public class WARCIndexer {
 						thread.interrupt();
 					} catch( Exception e ) {
 						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+						solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with Apache Preflight: " + e.getMessage() );
 					}
 					
 					String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID);
