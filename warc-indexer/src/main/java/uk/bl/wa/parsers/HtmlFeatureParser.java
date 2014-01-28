@@ -14,6 +14,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -39,8 +40,10 @@ public class HtmlFeatureParser extends AbstractParser {
 	
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
 	public static final String LINK_LIST = "LinkList";
+	public static final Property LINKS = Property.internalTextBag("LINK-LIST");
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
-	public static final String DISTINCT_ELEMENTS = "DistinctElements";
+	//public static final String DISTINCT_ELEMENTS = "DistinctElements";
+	public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
 	
 	@Override
 	public Set<MediaType> getSupportedTypes(ParseContext context) {
@@ -97,7 +100,7 @@ public class HtmlFeatureParser extends AbstractParser {
 			if( !"#root".equals(e.tag().getName()) )
 					de.add(e.tag().getName());
 		}
-		metadata.set(DISTINCT_ELEMENTS, StringUtils.join(de, " "));
+		metadata.set(DISTINCT_ELEMENTS, de.toArray(new String[] {}));
 		
 		// Licence field, following:
 		// http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#link-type-license

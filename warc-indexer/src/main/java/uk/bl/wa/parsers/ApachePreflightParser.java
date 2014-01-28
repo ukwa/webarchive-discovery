@@ -5,9 +5,11 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.activation.FileDataSource;
@@ -19,6 +21,7 @@ import org.apache.pdfbox.preflight.exception.SyntaxValidationException;
 import org.apache.pdfbox.preflight.parser.PreflightParser;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -42,6 +45,12 @@ public class ApachePreflightParser extends AbstractParser {
                   MediaType.application("pdf")
             )));
 
+	public static final Property PDF_PREFLIGHT_VALID = Property.internalBoolean("PDF-A-PREFLIGHT-VALID");
+
+	public static final Property PDF_PREFLIGHT_ERRORS = Property.internalTextBag("PDF-A-PREFLIGHT-ERRORS");
+
+	
+	
 	/* (non-Javadoc)
 	 * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
 	 */
@@ -92,15 +101,20 @@ public class ApachePreflightParser extends AbstractParser {
 		}
 
 		// display validation result
+		List<String> rs = new ArrayList<String>();
 		if (result.isValid()) {
 		  System.out.println("The resource is not a valid PDF/A-1b file");
+		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
 		} else {
 		  System.out.println("The resource is not valid, error(s) :");
+		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.FALSE.toString() );
 		  for (ValidationError error : result.getErrorsList()) {
 		    System.out.println(error.getErrorCode() + " : " + error.getDetails());
-		    metadata.add("PDF-A-"+error.getErrorCode(), error.getDetails());
+		    rs.add(error.getErrorCode() + " : " + error.getDetails());
 		  }
 		}
+
+	    metadata.set( PDF_PREFLIGHT_ERRORS , rs.toArray( new String[] {} ));
 
 	}
 

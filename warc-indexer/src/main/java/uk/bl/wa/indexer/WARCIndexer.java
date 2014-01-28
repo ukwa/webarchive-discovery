@@ -40,6 +40,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.tika.detect.XmlRootExtractor;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
+import org.apache.tika.parser.AbstractParser;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
@@ -57,6 +58,7 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
+import uk.bl.wa.parsers.ApachePreflightParser;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
@@ -117,6 +119,9 @@ public class WARCIndexer {
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
 
+	/** */
+	private ApachePreflightParser app = new ApachePreflightParser();
+	
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
 
@@ -483,9 +488,9 @@ public class WARCIndexer {
 					}
 					// Process element usage:
 					if( this.extractElementsUsed ) {
-						String de = metadata.get( HtmlFeatureParser.DISTINCT_ELEMENTS );
+						String[] de = metadata.getValues( HtmlFeatureParser.DISTINCT_ELEMENTS );
 						if( de != null ) {
-							for( String e : de.split( " " ) ) {
+							for( String e : de ) {
 								solr.addField( SolrFields.ELEMENTS_USED, e );
 							}
 						}
@@ -498,7 +503,25 @@ public class WARCIndexer {
 					// TODO Extract image properties.
 
 				} else if( mime.startsWith( "application/pdf" ) ) {
-					// TODO e.g. Use PDFBox Preflight to analyse? https://pdfbox.apache.org/userguide/preflight.html
+					metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
+					ParseRunner parser = new ParseRunner( app, tikainput, metadata );
+					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
+					try {
+						thread.start();
+						thread.join( 30000L );
+						thread.interrupt();
+					} catch( Exception e ) {
+						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+					}
+					
+					String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID);
+					solr.addField( "pdf_valid_pdfa_s", isValid );
+					String[] errors = metadata.getValues( ApachePreflightParser.PDF_PREFLIGHT_ERRORS );
+					if( errors != null ) {
+						for( String error : errors ) {
+							solr.addField( "pdf_pdfa_errors_ss",  error );
+						}
+					}
 
 				}
 			} catch( Exception i ) {
@@ -850,11 +873,11 @@ public class WARCIndexer {
 	}
 
 	private class ParseRunner implements Runnable {
-		HtmlFeatureParser hfp;
+		AbstractParser hfp;
 		Metadata metadata;
 		InputStream input;
 
-		public ParseRunner( HtmlFeatureParser parser, InputStream tikainput, Metadata metadata ) {
+		public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata ) {
 			this.hfp = parser;
 			this.metadata = metadata;
 			this.input = tikainput;
