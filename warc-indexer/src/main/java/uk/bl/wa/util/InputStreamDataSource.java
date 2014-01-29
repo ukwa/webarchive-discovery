@@ -19,15 +19,29 @@ import javax.activation.DataSource;
  *
  */
 public class InputStreamDataSource implements DataSource {
+	private boolean read = false;
+	
     private InputStream inputStream;
+    
+    private String contentType = "*/*";
 
     public InputStreamDataSource(InputStream inputStream) {
         this.inputStream = inputStream;
     }
 
+    public InputStreamDataSource(InputStream inputStream, String contentType ) {
+        this.inputStream = inputStream;
+        this.contentType = contentType;
+    }
+
     @Override
     public InputStream getInputStream() throws IOException {
-        return inputStream;
+    	if( read == false ) {
+    		read = true;
+            return inputStream;
+    	} else {
+    		throw new IOException("Cannot re-initialise this InputStream");
+    	}
     }
 
     @Override
@@ -37,7 +51,7 @@ public class InputStreamDataSource implements DataSource {
 
     @Override
     public String getContentType() {
-        return "*/*";
+        return contentType;
     }
 
     @Override
