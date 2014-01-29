@@ -121,6 +121,7 @@ public class WARCIndexer {
 
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
+	private boolean extractApachePreflightErrors = true;
 	
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
@@ -504,6 +505,7 @@ public class WARCIndexer {
 					// TODO Extract image properties.
 
 				} else if( mime.startsWith( "application/pdf" ) ) {
+				  if( extractApachePreflightErrors ) {
 					metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
 					ParseRunner parser = new ParseRunner( app, tikainput, metadata );
 					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
@@ -524,6 +526,7 @@ public class WARCIndexer {
 							solr.addField( "pdf_pdfa_errors_ss",  error );
 						}
 					}
+				  }
 
 				}
 			} catch( Exception i ) {
