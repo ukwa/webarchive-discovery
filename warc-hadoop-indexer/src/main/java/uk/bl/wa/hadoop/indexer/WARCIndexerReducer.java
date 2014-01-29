@@ -17,6 +17,7 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.warc.WARCConstants;
@@ -38,6 +39,10 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 	public WARCIndexerReducer() {}
 
+	/**
+	 * Sets up our SolrServer.
+	 * Presumes the existence of either "warc.solr.zookepers" or "warc.solr.servers" in the config.
+	 */
 	@Override
 	public void configure( JobConf job ) {
 		log.info( "Configuring..." );
@@ -47,7 +52,11 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		try {
 			if( !dummyRun ) {
-				solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
+				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
+					solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeepers" ) );
+				} else {
+					solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
+				}
 			}
 		} catch( MalformedURLException e ) {
 			log.error( "WARCIndexerReducer.configure(): " + e.getMessage() );
