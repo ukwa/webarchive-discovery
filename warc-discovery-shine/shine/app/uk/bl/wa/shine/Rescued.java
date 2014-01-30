@@ -17,6 +17,8 @@ import org.apache.solr.client.solrj.response.FacetField;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.FacetField.Count;
 
+import com.typesafe.config.ConfigFactory;
+
 import play.Configuration;
 import play.Logger;
 import uk.bl.wa.shine.URIStatusLookup.URIStatus;
@@ -25,7 +27,7 @@ import uk.bl.wa.shine.URIStatusLookup.URIStatus;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class Rescued extends SolrShine {
+public class Rescued extends Solr {
 	
 	URIStatusLookup usl = new URIStatusLookup();
 
@@ -38,41 +40,34 @@ SolrQuery.addFilterQuery("yourStringField:Cameras\\ \\&\\ Photos")
 	 * 
 	 */
 	
-	public Rescued(String host, Configuration config) {
-		super(host, config);
+	public Rescued(Configuration config) {
+		super(config);
 	}
 
-	public String halflife() throws SolrServerException, MalformedURLException {		
-		SolrQuery q = new SolrQuery();
-		q.set("q", "*:*");
-		q.addFacetField("crawl_year");
-		QueryResponse res = solr.query(q);
-		FacetField axis = res.getFacetField("crawl_year");
-		Logger.info("BASELINE"+axis.getValues());
-		List<String> years = new ArrayList<String>();
-		for( Count c : axis.getValues()) {
-			years.add(c.getAsFilterQuery());
-		}
+	public String halflife() throws SolrServerException, MalformedURLException {
+		List<String> years = this.getYearDistribution();
 		Logger.info("YEARS "+years);
-		Random rng = new Random();
-		int total = 20;
-		String[] urls = new String[total];
-		for( int i = 0; i < total; i++ ) {
-			String url = getRandomItemForFacet(years.get(rng.nextInt(years.size())));
-			urls[i] = url;
-			Logger.info("Got URL: "+url);
-		}
-		URIStatus[] statuses = usl.getStatus(urls);
-		Map<URIStatus,Integer> counts = new HashMap<URIStatus,Integer>();
-		for( URIStatus status : statuses ) {
-			if( ! counts.containsKey(status) ) {
-				counts.put(status, 1);
-			} else {
-				counts.put(status, counts.get(status) + 1);
+		for( String year : years ) {
+			int total = 20;
+			String[] urls = new String[total];
+			for( int i = 0; i < total; i++ ) {
+				String url = getRandomItemForFacet(year);
+				urls[i] = url;
+				Logger.info("Got URL: "+url);
 			}
-		}
-		for( URIStatus status : counts.keySet() ) {
-			Logger.info("Status Count: "+status+" "+counts.get(status));
+			// Now check statuses for that year:
+			URIStatus[] statuses = usl.getStatus(urls);
+			Map<URIStatus,Integer> counts = new HashMap<URIStatus,Integer>();
+			for( URIStatus status : statuses ) {
+				if( ! counts.containsKey(status) ) {
+					counts.put(status, 1);
+				} else {
+					counts.put(status, counts.get(status) + 1);
+				}
+			}
+			for( URIStatus status : counts.keySet() ) {
+				Logger.info("COUNTS "+year+" "+status+" "+counts.get(status));
+			}
 		}
 		return "";
 	}
@@ -105,14 +100,46 @@ SolrQuery.addFilterQuery("yourStringField:Cameras\\ \\&\\ Photos")
 		Logger.info("GOT: "+domain+ " > "+ url);
 		return url;
 	}
-		
+
+	/*
+	 * http://chrome.bl.uk:8080/solr/select/?q=*%3A*&version=2.2&start=0&rows=10&indent=on&fq=timestamp:[2004-01-01T00:00:00Z%20TO%202005-01-01T00:00:00Z]
+	 */
+	
+	/**
+	 * Upper bound:
+	 * http://localhost:8080/discovery/select?q=*:*&fl=crawl_date&sort=crawl_date+desc&rows=1&wt=json&indent=true
+	 * Lower bound:
+	 * http://localhost:8080/discovery/select?q=*:*&fl=crawl_date&sort=crawl_date+asc&rows=1&wt=json&indent=true
+	 * 
+	 * http://localhost:8080/discovery/select?q=*%3A*&wt=json&indent=true&rows=0&facet.range.gap=%2B1YEAR&facet.range=crawl_date&f.crawl_date.facet.range.start=1980-01-01T00:00:00Z&f.crawl_date.facet.range.end=2020-01-01T00:00:00Z&facet=on
+	 * @return
+	 * @throws SolrServerException
+	 */
+	private List<String> getYearDistribution() throws SolrServerException {
+		SolrQuery q = new SolrQuery();
+		q.set("q", "*:*");
+		q.addFacetField("crawl_year");
+		QueryResponse res = solr.query(q);
+		FacetField axis = res.getFacetField("crawl_year");
+		Logger.info("BASELINE"+axis.getValues());
+		List<String> years = new ArrayList<String>();
+		for( Count c : axis.getValues()) {
+			years.add(c.getAsFilterQuery());
+		}
+		return years;
+	}
 
 
 	/**
 	 * @param args
+	 * @throws SolrServerException 
+	 * @throws MalformedURLException 
 	 */
-	public static void main(String[] args) {
-
+	public static void main(String[] args) throws MalformedURLException, SolrServerException {
+		Configuration config = new play.Configuration(ConfigFactory.load("conf/application.conf").getConfig("shine"));
+		Rescued r = new Rescued(config);
+		//r.halflife();
+		List<String> years = r.getYearDistribution();
 	}
 
 }
