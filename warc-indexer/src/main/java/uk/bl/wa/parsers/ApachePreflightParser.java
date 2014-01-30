@@ -101,7 +101,7 @@ public class ApachePreflightParser extends AbstractParser {
 		}
 
 		// display validation result
-		List<String> rs = new ArrayList<String>();
+		Set<String> rs = new HashSet<String>();
 		if (result.isValid()) {
 		  System.out.println("The resource is not a valid PDF/A-1b file");
 		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
