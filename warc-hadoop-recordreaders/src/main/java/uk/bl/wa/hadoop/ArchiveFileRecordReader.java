@@ -37,9 +37,6 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private String archiveName;
 
 	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
-		
-		this.filesystem = FileSystem.get( conf );
-
 		if( split instanceof FileSplit ) {
 			this.paths = new Path[ 1 ];
 			this.paths[ 0 ] = ( ( FileSplit ) split ).getPath();
@@ -48,6 +45,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		} else {
 			throw new IOException( "InputSplit is not a file split or a multi-file split - aborting" );
 		}
+		// get correct file system in case there are many (such as in EMR)
+		this.filesystem = FileSystem.get(this.paths[0].toUri(), conf );
 		// Log the paths:
 		for( Path p : this.paths ) {
 			log.info("Processing path: "+p);
