@@ -4,18 +4,17 @@ import play.api._
 import play.api.mvc._
 import scala.collection.JavaConverters._
 import java.util.List
-import uk.bl.wa.shine.SolrShine
+import uk.bl.wa.shine.Shine
 import uk.bl.wa.shine.Query
 import uk.bl.wa.shine.Rescued
 
 object Application extends Controller {
   
   val config = play.Play.application().configuration().getConfig("shine");
-  val solrHost = config.getString("host");
   
-  val solr = new SolrShine(solrHost, config);
+  val solr = new Shine(config);
   
-  val rescued = new Rescued(solrHost, config);
+  val rescued = new Rescued(config);
   
   
   def index = Action {
