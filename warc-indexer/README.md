@@ -11,8 +11,8 @@ Using this command, it can also builds a suitable command-line tool for generati
 
 Which runs like this:
 
-    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar target \
-    --update-solr-server=http://localhost:8080/ \
+    $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar \
+    -s http://localhost:8080/ \
     src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
 
 TBA configuration HOW TO.
@@ -24,7 +24,7 @@ To print the default configuration:
 To override the default with a new configuration:
 
     $ java -jar target/warc-indexer-1.1.1-SNAPSHOT-jar-with-dependencies.jar -Dconfig.file=new.conf \
-    target --update-solr-server=http://localhost:8080/ \
+    -s http://localhost:8080/ \
     src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
 
 
