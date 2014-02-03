@@ -4,7 +4,9 @@ import static uk.bl.wa.hadoop.indexer.WritableSolrRecord.ARC_TYPE;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
@@ -19,6 +21,7 @@ import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.warc.WARCConstants;
 
@@ -35,7 +38,9 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
 	private SolrServer solrServer;
+	private int batchSize;
 	private boolean dummyRun;
+	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
 	public WARCIndexerReducer() {}
 
@@ -50,6 +55,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
+		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		try {
 			if( !dummyRun ) {
 				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
@@ -109,13 +115,40 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		}
 
 		if( !dummyRun ) {
-			try {
-				solrServer.add( oDoc );
-			} catch( SolrServerException e ) {
-				log.error( "SolrServer.add(): " + e.getMessage(), e );
-			}
+			docs.add( oDoc );
+			checkSubmission( docs, batchSize );
 		} else {
 			log.info( "DUMMY_RUN: Skipping addition of doc: " + oDoc.getField( "id" ).getFirstValue() );
+		}
+	}
+
+	/**
+	 * If we have at least one document unsubmitted, make sure we submit it.
+	 */
+	@Override
+	public void close() {
+		checkSubmission( docs, 1 );
+	}
+
+	/**
+	 * Checks whether a List of docs has exceeded a given limit
+	 * and if so, submits them.
+	 * 
+	 * @param docs
+	 * @param limit
+	 */
+	private void checkSubmission( List<SolrInputDocument> docs, int limit ) {
+		UpdateResponse response;
+		if( docs.size() > 0 && docs.size() >= limit ) {
+			try {
+				response = solrServer.add( docs );
+				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "; " + response.getRequestUrl() + "]" );
+			} catch( SolrServerException e ) {
+				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
+			} catch( IOException i ) {
+				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
+			}
+			docs.clear();
 		}
 	}
 }
