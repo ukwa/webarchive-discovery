@@ -21,10 +21,12 @@ import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.ARCReaderFactory;
 
-@SuppressWarnings( "deprecation" )
-public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable> implements RecordReader<Text, WritableArchiveRecord> {
-	private static Logger log = Logger.getLogger(ArchiveFileRecordReader.class.getName());
-	
+@SuppressWarnings("deprecation")
+public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable>
+		implements RecordReader<Text, WritableArchiveRecord> {
+	private static Logger log = Logger.getLogger(ArchiveFileRecordReader.class
+			.getName());
+
 	private FSDataInputStream datainputstream;
 	private FileStatus status;
 	private FileSystem filesystem;
@@ -36,34 +38,35 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 	private ArchiveRecord record;
 	private String archiveName;
 
-	public ArchiveFileRecordReader( Configuration conf, InputSplit split ) throws IOException {
-		
-		this.filesystem = FileSystem.get( conf );
-
-		if( split instanceof FileSplit ) {
-			this.paths = new Path[ 1 ];
-			this.paths[ 0 ] = ( ( FileSplit ) split ).getPath();
-		} else if( split instanceof MultiFileSplit ) {
-			this.paths = ( ( MultiFileSplit ) split ).getPaths();
+	public ArchiveFileRecordReader(Configuration conf, InputSplit split)
+			throws IOException {
+		if (split instanceof FileSplit) {
+			this.paths = new Path[1];
+			this.paths[0] = ((FileSplit) split).getPath();
+		} else if (split instanceof MultiFileSplit) {
+			this.paths = ((MultiFileSplit) split).getPaths();
 		} else {
-			throw new IOException( "InputSplit is not a file split or a multi-file split - aborting" );
+			throw new IOException(
+					"InputSplit is not a file split or a multi-file split - aborting");
 		}
+		// get correct file system in case there are many (such as in EMR)
+		this.filesystem = FileSystem.get(this.paths[0].toUri(), conf);
 		// Log the paths:
-		for( Path p : this.paths ) {
-			log.info("Processing path: "+p);
-			System.out.println("Processing path: "+p);
+		for (Path p : this.paths) {
+			log.info("Processing path: " + p);
+			System.out.println("Processing path: " + p);
 		}
 		// Queue up the iterator:
 		this.nextFile();
 	}
-	
+
 	@Override
 	public void close() throws IOException {
-		if( datainputstream != null ) {
+		if (datainputstream != null) {
 			try {
 				datainputstream.close();
-			} catch( IOException e ) {
-				log.error( "close(): " + e.getMessage() );
+			} catch (IOException e) {
+				log.error("close(): " + e.getMessage());
 			}
 		}
 	}
@@ -80,37 +83,45 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	@Override
 	public long getPos() throws IOException {
+		try {
+			datainputstream.available();
+		} catch (Exception e) {
+			return 0;
+		}
 		return datainputstream.getPos();
 	}
 
 	@Override
 	public float getProgress() throws IOException {
-		return datainputstream.getPos() / ( 1024 * 1024 * this.status.getLen() );
+		return datainputstream.getPos() / (1024 * 1024 * this.status.getLen());
 	}
 
 	@Override
-	public boolean next( Text key, WritableArchiveRecord value ) throws IOException {
+	public boolean next(Text key, WritableArchiveRecord value)
+			throws IOException {
 		boolean found = false;
-		while( !found ) {
+		while (!found) {
 			boolean hasNext = false;
 			try {
-				 hasNext = iterator.hasNext();
-			} catch( Throwable e ) {
-				log.error( "ERROR in hasNext():  "+this.archiveName+": "+ e.toString() );
+				hasNext = iterator.hasNext();
+			} catch (Throwable e) {
+				log.error("ERROR in hasNext():  " + this.archiveName + ": "
+						+ e.toString());
 				hasNext = false;
 			}
 			try {
-				if( hasNext ) {
-					record = ( ArchiveRecord ) iterator.next();
+				if (hasNext) {
+					record = (ArchiveRecord) iterator.next();
 					found = true;
-					key.set( this.archiveName );
-					value.setRecord( record );
-				} else if( !this.nextFile() ) {
+					key.set(this.archiveName);
+					value.setRecord(record);
+				} else if (!this.nextFile()) {
 					break;
 				}
-			} catch( Throwable e ) {
+			} catch (Throwable e) {
 				found = false;
-				log.error( "ERROR reading "+this.archiveName+": "+ e.toString() );
+				log.error("ERROR reading " + this.archiveName + ": "
+						+ e.toString());
 			}
 		}
 		return found;
@@ -118,20 +129,22 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	private boolean nextFile() throws IOException {
 		currentPath++;
-		if( currentPath >= paths.length ) {
+		if (currentPath >= paths.length) {
 			return false;
 		}
 		// Output the archive filename, to help with debugging:
 		log.info("Opening nextFile: " + paths[currentPath]);
 		// Set up the ArchiveReader:
-		this.status = this.filesystem.getFileStatus( paths[ currentPath ] );
-		datainputstream = this.filesystem.open( paths[ currentPath ] );
-		arcreader = ( ArchiveReader ) ArchiveReaderFactory.get( paths[ currentPath ].getName(), datainputstream, true );
-		// Set to strict reading, in order to cope with malformed archive files which cause an infinite loop otherwise.
+		this.status = this.filesystem.getFileStatus(paths[currentPath]);
+		datainputstream = this.filesystem.open(paths[currentPath]);
+		arcreader = (ArchiveReader) ArchiveReaderFactory.get(
+				paths[currentPath].getName(), datainputstream, true);
+		// Set to strict reading, in order to cope with malformed archive files
+		// which cause an infinite loop otherwise.
 		arcreader.setStrict(true);
 		// Get the iterator:
 		iterator = arcreader.iterator();
-		this.archiveName = paths[ currentPath ].getName();
+		this.archiveName = paths[currentPath].getName();
 		return true;
 	}
 
