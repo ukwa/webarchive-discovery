@@ -20,6 +20,7 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -142,11 +143,13 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			try {
 				response = solrServer.add( docs );
-				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "; " + response.getRequestUrl() + "]" );
+				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
 			} catch( SolrServerException e ) {
 				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
 			} catch( IOException i ) {
 				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
+			} catch( RemoteSolrException r ) {
+				log.error( "WARCIndexerReducer.reduce(): " + r.getMessage() );
 			}
 			docs.clear();
 		}

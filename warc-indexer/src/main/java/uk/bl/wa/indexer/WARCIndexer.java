@@ -122,7 +122,7 @@ public class WARCIndexer {
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
 	private boolean extractApachePreflightErrors = true;
-	
+
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
 
@@ -505,28 +505,28 @@ public class WARCIndexer {
 					// TODO Extract image properties.
 
 				} else if( mime.startsWith( "application/pdf" ) ) {
-				  if( extractApachePreflightErrors ) {
-					metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-					ParseRunner parser = new ParseRunner( app, tikainput, metadata );
-					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
-					try {
-						thread.start();
-						thread.join( 30000L );
-						thread.interrupt();
-					} catch( Exception e ) {
-						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-						solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with Apache Preflight: " + e.getMessage() );
-					}
-					
-					String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID);
-					solr.addField( "pdf_valid_pdfa_s", isValid );
-					String[] errors = metadata.getValues( ApachePreflightParser.PDF_PREFLIGHT_ERRORS );
-					if( errors != null ) {
-						for( String error : errors ) {
-							solr.addField( "pdf_pdfa_errors_ss",  error );
+					if( extractApachePreflightErrors ) {
+						metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
+						ParseRunner parser = new ParseRunner( app, tikainput, metadata );
+						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
+						try {
+							thread.start();
+							thread.join( 30000L );
+							thread.interrupt();
+						} catch( Exception e ) {
+							log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+							solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with Apache Preflight: " + e.getMessage() );
+						}
+
+						String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID );
+						solr.addField( "pdf_valid_pdfa_s", isValid );
+						String[] errors = metadata.getValues( ApachePreflightParser.PDF_PREFLIGHT_ERRORS );
+						if( errors != null ) {
+							for( String error : errors ) {
+								solr.addField( "pdf_pdfa_errors_ss", error );
+							}
 						}
 					}
-				  }
 
 				}
 			} catch( Exception i ) {
@@ -896,6 +896,5 @@ public class WARCIndexer {
 				log.error( "HtmlFeatureParser.parse(): " + e.getMessage() );
 			}
 		}
-
 	}
 }

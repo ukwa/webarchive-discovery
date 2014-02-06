@@ -201,8 +201,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			// If there was a parse error, report it:
 			solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
 
-			// Copy the body text:
-			String output = content.toString();
+			// Copy the body text, forcing a UTF-8 encoding:
+			String output = new String( content.toString().getBytes( "UTF-8" ) );
 			if( runner.complete || !output.equals( "" ) ) {
 				//log.debug("Extracted text from: "+url);				
 				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
