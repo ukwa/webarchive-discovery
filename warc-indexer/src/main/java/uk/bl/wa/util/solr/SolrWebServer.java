@@ -30,7 +30,7 @@ public class SolrWebServer {
 		if(solrUrl == null||solrUrl.isEmpty()){
 			System.out.println("Solr URL Not defined");
 		}
-				
+
 		solrServer = new HttpSolrServer(solrUrl);
 		
 		if(solrServer == null){
@@ -39,7 +39,7 @@ public class SolrWebServer {
 	}
 
 	/**
-	 * Post and Commit
+	 * Post a List of docs.
 	 * 
 	 * @param solrDoc
 	 * @throws SolrServerException
@@ -47,13 +47,12 @@ public class SolrWebServer {
 	 */
 	public void updateSolr(List<SolrInputDocument> docs) throws SolrServerException, IOException{
 		
-			solrServer.add(docs);	
-			solrServer.commit();
+			solrServer.add(docs);
 		
 	}
 	
 	/**
-	 * Post without Committing
+	 * Post a single documents.
 	 * 
 	 * @param solrDoc
 	 * @throws SolrServerException
@@ -66,7 +65,7 @@ public class SolrWebServer {
 	}
 	
 	/**
-	 * Post and Commit
+	 * Commit the SolrServer.
 	 * 
 	 * @throws SolrServerException
 	 * @throws IOException

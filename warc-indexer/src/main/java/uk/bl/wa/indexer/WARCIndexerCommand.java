@@ -7,9 +7,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.io.StringWriter;
-import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -30,6 +31,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -47,7 +49,7 @@ public class WARCIndexerCommand {
 	private static Log log = LogFactory.getLog(WARCIndexerCommand.class);
 	
 
-	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] [WARC File List]";
+	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
 	
@@ -60,19 +62,21 @@ public class WARCIndexerCommand {
 	 * @throws TransformerFactoryConfigurationError 
 	 * @throws SolrServerException 
 	 */
-	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException {
+	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException {
 		
 		CommandLineParser parser = new PosixParser();
 		String outputDir = null;
 		String solrUrl = null;
 		boolean isTextRequired = false;
 		boolean slashPages = false;
+		int batchSize = 1;
 		
 		Options options = new Options();
-		options.addOption("o", "output", true, "The directory to contain the output XML files");
-		options.addOption("s", "solr", true, "The URL of the required Solr Instance");
-		options.addOption("t", "text", false, "Include text in XML in output files");
-		options.addOption("r", "slash", false, "Only process slash (root) pages.");
+		options.addOption( "o", "output", true, "The directory to contain the output XML files" );
+		options.addOption( "s", "solr", true, "The URL of the required Solr Instance" );
+		options.addOption( "t", "text", false, "Include text in XML in output files" );
+		options.addOption( "r", "slash", false, "Only process slash (root) pages." );
+		options.addOption( "b", "batch", true, "Batch size for submissions." );
 		
 		try {
 		    // parse the command line arguments
@@ -80,12 +84,11 @@ public class WARCIndexerCommand {
 		   	String cli_args[] = line.getArgs();
 		   
 		
-		   	// Check that a mandatory Archive file(s) has been supplied
-		   	if( !( cli_args.length > 0 ) ) {
-				//System.out.println( "Arguments required are 1) Output directory 2) List of WARC files 3) Optionally --update-solr-server=url" );
-		   		printUsage(options);
+			// Check that a mandatory Archive file(s) has been supplied
+			if( !( cli_args.length > 0 ) ) {
+				printUsage( options );
 				System.exit( 0 );
-		   	}
+			}
 
 		   	// Get the output directory, if set
 		   	if(line.hasOption("o")){
@@ -118,6 +121,10 @@ public class WARCIndexerCommand {
 		   	if( line.hasOption( "r" ) ) {
 		   		slashPages = true;
 		   	}
+
+		   	if( line.hasOption( "b" ) ) {
+		   		batchSize = Integer.parseInt( line.getOptionValue( "b" ) );
+		   	}
 		   	
 		   	// Check that either an output dir or Solr URL is supplied
 		   	if(outputDir == null && solrUrl == null){
@@ -133,7 +140,7 @@ public class WARCIndexerCommand {
 		   		System.exit( 0 );
 		   	}
 	   	
-		   	parseWarcFiles(outputDir, solrUrl, cli_args, isTextRequired, slashPages);
+			parseWarcFiles( outputDir, solrUrl, cli_args, isTextRequired, slashPages, batchSize );
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -145,14 +152,14 @@ public class WARCIndexerCommand {
 	 * @param outputDir
 	 * @param args
 	 * @throws NoSuchAlgorithmException
-	 * @throws MalformedURLException
 	 * @throws IOException
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles(String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages) throws NoSuchAlgorithmException, MalformedURLException, IOException, TransformerFactoryConfigurationError, TransformerException, SolrServerException{
+	public static void parseWarcFiles( String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages, int batchSize ) throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, IOException {
 		
 		WARCIndexer windex = new WARCIndexer();
+		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 
 				
 		SolrWebServer solrWeb = null;
 		
@@ -195,7 +202,14 @@ public class WARCIndexerCommand {
 							writeXMLToFile(doc.toXml(), fileOutput);
 						}else{
 							// Post to Solr
-							solrWeb.updateSolrDoc(doc.doc);
+							try {
+								docs.add( doc.doc );
+								checkSubmission( solrWeb, docs, batchSize );
+							} catch( SolrServerException s ) {
+								log.warn( "SolrServerException: " + inputFile, s );
+							} catch( IOException i ) {
+								log.warn( "IOException: " + inputFile, i );
+							}
 						}
 						recordCount++;
 					}
@@ -206,11 +220,33 @@ public class WARCIndexerCommand {
 		}
 		
 		// Commit any Solr Updates
-		if(solrWeb != null) {		
-			solrWeb.commit();
+		if( solrWeb != null ) {
+			try {
+				solrWeb.commit();
+			} catch( SolrServerException s ) {
+				log.warn( "SolrServerException when committing.", s );
+			} catch( IOException i ) {
+				log.warn( "IOException when committing.", i );
+			}
 		}
-		
 		System.out.println("WARC Indexer Finished");
+	}
+
+	/**
+	 * Checks whether a List of SolrInputDocuments has grown large enough to
+	 * be submitted to a SolrWebServer.
+	 * 
+	 * @param solr
+	 * @param docs
+	 * @param limit
+	 * @throws SolrServerException
+	 * @throws IOException
+	 */
+	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
+		if( docs.size() > 0 && docs.size() >= limit ) {
+			solr.updateSolr( docs );
+		}
+		docs.clear();
 	}
 	
 	
