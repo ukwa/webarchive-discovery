@@ -27,7 +27,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 /**
- * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ * @author Andrew.Jackson@bl.uk
  *
  */
 public class WARCStatsTool extends Configured implements Tool {
@@ -93,8 +93,8 @@ public class WARCStatsTool extends Configured implements Tool {
 	}
 
 	/**
-	 * @param args
-	 * @throws Exception 
+	 * @param args command line arguments
+	 * @throws Exception at runtime
 	 */
 	public static void main(String[] args) throws Exception {
 		if( !( args.length > 0 ) ) {

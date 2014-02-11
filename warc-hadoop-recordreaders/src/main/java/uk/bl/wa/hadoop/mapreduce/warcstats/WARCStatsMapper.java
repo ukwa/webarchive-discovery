@@ -24,7 +24,7 @@ import org.archive.net.UURIFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 /**
- * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ * @author Andrew.Jackson@bl.uk
  *
  */
 public class WARCStatsMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {

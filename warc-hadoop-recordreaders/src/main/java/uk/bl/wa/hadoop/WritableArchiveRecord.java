@@ -24,7 +24,7 @@ import org.archive.io.warc.WARCRecord;
  * 
  * Not clear how to set up ArchiveRecordHeader for ARC form?
  * 
- * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ * @author Andrew.Jackson@bl.uk
  *
  */
 public class WritableArchiveRecord implements Writable {
