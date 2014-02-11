@@ -14,7 +14,7 @@ See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/
 Change of License
 -----------------
 
-Up to version 1.1.1, this has been an Apache licensed project. However, to take advantage of some great tools that happen to be licensed under the GPL, we are planning to switch to the GPL license. If this causes anyone any major problems, please [get in touch with me](https://twitter.com/anjacks0n).
+Up to version 1.1.1, this has been an Apache licensed project. However, to take advantage of some great tools that happen to be licensed under the GPL, we will have to switch to the GPL license for the warc-indexer and therefore for the warc-hadoop-indexer. We will leave the (W)ARC Hadoop RecordReaders licensed under Apache 2.0. If this causes anyone any major problems, please [get in touch with me](https://twitter.com/anjacks0n).
 
 Structure
 ---------
