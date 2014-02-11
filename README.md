@@ -14,7 +14,7 @@ Structure
  * [warc-solr-test-server](warc-solr-test-server): A war overlay project that can be used to fire up a test Solr server using the schema held in warc-indexer/src/main/solr.
  * [warc-discovery-shine](warc-discovery-shine): A very rough prototype web UI for browsing a Solr service that has been populated using this indexer.
     * Has it's own git repo, and should be modified [there](https://github.com/ukwa/shine).
-    * Kept up to date via ```git subtree merge --prefix warc-discovery-shine master```
+    * Kept up to date via ```./update-shine.sh```
 
 Configuration
 -------------
