@@ -5,6 +5,17 @@ These are the components we use to data-mine and index our ARC and WARC files an
 
 [![Build Status](https://travis-ci.org/ukwa/warc-discovery.png?branch=master)](https://travis-ci.org/ukwa/warc-discovery/)
 
+Roadmap
+-------
+
+See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
+
+
+Change of License
+-----------------
+
+Up to version 1.1.1, this has been an Apache licensed project. However, to take advantage of some great tools that happen to be licensed under the GPL, we are planning to switch to the GPL license. If this causes anyone any major problems, please [get in touch with me](https://twitter.com/anjacks0n).
+
 Structure
 ---------
 
@@ -20,19 +31,6 @@ Configuration
 -------------
 
 All components are set up to use [Typesafe Config](https://github.com/typesafehub/config) for configuration, which provides a flexible and powerful configuration system and uses a file format based on JSON. Each components contains a reference.conf file in src/main/resources that defines the default configuration for that part.  Most of the configuration is in the warc-indexer, which reflects the fact that most of the actual indexing logic is there in order to ensure the command-line and map-reduce versions are as close to identical in behaviour as possible. Each version also provides a command-line option to output the current configuration for inspection and to make it easier to override. See the individual component READMEs for more detail.
-
-
-Roadmap
--------
-
-Until recently, there are two development strands, held on distinct branches
-
-* master: This is our production version, which does full-text indexing but does not extract many facets.
-* adda-discovery: This is our development version, where we are experimenting with new facets and features to see what other useful aspects of the content we can make available for indexing.
-
-These have been merged into a master, in preparation for a full [1.1.1 release](https://github.com/ukwa/warc-discovery/issues?milestone=1&state=open).
-
-See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
 
 
 Similar Systems
