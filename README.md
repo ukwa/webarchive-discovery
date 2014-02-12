@@ -79,6 +79,12 @@ Configuration
 
 All components are set up to use [Typesafe Config](https://github.com/typesafehub/config) for configuration, which provides a flexible and powerful configuration system and uses a file format based on JSON. Each components contains a reference.conf file in src/main/resources that defines the default configuration for that part.  Most of the configuration is in the warc-indexer, which reflects the fact that most of the actual indexing logic is there in order to ensure the command-line and map-reduce versions are as close to identical in behaviour as possible. Each version also provides a command-line option to output the current configuration for inspection and to make it easier to override. See the individual component READMEs for more detail.
 
+Front-end Clients
+-----------------
+
+ * You can use Solr's built in UI to explore the data.
+ * You can use [Drupal Sarnia](https://drupal.org/project/sarnia) as a faceted browser (see the [Sarnia setup instructions](https://drupal.org/node/1379476) for details).
+ * You can help us develop the dedicated web-archive faceted search and analysis UI, [shine](https://github.com/ukwa/shine).
 
 Similar Systems
 ---------------
