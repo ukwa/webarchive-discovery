@@ -13,7 +13,7 @@ The primary goal of this project to provide full-text search for our web archive
 
 [WARC & ARC files] -> [indexer] -> [Solr cluster] -> [front-end UI]
 
-Currently, our experimental front-end is based on Drupal Sarnia, but we are starting to build our own, called [shine](https://github.com/ukwa/shine), that is more suited to the needs of our users.
+Currently, our experimental front-end is based on [Drupal Sarnia](https://drupal.org/project/sarnia), but we are starting to build our own, called [shine](https://github.com/ukwa/shine), that is more suited to the needs of our users.
 
 For moderate collections, the stand-alone warc-indexer tool can be used to populate a suitable Solr server. However, we need to index very large collections (tens of TB of compressed ARCs/WARCs, containing billions of resources), and so much of the rest of the codebase is concerned with running the indexer at scale. We use the ‘warc-hadoop-recordreaders’ to process (W)ARC records in a Hadoop Map-Reduce job that posts the content to the Solr servers.
 
