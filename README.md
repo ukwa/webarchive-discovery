@@ -60,6 +60,7 @@ Features
      * For HTML, can record the elements employed by each resource, allowing element usage to be analysed over time.
      * For PDF, can run each one through Apache Prefight in order to diagnose possible preservation risks.
 
+Note that many of these features are brand new and in the process of being researched. In many cases, the quality and utility of the results they yield is still to be ascertained.
 
 Structure
 ---------
