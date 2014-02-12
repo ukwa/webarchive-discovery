@@ -3,7 +3,7 @@ Web Archive Discovery
 
 These are the components we use to data-mine and index our ARC and WARC files and make the contents explorable and discoverable.
 
-[![Build Status](https://travis-ci.org/ukwa/warc-discovery.png?branch=master)](https://travis-ci.org/ukwa/warc-discovery/)
+[![Build Status](https://travis-ci.org/ukwa/webarchive-discovery.png?branch=master)](https://travis-ci.org/ukwa/webarchive-discovery/)
 
 
 Introduction
@@ -11,9 +11,9 @@ Introduction
 
 The primary goal of this project to provide full-text search for our web archives. To achieve this, the warc-indexer component is used to parse the (W)ARC files and, for each resource, it posts a record into a cluster of Apache Solr servers. We then use client facing tools that allow researchers to query the Solr index and explore the collections.
 
+[Serial Figure]
 
-
-Currently, our experimental front-end is based on Drupal Sarnia, but we are starting to build our own, called 'shine', that is more suited to the needs of our users.
+Currently, our experimental front-end is based on Drupal Sarnia, but we are starting to build our own, called [shine](https://github.com/ukwa/shine), that is more suited to the needs of our users.
 
 For moderate collections, the stand-alone warc-indexer tool can be used to populate a suitable Solr server. However, we need to index very large collections (tens of TB of compressed ARCs/WARCs, containing billions of resources), and so much of the rest of the codebase is concerned with running the indexer at scale. We use the ‘warc-hadoop-recordreaders’ to process (W)ARC records in a Hadoop Map-Reduce job that posts the content to the Solr servers.
 
@@ -24,7 +24,7 @@ While search is the primary goal, the fact that we are going through and parsing
 Roadmap
 -------
 
-See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
+See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/webarchive-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/webarchive-discovery/issues) for the more details.
 
 ### Change of Name ###
 
