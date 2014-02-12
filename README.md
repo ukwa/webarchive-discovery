@@ -53,7 +53,7 @@ Features
      * Uses a [simple sentiment analysis algorithm](https://github.com/ukwa/SentimentalJ) to allow content to be ranked by sentiment.
  * Supports the overlay of additional content annotations (e.g. collections that an item belongs to).
  * Format Analysis:
-     * Stores and combines format identification results from Apache Tika and DROID, covering content type, character sets, and format versions.
+     * Stores and combines format identification results from Apache Tika and DROID, covering a wide range of formats, versions and encodings.
      * Extracts and stores information on the software tools use to generate the resources.
      * Stores parse errors so problematic format variations can be caught.
      * Stores server content types, file extensions, and header bytes (both the first four bytes, and header byte shingles), allowing previously unidentified formats to be identified.
