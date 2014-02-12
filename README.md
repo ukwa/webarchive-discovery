@@ -11,13 +11,13 @@ Introduction
 
 The primary goal of this project to provide full-text search for our web archives. To achieve this, the warc-indexer component is used to parse the (W)ARC files and, for each resource, it posts a record into a cluster of Apache Solr servers. We then use client facing tools that allow researchers to query the Solr index and explore the collections.
 
-[Serial Figure]
+[WARC & ARC files] -> [indexer] -> [Solr cluster] -> [front-end UI]
 
 Currently, our experimental front-end is based on Drupal Sarnia, but we are starting to build our own, called [shine](https://github.com/ukwa/shine), that is more suited to the needs of our users.
 
 For moderate collections, the stand-alone warc-indexer tool can be used to populate a suitable Solr server. However, we need to index very large collections (tens of TB of compressed ARCs/WARCs, containing billions of resources), and so much of the rest of the codebase is concerned with running the indexer at scale. We use the ‘warc-hadoop-recordreaders’ to process (W)ARC records in a Hadoop Map-Reduce job that posts the content to the Solr servers.
 
-[Hadoop Figure]
+[WARC & ARC files on HDFS] -> [map-reduce indexer] -> [Solr cluster] -> [front-end UI]
 
 While search is the primary goal, the fact that we are going through and parsing every byte means that this is a good time to perform any other analysis or processing of interest. Therefore, we have been exploring a range of additional content properties to be exposed via the Solr index. These include format analysis (Apache Tika and DROID), some experimental preservation risk scanning, link extraction, metadata extraction, and so on (see [Features](#Features) below for more details.
 
@@ -60,7 +60,7 @@ Features
      * Stores the ssdeep fuzzy hash of the textual content, allowing documents with similar text to be grouped together.
      * Detects UK postcodes and converts to lat-long coding for Solr, allowing geo-search to be performed.
      * Attempts to use embedded metadata to estimate document creation dates.
-     * Uses a [simple sentiment analysis algorithm]() to allow content to be ranked by sentiment.
+     * Uses a [simple sentiment analysis algorithm](https://github.com/ukwa/SentimentalJ) to allow content to be ranked by sentiment.
  * Supports the overlay of additional content annotations (e.g. collections that an item belongs to).
  * Format Analysis:
      * Stores and combines format identification results from Apache Tika and DROID, covering content type, character sets, and format versions.
