@@ -19,7 +19,6 @@ import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
-import org.archive.io.arc.ARCReaderFactory;
 
 @SuppressWarnings("deprecation")
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable>
@@ -93,7 +92,8 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	@Override
 	public float getProgress() throws IOException {
-		return datainputstream.getPos() / (1024 * 1024 * this.status.getLen());
+		float progress = ( float ) datainputstream.getPos() / ( float ) this.status.getLen();
+		return progress;
 	}
 
 	@Override
