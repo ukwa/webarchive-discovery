@@ -114,6 +114,11 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.set( CONFIG_PROPERTIES, index_conf.withOnlyPath( "warc" ).root().render( ConfigRenderOptions.concise() ) );
 		LOG.info( "Loaded warc config." );
 		LOG.info( index_conf.getString( "warc.title" ) );
+		if( index_conf.hasPath( "warc.solr.zookeepers" ) ) {
+			LOG.info( "Using Zookeepers." );
+		} else {
+			LOG.info( "Using SolrServers." );
+		}
 
 		// Pull in ACT metadata
 		if( this.readAct ) {

@@ -61,6 +61,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 			if( !dummyRun ) {
 				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
 					solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeepers" ) );
+					( ( CloudSolrServer ) solrServer ).setDefaultCollection( conf.getString( "warc.solr.collection" ) );
 				} else {
 					solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
 				}
