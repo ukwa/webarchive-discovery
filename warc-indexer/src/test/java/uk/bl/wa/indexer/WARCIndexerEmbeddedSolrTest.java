@@ -80,9 +80,11 @@ public class WARCIndexerEmbeddedSolrTest {
 	@Test
 	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
 		// Fire up a SOLR:
+		String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
 		SolrInputDocument document = new SolrInputDocument();
         document.addField("id", "1");
         document.addField("name", "my name");
+        document.addField( "url", url );
 
         System.out.println("Adding document: "+document);
         server.add(document);
@@ -93,6 +95,10 @@ public class WARCIndexerEmbeddedSolrTest {
         QueryResponse response = server.query(params);
         assertEquals(1L, response.getResults().getNumFound());
         assertEquals("1", response.getResults().get(0).get("id"));
+
+        // Check that URLs are encoding correctly.
+        assertEquals( url, document.getFieldValue( "url" ) );
+		assertEquals( url, response.getResults().get( 0 ).get( "url" ) );
         
         //  Now generate some Solr documents from WARCs:
 		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
