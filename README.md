@@ -79,11 +79,34 @@ Configuration
 
 All components are set up to use [Typesafe Config](https://github.com/typesafehub/config) for configuration, which provides a flexible and powerful configuration system and uses a file format based on JSON. Each components contains a reference.conf file in src/main/resources that defines the default configuration for that part.  Most of the configuration is in the warc-indexer, which reflects the fact that most of the actual indexing logic is there in order to ensure the command-line and map-reduce versions are as close to identical in behaviour as possible. Each version also provides a command-line option to output the current configuration for inspection and to make it easier to override. See the individual component READMEs for more detail.
 
+Quick Start
+-----------
+
+First, checkout this respository, change into the root folder, and:
+
+    $ mvn install
+
+Then, in a spare terminal:
+
+    $ cd warc-solr-test-server
+    $ mvn jetty:run-exploded
+
+This will fire up a suitable Solr instance, with a UI at [http://localhost:8080/#/discovery](http://localhost:8080/#/discovery). For configuring a front-end client, the Solr endpoint is http://localhost:8080/discovery/select, e.g. [this query should return all results in JSON format](http://localhost:8080/discovery/select?q=*%3A*&wt=json&indent=true).
+
+In the original terminal:
+
+    $ cd warc-indexer
+    $ java -jar target/warc-indexer-*-jar-with-dependencies.jar -s http://localhost:8080/discovery/ src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz
+
+Which will populate the Solr index with a few resources from a snapshot of the English Wikipedia page about the Mona Lisa.
+
+
 Front-end Clients
 -----------------
 
  * You can use Solr's built in UI to explore the data.
  * You can use [Drupal Sarnia](https://drupal.org/project/sarnia) as a faceted browser (see the [Sarnia setup instructions](https://drupal.org/node/1379476) for details).
+ * You can use the [Carrot2 Workbench](http://download.carrot2.org/head/manual/index.html#section.getting-started.solr) to explore, cluster and visualise the contents of the index.
  * You can help us develop the dedicated web-archive faceted search and analysis UI, [shine](https://github.com/ukwa/shine).
 
 Similar Systems
