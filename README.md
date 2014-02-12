@@ -1,18 +1,36 @@
-WARC Discovery
-==============
+Web Archive Discovery
+=====================
 
 These are the components we use to data-mine and index our ARC and WARC files and make the contents explorable and discoverable.
 
 [![Build Status](https://travis-ci.org/ukwa/warc-discovery.png?branch=master)](https://travis-ci.org/ukwa/warc-discovery/)
+
+
+Introduction
+------------
+
+The primary goal of this project to provide full-text search for our web archives. To achieve this, the warc-indexer component is used to parse the (W)ARC files and, for each resource, it posts a record into a cluster of Apache Solr servers. We then use client facing tools that allow researchers to query the Solr index and explore the collections.
+
+
+
+Currently, our experimental front-end is based on Drupal Sarnia, but we are starting to build our own, called 'shine', that is more suited to the needs of our users.
+
+For moderate collections, the stand-alone warc-indexer tool can be used to populate a suitable Solr server. However, we need to index very large collections (tens of TB of compressed ARCs/WARCs, containing billions of resources), and so much of the rest of the codebase is concerned with running the indexer at scale. We use the ‘warc-hadoop-recordreaders’ to process (W)ARC records in a Hadoop Map-Reduce job that posts the content to the Solr servers.
+
+[Hadoop Figure]
+
+While search is the primary goal, the fact that we are going through and parsing every byte means that this is a good time to perform any other analysis or processing of interest. Therefore, we have been exploring a range of additional content properties to be exposed via the Solr index. These include format analysis (Apache Tika and DROID), some experimental preservation risk scanning, link extraction, metadata extraction, and so on.
 
 Roadmap
 -------
 
 See the [To Do List](TODO.md), the [roadmap milestones](https://github.com/ukwa/warc-discovery/issues/milestones), and the [issue tracker](https://github.com/ukwa/warc-discovery/issues) for the more details.
 
+### Change of Name ###
 
-Change of License
------------------
+Up to version 1.1.1, this has been known as 'warc-discovery'. From 1.2.0 onwards, the codebase will go by the slightly clearer name of 'webarchive-discovery'. This also makes the naming more consistent with the 'webarchive-commons' package from the IIPC.
+
+### Change of License ###
 
 Up to version 1.1.1, this has been an Apache licensed project. However, to take advantage of some great tools that happen to be licensed under the GPL, we will have to switch to the GPL license for the warc-indexer and therefore for the warc-hadoop-indexer. We will leave the (W)ARC Hadoop RecordReaders licensed under Apache 2.0. If this causes anyone any major problems, please [get in touch with me](https://twitter.com/anjacks0n).
 
@@ -27,11 +45,16 @@ Structure
     * Has it's own git repo, and should be modified [there](https://github.com/ukwa/shine).
     * Kept up to date via ```./update-shine.sh```
 
+Features
+--------
+
+ * Full-text and metadata extraction from a wide range of formats via Apache Tika.
+ * 
+
 Configuration
 -------------
 
 All components are set up to use [Typesafe Config](https://github.com/typesafehub/config) for configuration, which provides a flexible and powerful configuration system and uses a file format based on JSON. Each components contains a reference.conf file in src/main/resources that defines the default configuration for that part.  Most of the configuration is in the warc-indexer, which reflects the fact that most of the actual indexing logic is there in order to ensure the command-line and map-reduce versions are as close to identical in behaviour as possible. Each version also provides a command-line option to output the current configuration for inspection and to make it easier to override. See the individual component READMEs for more detail.
-
 
 Similar Systems
 -------------
