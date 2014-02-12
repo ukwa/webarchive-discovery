@@ -19,7 +19,7 @@ For moderate collections, the stand-alone warc-indexer tool can be used to popul
 
 [Hadoop Figure]
 
-While search is the primary goal, the fact that we are going through and parsing every byte means that this is a good time to perform any other analysis or processing of interest. Therefore, we have been exploring a range of additional content properties to be exposed via the Solr index. These include format analysis (Apache Tika and DROID), some experimental preservation risk scanning, link extraction, metadata extraction, and so on.
+While search is the primary goal, the fact that we are going through and parsing every byte means that this is a good time to perform any other analysis or processing of interest. Therefore, we have been exploring a range of additional content properties to be exposed via the Solr index. These include format analysis (Apache Tika and DROID), some experimental preservation risk scanning, link extraction, metadata extraction, and so on (see [Features](#Features) below for more details.
 
 Roadmap
 -------
@@ -48,8 +48,27 @@ Structure
 Features
 --------
 
- * Full-text and metadata extraction from a wide range of formats via Apache Tika.
- * 
+ * Support both local command-line and Hadoop map-reduce execution.
+     * The map-reduce version uses payload hashes to compensate for de-duplication of crawls.
+ * Highly configurable.
+ * Specific record or content types, or status codes, can be excluded from indexing.
+ * Content Analysis:
+     * Full-text and metadata extraction from a wide range of formats via Apache Tika.
+     * Metadata fields include embedded author information, language detection.
+     * Extracts and stores links between resources, at various configurable levels of granularity (URL-to-domain, URL-to-host, URL-to-URL).
+     * Extracts embedded licensing information.
+     * Stores the ssdeep fuzzy hash of the textual content, allowing documents with similar text to be grouped together.
+     * Detects UK postcodes and converts to lat-long coding for Solr, allowing geo-search to be performed.
+     * Attempts to use embedded metadata to estimate document creation dates.
+     * Uses a [simple sentiment analysis algorithm]() to allow content to be ranked by sentiment.
+ * Supports the overlay of additional content annotations (e.g. collections that an item belongs to).
+ * Format Analysis:
+     * Stores and combines format identification results from Apache Tika and DROID, covering content type, character sets, and format versions.
+     * Extracts and stores information on the software tools use to generate the resources.
+     * Stores parse errors so problematic format variations can be caught.
+     * Stores server content types, file extensions, and header bytes (both the first four bytes, and header byte shingles), allowing previously unidentified formats to be identified.
+     * For HTML, can record the elements employed by each resource, allowing element usage to be analysed over time.
+     * For PDF, can run each one through Apache Prefight in order to diagnose possible preservation risks.
 
 Configuration
 -------------
