@@ -59,6 +59,7 @@ Features
      * Stores server content types, file extensions, and header bytes (both the first four bytes, and header byte shingles), allowing previously unidentified formats to be identified.
      * For HTML, can record the elements employed by each resource, allowing element usage to be analysed over time.
      * For PDF, can run each one through Apache Prefight in order to diagnose possible preservation risks.
+     * For XML, stores the root element namespace.
 
 Note that many of these features are brand new and in the process of being researched. In many cases, the quality and utility of the results they yield is still to be ascertained.
 

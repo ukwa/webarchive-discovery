@@ -60,6 +60,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.parsers.ApachePreflightParser;
 import uk.bl.wa.parsers.HtmlFeatureParser;
+import uk.bl.wa.parsers.XMLRootNamespaceParser;
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wa.util.PostcodeGeomapper;
@@ -122,6 +123,10 @@ public class WARCIndexer {
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
 	private boolean extractApachePreflightErrors = true;
+
+	/** */
+	private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
+	private boolean extractXMLRootNamespace = true;
 
 	/** */
 	private SentimentalJ sentij = new SentimentalJ();
@@ -386,20 +391,6 @@ public class WARCIndexer {
 				log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
 			}
 
-			// Also attempt to grab the XML Root NS:
-			try {
-				tikainput.reset();
-				QName qname = new XmlRootExtractor().extractRootElement( tikainput );
-				if( qname != null ) {
-					if( qname.getNamespaceURI() != null && ( !"".equals( qname.getNamespaceURI().trim() ) ) ) {
-						log.info( "rootXML: " + qname.getLocalPart() + " prefix:" + qname.getPrefix() + " nsURI:" + qname.getNamespaceURI() );
-						solr.doc.addField( "xml_ns_root_s", qname.getNamespaceURI().toLowerCase() + "#" + qname.getLocalPart().toLowerCase() );
-					}
-				}
-			} catch( Exception i ) {
-				log.error( i + ": " + i.getMessage() + ";xmlns; " + fullUrl + " @" + header.getOffset() );
-			}
-
 			// Also run DROID (restricted range):
 			if( dd != null && runDroid == true ) {
 				try {
@@ -527,7 +518,23 @@ public class WARCIndexer {
 							}
 						}
 					}
-
+				} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
+					// Also attempt to grab the XML Root NS:
+					if( this.extractXMLRootNamespace ) {
+						ParseRunner parser = new ParseRunner( xrns, tikainput, metadata );
+						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
+						try {
+							thread.start();
+							thread.join( 30000L );
+							thread.interrupt();
+						} catch( Exception e ) {
+							log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+							solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing for XML Root Namespace: " + e.getMessage() );
+						}
+						solr.doc.addField( "xml_ns_root_s", metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
+					}
+				} else {
+					log.info("No specific additional parser for: "+mime);
 				}
 			} catch( Exception i ) {
 				log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
