@@ -1,8 +1,9 @@
 package uk.bl.wa.indexer;
 
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.format.warc.WARCConstants.WARCRecordType;
+import static org.archive.io.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
+import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
+import static org.archive.io.warc.WARCConstants.RESPONSE;
+import static org.archive.io.warc.WARCConstants.REVISIT;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -42,8 +43,8 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCConstants;
 import org.archive.io.warc.WARCRecord;
-import org.archive.url.UsableURI;
-import org.archive.url.UsableURIFactory;
+import org.archive.net.UURI;
+import org.archive.net.UURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.archive.util.Base32;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
@@ -219,7 +220,7 @@ public class WARCIndexer {
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.resource ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.revisit ) ) ) {
+				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( REVISIT ) ) ) {
 					return null;
 				}
 			} // else we're processing ARCs
@@ -394,7 +395,7 @@ public class WARCIndexer {
 					// Pass the URL in so DROID can fall back on that:
 					Metadata metadata = new Metadata();
 					if( passUriToFormatTools ) {
-						UsableURI uuri = UsableURIFactory.getInstance( fullUrl );
+						UURI uuri = UURIFactory.getInstance( fullUrl );
 						// Droid seems unhappy about spaces in filenames, so hack to avoid:
 						String cleanUrl = uuri.getName().replace( " ", "+" );
 						metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );

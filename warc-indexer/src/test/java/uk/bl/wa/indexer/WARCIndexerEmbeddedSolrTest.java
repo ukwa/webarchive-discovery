@@ -26,6 +26,7 @@ import org.apache.solr.core.CoreContainer;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.wayback.exception.ResourceNotAvailableException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,8 +40,9 @@ import uk.bl.wa.util.solr.SolrRecord;
  */
 public class WARCIndexerEmbeddedSolrTest {
 
-	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
-	private String testWarc = "src/test/resources/variations.warc.gz";
+	private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc";
+	//private String testWarc = "src/test/resources/variations.warc.gz";
 	//private String testWarc = "src/test/resources/TEST.arc.gz";
 	
 	private EmbeddedSolrServer server;
@@ -76,9 +78,10 @@ public class WARCIndexerEmbeddedSolrTest {
 	 * @throws NoSuchAlgorithmException
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
+	 * @throws ResourceNotAvailableException 
 	 */
 	@Test
-	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
+	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, ResourceNotAvailableException {
 		// Fire up a SOLR:
 		String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
 		SolrInputDocument document = new SolrInputDocument();
@@ -146,26 +149,17 @@ public class WARCIndexerEmbeddedSolrTest {
 		 */
 		
 		WARCIndexer windex = new WARCIndexer();
-		File warcFile = new File(testWarc);
-		System.out.println("Reading file: "+warcFile.getAbsolutePath());
-		ArchiveReader reader = ArchiveReaderFactory.get( warcFile );
-		System.out.println("ArchiveReader.isCompressed "+reader.isCompressed());
-		System.out.println("ArchiveReader.isDigest "+reader.isDigest());
-		System.out.println("ArchiveReader.isStrict "+reader.isStrict());
-		System.out.println("ArchiveReader.isValid "+reader.isValid());
+		ArchiveReader reader = ArchiveReaderFactory.get( new File(testWarc) );
 		Iterator<ArchiveRecord> ir = reader.iterator();
-		System.out.println("Iterator.hasNext "+ir.hasNext());
-		ArchiveRecord ar = reader.get();
-		System.out.println("ArchiveReader.get "+ar);
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
 			SolrRecord doc = windex.extract("",rec);
 			if( doc != null ) {
-				System.out.println(doc.toXml());
+				//System.out.println(doc.toXml());
 				//break;
 				docs.add(doc.doc);
 			} else {
-				System.out.println("Got a NULL document: "+rec.getHeader().getUrl());
+				System.out.println("Got a NULL document for: "+rec.getHeader().getUrl());
 			}
 			//System.out.println(" ---- ---- ");
 		}

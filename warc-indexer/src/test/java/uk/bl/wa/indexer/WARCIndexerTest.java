@@ -3,6 +3,7 @@ package uk.bl.wa.indexer;
 import static org.junit.Assert.*;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
@@ -13,6 +14,7 @@ import java.util.List;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.util.ArchiveUtils;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
@@ -164,6 +166,7 @@ public class WARCIndexerTest {
 		WARCIndexer windex = new WARCIndexer(config2);
 		
 		String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
+		System.out.println("ArchiveUtils.isGZipped: "+ArchiveUtils.isGzipped( new FileInputStream(inputFile)));
 		ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		int recordCount = 0;
