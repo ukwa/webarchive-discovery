@@ -39,8 +39,8 @@ import uk.bl.wa.util.solr.SolrRecord;
  */
 public class WARCIndexerEmbeddedSolrTest {
 
-	private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
-	//private String testWarc = "src/test/resources/variations.warc.gz";
+	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+	private String testWarc = "src/test/resources/variations.warc.gz";
 	//private String testWarc = "src/test/resources/TEST.arc.gz";
 	
 	private EmbeddedSolrServer server;
@@ -146,18 +146,32 @@ public class WARCIndexerEmbeddedSolrTest {
 		 */
 		
 		WARCIndexer windex = new WARCIndexer();
-		ArchiveReader reader = ArchiveReaderFactory.get( new File(testWarc));
+		File warcFile = new File(testWarc);
+		System.out.println("Reading file: "+warcFile.getAbsolutePath());
+		ArchiveReader reader = ArchiveReaderFactory.get( warcFile );
+		System.out.println("ArchiveReader.isCompressed "+reader.isCompressed());
+		System.out.println("ArchiveReader.isDigest "+reader.isDigest());
+		System.out.println("ArchiveReader.isStrict "+reader.isStrict());
+		System.out.println("ArchiveReader.isValid "+reader.isValid());
 		Iterator<ArchiveRecord> ir = reader.iterator();
+		System.out.println("Iterator.hasNext "+ir.hasNext());
+		ArchiveRecord ar = reader.get();
+		System.out.println("ArchiveReader.get "+ar);
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
 			SolrRecord doc = windex.extract("",rec);
 			if( doc != null ) {
-				//WARCIndexer.prettyPrintXML(ClientUtils.toXML(doc.doc));
+				System.out.println(doc.toXml());
 				//break;
 				docs.add(doc.doc);
+			} else {
+				System.out.println("Got a NULL document: "+rec.getHeader().getUrl());
 			}
 			//System.out.println(" ---- ---- ");
 		}
+		System.out.println("Added "+docs.size()+" docs.");
+		// Check the read worked:
+        assertEquals(21L, docs.size());
 
         server.add(docs);
         server.commit();

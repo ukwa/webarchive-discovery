@@ -24,7 +24,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
-import org.archive.io.warc.WARCConstants;
+import org.archive.format.warc.WARCConstants.WARCRecordType;
 
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
@@ -60,10 +60,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		try {
 			if( !dummyRun ) {
 				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
+					log.info("Setting up CloudSolrServer client via zookeepers.");
 					solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeepers" ) );
 					( ( CloudSolrServer ) solrServer ).setDefaultCollection( conf.getString( "warc.solr.collection" ) );
 				} else {
-					solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
+					log.info("Setting up LBHttpSolrServer client from warc.solr.servers list.");
+				solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
 				}
 			}
 		} catch( MalformedURLException e ) {
@@ -93,7 +95,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 			// If this is a 'response' or an ARC (i.e. null) record...
 			type = wsr.getType();
-			if( type.equals( ARC_TYPE ) || type.equals( WARCConstants.RESPONSE ) ) {
+			if( type.equals( ARC_TYPE ) || type.equals( WARCRecordType.response ) ) {
 				// If oDoc already set, compare dates.
 				if( oDoc != null ) {
 					String currentEarliest = ( String ) oDoc.getFieldValue( SolrFields.WAYBACK_DATE );

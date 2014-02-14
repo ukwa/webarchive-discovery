@@ -1,9 +1,8 @@
 package uk.bl.wa.indexer;
 
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.io.warc.WARCConstants.RESPONSE;
-import static org.archive.io.warc.WARCConstants.REVISIT;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
+import static org.archive.format.warc.WARCConstants.WARCRecordType;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -43,8 +42,8 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCConstants;
 import org.archive.io.warc.WARCRecord;
-import org.archive.net.UURI;
-import org.archive.net.UURIFactory;
+import org.archive.url.UsableURI;
+import org.archive.url.UsableURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.archive.util.Base32;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
@@ -87,7 +86,7 @@ public class WARCIndexer {
 
 	private static Log log = LogFactory.getLog( WARCIndexer.class );
 
-	private static final long BUFFER_SIZE = 1024 * 1024l; // 10485760 bytes = 10MB.
+	private static final long BUFFER_SIZE = 20 * 1024 * 1024l; // = 20MB.
 
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
@@ -220,7 +219,7 @@ public class WARCIndexer {
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( REVISIT ) ) ) {
+				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.resource ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.revisit ) ) ) {
 					return null;
 				}
 			} // else we're processing ARCs
@@ -395,7 +394,7 @@ public class WARCIndexer {
 					// Pass the URL in so DROID can fall back on that:
 					Metadata metadata = new Metadata();
 					if( passUriToFormatTools ) {
-						UURI uuri = UURIFactory.getInstance( fullUrl );
+						UsableURI uuri = UsableURIFactory.getInstance( fullUrl );
 						// Droid seems unhappy about spaces in filenames, so hack to avoid:
 						String cleanUrl = uuri.getName().replace( " ", "+" );
 						metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );

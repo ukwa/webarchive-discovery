@@ -38,7 +38,7 @@
       <url>git@github.com:ukwa/warc-discovery.git</url>
    </scm>
    <properties>
-      <solr.version>4.4.0</solr.version>
+      <solr.version>4.6.1</solr.version>
       <tika.version>1.4</tika.version>
       <jdk.version>1.6</jdk.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -67,29 +67,11 @@
          </plugin>
       </plugins>
    </build>
-   <repositories>
-      <repository>
-         <releases>
-            <enabled>true</enabled>
-            <updatePolicy>daily</updatePolicy>
-            <checksumPolicy>warn</checksumPolicy>
-         </releases>
-         <snapshots>
-            <enabled>true</enabled>
-            <updatePolicy>daily</updatePolicy>
-            <checksumPolicy>warn</checksumPolicy>
-         </snapshots>
-         <id>internetarchive</id>
-         <name>Internet Archive Maven Repository</name>
-         <url>http://builds.archive.org:8080/maven2</url>
-         <layout>default</layout>
-      </repository>
-   </repositories>
    <dependencies>
       <dependency>
-         <groupId>org.archive.wayback</groupId>
-         <artifactId>wayback-core</artifactId>
-         <version>1.7.0</version>
+         <groupId>org.netpreserve.openwayback</groupId>
+         <artifactId>openwayback-core</artifactId>
+         <version>2.0.0.BETA.1</version>
          <exclusions>
             <exclusion>
                <artifactId>poi-scratchpad</artifactId>
@@ -102,10 +84,6 @@
             <exclusion>
                <artifactId>hadoop-core</artifactId>
                <groupId>org.apache.hadoop</groupId>
-            </exclusion>
-            <exclusion>
-               <artifactId>guava</artifactId>
-               <groupId>com.google.guava</groupId>
             </exclusion>
          </exclusions>
       </dependency>

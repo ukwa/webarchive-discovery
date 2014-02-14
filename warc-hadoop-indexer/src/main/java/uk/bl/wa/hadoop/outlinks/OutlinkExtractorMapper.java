@@ -1,7 +1,6 @@
 package uk.bl.wa.hadoop.outlinks;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.IOException;
 import java.util.Iterator;
@@ -14,6 +13,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.tika.metadata.Metadata;
+import org.archive.format.warc.WARCConstants.WARCRecordType;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
@@ -35,7 +35,7 @@ public class OutlinkExtractorMapper extends MapReduceBase implements Mapper<Text
 		try {
 			header = value.getRecord().getHeader();
 			// If this is a non-response WARC record...
-			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) ) {
+			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && !header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response ) ) {
 				return;
 			}
 			resourceUrl = value.getRecord().getHeader().getUrl();

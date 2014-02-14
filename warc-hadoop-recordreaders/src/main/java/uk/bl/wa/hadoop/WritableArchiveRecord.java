@@ -28,6 +28,8 @@ import org.archive.io.warc.WARCRecord;
  *
  */
 public class WritableArchiveRecord implements Writable {
+	public static int SIZE_LIMIT = 1024 * 1024 * 20; // 20MB - only applies if you try to 'getPayload' or 'write' it, otherwise streaming is used.
+	
 	private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
 	private ArchiveRecord record = null;
 
@@ -51,7 +53,7 @@ public class WritableArchiveRecord implements Writable {
 		BufferedInputStream input = new BufferedInputStream( record );
 		ByteArrayOutputStream output = new ByteArrayOutputStream();
 		int ch;
-		byte[] buffer = new byte[ 1048576 ];
+		byte[] buffer = new byte[ SIZE_LIMIT ];
 		try {
 			while( ( ch = input.read( buffer ) ) >= 0 ) {
 				output.write( buffer, 0, ch );
@@ -78,7 +80,7 @@ public class WritableArchiveRecord implements Writable {
 		log.debug( "Calling write( DataOutput )..." );
 		if( record != null ) {
 			int ch;
-			byte[] buffer = new byte[ 1048576 ];
+			byte[] buffer = new byte[ SIZE_LIMIT ];
 			while( ( ch = record.read( buffer ) ) >= 0 ) {
 				output.write( buffer, 0, ch );
 			}

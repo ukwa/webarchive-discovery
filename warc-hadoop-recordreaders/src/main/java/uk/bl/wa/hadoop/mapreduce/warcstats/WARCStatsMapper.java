@@ -18,8 +18,8 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
-import org.archive.net.UURI;
-import org.archive.net.UURIFactory;
+import org.archive.url.UsableURI;
+import org.archive.url.UsableURIFactory;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
@@ -69,7 +69,7 @@ public class WARCStatsMapper extends MapReduceBase implements Mapper<Text, Writa
 		// URL:
 		String uri = header.getUrl();
 		if( uri != null ){ 
-			UURI uuri = UURIFactory.getInstance(uri);
+			UsableURI uuri = UsableURIFactory.getInstance(uri);
 			// Hosts:
 			if( "https".contains(uuri.getScheme()) ) {
 				output.collect( new Text("record-hosts"), new Text("HOSTS\t"+uuri.getAuthority()) );

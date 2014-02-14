@@ -36,7 +36,6 @@ public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 				throw new IllegalArgumentException( "can't find " + utf8 + " encoding" );
 			}
 		}
-		long fileSizeLimit = 1024 * 1024 * 1024 * 10; //10MB
 
 		protected DataOutputStream out;
 

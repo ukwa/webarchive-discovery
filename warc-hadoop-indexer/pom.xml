@@ -67,11 +67,6 @@
          <version>1.1.2-SNAPSHOT</version>
       </dependency>
       <dependency>
-         <groupId>org.archive.wayback</groupId>
-         <artifactId>wayback-hadoop-java</artifactId>
-         <version>1.7.0</version>
-      </dependency>
-      <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-simple</artifactId>
          <version>1.6.1</version>
