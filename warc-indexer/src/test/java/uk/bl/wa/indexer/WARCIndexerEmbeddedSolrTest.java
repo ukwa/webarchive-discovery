@@ -165,7 +165,7 @@ public class WARCIndexerEmbeddedSolrTest {
 		}
 		System.out.println("Added "+docs.size()+" docs.");
 		// Check the read worked:
-        assertEquals(21L, docs.size());
+        assertEquals(39L, docs.size());
 
         server.add(docs);
         server.commit();
