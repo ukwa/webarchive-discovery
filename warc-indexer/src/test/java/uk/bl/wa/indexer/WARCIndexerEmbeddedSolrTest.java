@@ -5,7 +5,7 @@ package uk.bl.wa.indexer;
 
 import static org.junit.Assert.*;
 
-import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
@@ -23,10 +23,11 @@ import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
+import org.archive.format.gzip.GZIPDecoder;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
-import org.archive.wayback.exception.ResourceNotAvailableException;
+import org.archive.util.ArchiveUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -41,9 +42,12 @@ import uk.bl.wa.util.solr.SolrRecord;
 public class WARCIndexerEmbeddedSolrTest {
 
 	private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen.warc.gz";
 	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc";
 	//private String testWarc = "src/test/resources/variations.warc.gz";
 	//private String testWarc = "src/test/resources/TEST.arc.gz";
+	//String testWarc = "src/test/resources/IAH-20080430204825-00000-blackbook-truncated.warc.gz";
+	String testArc = "src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz";
 	
 	private EmbeddedSolrServer server;
 
@@ -81,7 +85,7 @@ public class WARCIndexerEmbeddedSolrTest {
 	 * @throws ResourceNotAvailableException 
 	 */
 	@Test
-	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, ResourceNotAvailableException {
+	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException {
 		// Fire up a SOLR:
 		String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
 		SolrInputDocument document = new SolrInputDocument();
@@ -149,21 +153,25 @@ public class WARCIndexerEmbeddedSolrTest {
 		 */
 		
 		WARCIndexer windex = new WARCIndexer();
-		ArchiveReader reader = ArchiveReaderFactory.get( new File(testWarc) );
+		ArchiveReader reader = ArchiveReaderFactory.get( testWarc );
+		System.out.println("ArchiveUtils.isGZipped: "+ArchiveUtils.isGzipped( new FileInputStream(testWarc)));
+		new GZIPDecoder().parseHeader( new FileInputStream(testWarc) );
 		Iterator<ArchiveRecord> ir = reader.iterator();
+		int total = 0;
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract("",rec);
+			total++;
+			SolrRecord doc = windex.extract( rec.getHeader().getUrl(), rec );
 			if( doc != null ) {
 				//System.out.println(doc.toXml());
 				//break;
 				docs.add(doc.doc);
 			} else {
-				System.out.println("Got a NULL document for: "+rec.getHeader().getUrl());
+				//System.out.println("Got a NULL document for: "+rec.getHeader().getUrl());
 			}
 			//System.out.println(" ---- ---- ");
 		}
-		System.out.println("Added "+docs.size()+" docs.");
+		System.out.println("Added "+docs.size()+" docs out of "+total+" .");
 		// Check the read worked:
         assertEquals(39L, docs.size());
 

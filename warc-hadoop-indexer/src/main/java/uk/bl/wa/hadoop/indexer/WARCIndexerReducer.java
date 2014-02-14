@@ -1,7 +1,6 @@
 package uk.bl.wa.hadoop.indexer;
 
 import static uk.bl.wa.hadoop.indexer.WritableSolrRecord.ARC_TYPE;
-import static org.archive.io.warc.WARCConstants.RESPONSE;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -25,6 +24,7 @@ import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.archive.format.warc.WARCConstants.WARCRecordType;
 
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
@@ -95,7 +95,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 			// If this is a 'response' or an ARC (i.e. null) record...
 			type = wsr.getType();
-			if( type.equals( ARC_TYPE ) || type.equals( RESPONSE ) ) {
+			if( type.equals( ARC_TYPE ) || type.equals( WARCRecordType.response.toString() ) ) {
 				// If oDoc already set, compare dates.
 				if( oDoc != null ) {
 					String currentEarliest = ( String ) oDoc.getFieldValue( SolrFields.WAYBACK_DATE );

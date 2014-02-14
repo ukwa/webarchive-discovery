@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
+import org.archive.format.gzip.GZIPDecoder;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -167,6 +168,7 @@ public class WARCIndexerTest {
 		
 		String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
 		System.out.println("ArchiveUtils.isGZipped: "+ArchiveUtils.isGzipped( new FileInputStream(inputFile)));
+		new GZIPDecoder().parseHeader( new FileInputStream(inputFile) );
 		ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		int recordCount = 0;
