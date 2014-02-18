@@ -85,10 +85,7 @@ import eu.scape_project.bitwiser.utils.SSDeep;
  * 
  */
 public class WARCIndexer {
-
 	private static Log log = LogFactory.getLog( WARCIndexer.class );
-
-	private static final long BUFFER_SIZE = 20 * 1024 * 1024l; // = 20MB.
 
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
@@ -117,6 +114,7 @@ public class WARCIndexer {
 	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
+	private long bufferSize = ( 20L * 1024L * 1024L );
 
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
@@ -165,6 +163,7 @@ public class WARCIndexer {
 		this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
 		// Response codes to include:
 		this.response_includes = conf.getStringList( "warc.index.extract.response_include" );
+		this.bufferSize = conf.getLong( "warc.index.extract.buffer_size" );
 
 		// URL Filtering options:
 		if( conf.getBoolean( "warc.index.exclusions.enabled" ) ) {
@@ -185,7 +184,7 @@ public class WARCIndexer {
 		try {
 			dd = new DroidDetector();
 			dd.setBinarySignaturesOnly( droidUseBinarySignaturesOnly );
-			dd.setMaxBytesToScan( BUFFER_SIZE );
+			dd.setMaxBytesToScan( bufferSize );
 		} catch( CommandExecutionException e ) {
 			e.printStackTrace();
 			dd = null;
@@ -338,7 +337,7 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 
 			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, BUFFER_SIZE ), ( int ) BUFFER_SIZE );
+			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, bufferSize ), ( int ) bufferSize );
 			tikainput.mark( ( int ) header.getLength() );
 			if( passUriToFormatTools ) {
 				solr = tika.extract( solr, tikainput, header.getUrl() );
