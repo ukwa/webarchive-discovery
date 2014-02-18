@@ -252,6 +252,8 @@ public class WARCIndexer {
 			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
 			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong( waybackDate + "00" ) + ( ( md5digest[ 1 ] << 8 ) + md5digest[ 0 ] ) );
 			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
+			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
+			long content_length = header.getLength();
 
 			// Also pull out the file extension, if any:
 			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
@@ -332,6 +334,9 @@ public class WARCIndexer {
 					return null;
 				}
 			}
+			
+			// Update the content_length based on what's available:
+			content_length = tikainput.available();
 
 			// -----------------------------------------------------
 			// Parse payload using Tika:
@@ -345,6 +350,9 @@ public class WARCIndexer {
 			} else {
 				solr = tika.extract( solr, tikainput, null );
 			}
+			
+			// Record the length:
+			solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
 
 			// TODO: ArchiveRecordHeader.getDigest() returning null for (W)ARCs.
 			// TODO: At the very least we should calculate the hash on the whole InputStream.
