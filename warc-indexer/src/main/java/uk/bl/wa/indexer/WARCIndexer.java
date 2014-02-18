@@ -152,6 +152,7 @@ public class WARCIndexer {
 		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
