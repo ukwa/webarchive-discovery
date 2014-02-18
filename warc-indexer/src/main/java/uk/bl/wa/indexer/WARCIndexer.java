@@ -65,6 +65,7 @@ import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
+import antlr.Parser;
 
 import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
@@ -425,7 +426,7 @@ public class WARCIndexer {
 				if( mime.startsWith( "text" ) ) {
 					// JSoup NEEDS the URL to function:
 					metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-					ParseRunner parser = new ParseRunner( hfp, tikainput, metadata );
+					ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
 					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 					try {
 						thread.start();
@@ -495,7 +496,7 @@ public class WARCIndexer {
 				} else if( mime.startsWith( "application/pdf" ) ) {
 					if( extractApachePreflightErrors ) {
 						metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-						ParseRunner parser = new ParseRunner( app, tikainput, metadata );
+						ParseRunner parser = new ParseRunner( app, tikainput, metadata, solr );
 						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 						try {
 							thread.start();
@@ -518,7 +519,7 @@ public class WARCIndexer {
 				} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
 					// Also attempt to grab the XML Root NS:
 					if( this.extractXMLRootNamespace ) {
-						ParseRunner parser = new ParseRunner( xrns, tikainput, metadata );
+						ParseRunner parser = new ParseRunner( xrns, tikainput, metadata,solr );
 						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 						try {
 							thread.start();
@@ -882,22 +883,26 @@ public class WARCIndexer {
 	}
 
 	private class ParseRunner implements Runnable {
-		AbstractParser hfp;
+		AbstractParser parser;
 		Metadata metadata;
 		InputStream input;
+		private SolrRecord solr;
 
-		public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata ) {
-			this.hfp = parser;
+		public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata, SolrRecord solr ) {
+			this.parser = parser;
 			this.metadata = metadata;
 			this.input = tikainput;
+			this.solr = solr;
 		}
 
 		@Override
 		public void run() {
 			try {
-				hfp.parse( input, null, metadata, null );
+				parser.parse( input, null, metadata, null );
 			} catch( Exception e ) {
-				log.error( "HtmlFeatureParser.parse(): " + e.getMessage() );
+				log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
+				// Also record as a Solr PARSE_ERROR
+				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with "+parser.getClass().getName()+": " + e.getMessage() );
 			}
 		}
 	}
