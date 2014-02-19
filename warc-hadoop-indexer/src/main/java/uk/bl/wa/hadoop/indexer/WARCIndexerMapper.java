@@ -143,15 +143,13 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				return;
 			}
 
-			Text oKey = new Text( ( String ) solr.doc.getFieldValue( SolrFields.HASH_AND_URL ) );
+			Text oKey = new Text( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_HOST ) );
 			try {
 				URI uri = new URI( header.getUrl() );
 				if( processCollections ) {
 					processCollectionScopes( uri, solr );
 				}
 				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
-				// Set the record type (null for ARCs).
-				wsolr.setType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) );
 				output.collect( oKey, wsolr );
 			} catch( Exception e ) {
 				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );

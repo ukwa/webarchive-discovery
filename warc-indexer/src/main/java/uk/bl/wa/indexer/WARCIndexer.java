@@ -2,8 +2,6 @@ package uk.bl.wa.indexer;
 
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.io.warc.WARCConstants.RESPONSE;
-import static org.archive.io.warc.WARCConstants.REVISIT;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -65,7 +63,6 @@ import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
-import antlr.Parser;
 
 import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
@@ -90,6 +87,7 @@ public class WARCIndexer {
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
 	private List<String> response_includes;
+	private List<String> record_type_includes;
 
 	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
 
@@ -164,6 +162,8 @@ public class WARCIndexer {
 		this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
 		// Response codes to include:
 		this.response_includes = conf.getStringList( "warc.index.extract.response_include" );
+		// Record types to include:
+		this.record_type_includes = conf.getStringList( "warc.index.extract.record_type_include" );
 		this.bufferSize = conf.getLong( "warc.index.extract.buffer_size" );
 
 		// URL Filtering options:
@@ -221,7 +221,7 @@ public class WARCIndexer {
 
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( RESPONSE ) || header.getHeaderValue( HEADER_KEY_TYPE ).equals( REVISIT ) ) ) {
+				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
 			} // else we're processing ARCs
@@ -249,8 +249,6 @@ public class WARCIndexer {
 			// Basic metadata:
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
-			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
-			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong( waybackDate + "00" ) + ( ( md5digest[ 1 ] << 8 ) + md5digest[ 0 ] ) );
 			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
@@ -372,9 +370,9 @@ public class WARCIndexer {
 			} catch( Exception i ) {
 				log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
 			}
+			solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
 			// Set these last: ARC records must be read in full to calculate the hash.
 			solr.doc.setField( SolrFields.HASH, hash );
-			solr.doc.setField( SolrFields.HASH_AND_URL, hash + "_" + fullUrl );
 
 			// Pull out the first few bytes, to hunt for new format by magic:
 			try {
@@ -865,6 +863,15 @@ public class WARCIndexer {
 			}
 		}
 		// Exclude
+		return false;
+	}
+
+	private boolean checkRecordType( String type ) {
+		for( String include : record_type_includes ) {
+			if( type.equals( include ) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 
