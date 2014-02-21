@@ -156,4 +156,9 @@
          <scope>test</scope>
       </dependency>
    </dependencies>
+   <organization>
+      <name>The UK Web Archive</name>
+      <url>http://www.webarchive.org.uk/</url>
+   </organization>
+   <inceptionYear>2013</inceptionYear>
 </project>
