@@ -44,7 +44,7 @@
    </scm>
    <properties>
       <solr.version>4.6.1</solr.version>
-      <tika.version>1.4</tika.version>
+      <tika.version>1.5</tika.version>
       <jdk.version>1.6</jdk.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
