@@ -91,10 +91,6 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
 			}
 		}
-		if( !dummyRun ) {
-			// Have we any unsubmitted SolrInputDocuments?
-			checkSubmission( docs, 1 );
-		}
 	}
 
 	/**
@@ -117,14 +113,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			try {
 				response = solrServer.add( docs );
-				docs.clear();
 				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
-			} catch( SolrServerException e ) {
-				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
-			} catch( IOException i ) {
-				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
-			} catch( RemoteSolrException r ) {
-				log.error( "WARCIndexerReducer.reduce(): " + r.getMessage() );
+				docs.clear();
+			} catch( Exception e ) {
+				// SOLR-5719 possibly hitting us here;
+				// CloudSolrServer.RouteException
+				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage(), e );
 			}
 		}
 	}

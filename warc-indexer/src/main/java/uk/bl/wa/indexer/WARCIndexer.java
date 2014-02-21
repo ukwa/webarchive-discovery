@@ -111,6 +111,7 @@ public class WARCIndexer {
 	private boolean extractText = true;
 	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
+	private boolean hashUrlId = false;
 	private int firstBytesLength = 32;
 	private long bufferSize = ( 20L * 1024L * 1024L );
 
@@ -150,6 +151,7 @@ public class WARCIndexer {
 		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+		this.hashUrlId = conf.getBoolean( "warc.index.solr.use_hash_url_id" );
 		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
@@ -370,7 +372,12 @@ public class WARCIndexer {
 			} catch( Exception i ) {
 				log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
 			}
-			solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
+			// Optionally use a hash-based ID to store only one version of a URL:
+			if( hashUrlId ) {
+				solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
+			} else {
+				solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
+			}
 			// Set these last: ARC records must be read in full to calculate the hash.
 			solr.doc.setField( SolrFields.HASH, hash );
 
