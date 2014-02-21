@@ -3,10 +3,33 @@
  */
 package uk.bl.wa.parsers;
 
+/*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2014 The UK Web Archive
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
 import static org.junit.Assert.*;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.tika.metadata.Metadata;
@@ -55,6 +78,27 @@ public class StanfordAnnotatorParserTest {
 		Set<String> misc = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_MISC)));
 		System.out.println("MISC: "+misc);
 		assertTrue(misc.contains("American"));
+
+		/* And sentiments */
+		
+		String sentiment = metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
+		System.out.println("Sentiment: "+sentiment);
+		
+		List<String> sentiments = Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
+		System.out.println("Sentiments: "+sentiments);
 	}
 
+	@Test
+	public void testNERSentiment() {
+		String text = "This movie doesn't care about cleverness, wit or any other kind of intelligent humor. Those who find ugly meanings in beautiful things are corrupt without being charming. There are slow and repetitive parts, but it has just enough spice to keep it interesting.";
+		Metadata metadata = new Metadata();
+		parser.parse(text, metadata);
+		String sentiment = metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
+		System.out.println("Sentiment: "+sentiment);
+		assertTrue(sentiment.equals("2"));
+		
+		List<String> sentiments = Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
+		System.out.println("Sentiments: "+sentiments);
+		
+	}
 }
