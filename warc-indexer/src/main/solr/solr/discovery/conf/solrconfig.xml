@@ -1144,7 +1144,7 @@
 				[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory 
 				[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory 
 				[ternary trees] -->
-			<str name="field">name</str>  <!-- the indexed field to derive suggestions from -->
+			<str name="field">title</str>  <!-- the indexed field to derive suggestions from -->
 			<float name="threshold">0.005</float>
 			<str name="buildOnCommit">true</str>
 			<!-- <str name="sourceLocation">american-english</str> -->
