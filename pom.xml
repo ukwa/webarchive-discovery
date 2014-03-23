@@ -121,7 +121,7 @@
       <dependency>
          <groupId>eu.scape-project.nanite</groupId>
          <artifactId>nanite-core</artifactId>
-         <version>1.0.3-SNAPSHOT</version>
+         <version>1.0.73.3-SNAPSHOT</version>
       </dependency>
       <dependency>
          <groupId>org.openimaj</groupId>
