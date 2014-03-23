@@ -1,13 +1,14 @@
-Nanite Extensions
------------------
+Web Archive Tika
+----------------
 
-More ideas for extensions modules for Nanite.
+Tika modules for working with web archives.
 
 
-RAR support
------------
+Ideas
+-----
 
-* https://code.google.com/p/raroscope/
-* https://github.com/junrar/junrar
+* RAR Support:
+    * https://code.google.com/p/raroscope/
+    * https://github.com/junrar/junrar
 
 

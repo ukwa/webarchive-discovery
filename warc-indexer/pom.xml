@@ -95,33 +95,9 @@
          <version>2.11.0</version>
       </dependency>
       <dependency>
-         <groupId>org.apache.tika</groupId>
-         <artifactId>tika-core</artifactId>
-         <version>${tika.version}</version>
-      </dependency>
-      <dependency>
          <groupId>org.jsoup</groupId>
          <artifactId>jsoup</artifactId>
          <version>1.7.2</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.tika</groupId>
-         <artifactId>tika-parsers</artifactId>
-         <version>${tika.version}</version>
-         <exclusions>
-            <exclusion>
-               <artifactId>slf4j-api</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.solr</groupId>
-               <artifactId>solr-core</artifactId>
-            </exclusion>
-            <exclusion>
-               <artifactId>xercesImpl</artifactId>
-               <groupId>xerces</groupId>
-            </exclusion>
-         </exclusions>
       </dependency>
       <dependency>
          <groupId>junit</groupId>
@@ -197,21 +173,6 @@
          <version>0.0.2</version>
       </dependency>
       <dependency>
-         <groupId>eu.scape-project.nanite</groupId>
-         <artifactId>nanite-core</artifactId>
-         <version>1.0.72.2</version>
-         <exclusions>
-            <exclusion>
-               <artifactId>slf4j-log4j12</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-               <artifactId>xercesImpl</artifactId>
-               <groupId>xerces</groupId>
-            </exclusion>
-         </exclusions>
-      </dependency>
-      <dependency>
          <groupId>com.typesafe</groupId>
          <artifactId>config</artifactId>
          <version>1.0.2</version>
@@ -238,6 +199,11 @@
          <artifactId>stanford-corenlp</artifactId>
          <version>3.3.1</version>
          <classifier>models</classifier>
+      </dependency>
+      <dependency>
+      	<groupId>uk.bl.wa.discovery</groupId>
+      	<artifactId>webarchive-tika</artifactId>
+      	<version>2.0.0-SNAPSHOT</version>
       </dependency>
    </dependencies>
 </project>
