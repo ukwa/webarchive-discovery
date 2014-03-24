@@ -385,6 +385,14 @@ public class WARCIndexer {
 			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
 			
+			// If this is a revisit record, we should just return an update to the crawl_dates:
+			if(  header.getHeaderValue( HEADER_KEY_TYPE ).equals(WARCConstants.WARCRecordType.revisit.name())) {
+				SolrRecord revisited = new SolrRecord();
+				revisited.addField(SolrFields.ID, id);
+				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				log.warn("Returning REVISIT update for "+fullUrl);
+				return revisited;
+			}
 			
 			// -----------------------------------------------------
 			// Payload duplication has been checked, ready to parse:
