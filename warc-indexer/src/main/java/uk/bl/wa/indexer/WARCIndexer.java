@@ -345,23 +345,14 @@ public class WARCIndexer {
 			solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
 			
 			// -----------------------------------------------------
-			// Headers have been processed, payload ready to parse.
+			// Headers have been processed, payload ready to cache:
 			// -----------------------------------------------------
 			
 			// Create an appropriately cached version of the payload, to allow analysis.
 			HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
 			tikainput = hcis.getInputStream();
 			String hash = hcis.getHash();
-			// Mark the start of the payload.
-			tikainput.mark( ( int ) content_length );
 
-			// Analyse with tika:
-			if( passUriToFormatTools ) {
-				solr = tika.extract( solr, tikainput, header.getUrl() );
-			} else {
-				solr = tika.extract( solr, tikainput, null );
-			}
-			
 			// Optionally use a hash-based ID to store only one version of a URL:
 			if( hashUrlId ) {
 				solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
@@ -371,6 +362,20 @@ public class WARCIndexer {
 			// Set these last: ARC records must be read in full to calculate the hash.
 			solr.doc.setField( SolrFields.HASH, hash );
 
+			// -----------------------------------------------------
+			// Payload has been cached, ready to process:
+			// -----------------------------------------------------
+			
+			// Mark the start of the payload.
+			tikainput.mark( ( int ) content_length );
+			
+			// Analyse with tika:
+			if( passUriToFormatTools ) {
+				solr = tika.extract( solr, tikainput, header.getUrl() );
+			} else {
+				solr = tika.extract( solr, tikainput, null );
+			}
+			
 			// Pull out the first few bytes, to hunt for new format by magic:
 			try {
 				tikainput.reset();
