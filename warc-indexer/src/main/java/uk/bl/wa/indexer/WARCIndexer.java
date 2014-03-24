@@ -402,7 +402,7 @@ public class WARCIndexer {
 					WARCPayloadAnalysers.html.analyse(header, tikainput, solr);
 
 				} else if( mime.startsWith( "image" ) ) {
-					// TODO Extract image properties.
+					WARCPayloadAnalysers.image.analyse(header, tikainput, solr);
 
 				} else if( mime.startsWith( "application/pdf" ) ) {
 					WARCPayloadAnalysers.pdf.analyse(header, tikainput, solr);

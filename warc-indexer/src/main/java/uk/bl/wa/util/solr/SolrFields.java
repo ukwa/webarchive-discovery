@@ -113,6 +113,8 @@ public interface SolrFields {
 	public static final String IMAGE_HEIGHT = "image_height";
 	public static final String IMAGE_SIZE = "image_size";
 	public static final String IMAGE_FACES = "image_faces";
-	public static final String IMAGE_COLOURS = "image_dominant_colours";
+	public static final String IMAGE_FACES_COUNT = "image_faces_count";
+	public static final String IMAGE_COLOURS = "image_colours";
+	public static final String IMAGE_DOMINANT_COLOUR = "image_dominant_colour";
 	
 }
