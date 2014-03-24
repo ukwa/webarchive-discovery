@@ -45,7 +45,7 @@
     that avoids logging every request
 -->
 
-<schema name="example" version="1.5">
+<schema name="webarchive-discovery" version="1.5">
   <!-- attribute "name" is the name of this schema and is only used for display purposes.
        version="x.y" is Solr's version number for the schema syntax and 
        semantics.  It should not normally be changed by applications.
@@ -299,6 +299,10 @@
    
    <!-- The size of images, in pixels? or tags/ranges? -->
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
+   <!-- Locations of faces detected in the images -->
+   <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
+   <!-- The dominant colours extracted from the images -->
+   <field name='image_dominant_colours' type='string' indexed='false' stored='true' multiValued='true'/>
 
    <!-- The different HTML elements used by the document -->
    <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true"/>
