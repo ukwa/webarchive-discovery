@@ -298,11 +298,13 @@
    <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The size of images, in pixels? or tags/ranges? -->
-   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="true"/>
+   <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false"/>
    <!-- Locations of faces detected in the images -->
-   <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
+   <field name='image_faces' type='string' indexed='true' stored='true' multiValued='true'/>
    <!-- The dominant colours extracted from the images -->
-   <field name='image_dominant_colours' type='string' indexed='false' stored='true' multiValued='true'/>
+   <field name='image_dominant_colours' type='string' indexed='true' stored='true' multiValued='true'/>
 
    <!-- The different HTML elements used by the document -->
    <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true"/>
