@@ -160,6 +160,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setReducerClass( WARCIndexerReducer.class );
 		conf.setOutputFormat( TextOutputFormat.class );
 		conf.set( "map.output.key.field.separator", "" );
+		// Compress the output from the maps, to cut down temp space requirements between map and reduce.
+		conf.setBoolean("mapreduce.map.output.compress", true);
 
 		conf.setOutputKeyClass( Text.class );
 		conf.setOutputValueClass( Text.class );
