@@ -22,7 +22,7 @@
 		Generally, you want to use the latest version to get all bug fixes and improvements. 
 		It is highly recommended that you fully re-index after changing this setting 
 		as it can affect both how text is indexed and queried. -->
-	<luceneMatchVersion>LUCENE_40</luceneMatchVersion>
+	<luceneMatchVersion>4.6</luceneMatchVersion>
 
 	<!-- <lib/> directives can be used to instruct Solr to load an Jars identified 
 		and use them to resolve any "plugins" specified in your solrconfig.xml or 
@@ -77,6 +77,17 @@
 	<directoryFactory name="DirectoryFactory"
 		class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
 
+	<!-- The CodecFactory for defining the format of the inverted index.
+       The default implementation is SchemaCodecFactory, which is the official Lucene
+       index format, but hooks into the schema to provide per-field customization of
+       the postings lists and per-document values in the fieldType element
+       (postingsFormat/docValuesFormat). Note that most of the alternative implementations
+       are experimental, so if you choose to customize the index format, its a good
+       idea to convert back to the official format e.g. via IndexWriter.addIndexes(IndexReader)
+       before upgrading to a newer version to avoid unnecessary reindexing.
+     -->
+  	<codecFactory class="solr.SchemaCodecFactory"/>
+  	
 	<!-- ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~ 
 		Index Config - These settings control low-level behavior of indexing Most 
 		example settings here show the default value, but are commented out, to more 
