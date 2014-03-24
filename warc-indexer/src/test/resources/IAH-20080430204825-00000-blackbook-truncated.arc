@@ -16,11 +16,9 @@ URL IP-address Archive-date Content-type Archive-length
 <dc:format>ARC file version 1.1</dc:format>
 <dcterms:conformsTo xsi:type="dcterms:URI">http://www.archive.org/web/researcher/ArcFileFormat.php</dcterms:conformsTo>
 </arcmetadata>
-
 dns:www.archive.org 68.87.76.178 20080430204825 text/dns 56
 20080430204825
 www.archive.org.	589	IN	A	207.241.229.39
-
 http://www.archive.org/robots.txt 207.241.229.39 20080430204825 text/plain 782
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:24 GMT
@@ -48,7 +46,6 @@ Disallow: /nothing---please-crawl-us--
 # via collection pages.   --Feb2008 tracey--
 User-agent: Teoma
 Crawl-Delay: 10
-
 http://www.archive.org/ 207.241.229.39 20080430204826 text/html 680
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:25 GMT
@@ -73,7 +70,6 @@ Please visit our website at:
 <a href="http://www.archive.org">http://www.archive.org</a>
 </body>
 </html>
-
 http://www.archive.org/index.php 207.241.229.39 20080430204826 text/html 29000
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:25 GMT
@@ -411,7 +407,6 @@ Content-Type: text/html; charset=UTF-8
   <a href="/about/terms.php">Terms of Use (10 Mar 2001)</a>
 </p>
 </body></html>
-
 http://www.archive.org/images/logoc.jpg 207.241.229.39 20080430204829 image/jpeg 1963
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:28 GMT
@@ -435,8 +430,7 @@ R7âÀáÂŠU4Ù—ÈêÑˆêËe½›ŒİB:%n'çªEq›	Œ˜ñy-¨)H²[%T¶­R‘©{;4*Ù26n.IéQp7·Õ;¶¸
 -zœë;%óÔ­¦ˆKY<ª…ÿ *ñÈÕsí×jJ=}¾….¾ß¥¾‘¸?ç]Q•¦“n¬ı*­Åñbgù¡ä?ôÎFÇŸÕ/âf¸i_Á_±”:àVÓÛª?Û'\xdPŸÁ5G»èKÉu:¶Ïã¶±ç½ ~Òj´ÙÉòcŠas÷&AÉsZdXé
 Pº­Ø‘ÌšG‘-Ê,VoC¹·¦/#èœÇ%Ù>’Tw–ID†–mr9%'Fù“Øè¦$äO?w¾Ş}OF‚§šÈÁ–Ó‹*#ÈÔõÓ{%Z”«ò¸¤y
 W®‚rs]ß2Æ„&.5Õ)IS’šd)7¸J[G}IYÉGM†ÃÍªûŞ¨,È*4oP¼µ´ãÊ±øµ‰ óájzåJP™17ó“İp%ì]ÉiK31¢k²AËş¤iP$ŞÊ9®0k£V’×Dò1ñ›wmÄà"F2rXmË¤©Fxp_³Æ©ÍO±.=Î¯²sÕm|j}K~`e)Ru…^Ö·V–PC%³ıJõÓÊôü‘>Ê½4„è}¤<6K‰
-x®fv"’öî_–2[?Ûº@ìàº³Š¸Êîí¦ü§”›ö*Ê4Öp3™Q{rJ5yk'‰µ>îc ë ·è‰‚]pCSjyÂûËH*Öá·ÄOò÷Ö:š¬`²‚<)™<DH˜öPù“âİqÇÍô"¶ã¡)ìåK4¢ôm³Ôl‘h¶Á‚Ú¡¥©,Â¦àéı\€?q5½±9ÀïÒ¾¥™y,ÊÄ–”…GuÄÚ—e-ä´š¢¤în~ˆŸ£}/ÖËÓş·ÏWª¾½z¼ÛwöZÖákp­deD˜à(¢BB€”HJ $H'™¾4“ì­”E«Q4HIÿÙ
-http://www.archive.org/images/go-button-gateway.gif 207.241.229.39 20080430204829 image/gif 1424
+x®fv"’öî_–2[?Ûº@ìàº³Š¸Êîí¦ü§”›ö*Ê4Öp3™Q{rJ5yk'‰µ>îc ë ·è‰‚]pCSjyÂûËH*Öá·ÄOò÷Ö:š¬`²‚<)™<DH˜öPù“âİqÇÍô"¶ã¡)ìåK4¢ôm³Ôl‘h¶Á‚Ú¡¥©,Â¦àéı\€?q5½±9ÀïÒ¾¥™y,ÊÄ–”…GuÄÚ—e-ä´š¢¤în~ˆŸ£}/ÖËÓş·ÏWª¾½z¼ÛwöZÖákp­deD˜à(¢BB€”HJ $H'™¾4“ì­”E«Q4HIÿÙhttp://www.archive.org/images/go-button-gateway.gif 207.241.229.39 20080430204829 image/gif 1424
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:28 GMT
 Server: Apache/2.0.54 (Ubuntu) PHP/5.0.5-2ubuntu1.4 mod_ssl/2.0.54 OpenSSL/0.9.7g
@@ -449,8 +443,7 @@ Content-Type: image/gif
 
 GIF89a  ÷ÿ ÀÀÀñ±Xî®Wä¦Sİ¡QÍ—KÊ”Jò²Yì®W×Oñ°Zò´_óºoôÁzõÄƒõÆ„ÅŠEë¤RÇ‹FòÂŒòÄÓ‹E¿~?æWê°vÿşıİ‘HÍ†Cé¨jî¼Œ×†CÛ‰E»u;¶r9áLì»“îÂã•Xß”]å©}Íy<Àq8Åt:·l6ä¡ré¶‘ıúøÑr9¬^/ìÃªÏl6ªY,Àg3»d2¸c1³`0Ğq9­^0Óu>Õw@İ–nßŸzá¦ƒå¯‘íÄ¬Ìf3Èd2Æc1Åc1Âb0Áa0½^/¸\.µZ-­W+Ëe3Çc2Ãa1¿_0·[.³Y-®W,ªV+Ìh5Ìh7Îl9Îl;În=Ğp?ĞpAĞrCĞtFÒvIÒyLÒzLÓ{NÔ}RÓ}RÔ~SÔ€UÕW×†]×ˆ`ÙiÛ’nÛ”pÜ–sŞšxŞœ{ß|à¢ƒâ¦ˆâ§‰å²˜æ´›ç¸Ÿèº£ëÀ©íÈµğÓÄ÷æİùìåÌf5Îh7Ğn?ä®”óÜÑúñíüõòşûúÿÿÿ                                                                                                                                                                                                                                                                                                                                                                                       !ù    ,      @ÿ è C‹oz°à0°á‰>W‚øq‘&œ yşù“'HAF  p@‡Ç“(=.YB$	Œ qÃ'¥M/ 0q¦¦Ÿ@AÒÂ¨‘£Ê&QR48 ‚ŠIn¬°``iC
 1Ü„©¢ç¤=V°ìˆ0Á4Sn¦\"„mØxTQĞPAá’aÈ$
-¼pI«ö$[$RŒ€Cˆã•…I’‚U HÄYcÌ–-_ÈŒ)±Àê„:l²ö(ƒ¬Àq¸¬>)„É ätñè'ƒ <AÄüôGL%‚ŠÑàãMÚ@wP²ÄĞDĞà¡†JÑéAÍ@İºG@C Ø¸Pfoß€‚/>×‰’ DhÙ3{¥% ,&d6­DÄ3H`(GÄC4áJ„P@C ;
-http://www.archive.org/images/star.png 207.241.229.39 20080430204830 image/png 564
+¼pI«ö$[$RŒ€Cˆã•…I’‚U HÄYcÌ–-_ÈŒ)±Àê„:l²ö(ƒ¬Àq¸¬>)„É ätñè'ƒ <AÄüôGL%‚ŠÑàãMÚ@wP²ÄĞDĞà¡†JÑéAÍ@İºG@C Ø¸Pfoß€‚/>×‰’ DhÙ3{¥% ,&d6­DÄ3H`(GÄC4áJ„P@C ;http://www.archive.org/images/star.png 207.241.229.39 20080430204830 image/png 564
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:29 GMT
 Server: Apache/2.0.54 (Ubuntu) PHP/5.0.5-2ubuntu1.4 mod_ssl/2.0.54 OpenSSL/0.9.7g
@@ -463,8 +456,7 @@ Content-Type: image/png
 
 ‰PNG
 
-   IHDR         e^|è   3PLTE   ÿ¥ ÿ® ş³ ÿº ÿÀ ÿÇ şÏ şÕ ÿÛ ÿâ ÿè ÿîÿó ı÷ ış   ™’¢X   tRNS @æØf   bKGD ˆH   	pHYs     šœ   tIMEÕ;BFo   OIDAT×UÎQ€0PÔéœ“­÷?­P1Á~ñÒ@a 9˜?C31´‡aÑ»_Í_›ÃuÖc÷ÔTCæÔ‘ìJ”ÖÙ•²­4xËËïW{2~‰a’    IEND®B`‚
-http://www.archive.org/services/collection-rss.php 207.241.229.39 20080430204830 text/xml 50832
+   IHDR         e^|è   3PLTE   ÿ¥ ÿ® ş³ ÿº ÿÀ ÿÇ şÏ şÕ ÿÛ ÿâ ÿè ÿîÿó ı÷ ış   ™’¢X   tRNS @æØf   bKGD ˆH   	pHYs     šœ   tIMEÕ;BFo   OIDAT×UÎQ€0PÔéœ“­÷?­P1Á~ñÒ@a 9˜?C31´‡aÑ»_Í_›ÃuÖc÷ÔTCæÔ‘ìJ”ÖÙ•²­4xËËïW{2~‰a’    IEND®B`‚http://www.archive.org/services/collection-rss.php 207.241.229.39 20080430204830 text/xml 50832
 HTTP/1.1 200 OK
 Date: Wed, 30 Apr 2008 20:48:29 GMT
 Server: Apache/2.0.54 (Ubuntu) PHP/5.0.5-2ubuntu1.4 mod_ssl/2.0.54 OpenSSL/0.9.7g
@@ -1012,4 +1004,3 @@ Content-Type: text/xml
     </item>
   </channel>
 </rss>
-
