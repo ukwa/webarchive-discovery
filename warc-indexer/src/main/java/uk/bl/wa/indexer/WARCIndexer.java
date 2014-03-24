@@ -24,22 +24,17 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
-import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -49,13 +44,11 @@ import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
-import org.apache.tika.parser.AbstractParser;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
@@ -64,18 +57,15 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.url.UsableURI;
 import org.archive.url.UsableURIFactory;
 import org.archive.util.ArchiveUtils;
-import org.archive.util.Base32;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
 import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
+import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalyser;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
-import uk.bl.wa.parsers.ApachePreflightParser;
-import uk.bl.wa.parsers.HtmlFeatureParser;
-import uk.bl.wa.parsers.XMLRootNamespaceParser;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
@@ -114,24 +104,11 @@ public class WARCIndexer {
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	/** */
-	private HtmlFeatureParser hfp = new HtmlFeatureParser();
-	private boolean extractLinkDomains = true;
-	private boolean extractLinkHosts = true;
-	private boolean extractLinks = false;
 	private boolean extractText = true;
-	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
 	private boolean hashUrlId = false;
 	private int firstBytesLength = 32;
 	private long bufferSize = ( 20L * 1024L * 1024L );
-
-	/** */
-	private ApachePreflightParser app = new ApachePreflightParser();
-	private boolean extractApachePreflightErrors = true;
-
-	/** */
-	private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
-	private boolean extractXMLRootNamespace = true;
 
 	/** Wayback-style URI filtering: */
 	StaticMapExclusionFilterFactory smef = null;
@@ -150,13 +127,8 @@ public class WARCIndexer {
 	 */
 	public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
 		// Optional configurations:
-		this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
-		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
-		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
-		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
-		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
@@ -248,19 +220,19 @@ public class WARCIndexer {
 
 			// Dates
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
-			solr.doc.setField( SolrFields.WAYBACK_DATE, waybackDate );
-			solr.doc.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
-			solr.doc.setField( SolrFields.CRAWL_DATE, parseCrawlDate( waybackDate ) );
+			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
+			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
+			solr.setField( SolrFields.CRAWL_DATE, parseCrawlDate( waybackDate ) );
 
 			// Basic metadata:
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
-			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
+			solr.setField( SolrFields.SOLR_URL, fullUrl );
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
 
 			// Also pull out the file extension, if any:
-			solr.doc.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
+			solr.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			// Trac #2271: replace string-splitting with URI-based methods.
 			URL url = null;
@@ -284,15 +256,15 @@ public class WARCIndexer {
 			}
 			// Spot 'slash pages':
 			if( url.getPath().equals( "/" ) || url.getPath().equals( "" ) || url.getPath().matches( "/index\\.[a-z]+$" ) )
-				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
+				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
 			if( url.getPath().equals( "/robots.txt" ) )
-				solr.doc.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
+				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
 			// Record the domain (strictly, the host):
 			String host = url.getHost();
-			solr.doc.setField( SolrFields.SOLR_HOST, host );
-			solr.doc.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
-			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
+			solr.setField( SolrFields.SOLR_HOST, host );
+			solr.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
+			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
 
 			InputStream tikainput = null;
 
@@ -334,7 +306,7 @@ public class WARCIndexer {
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
 				if( this.checkResponseCode( statusCode ) == false ) {
-					log.info( "Skipping this record based on status code " + statusCode + ": " + header.getUrl() );
+					log.debug( "Skipping this record based on status code " + statusCode + ": " + header.getUrl() );
 					return null;
 				}
 			}
@@ -355,12 +327,12 @@ public class WARCIndexer {
 
 			// Optionally use a hash-based ID to store only one version of a URL:
 			if( hashUrlId ) {
-				solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
+				solr.setField( SolrFields.ID, hash + "/" + md5hex );
 			} else {
-				solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
+				solr.setField( SolrFields.ID, waybackDate + "/" + md5hex );
 			}
 			// Set these last: ARC records must be read in full to calculate the hash.
-			solr.doc.setField( SolrFields.HASH, hash );
+			solr.setField( SolrFields.HASH, hash );
 
 			// -----------------------------------------------------
 			// Payload has been cached, ready to process:
@@ -423,124 +395,23 @@ public class WARCIndexer {
 
 			// Pass on to other extractors as required, resetting the stream before each:
 			// Entropy, compressibility, fuzzy hashes, etc.
-			Metadata metadata = new Metadata();
 			try {
 				tikainput.reset();
-				// JSoup link extractor for (x)html, deposit in 'links' field.
-				String mime = ( String ) solr.doc.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
-				HashMap<String, String> hosts = new HashMap<String, String>();
-				HashMap<String, String> suffixes = new HashMap<String, String>();
-				HashMap<String, String> domains = new HashMap<String, String>();
-				if( mime.startsWith( "text" ) ) {
-					// JSoup NEEDS the URL to function:
-					metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-					ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
-					Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
-					try {
-						thread.start();
-						thread.join( 30000L );
-						thread.interrupt();
-					} catch( Exception e ) {
-						log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-						solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing as HTML: " + e.getMessage() );
-					}
-
-					// Process links:
-					String links_list = metadata.get( HtmlFeatureParser.LINK_LIST );
-					if( links_list != null ) {
-						String lhost, ldomain, lsuffix;
-						for( String link : links_list.split( " " ) ) {
-							lhost = LinkExtractor.extractHost( link );
-							if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
-								hosts.put( lhost, "" );
-							}
-							lsuffix = LinkExtractor.extractPublicSuffix( link );
-							if( lsuffix != null ) {
-								suffixes.put( lsuffix, "" );
-							}
-							ldomain = LinkExtractor.extractPrivateSuffix( link );
-							if( ldomain != null ) {
-								domains.put( ldomain, "" );
-							}
-							// Also store actual resource-level links:
-							if( this.extractLinks )
-								solr.addField( SolrFields.SOLR_LINKS, link );
-						}
-						// Store the data from the links:
-						Iterator<String> iterator = null;
-						if( this.extractLinkHosts ) {
-							iterator = hosts.keySet().iterator();
-							while( iterator.hasNext() ) {
-								solr.addField( SolrFields.SOLR_LINKS_HOSTS, iterator.next() );
-							}
-						}
-						if( this.extractLinkDomains ) {
-							iterator = domains.keySet().iterator();
-							while( iterator.hasNext() ) {
-								solr.addField( SolrFields.SOLR_LINKS_DOMAINS, iterator.next() );
-							}
-						}
-						iterator = suffixes.keySet().iterator();
-						while( iterator.hasNext() ) {
-							solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
-						}
-					}
-					// Process element usage:
-					if( this.extractElementsUsed ) {
-						String[] de = metadata.getValues( HtmlFeatureParser.DISTINCT_ELEMENTS );
-						if( de != null ) {
-							for( String e : de ) {
-								solr.addField( SolrFields.ELEMENTS_USED, e );
-							}
-						}
-					}
-					for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
-						solr.addField( SolrFields.LICENSE_URL, lurl );
-					}
+				String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
+				if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
+					WARCPayloadAnalysers.html.analyse(header, tikainput, solr);
 
 				} else if( mime.startsWith( "image" ) ) {
 					// TODO Extract image properties.
 
 				} else if( mime.startsWith( "application/pdf" ) ) {
-					if( extractApachePreflightErrors ) {
-						metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-						ParseRunner parser = new ParseRunner( app, tikainput, metadata, solr );
-						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
-						try {
-							thread.start();
-							thread.join( 30000L );
-							thread.interrupt();
-						} catch( Exception e ) {
-							log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-							solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with Apache Preflight: " + e.getMessage() );
-						}
+					WARCPayloadAnalysers.pdf.analyse(header, tikainput, solr);
 
-						String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID );
-						solr.addField( "pdf_valid_pdfa_s", isValid );
-						String[] errors = metadata.getValues( ApachePreflightParser.PDF_PREFLIGHT_ERRORS );
-						if( errors != null ) {
-							for( String error : errors ) {
-								solr.addField( "pdf_pdfa_errors_ss", error );
-							}
-						}
-					}
 				} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
-					// Also attempt to grab the XML Root NS:
-					if( this.extractXMLRootNamespace ) {
-						ParseRunner parser = new ParseRunner( xrns, tikainput, metadata,solr );
-						Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
-						try {
-							thread.start();
-							thread.join( 30000L );
-							thread.interrupt();
-						} catch( Exception e ) {
-							log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-							solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing for XML Root Namespace: " + e.getMessage() );
-						}
-						solr.doc.addField( "xml_ns_root_s", metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
-					}
+					WARCPayloadAnalysers.xml.analyse(header, tikainput, solr);
+					
 				} else {
-					log.info("No specific additional parser for: "+mime);
+					log.debug("No specific additional parser for: "+mime);
 				}
 			} catch( Exception i ) {
 				log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
@@ -552,8 +423,8 @@ public class WARCIndexer {
 			// --- Now run analysis on text extracted from the payload ---
 			//
 			// Pull out the text:
-			if( solr.doc.getField( SolrFields.SOLR_EXTRACTED_TEXT ) != null ) {
-				String text = ( String ) solr.doc.getField( SolrFields.SOLR_EXTRACTED_TEXT ).getFirstValue();
+			if( solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ) != null ) {
+				String text = ( String ) solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ).getFirstValue();
 				text = text.trim();
 				if( !"".equals( text ) ) {
 					TextAnalyser.runAllAnalysers(text, solr);
@@ -562,7 +433,7 @@ public class WARCIndexer {
 			
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {
-				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
+				solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
 			}
 		}
 		return solr;
@@ -579,11 +450,11 @@ public class WARCIndexer {
 			// Get the other headers:
 			for( Header h : httpHeaders ) {
 				// Get the type from the server
-				if( h.getName().equals( HttpHeaders.CONTENT_TYPE ) && solr.doc.getField( SolrFields.CONTENT_TYPE_SERVED ) == null )
+				if( h.getName().equals( HttpHeaders.CONTENT_TYPE ) && solr.getField( SolrFields.CONTENT_TYPE_SERVED ) == null )
 					solr.addField( SolrFields.CONTENT_TYPE_SERVED, h.getValue() );
 				// Also, grab the X-Powered-By or Server headers if present:
 				if( h.getName().equals( "X-Powered-By" ) )
-					solr.addField( SolrFields.GENERATOR, h.getValue() );
+					solr.addField( SolrFields.SERVER, h.getValue() );
 				if( h.getName().equals( HttpHeaders.SERVER ) )
 					solr.addField( SolrFields.SERVER, h.getValue() );
 			}
@@ -692,16 +563,16 @@ public class WARCIndexer {
 	 */
 	private void processContentType( SolrRecord solr, ArchiveRecordHeader header ) {
 		// Get the current content-type:
-		String contentType = ( String ) solr.doc.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
-		String serverType = ( String ) solr.doc.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
+		String contentType = ( String ) solr.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
+		String serverType = ( String ) solr.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
 
 		// Store the raw content type from Tika:
-		solr.doc.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
+		solr.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
 
 		// Also get the other content types:
 		MediaType mt_tika = MediaType.parse( contentType );
-		if( solr.doc.get( SolrFields.CONTENT_TYPE_DROID ) != null ) {
-			MediaType mt_droid = MediaType.parse( ( String ) solr.doc.get( SolrFields.CONTENT_TYPE_DROID ).getFirstValue() );
+		if( solr.getField( SolrFields.CONTENT_TYPE_DROID ) != null ) {
+			MediaType mt_droid = MediaType.parse( ( String ) solr.getField( SolrFields.CONTENT_TYPE_DROID ).getFirstValue() );
 			if( mt_tika == null || mt_tika.equals( MediaType.OCTET_STREAM ) ) {
 				contentType = mt_droid.toString();
 			} else if( mt_droid.getBaseType().equals( mt_tika.getBaseType() ) && mt_droid.getParameters().get( "version" ) != null ) {
@@ -710,7 +581,7 @@ public class WARCIndexer {
 				contentType = mt_tika.toString();
 			}
 			if( mt_droid.getParameters().get( "version" ) != null ) {
-				solr.doc.addField( SolrFields.CONTENT_VERSION, mt_droid.getParameters().get( "version" ) );
+				solr.addField( SolrFields.CONTENT_VERSION, mt_droid.getParameters().get( "version" ) );
 			}
 		}
 
@@ -725,7 +596,7 @@ public class WARCIndexer {
 
 		// Determine content type:
 		if( contentType != null )
-			solr.doc.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
+			solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
 
 		// Fall back on serverType for plain text:
 		if( contentType != null && contentType.startsWith( "text/plain" ) ) {
@@ -737,33 +608,33 @@ public class WARCIndexer {
 		// Content-Type can still be null
 		if( contentType != null ) {
 			// Strip parameters out of main type field:
-			solr.doc.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
+			solr.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
 
 			// Also add a more general, simplified type, as appropriate:
 			// FIXME clean up this messy code:
 			if( contentType.matches( "^image/.*$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
 			} else if( contentType.matches( "^(audio|video)/.*$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
 			} else if( contentType.matches( "^text/htm.*$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
 			} else if( contentType.matches( "^application/pdf.*$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
 			} else if( contentType.matches( "^.*word$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
 			} else if( contentType.matches( "^.*excel$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
 			} else if( contentType.matches( "^.*powerpoint$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
 			} else if( contentType.matches( "^text/plain.*$" ) ) {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
 			} else {
-				solr.doc.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
 			}
 
 			// Remove text from JavaScript, CSS, ...
 			if( contentType.startsWith( "application/javascript" ) || contentType.startsWith( "text/javascript" ) || contentType.startsWith( "text/css" ) ) {
-				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
+				solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
 			}
 		}
 	}
@@ -830,28 +701,4 @@ public class WARCIndexer {
 		return false;
 	}
 
-	private class ParseRunner implements Runnable {
-		AbstractParser parser;
-		Metadata metadata;
-		InputStream input;
-		private SolrRecord solr;
-
-		public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata, SolrRecord solr ) {
-			this.parser = parser;
-			this.metadata = metadata;
-			this.input = tikainput;
-			this.solr = solr;
-		}
-
-		@Override
-		public void run() {
-			try {
-				parser.parse( input, null, metadata, null );
-			} catch( Exception e ) {
-				log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
-				// Also record as a Solr PARSE_ERROR
-				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with "+parser.getClass().getName()+": " + e.getMessage() );
-			}
-		}
-	}
 }

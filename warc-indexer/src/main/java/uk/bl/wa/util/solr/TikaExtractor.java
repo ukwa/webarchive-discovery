@@ -229,8 +229,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			String output = new String( content.toString().getBytes( "UTF-8" ) );
 			if( runner.complete || !output.equals( "" ) ) {
 				//log.debug("Extracted text from: "+url);				
-				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
-				solr.doc.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
+				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
+				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			} else {
 				//log.debug("Failed to extract any text from: "+url);
 			}

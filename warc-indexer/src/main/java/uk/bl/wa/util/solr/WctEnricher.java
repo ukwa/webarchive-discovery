@@ -33,7 +33,6 @@ import javax.xml.stream.XMLInputFactory;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.events.XMLEvent;
 
-import org.apache.solr.common.SolrInputDocument;
 import org.restlet.resource.ClientResource;
 import org.restlet.resource.ResourceException;
 
@@ -46,17 +45,13 @@ public class WctEnricher {
 	public WctEnricher( String archiveName ) {
 		String wctID = this.getWctTi( archiveName );
 		solr = new SolrRecord();
-		solr.doc.setField( WctFields.WCT_INSTANCE_ID, wctID );
+		solr.setField( WctFields.WCT_INSTANCE_ID, wctID );
 		getWctMetadata( solr );
-	}
-
-	public SolrInputDocument getSolr() {
-		return this.solr.doc;
 	}
 
 	private void getWctMetadata( SolrRecord solr ) {
 		
-		ClientResource cr = new ClientResource( WctRestletUrl + this.solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
+		ClientResource cr = new ClientResource( WctRestletUrl + this.solr.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
 		try {
 			this.read( cr.get().getStream() );
 		} catch (ResourceException e) {
@@ -67,12 +62,12 @@ public class WctEnricher {
 	}
 
 	public void addWctMetadata( SolrRecord in ) {
-		in.doc.addField( WctFields.WCT_TARGET_ID, this.solr.doc.getFieldValue( WctFields.WCT_TARGET_ID ) );
-		in.doc.addField( WctFields.WCT_TITLE, this.solr.doc.getFieldValue( WctFields.WCT_TITLE ) );
-		in.doc.addField( WctFields.WCT_HARVEST_DATE, this.solr.doc.getFieldValue( WctFields.WCT_HARVEST_DATE ) );
-		in.doc.addField( WctFields.WCT_COLLECTIONS, this.solr.doc.getFieldValue( WctFields.WCT_COLLECTIONS ) );
-		in.doc.addField( WctFields.WCT_AGENCY, this.solr.doc.getFieldValue( WctFields.WCT_AGENCY ) );
-		in.doc.addField( WctFields.WCT_SUBJECTS, this.solr.doc.getFieldValue( WctFields.WCT_SUBJECTS ) );
+		in.addField( WctFields.WCT_TARGET_ID, this.solr.getFieldValue( WctFields.WCT_TARGET_ID ).toString() );
+		in.addField( WctFields.WCT_TITLE, this.solr.getFieldValue( WctFields.WCT_TITLE ).toString() );
+		in.addField( WctFields.WCT_HARVEST_DATE, this.solr.getFieldValue( WctFields.WCT_HARVEST_DATE ).toString() );
+		in.addField( WctFields.WCT_COLLECTIONS, this.solr.getFieldValue( WctFields.WCT_COLLECTIONS ).toString() );
+		in.addField( WctFields.WCT_AGENCY, this.solr.getFieldValue( WctFields.WCT_AGENCY ).toString() );
+		in.addField( WctFields.WCT_SUBJECTS, this.solr.getFieldValue( WctFields.WCT_SUBJECTS ).toString() );
 	}
 
 	public void read( InputStream s ) {
@@ -97,17 +92,17 @@ public class WctEnricher {
 
 	public void setTag( String tag, String value ) {
 		if( tag.equals( WctFields.WCT_INSTANCE_ID ) ) {
-			this.solr.doc.addField( WctFields.WCT_INSTANCE_ID, value );
+			this.solr.addField( WctFields.WCT_INSTANCE_ID, value );
 		} else if( tag.equals( WctFields.WCT_TARGET_ID ) ) {
-			this.solr.doc.addField( WctFields.WCT_TARGET_ID, value );
+			this.solr.addField( WctFields.WCT_TARGET_ID, value );
 		} else if( tag.equals( WctFields.WCT_HARVEST_DATE ) ) {
-			this.solr.doc.addField( WctFields.WCT_HARVEST_DATE, value );
+			this.solr.addField( WctFields.WCT_HARVEST_DATE, value );
 		} else if( tag.equals( WctFields.WCT_AGENCY ) ) {
-			this.solr.doc.addField( WctFields.WCT_AGENCY, value );
+			this.solr.addField( WctFields.WCT_AGENCY, value );
 		} else if( tag.equals( WctFields.WCT_COLLECTIONS ) ) {
-			this.solr.doc.addField( WctFields.WCT_COLLECTIONS, value );
+			this.solr.addField( WctFields.WCT_COLLECTIONS, value );
 		} else if( tag.equals( WctFields.WCT_SUBJECTS ) ) {
-			this.solr.doc.addField( WctFields.WCT_SUBJECTS, value );
+			this.solr.addField( WctFields.WCT_SUBJECTS, value );
 		}
 	}
 	

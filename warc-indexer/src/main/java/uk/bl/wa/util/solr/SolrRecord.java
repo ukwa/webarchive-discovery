@@ -29,8 +29,10 @@ package uk.bl.wa.util.solr;
 
 import java.io.Serializable;
 
+import org.apache.commons.httpclient.NameValuePair;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.SolrInputField;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -40,7 +42,7 @@ public class SolrRecord implements Serializable {
 
 	private static final long serialVersionUID = -4556484652176976470L;
 	
-	public SolrInputDocument doc = new SolrInputDocument();
+	private SolrInputDocument doc = new SolrInputDocument();
 
 	public String toXml() {
 		return ClientUtils.toXML( doc );
@@ -94,5 +96,50 @@ public class SolrRecord implements Serializable {
 		if( value != null )
 			doc.setField( solr_property, sanitizeString(solr_property, value) );
 	}
-	
+
+	/**
+	 * @param fieldname
+	 * @return
+	 */
+	public Object getFieldValue(String fieldname) {
+		return doc.getFieldValue(fieldname);
+	}
+
+	/**
+	 * @return
+	 */
+	public SolrInputDocument getSolrDocument() {
+		return doc;
+	}
+
+	/**
+	 * @param fieldname
+	 */
+	public void removeField(String fieldname) {
+		doc.removeField(fieldname);
+	}
+
+	/**
+	 * @param fieldname
+	 * @return
+	 */
+	public SolrInputField getField(String fieldname) {
+		return doc.getField(fieldname);
+	}
+
+	/**
+	 * @param fieldname
+	 * @return
+	 */
+	public boolean containsKey(String fieldname) {
+		return doc.containsKey(fieldname);
+	}
+
+	/**
+	 * @param newdoc
+	 */
+	public void setSolrDocument(SolrInputDocument newdoc) {
+		doc = newdoc;
+	}
+
 }

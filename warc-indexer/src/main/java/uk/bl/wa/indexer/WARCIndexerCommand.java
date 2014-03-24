@@ -219,15 +219,15 @@ public class WARCIndexerCommand {
 				if( doc != null ) {
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
-					if( !slashPages || ( doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
-									     doc.doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
+					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
+									     doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
 						// Write XML to file if not posting straight to the server.
 						if(solrUrl == null) {
 							writeXMLToFile(doc.toXml(), fileOutput);
 						}else{
 							// Post to Solr
 							try {
-								docs.add( doc.doc );
+								docs.add( doc.getSolrDocument() );
 								checkSubmission( solrWeb, docs, batchSize );
 							} catch( SolrServerException s ) {
 								log.warn( "SolrServerException: " + inputFile, s );

@@ -181,7 +181,7 @@ public class WARCIndexerEmbeddedSolrTest {
 			if( doc != null ) {
 				//System.out.println(doc.toXml());
 				//break;
-				docs.add(doc.doc);
+				docs.add(doc.getSolrDocument());
 			} else {
 				System.out.println("Got a NULL document for: "+rec.getHeader().getUrl());
 			}
