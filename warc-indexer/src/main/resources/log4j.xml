@@ -11,10 +11,10 @@
 
   <!--  Increase logging from this code  -->
   <logger name="uk.bl.wap">
-    <level value="debug"/> 
+    <level value="info"/> 
   </logger>
   <logger name="uk.bl.wa">
-    <level value="debug"/> 
+    <level value="info"/> 
   </logger>
 	
   <root> 
