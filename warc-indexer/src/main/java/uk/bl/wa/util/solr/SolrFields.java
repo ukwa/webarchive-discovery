@@ -108,4 +108,11 @@ public interface SolrFields {
 	public static final String SSDEEP_NGRAM_PREFIX = "ssdeep_hash_ngram_bs_";
 	
 	public static final String ELEMENTS_USED = "elements_used";
+	
+	public static final String IMAGE_WIDTH = "image_width";
+	public static final String IMAGE_HEIGHT = "image_height";
+	public static final String IMAGE_SIZE = "image_size";
+	public static final String IMAGE_FACES = "image_faces";
+	public static final String IMAGE_COLOURS = "image_dominant_colours";
+	
 }
