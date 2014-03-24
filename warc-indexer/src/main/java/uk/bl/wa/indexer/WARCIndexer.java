@@ -88,7 +88,6 @@ import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
-import antlr.Parser;
 
 import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
@@ -241,11 +240,11 @@ public class WARCIndexer {
 	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
 		SolrRecord solr = new SolrRecord();
-
+		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response ) || 
-					   header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.revisit ) ) ) {
+				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response.toString() ) || 
+					   header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.revisit.toString() ) ) ) {
 					return null;
 				}
 			} // else we're processing ARCs

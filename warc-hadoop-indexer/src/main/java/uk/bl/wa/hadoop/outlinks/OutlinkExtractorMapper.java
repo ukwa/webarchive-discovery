@@ -36,7 +36,7 @@ public class OutlinkExtractorMapper extends MapReduceBase implements Mapper<Text
 			header = value.getRecord().getHeader();
 			// If this is a non-response WARC record...
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) && 
-			   !header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response ) ) {
+			   !header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response.toString() ) ) {
 				return;
 			}
 			resourceUrl = value.getRecord().getHeader().getUrl();

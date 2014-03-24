@@ -95,7 +95,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 			// If this is a 'response' or an ARC (i.e. null) record...
 			type = wsr.getType();
-			if( type.equals( ARC_TYPE ) || type.equals( WARCRecordType.response ) ) {
+			if( type.equals( ARC_TYPE ) || type.equals( WARCRecordType.response.toString() ) ) {
 				// If oDoc already set, compare dates.
 				if( oDoc != null ) {
 					String currentEarliest = ( String ) oDoc.getFieldValue( SolrFields.WAYBACK_DATE );
