@@ -282,7 +282,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			// Look for generic xmp:CreatorTool
 			solr.addField(SolrFields.GENERATOR, metadata.get("xmp:CreatorTool"));
 			// For PDF, support other metadata tags:
-			solr.addField(SolrFields.GENERATOR, metadata.get( "creator" ));
+			//solr.addField(SolrFields.GENERATOR, metadata.get( "creator" )); // This appears to be dc:creator i.e. author.
 			solr.addField(SolrFields.GENERATOR, metadata.get( "producer" ));
 			solr.addField(SolrFields.GENERATOR, metadata.get( Metadata.SOFTWARE ));
 			solr.addField(SolrFields.GENERATOR, metadata.get( "generator" ));
