@@ -133,6 +133,8 @@ public class HashedCachedInputStream {
 			// Now set up the inputStream
 			if( inMemory ) {
 				this.newInputStream = new ByteArrayInputStream( ((ByteArrayOutputStream)cache).toByteArray() );
+				// Encourage GC
+				cache = null;
 			} else {
 				this.newInputStream = new FileInputStream(this.cacheFile);
 			}
@@ -169,7 +171,8 @@ public class HashedCachedInputStream {
 	 * 
 	 */
 	public void cleanup() {
-		this.cacheFile.delete();
+		if( this.cacheFile != null )
+			this.cacheFile.delete();
 	}
 
 }
