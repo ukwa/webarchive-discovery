@@ -28,6 +28,10 @@ package uk.bl.wa.solr;
  */
 
 import java.io.Serializable;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.httpclient.NameValuePair;
 import org.apache.solr.client.solrj.util.ClientUtils;
@@ -95,6 +99,18 @@ public class SolrRecord implements Serializable {
 	public void setField( String solr_property, String value ) {
 		if( value != null )
 			doc.setField( solr_property, sanitizeString(solr_property, value) );
+	}
+	
+	/**
+	 * Like add, but also allows these values to merge with those in the index already.
+	 * 
+	 * @param solr_property
+	 * @param value
+	 */
+	public void mergeField( String solr_property, String value ) {
+		Map<String, List<String>> operation = new HashMap<String, List<String>>();
+		operation.put("add", Arrays.asList( value ));
+		doc.addField( solr_property, operation);
 	}
 
 	/**

@@ -1,4 +1,3 @@
-
 package uk.bl.wa.solr;
 
 /*
@@ -25,40 +24,72 @@ package uk.bl.wa.solr;
  * #L%
  */
 
-
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.List;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.CloudSolrServer;
 import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
+import com.typesafe.config.Config;
 
 /**
  * Solr Server Wrapper
  * 
- * @author JoeOBrien
+ * @author anj
  */
 public class SolrWebServer {
+	private static Log log = LogFactory.getLog(SolrWebServer.class);
+
+	private SolrServer solrServer;
 	
-	private SolrServer solrServer;	
-	
+	public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
+
+	public static final String CONF_HTTP_SERVERS = "warc.solr.servers";
+
+	public static final String CONF_HTTP_SERVER = "warc.solr.server";
+
 	/**
 	 * Initializes the Solr connection
 	 */
-	public SolrWebServer( String solrUrl) {
-		
-		if(solrUrl == null||solrUrl.isEmpty()){
-			System.out.println("Solr URL Not defined");
+	public SolrWebServer(Config conf) {
+
+		try {
+			if( conf.hasPath(CONF_HTTP_SERVER)) {
+				log.info("Setting up HttpSolrServer client from a url: "+conf.getString(CONF_HTTP_SERVER));
+				solrServer = new HttpSolrServer(
+						conf.getString(CONF_HTTP_SERVER));
+				
+			} else if (conf.hasPath(CONF_ZOOKEEPERS)) {
+				log.info("Setting up CloudSolrServer client via zookeepers.");
+				solrServer = new CloudSolrServer(
+						conf.getString(CONF_ZOOKEEPERS));
+				((CloudSolrServer) solrServer).setDefaultCollection(conf
+						.getString("warc.solr.collection"));
+				
+			} else if (conf.hasPath(CONF_HTTP_SERVERS)) {
+				log.info("Setting up LBHttpSolrServer client from servers list.");
+				solrServer = new LBHttpSolrServer(conf.getString(
+						CONF_HTTP_SERVERS).split(","));
+				
+			} else {
+				log.error("No valid SOLR config found.");
+			}
+		} catch (MalformedURLException e) {
+			log.error("WARCIndexerReducer.configure(): " + e.getMessage());
 		}
 
-		solrServer = new HttpSolrServer(solrUrl);
-		
-		if(solrServer == null){
-			System.out.println("Cannot connect to Solr Server: " + solrUrl);
+		if (solrServer == null) {
+			System.out.println("Cannot connect to Solr Server!");
 		}
 	}
 
@@ -66,15 +97,15 @@ public class SolrWebServer {
 	 * Post a List of docs.
 	 * 
 	 * @param solrDoc
+	 * @return 
 	 * @throws SolrServerException
 	 * @throws IOException
 	 */
-	public void updateSolr(List<SolrInputDocument> docs) throws SolrServerException, IOException{
-		
-			solrServer.add(docs);
-		
+	public  UpdateResponse add(List<SolrInputDocument> docs)
+			throws SolrServerException, IOException {
+		return solrServer.add(docs);
 	}
-	
+
 	/**
 	 * Post a single documents.
 	 * 
@@ -82,38 +113,37 @@ public class SolrWebServer {
 	 * @throws SolrServerException
 	 * @throws IOException
 	 */
-	public void updateSolrDoc(SolrInputDocument doc) throws SolrServerException, IOException{
-		
-			solrServer.add(doc);	
-		
+	public void updateSolrDoc(SolrInputDocument doc)
+			throws SolrServerException, IOException {
+		solrServer.add(doc);
+
 	}
-	
+
 	/**
 	 * Commit the SolrServer.
 	 * 
 	 * @throws SolrServerException
 	 * @throws IOException
 	 */
-	public void commit() throws SolrServerException, IOException{
-		
-			solrServer.commit();
-		
+	public void commit() throws SolrServerException, IOException {
+
+		solrServer.commit();
+
 	}
-	
+
 	/**
 	 * Sends the prepared query to solr and returns the result;
+	 * 
 	 * @param query
 	 * @return
-	 * @throws SolrServerException 
+	 * @throws SolrServerException
 	 */
-	
-	public QueryResponse execQuery(SolrQuery query) throws SolrServerException {
-		QueryResponse rsp = solrServer.query( query );
-		
+
+	public QueryResponse query(SolrQuery query) throws SolrServerException {
+		QueryResponse rsp = solrServer.query(query);
 		return rsp;
 	}
-	
-	
+
 	/**
 	 * Overrides the generic destroy method. Closes all Solrj connections.
 	 */

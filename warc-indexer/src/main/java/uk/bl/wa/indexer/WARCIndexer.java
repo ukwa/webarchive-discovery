@@ -34,7 +34,10 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.TimeZone;
 
@@ -47,6 +50,9 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.archive.format.warc.WARCConstants;
@@ -68,6 +74,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.TikaExtractor;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
@@ -112,6 +119,9 @@ public class WARCIndexer {
 
 	/** Wayback-style URI filtering: */
 	StaticMapExclusionFilterFactory smef = null;
+
+	/** Hook to the solr server: */
+	private SolrWebServer solrServer;
 
 	/* ------------------------------------------------------------ */
 
@@ -169,6 +179,9 @@ public class WARCIndexer {
 			dd = null;
 		}
 		tika = new TikaExtractor( conf );
+		
+		// Also hook up to Solr server for queries:
+		solrServer = new SolrWebServer(conf);
 	}
 
 	/**
@@ -217,12 +230,6 @@ public class WARCIndexer {
 				return null;
 
 			// --- Basic headers ---
-
-			// Dates
-			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
-			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
-			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
-			solr.setField( SolrFields.CRAWL_DATE, parseCrawlDate( waybackDate ) );
 
 			// Basic metadata:
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
@@ -325,17 +332,62 @@ public class WARCIndexer {
 			tikainput = hcis.getInputStream();
 			String hash = hcis.getHash();
 
+			// Prepare crawl date information:
+			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
+			Date crawlDate =  getWaybackDate( waybackDate );
+			String crawlDateString = parseCrawlDate( waybackDate );
+			
 			// Optionally use a hash-based ID to store only one version of a URL:
+			String id = null;
 			if( hashUrlId ) {
-				solr.setField( SolrFields.ID, hash + "/" + md5hex );
+				id = hash + "/" + md5hex;
 			} else {
-				solr.setField( SolrFields.ID, waybackDate + "/" + md5hex );
+				id = waybackDate + "/" + md5hex;
 			}
-			// Set these last: ARC records must be read in full to calculate the hash.
+			// Set these last:
+			solr.setField( SolrFields.ID, id );
 			solr.setField( SolrFields.HASH, hash );
 
 			// -----------------------------------------------------
-			// Payload has been cached, ready to process:
+			// Payload has been cached, ready to check crawl dates:
+			// -----------------------------------------------------
+			
+			// Query for currently known crawl dates:
+			HashSet<Date> currentCrawlDates = new HashSet<Date>();
+			SolrQuery q = new SolrQuery("id:\""+id+"\"");
+			q.addField("crawl_dates");
+			try {
+				QueryResponse result = solrServer.query(q);
+				if( result.getResults().size() > 0 ) {
+					for( Object cds : result.getResults().get(0).getFieldValues("crawl_dates") ) {
+						currentCrawlDates.add((Date) cds);
+					}
+				}
+			} catch (SolrServerException e) {
+				e.printStackTrace();
+				// FIXME retry?
+			}
+			
+			// Is this date already in?
+			if( ! currentCrawlDates.contains(crawlDate) ) {
+				// Also allow dates to be merged under the CRAWL_DATES field:
+				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				currentCrawlDates.add(crawlDate);
+			}
+			
+			// Sort the dates and find the earliest:
+			List<Date> dateList = new ArrayList<Date>(currentCrawlDates);
+			Collections.sort(dateList);
+			Date firstDate = dateList.get(0);
+			solr.setField( SolrFields.CRAWL_DATE, formatter.format(firstDate) );
+			
+			// Also set other date fields:
+			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
+			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
+			
+			
+			// -----------------------------------------------------
+			// Payload duplication has been checked, ready to parse:
 			// -----------------------------------------------------
 			
 			// Mark the start of the payload.

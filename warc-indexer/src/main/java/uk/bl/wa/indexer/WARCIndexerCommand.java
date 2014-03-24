@@ -60,6 +60,10 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigValueFactory;
+
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
@@ -181,17 +185,21 @@ public class WARCIndexerCommand {
 	 * @throws TransformerException
 	 */
 	public static void parseWarcFiles( String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages, int batchSize ) throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, IOException {
-		
-		WARCIndexer windex = new WARCIndexer();
-		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 
-				
-		SolrWebServer solrWeb = null;
-		
+
 		// If the Solr URL is set initiate a connections
-		if(solrUrl != null) {		
-			solrWeb = new SolrWebServer(solrUrl);
+		Config conf = ConfigFactory.load();
+		if(solrUrl != null) {
+			conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
 		}
 		
+		// Set up the server config:
+		SolrWebServer solrWeb = new SolrWebServer(conf);
+
+		// Also pass config down:
+		WARCIndexer windex = new WARCIndexer(conf);
+		
+		// To be indexed:
+		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 
 		int totInputFile = args.length;
 		int curInputFile = 1;
 					
@@ -268,7 +276,7 @@ public class WARCIndexerCommand {
 	 */
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
-			solr.updateSolr( docs );
+			solr.add( docs );
 		}
 		docs.clear();
 	}

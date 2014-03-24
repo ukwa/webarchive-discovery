@@ -1,7 +1,6 @@
 package uk.bl.wa.hadoop.indexer;
 
 import java.io.IOException;
-import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
@@ -14,13 +13,11 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
 import uk.bl.wa.solr.WctFields;
 
@@ -31,7 +28,7 @@ import com.typesafe.config.ConfigFactory;
 public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
-	private SolrServer solrServer;
+	private SolrWebServer solrServer;
 	private int batchSize;
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
@@ -50,20 +47,8 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
-		try {
-			if( !dummyRun ) {
-				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
-					log.info( "Setting up CloudSolrServer client via zookeepers." );
-					solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeepers" ) );
-					( ( CloudSolrServer ) solrServer ).setDefaultCollection( conf.getString( "warc.solr.collection" ) );
-				} else {
-					log.info( "Setting up LBHttpSolrServer client from warc.solr.servers list." );
-					solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
-				}
-			}
-		} catch( MalformedURLException e ) {
-			log.error( "WARCIndexerReducer.configure(): " + e.getMessage() );
-		}
+		
+		solrServer = new SolrWebServer(conf);
 	}
 
 	@Override

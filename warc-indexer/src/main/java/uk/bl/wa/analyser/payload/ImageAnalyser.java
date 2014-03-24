@@ -82,8 +82,8 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			BufferedImage image = ImageIO.read(tikainput);
 			long pixels = image.getWidth()*image.getHeight();
 			solr.addField(SolrFields.IMAGE_SIZE, ""+pixels);
-		} catch (IOException e1) {
-			e1.printStackTrace();
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 		
 		// Also attempt to extract faces:
@@ -107,7 +107,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			if ( faces > 0 )
 				solr.setField( SolrFields.IMAGE_FACES_COUNT, ""+faces );
 			// Store colour:
-			solr.addField(SolrFields.IMAGE_COLOURS, metadata.get( FaceDetectionParser.DOM_COL));
+			solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR, metadata.get( FaceDetectionParser.DOM_COL));
 		}
 	}
 
