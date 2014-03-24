@@ -30,7 +30,7 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
-import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -65,12 +65,11 @@ public class HashedCachedInputStream {
 	
 	private String hash = null;
 
-	private InputStream newInputStream;
-	
 	private boolean inMemory;
 	
 	private File cacheFile;
-	private RandomAccessFile RAFcache;
+	
+	private byte[] cacheBytes;
 	
 	private boolean truncated = false;
 	
@@ -106,8 +105,7 @@ public class HashedCachedInputStream {
 				inMemory = false;
 				cacheFile = File.createTempFile("warc-indexer", ".cache");
 				cacheFile.deleteOnExit();
-				RAFcache = new RandomAccessFile(cacheFile, "rwd");
-				cache = new FileOutputStream( RAFcache.getFD() );
+				cache = new FileOutputStream( cacheFile );
 			}
 				
 			DigestInputStream dinput = new DigestInputStream( in, digest );
@@ -130,18 +128,17 @@ public class HashedCachedInputStream {
 			if( headerHash != null ) {
 				if( ! headerHash.equals(hash)) {
 					log.error("Hashes are not equal for this input!");
-					throw new RuntimeException("Hash check failed.");
+					throw new RuntimeException("Hash check failed!");
+				} else {
+					log.debug("Hashes were found to match for "+header.getUrl());
 				}
 			}
 			
 			// Now set up the inputStream
 			if( inMemory ) {
-				this.newInputStream = new ByteArrayInputStream( ((ByteArrayOutputStream)cache).toByteArray() );
+				this.cacheBytes = ((ByteArrayOutputStream)cache).toByteArray();
 				// Encourage GC
 				cache = null;
-			} else {
-				// Return a mark/resettable input stream:
-				this.newInputStream = new RandomAccessFileInputStream(this.RAFcache);
 			}
 		} catch( Exception i ) {
 			log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
@@ -161,7 +158,18 @@ public class HashedCachedInputStream {
 	 * @return
 	 */
 	public InputStream getInputStream() {
-		return newInputStream;
+		if( inMemory ) {
+			return new ByteArrayInputStream( this.cacheBytes );
+		} else {
+			RandomAccessFile RAFcache;
+			try {
+				RAFcache = new RandomAccessFile(cacheFile, "r");
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+				return null;
+			}
+			return new RandomAccessFileInputStream(RAFcache);
+		}
 	}
 	
 	/**
