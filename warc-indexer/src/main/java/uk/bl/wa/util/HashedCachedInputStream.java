@@ -34,6 +34,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.io.RandomAccessFile;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,6 +45,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.Base32;
+import org.jwat.common.RandomAccessFileInputStream;
 
 /**
  * Utility method that takes a given input stream and caches the
@@ -68,6 +70,7 @@ public class HashedCachedInputStream {
 	private boolean inMemory;
 	
 	private File cacheFile;
+	private RandomAccessFile RAFcache;
 	
 	private boolean truncated = false;
 	
@@ -103,7 +106,8 @@ public class HashedCachedInputStream {
 				inMemory = false;
 				cacheFile = File.createTempFile("warc-indexer", ".cache");
 				cacheFile.deleteOnExit();
-				cache = new FileOutputStream( cacheFile );
+				RAFcache = new RandomAccessFile(cacheFile, "rwd");
+				cache = new FileOutputStream( RAFcache.getFD() );
 			}
 				
 			DigestInputStream dinput = new DigestInputStream( in, digest );
@@ -136,7 +140,8 @@ public class HashedCachedInputStream {
 				// Encourage GC
 				cache = null;
 			} else {
-				this.newInputStream = new FileInputStream(this.cacheFile);
+				// Return a mark/resettable input stream:
+				this.newInputStream = new RandomAccessFileInputStream(this.RAFcache);
 			}
 		} catch( Exception i ) {
 			log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
