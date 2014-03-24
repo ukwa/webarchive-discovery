@@ -143,7 +143,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				return;
 			}
 
-			Text oKey = new Text( ( String ) solr.doc.getFieldValue( SolrFields.SOLR_HOST ) );
+			Text oKey = new Text( ( String ) solr.getFieldValue( SolrFields.SOLR_HOST ) );
 			try {
 				URI uri = new URI( header.getUrl() );
 				if( processCollections ) {
@@ -197,14 +197,14 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	private void updateCollections( UriCollection collection, SolrRecord solr ) {
 		// Trac #2243; This should only happen if the record's timestamp is
 		// within the range set by the Collection.
-		Date date = WARCIndexer.getWaybackDate( ( String ) solr.doc.getField( SolrFields.CRAWL_DATE ).getValue() );
+		Date date = WARCIndexer.getWaybackDate( ( String ) solr.getField( SolrFields.CRAWL_DATE ).getValue() );
 
-		LOG.info( "Updating collections for " + solr.doc.getField( SolrFields.SOLR_URL ) );
+		LOG.info( "Updating collections for " + solr.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection
 		if( collection.collectionCategories != null && collection.collectionCategories.length() > 0 ) {
 			if( collectionDateRanges.containsKey( collection.collectionCategories ) && collectionDateRanges.get( collection.collectionCategories ).isInDateRange( date ) ) {
 				solr.addField( SolrFields.SOLR_COLLECTION, collection.collectionCategories );
-				LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+				LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.getField( SolrFields.SOLR_URL ) );
 			}
 		}
 		// Iterate over the hierarchical collections
@@ -212,7 +212,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			for( String col : collection.allCollections ) {
 				if( collectionDateRanges.containsKey( col ) && collectionDateRanges.get( col ).isInDateRange( date ) ) {
 					solr.addField( SolrFields.SOLR_COLLECTIONS, col );
-					LOG.info( "Added collection '" + col + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+					LOG.info( "Added collection '" + col + "' to " + solr.getField( SolrFields.SOLR_URL ) );
 				}
 			}
 		}
@@ -221,7 +221,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			for( String subject : collection.subject ) {
 				if( collectionDateRanges.containsKey( subject ) && collectionDateRanges.get( subject ).isInDateRange( date ) ) {
 					solr.addField( SolrFields.SOLR_SUBJECT, subject );
-					LOG.info( "Added collection '" + subject + "' to " + solr.doc.getField( SolrFields.SOLR_URL ) );
+					LOG.info( "Added collection '" + subject + "' to " + solr.getField( SolrFields.SOLR_URL ) );
 				}
 			}
 		}

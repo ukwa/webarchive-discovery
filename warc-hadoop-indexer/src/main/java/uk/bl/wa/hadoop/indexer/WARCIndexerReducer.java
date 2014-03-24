@@ -77,16 +77,16 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 			solr = wsr.getSolrRecord();
 
 			// Add additional metadata for WCT Instances.
-			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
+			if( solr.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
 				wct = new WctEnricher( key.toString() );
 				wct.addWctMetadata( solr );
 			}
 			if( !dummyRun ) {
-				docs.add( solr.doc );
+				docs.add( solr.getSolrDocument() );
 				// Have we exceeded the batchSize?
 				checkSubmission( docs, batchSize );
 			} else {
-				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
+				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.getField( "id" ).getFirstValue() );
 			}
 		}
 	}

@@ -30,12 +30,12 @@ public class WritableSolrRecord  implements Writable, Serializable {
 		int length = input.readInt();
 		byte[] bytes = new byte[ length ];
 		input.readFully( bytes );
-		this.sr.doc = ( SolrInputDocument ) SerializationUtils.deserialize( bytes );
+		this.sr.setSolrDocument( ( SolrInputDocument ) SerializationUtils.deserialize( bytes ) );
 	}
 
 	@Override
 	public void write( DataOutput output ) throws IOException {
-		byte[] bytes = SerializationUtils.serialize( this.sr.doc );
+		byte[] bytes = SerializationUtils.serialize( this.sr.getSolrDocument() );
 		output.writeInt( bytes.length );
 		output.write( bytes );
 	}
