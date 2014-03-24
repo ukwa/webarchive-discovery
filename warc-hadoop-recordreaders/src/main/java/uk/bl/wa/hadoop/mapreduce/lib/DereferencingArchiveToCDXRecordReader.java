@@ -162,7 +162,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 	private String hdfsPath( String cdx, String path ) throws URISyntaxException {
 		String[] fields = cdx.split( " " );
 		if( warcArkLookup.size() != 0 ) {
-			fields[ 9 ] = warcArkLookup.get( fields[ 9 ] );
+			fields[ 9 ] = warcArkLookup.get( fields[ 9 ] ) + "#" + fields[ 9 ];
 		} else {
 			fields[ 9 ] = new URI( path ).getPath() + "?user.name=hadoop&bogus=.warc.gz";
 		}

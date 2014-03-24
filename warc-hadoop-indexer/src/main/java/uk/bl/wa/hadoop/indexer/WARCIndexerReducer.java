@@ -1,14 +1,10 @@
 package uk.bl.wa.hadoop.indexer;
 
-import static uk.bl.wa.hadoop.indexer.WritableSolrRecord.ARC_TYPE;
-import static org.archive.format.warc.WARCConstants.WARCRecordType;
-
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import java.util.TreeSet;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -19,14 +15,11 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer.RemoteSolrException;
 import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.WctEnricher;
 import uk.bl.wa.util.solr.WctFields;
@@ -60,12 +53,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		try {
 			if( !dummyRun ) {
 				if( conf.hasPath( "warc.solr.zookeepers" ) ) {
-					log.info("Setting up CloudSolrServer client via zookeepers.");
+					log.info( "Setting up CloudSolrServer client via zookeepers." );
 					solrServer = new CloudSolrServer( conf.getString( "warc.solr.zookeepers" ) );
 					( ( CloudSolrServer ) solrServer ).setDefaultCollection( conf.getString( "warc.solr.collection" ) );
 				} else {
-					log.info("Setting up LBHttpSolrServer client from warc.solr.servers list.");
-				solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
+					log.info( "Setting up LBHttpSolrServer client from warc.solr.servers list." );
+					solrServer = new LBHttpSolrServer( conf.getString( "warc.solr.servers" ).split( "," ) );
 				}
 			}
 		} catch( MalformedURLException e ) {
@@ -76,53 +69,25 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void reduce( Text key, Iterator<WritableSolrRecord> values, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
 		WctEnricher wct;
-		TreeSet<String> crawlDates = new TreeSet<String>();
-
-		// Iterate over values, checking if this is a response/revisit, building up a list of timestamps.
 		WritableSolrRecord wsr;
 		SolrRecord solr;
-		String type = null;
-		SolrInputDocument oDoc = null;
+
 		while( values.hasNext() ) {
 			wsr = values.next();
 			solr = wsr.getSolrRecord();
 
 			// Add additional metadata for WCT Instances.
 			if( solr.doc.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
-				wct = new WctEnricher( ( String ) solr.doc.getFieldValue( WctFields.WCT_INSTANCE_ID ) );
+				wct = new WctEnricher( key.toString() );
 				wct.addWctMetadata( solr );
 			}
-
-			// If this is a 'response' or an ARC (i.e. null) record...
-			type = wsr.getType();
-			if( type.equals( ARC_TYPE ) || type.equals( WARCRecordType.response.toString() ) ) {
-				// If oDoc already set, compare dates.
-				if( oDoc != null ) {
-					String currentEarliest = ( String ) oDoc.getFieldValue( SolrFields.WAYBACK_DATE );
-					String toCheck = ( String ) solr.doc.getFieldValue( SolrFields.WAYBACK_DATE );
-					if( currentEarliest.compareTo( toCheck ) == 1 ) {
-						oDoc = solr.doc;
-					}
-				} else {
-					oDoc = solr.doc;
-				}
+			if( !dummyRun ) {
+				docs.add( solr.doc );
+				// Have we exceeded the batchSize?
+				checkSubmission( docs, batchSize );
+			} else {
+				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.doc.getField( "id" ).getFirstValue() );
 			}
-			crawlDates.add( ( String ) solr.doc.getFieldValue( SolrFields.CRAWL_DATE ) );
-		}
-		// If we haven't found a response (i.e. just a lot of revisits) something's wrong.
-		if( oDoc == null ) {
-			log.error( "No appropriate response record found for: " + key + " (" + type + ")" );
-			return;
-		} else {
-			// Set the multivalued field with our (sorted) revisited dates.
-			oDoc.setField( SolrFields.CRAWL_DATES, crawlDates.toArray( new String[ crawlDates.size() ] ) );
-		}
-
-		if( !dummyRun ) {
-			docs.add( oDoc );
-			checkSubmission( docs, batchSize );
-		} else {
-			log.info( "DUMMY_RUN: Skipping addition of doc: " + oDoc.getField( "id" ).getFirstValue() );
 		}
 	}
 
@@ -147,14 +112,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 			try {
 				response = solrServer.add( docs );
 				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
-			} catch( SolrServerException e ) {
-				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage() );
-			} catch( IOException i ) {
-				log.error( "WARCIndexerReducer.reduce(): " + i.getMessage() );
-			} catch( RemoteSolrException r ) {
-				log.error( "WARCIndexerReducer.reduce(): " + r.getMessage() );
+				docs.clear();
+			} catch( Exception e ) {
+				// SOLR-5719 possibly hitting us here;
+				// CloudSolrServer.RouteException
+				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage(), e );
 			}
-			docs.clear();
 		}
 	}
 }

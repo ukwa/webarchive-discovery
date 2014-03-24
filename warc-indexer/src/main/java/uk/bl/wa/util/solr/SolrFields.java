@@ -45,7 +45,6 @@ public interface SolrFields {
 	public static final String PUBLIC_SUFFIX = "public_suffix";
 
 	public static final String HASH = "hash";
-	public static final String HASH_AND_URL = "hash_and_url";
 	public static final String SOLR_TITLE = "title";
 	public static final String SOLR_SUBJECT = "subject";
 	public static final String SOLR_DESCRIPTION = "description";

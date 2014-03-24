@@ -112,6 +112,7 @@ public class WARCIndexer {
 	private List<String> url_excludes;
 	private List<String> protocol_includes;
 	private List<String> response_includes;
+	private List<String> record_type_includes;
 
 	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
 
@@ -135,6 +136,7 @@ public class WARCIndexer {
 	private boolean extractText = true;
 	private boolean extractElementsUsed = true;
 	private boolean extractContentFirstBytes = true;
+	private boolean hashUrlId = false;
 	private int firstBytesLength = 32;
 	private long bufferSize = ( 20L * 1024L * 1024L );
 
@@ -174,6 +176,7 @@ public class WARCIndexer {
 		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
 		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
@@ -186,6 +189,8 @@ public class WARCIndexer {
 		this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
 		// Response codes to include:
 		this.response_includes = conf.getStringList( "warc.index.extract.response_include" );
+		// Record types to include:
+		this.record_type_includes = conf.getStringList( "warc.index.extract.record_type_include" );
 		this.bufferSize = conf.getLong( "warc.index.extract.buffer_size" );
 
 		// URL Filtering options:
@@ -243,8 +248,7 @@ public class WARCIndexer {
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-				if( !( header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response.toString() ) || 
-					   header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.revisit.toString() ) ) ) {
+				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
 			} // else we're processing ARCs
@@ -272,8 +276,6 @@ public class WARCIndexer {
 			// Basic metadata:
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
-			solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
-			solr.doc.setField( SolrFields.ID_LONG, Long.parseLong( waybackDate + "00" ) + ( ( md5digest[ 1 ] << 8 ) + md5digest[ 0 ] ) );
 			solr.doc.setField( SolrFields.SOLR_URL, fullUrl );
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
@@ -395,9 +397,14 @@ public class WARCIndexer {
 			} catch( Exception i ) {
 				log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
 			}
+			// Optionally use a hash-based ID to store only one version of a URL:
+			if( hashUrlId ) {
+				solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
+			} else {
+				solr.doc.setField( SolrFields.ID, waybackDate + "/" + md5hex );
+			}
 			// Set these last: ARC records must be read in full to calculate the hash.
 			solr.doc.setField( SolrFields.HASH, hash );
-			solr.doc.setField( SolrFields.HASH_AND_URL, hash + "_" + fullUrl );
 
 			// Pull out the first few bytes, to hunt for new format by magic:
 			try {
@@ -888,6 +895,15 @@ public class WARCIndexer {
 			}
 		}
 		// Exclude
+		return false;
+	}
+
+	private boolean checkRecordType( String type ) {
+		for( String include : record_type_includes ) {
+			if( type.equals( include ) ) {
+				return true;
+			}
+		}
 		return false;
 	}
 
