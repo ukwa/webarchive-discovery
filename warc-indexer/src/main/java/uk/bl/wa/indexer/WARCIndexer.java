@@ -53,6 +53,7 @@ import org.apache.http.HttpHeaders;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrDocument;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.archive.format.warc.WARCConstants;
@@ -357,10 +358,13 @@ public class WARCIndexer {
 			SolrQuery q = new SolrQuery("id:\""+id+"\"");
 			q.addField("crawl_dates");
 			try {
-				QueryResponse result = solrServer.query(q);
-				if( result.getResults().size() > 0 ) {
-					for( Object cds : result.getResults().get(0).getFieldValues("crawl_dates") ) {
-						currentCrawlDates.add((Date) cds);
+				QueryResponse results = solrServer.query(q);
+				if( results.getResults().size() > 0 ) {
+					SolrDocument fr = results.getResults().get(0);
+					if( fr.containsKey(SolrFields.CRAWL_DATES)) {
+						for( Object cds : fr.getFieldValues(SolrFields.CRAWL_DATES) ) {
+							currentCrawlDates.add((Date) cds);
+						}
 					}
 				}
 			} catch (SolrServerException e) {
@@ -386,7 +390,7 @@ public class WARCIndexer {
 			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
 			
 			// If this is a revisit record, we should just return an update to the crawl_dates:
-			if(  header.getHeaderValue( HEADER_KEY_TYPE ).equals(WARCConstants.WARCRecordType.revisit.name())) {
+			if(  WARCConstants.WARCRecordType.revisit.name().equals( header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 				SolrRecord revisited = new SolrRecord();
 				revisited.addField(SolrFields.ID, id);
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
