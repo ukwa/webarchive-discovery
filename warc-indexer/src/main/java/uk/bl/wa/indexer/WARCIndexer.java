@@ -26,7 +26,6 @@ package uk.bl.wa.indexer;
 
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.format.warc.WARCConstants.WARCRecordType;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
@@ -40,13 +39,9 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 import java.util.TimeZone;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.codec.binary.Hex;
@@ -75,15 +70,13 @@ import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
-import uk.bl.wa.extract.LanguageDetector;
+import uk.bl.wa.analyser.text.TextAnalyser;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.parsers.ApachePreflightParser;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.parsers.XMLRootNamespaceParser;
-import uk.bl.wa.sentimentalj.Sentiment;
-import uk.bl.wa.sentimentalj.SentimentalJ;
-import uk.bl.wa.util.PostcodeGeomapper;
+import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.util.solr.SolrRecord;
 import uk.bl.wa.util.solr.TikaExtractor;
@@ -93,9 +86,6 @@ import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
-
-import eu.scape_project.bitwiser.utils.FuzzyHash;
-import eu.scape_project.bitwiser.utils.SSDeep;
 
 /**
  * 
@@ -114,9 +104,6 @@ public class WARCIndexer {
 	private List<String> response_includes;
 	private List<String> record_type_includes;
 
-	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
-
-	private MessageDigest digest = MessageDigest.getInstance( "SHA-1" );
 	private TikaExtractor tika = null;
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
@@ -126,8 +113,6 @@ public class WARCIndexer {
 	private MessageDigest md5 = null;
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
-	/** */
-	private LanguageDetector ld = new LanguageDetector();
 	/** */
 	private HtmlFeatureParser hfp = new HtmlFeatureParser();
 	private boolean extractLinkDomains = true;
@@ -147,12 +132,6 @@ public class WARCIndexer {
 	/** */
 	private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
 	private boolean extractXMLRootNamespace = true;
-
-	/** */
-	private SentimentalJ sentij = new SentimentalJ();
-
-	/** */
-	private PostcodeGeomapper pcg = new PostcodeGeomapper();
 
 	/** Wayback-style URI filtering: */
 	StaticMapExclusionFilterFactory smef = null;
@@ -362,41 +341,27 @@ public class WARCIndexer {
 			
 			// Update the content_length based on what's available:
 			content_length = tikainput.available();
-
+			// Record the length:
+			solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
+			
 			// -----------------------------------------------------
-			// Parse payload using Tika:
+			// Headers have been processed, payload ready to parse.
 			// -----------------------------------------------------
+			
+			// Create an appropriately cached version of the payload, to allow analysis.
+			HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
+			tikainput = hcis.getInputStream();
+			String hash = hcis.getHash();
+			// Mark the start of the payload.
+			tikainput.mark( ( int ) content_length );
 
-			// Mark the start of the payload, and then run Tika on it:
-			tikainput = new BufferedInputStream( new BoundedInputStream( tikainput, bufferSize ), ( int ) bufferSize );
-			tikainput.mark( ( int ) header.getLength() );
+			// Analyse with tika:
 			if( passUriToFormatTools ) {
 				solr = tika.extract( solr, tikainput, header.getUrl() );
 			} else {
 				solr = tika.extract( solr, tikainput, null );
 			}
 			
-			// Record the length:
-			solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
-
-			// TODO: ArchiveRecordHeader.getDigest() returning null for (W)ARCs.
-			// TODO: At the very least we should calculate the hash on the whole InputStream.
-			String hash = null;
-			try {
-				tikainput.reset();
-				if( header.getHeaderFieldKeys().contains( HEADER_KEY_PAYLOAD_DIGEST ) ) {
-					hash = ( String ) header.getHeaderValue( HEADER_KEY_PAYLOAD_DIGEST );
-				} else {
-					DigestInputStream dinput = new DigestInputStream( tikainput, digest );
-					byte[] dummy = new byte[ 4096 ];
-					while( dinput.read( dummy ) > 0 ) {
-						// Do nothing
-					}
-					hash = "sha1:" + Base32.encode( digest.digest() );
-				}
-			} catch( Exception i ) {
-				log.error( "Hashing: " + header.getUrl() + "@" + header.getOffset(), i );
-			}
 			// Optionally use a hash-based ID to store only one version of a URL:
 			if( hashUrlId ) {
 				solr.doc.setField( SolrFields.ID, hash + "/" + md5hex );
@@ -452,7 +417,7 @@ public class WARCIndexer {
 			processContentType( solr, header );
 
 			// Pass on to other extractors as required, resetting the stream before each:
-			// Entropy, compressibility, fussy hashes, etc.
+			// Entropy, compressibility, fuzzy hashes, etc.
 			Metadata metadata = new Metadata();
 			try {
 				tikainput.reset();
@@ -575,90 +540,21 @@ public class WARCIndexer {
 			} catch( Exception i ) {
 				log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
 			}
+			
+			// Clear up the caching of the payload:
+			hcis.cleanup();
 
-			// --- The following extractors don't need to re-read the payload ---
-
+			// --- Now run analysis on text extracted from the payload ---
+			//
 			// Pull out the text:
 			if( solr.doc.getField( SolrFields.SOLR_EXTRACTED_TEXT ) != null ) {
 				String text = ( String ) solr.doc.getField( SolrFields.SOLR_EXTRACTED_TEXT ).getFirstValue();
 				text = text.trim();
 				if( !"".equals( text ) ) {
-					/* ---------------------------------------------------------- */
-
-					if( metadata.get( Metadata.CONTENT_LANGUAGE ) == null ) {
-						String li = ld.detectLanguage( text );
-						if( li != null )
-							solr.addField( SolrFields.CONTENT_LANGUAGE, li );
-					} else {
-						solr.addField( SolrFields.CONTENT_LANGUAGE, metadata.get( Metadata.CONTENT_LANGUAGE ) );
-					}
-
-					/* ---------------------------------------------------------- */
-
-					// Sentiment Analysis:
-					int sentilen = 10000;
-					if( sentilen > text.length() )
-						sentilen = text.length();
-					String sentitext = text.substring( 0, sentilen );
-					// metadata.get(HtmlFeatureParser.FIRST_PARAGRAPH);
-
-					Sentiment senti = sentij.analyze( sentitext );
-					double sentilog = Math.signum( senti.getComparative() ) * ( Math.log( 1.0 + Math.abs( senti.getComparative() ) ) / 40.0 );
-					int sentii = ( int ) ( SolrFields.SENTIMENTS.length * ( 0.5 + sentilog ) );
-					if( sentii < 0 ) {
-						log.debug( "Caught a sentiment rating less than zero: " + sentii + " from " + sentilog );
-						sentii = 0;
-					}
-					if( sentii >= SolrFields.SENTIMENTS.length ) {
-						log.debug( "Caught a sentiment rating too large to be in range: " + sentii + " from " + sentilog );
-						sentii = SolrFields.SENTIMENTS.length - 1;
-					}
-					// if( sentii != 3 )
-					// log.debug("Got sentiment: " + sentii+" "+sentilog+" "+ SolrFields.SENTIMENTS[sentii] );
-					// Map to sentiment scale:
-					solr.addField( SolrFields.SENTIMENT, SolrFields.SENTIMENTS[ sentii ] );
-					solr.addField( SolrFields.SENTIMENT_SCORE, "" + senti.getComparative() );
-
-					/* ---------------------------------------------------------- */
-
-					// Postcode Extractor (based on text extracted by Tika)
-					Matcher pcm = postcodePattern.matcher( text );
-					Set<String> pcs = new HashSet<String>();
-					while( pcm.find() )
-						pcs.add( pcm.group() );
-					for( String pc : pcs ) {
-						solr.addField( SolrFields.POSTCODE, pc );
-						String pcd = pc.substring( 0, pc.lastIndexOf( " " ) );
-						solr.addField( SolrFields.POSTCODE_DISTRICT, pcd );
-						String location = pcg.getLatLogForPostcodeDistrict( pcd );
-						if( location != null )
-							solr.addField( SolrFields.LOCATIONS, location );
-					}
-
-					// TODO Named entity extraction
-
-					/* ---------------------------------------------------------- */
-
-					// Canonicalize the text - strip newlines etc.
-					Pattern whitespace = Pattern.compile( "\\s+" );
-					Matcher matcher = whitespace.matcher( text );
-					text = matcher.replaceAll( " " ).toLowerCase().trim();
-
-					/* ---------------------------------------------------------- */
-
-					// Add SSDeep hash for the text, to spot similar texts.
-					SSDeep ssd = new SSDeep();
-					FuzzyHash tfh = ssd.fuzzy_hash_buf( text.getBytes( "UTF-8" ) );
-					solr.addField( SolrFields.SSDEEP_PREFIX + tfh.getBlocksize(), tfh.getHash() );
-					solr.addField( SolrFields.SSDEEP_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
-					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + tfh.getBlocksize(), tfh.getHash() );
-					solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
-
+					TextAnalyser.runAllAnalysers(text, solr);
 				}
 			}
-
-			// TODO ACT/WctEnricher, currently invoked in the reduce stage to lower query hits, but should shift here.
-
+			
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {
 				solr.doc.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
