@@ -202,16 +202,16 @@
    <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
    
    <!-- The domain for this URL: -->
-   <field name="host" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="host" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The private suffix a.k.a domain for this host: -->
-   <field name="domain" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="domain" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
    <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The hostnames of discovered outlinks -->
-   <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <!-- The private suffixs of the target domains of any links, i.e. example.co.uk, example.org, etc: -->
-   <field name="links_domains" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="links_domains" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
    <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
    
@@ -302,9 +302,11 @@
    <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false"/>
    <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false"/>
    <!-- Locations of faces detected in the images -->
-   <field name='image_faces' type='string' indexed='true' stored='true' multiValued='true'/>
+   <field name='image_faces_count' type='tint' indexed='true' stored='true' multiValued='false'/>
+   <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
    <!-- The dominant colours extracted from the images -->
-   <field name='image_dominant_colours' type='string' indexed='true' stored='true' multiValued='true'/>
+   <field name='image_colours' type='string' indexed='true' stored='true' multiValued='true'/>
+   <field name='image_dominant_colour' type='string' indexed='true' stored='true' multiValued='false'/>
 
    <!-- The different HTML elements used by the document -->
    <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -502,6 +504,8 @@
 
     <!-- The StrField type is not analyzed, but indexed/stored verbatim. -->
     <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
+    <!-- Alternative string type that will store everything on disk. -->
+    <fieldType name="string_ondisk" class="solr.StrField" docValuesFormat="Disk" />
 
     <!-- boolean type: "true" or "false" -->
     <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
