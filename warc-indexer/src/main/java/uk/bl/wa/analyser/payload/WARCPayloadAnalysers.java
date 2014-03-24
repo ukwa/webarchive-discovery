@@ -22,5 +22,7 @@ public class WARCPayloadAnalysers {
 
 	public static XMLAnalyser xml = new XMLAnalyser(ConfigFactory.load());
 
+	public static ImageAnalyser image = new ImageAnalyser(ConfigFactory.load());
+
 
 }

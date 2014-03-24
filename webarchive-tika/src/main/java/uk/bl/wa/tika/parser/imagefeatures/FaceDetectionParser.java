@@ -48,7 +48,9 @@ public class FaceDetectionParser extends AbstractParser {
 	/** */
 	private static final long serialVersionUID = -773080986108106790L;
 	
-	private static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
+	public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
+
+	public static final String DOM_COL = "DOMCOL";
 	
 	private static final Set<MediaType> SUPPORTED_TYPES =
 			Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
@@ -77,7 +79,9 @@ public class FaceDetectionParser extends AbstractParser {
 		
 		// Pull out dominant colour:
 		Color dc = this.extractDominantColour(image);
-		
+		ColourMatcher cm = new ColourMatcher();
+		metadata.add(DOM_COL, cm.getMatch(dc).getName());
+			
 		// Detect faces:
 		FaceDetector<KEDetectedFace,FImage> fd = new FKEFaceDetector(20);
 		//FaceDetector<DetectedFace,FImage> fd = new HaarCascadeDetector(20);
@@ -96,7 +100,7 @@ public class FaceDetectionParser extends AbstractParser {
 			metadata.add(FACE_FRAGMENT_ID, xywh);
 			
 		}
-		DisplayUtilities.display(image);
+		//DisplayUtilities.display(image);
 	}
 	
 	private Color extractDominantColour( MBFImage image ) {
@@ -116,8 +120,8 @@ public class FaceDetectionParser extends AbstractParser {
 		Color dc = new Color((int)(255*model.colourAverage(max_i)[0]), 
 							 (int)(255*model.colourAverage(max_i)[1]),
 							 (int)(255*model.colourAverage(max_i)[2]) );
-		System.out.println("Got Color: " + dc );
-		System.out.println("Got colour: " + cm.getMatch(dc).getName() );
+		//System.out.println("Got Color: " + dc );
+		//System.out.println("Got colour: " + cm.getMatch(dc).getName() );
 
 		/*
 		for( int i = 0; i < res; i++ ) {
@@ -149,7 +153,7 @@ public class FaceDetectionParser extends AbstractParser {
 				fcmaxc = c;
 			}
 		}
-		System.out.println("Got colour: "+cm.getMatch(fcmaxc).getName());
+		//System.out.println("Got colour: "+cm.getMatch(fcmaxc).getName());
 		//return fcmaxc;
 		
 		return dc;
