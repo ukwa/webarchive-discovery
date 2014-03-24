@@ -66,10 +66,10 @@ import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalyser;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.TikaExtractor;
 import uk.bl.wa.util.HashedCachedInputStream;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
-import uk.bl.wa.util.solr.TikaExtractor;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 
 import com.google.common.base.Splitter;

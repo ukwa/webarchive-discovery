@@ -9,7 +9,7 @@ import org.apache.commons.lang.SerializationUtils;
 import org.apache.hadoop.io.Writable;
 import org.apache.solr.common.SolrInputDocument;
 
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * Writable wrapper for SolrRecord.

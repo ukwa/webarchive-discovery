@@ -56,7 +56,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

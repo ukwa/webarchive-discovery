@@ -26,8 +26,8 @@ package uk.bl.wa.analyser.text;
  */
 
 import uk.bl.wa.extract.LanguageDetector;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj

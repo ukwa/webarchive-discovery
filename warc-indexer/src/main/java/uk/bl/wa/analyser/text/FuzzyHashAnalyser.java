@@ -31,8 +31,8 @@ import java.util.regex.Pattern;
 
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj

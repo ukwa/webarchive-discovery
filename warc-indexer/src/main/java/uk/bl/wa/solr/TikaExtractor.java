@@ -1,4 +1,4 @@
-package uk.bl.wa.util.solr;
+package uk.bl.wa.solr;
 
 /*
  * #%L

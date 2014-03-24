@@ -60,9 +60,9 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
-import uk.bl.wa.util.solr.SolrWebServer;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrWebServer;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

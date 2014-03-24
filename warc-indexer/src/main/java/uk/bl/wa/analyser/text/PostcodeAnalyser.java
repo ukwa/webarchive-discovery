@@ -31,8 +31,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import uk.bl.wa.extract.PostcodeGeomapper;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj

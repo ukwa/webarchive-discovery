@@ -47,7 +47,7 @@ import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecord;
 
 public class WARCIndexerTest {
 	

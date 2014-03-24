@@ -20,9 +20,9 @@ import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-import uk.bl.wa.util.solr.SolrRecord;
-import uk.bl.wa.util.solr.WctEnricher;
-import uk.bl.wa.util.solr.WctFields;
+import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.WctEnricher;
+import uk.bl.wa.solr.WctFields;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;

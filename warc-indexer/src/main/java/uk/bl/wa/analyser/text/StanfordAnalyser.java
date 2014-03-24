@@ -33,8 +33,8 @@ import java.util.Set;
 import org.apache.tika.metadata.Metadata;
 
 import uk.bl.wa.parsers.StanfordAnnotatorParser;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj

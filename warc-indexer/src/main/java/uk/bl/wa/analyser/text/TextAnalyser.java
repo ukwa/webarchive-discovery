@@ -28,7 +28,7 @@ package uk.bl.wa.analyser.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj

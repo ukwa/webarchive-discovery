@@ -31,8 +31,8 @@ import org.jdom.input.SAXBuilder;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.util.solr.SolrFields;
-import uk.bl.wa.util.solr.SolrRecord;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 import com.google.common.base.Joiner;
 import com.typesafe.config.Config;
