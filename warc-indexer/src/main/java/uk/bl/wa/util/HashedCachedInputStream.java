@@ -159,7 +159,12 @@ public class HashedCachedInputStream {
 	 */
 	public InputStream getInputStream() {
 		if( inMemory ) {
-			return new ByteArrayInputStream( this.cacheBytes );
+			if( this.cacheBytes != null ) {
+				return new ByteArrayInputStream( this.cacheBytes );
+			} else {
+				log.error("Found a NULL byte array!");
+				return new ByteArrayInputStream( new byte[] {} );
+			}
 		} else {
 			RandomAccessFile RAFcache;
 			try {
