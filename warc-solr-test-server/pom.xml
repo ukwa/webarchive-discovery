@@ -47,7 +47,6 @@
                 </configuration>
                 <executions>
                     <execution>
-                        <phase>compile</phase>
                         <goals>
                             <goal>run-exploded</goal>
                         </goals>
