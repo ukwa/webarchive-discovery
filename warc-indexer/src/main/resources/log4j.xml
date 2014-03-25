@@ -18,7 +18,7 @@
   </logger>
   
   <!-- Decrease logging from -->
-  <logger name="org.apache.pdfbox">
+  <logger name="org.apache">
     <level value="error"/> 
   </logger>
   

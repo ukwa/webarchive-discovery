@@ -9,12 +9,17 @@
     </layout> 
   </appender> 
 
-  <!--  Increase logging from this code  -->
+  <!--  Increase logging from our code:  -->
   <logger name="uk.bl.wa">
-    <level value="debug"/> 
+    <level value="info"/> 
+  </logger>
+
+  <!-- Decrease logging from here: -->	
+  <logger name="org.apache">
+    <level value="error"/> 
   </logger>
 	
-  <root> 
+  <root>
     <priority value="warn" /> 
     <appender-ref ref="console" />
   </root>

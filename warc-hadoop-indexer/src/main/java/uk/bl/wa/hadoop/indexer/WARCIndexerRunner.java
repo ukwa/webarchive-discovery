@@ -4,11 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
-import java.net.URL;
-import java.util.Scanner;
-
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -31,7 +26,6 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
 import uk.bl.wa.util.ConfigPrinter;
 
-import com.sun.syndication.io.impl.Base64;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -46,48 +40,15 @@ import com.typesafe.config.ConfigRenderOptions;
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerRunner extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog( WARCIndexerRunner.class );
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-a] [Read from ACT.] [-d] [Dump config.] [-w] [Wait for completion.]";
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
 	private String inputPath;
 	private String outputPath;
 	private String configPath;
-	private boolean readAct;
 	private boolean wait;
 	private boolean dumpConfig;
-
-	private String cookie;
-	private String csrf;
-
-	/**
-	 * Performs login operation to ACT, setting Cookie and CSRF.
-	 * @throws IOException
-	 */
-	protected void actLogin() throws IOException {
-		Config loginConf = ConfigFactory.load( "credentials.conf" );
-		URL login = new URL( loginConf.getString( "act.login" ) );
-
-		HttpURLConnection connection = ( HttpURLConnection ) login.openConnection();
-		StringBuilder credentials = new StringBuilder();
-		credentials.append( "Basic " );
-		credentials.append( loginConf.getString( "act.username" ) );
-		credentials.append( ":" );
-		credentials.append( loginConf.getString( "act.password" ) );
-		connection.setRequestProperty( "Authorization", "Basic " + Base64.encode( credentials.toString() ) );
-
-		Scanner scanner;
-		if( connection.getResponseCode() != 200 ) {
-			scanner = new Scanner( connection.getErrorStream() );
-			scanner.useDelimiter( "\\Z" );
-			throw new IOException( scanner.next() );
-		} else {
-			scanner = new Scanner( connection.getInputStream() );
-		}
-		scanner.useDelimiter( "\\Z" );
-		this.csrf = scanner.next();
-		this.cookie = connection.getHeaderField( "set-cookie" );
-	}
 
 	/**
 	 * 
@@ -123,14 +84,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 			LOG.info( "Using SolrServers." );
 		}
 
-		// Pull in ACT metadata
-		if( this.readAct ) {
-			LOG.info( "Reading records from ACT..." );
-			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
-			LOG.info( "Reading Collections from ACT..." );
-			conf.set( "warc.collections.xml", readAct( index_conf.getString( "warc.act.collections.url" ) ) );
-			LOG.info( "Read " + conf.get( "warc.act.xml" ).length() + " bytes." );
-		}
 		// Also set reduce speculative execution off, avoiding duplicate submissions to Solr.
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 
@@ -171,32 +124,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setNumReduceTasks( numReducers );
 	}
 
-	/**
-	 * Read data from ACT to include curator-specified metadata.
-	 * @param conf
-	 * @return
-	 * @throws MalformedURLException
-	 * @throws IOException
-	 */
-	protected String readAct( String url ) throws IOException {
-		URL act = new URL( url );
-		HttpURLConnection connection = ( HttpURLConnection ) act.openConnection();
-		if( this.cookie != null ) {
-			connection.setRequestProperty( "Cookie", this.cookie );
-			connection.setRequestProperty( "X-CSRF-TOKEN", this.csrf );
-		}
-
-		Scanner scanner;
-		if( connection.getResponseCode() != 200 ) {
-			scanner = new Scanner( connection.getErrorStream() );
-			scanner.useDelimiter( "\\Z" );
-			throw new IOException( scanner.next() );
-		} else {
-			scanner = new Scanner( connection.getInputStream() );
-		}
-		scanner.useDelimiter( "\\Z" );
-		return scanner.next();
-	}
 
 	/**
 	 * 
@@ -225,7 +152,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		options.addOption( "i", true, "input file list" );
 		options.addOption( "o", true, "output directory" );
 		options.addOption( "c", true, "path to configuration" );
-		options.addOption( "a", false, "read data from ACT" );
 		options.addOption( "w", false, "wait for job to finish" );
 		options.addOption( "d", false, "dump configuration" );
 		//TODO: Problematic with "hadoop jar"?
@@ -241,7 +167,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		}
 		this.inputPath = cmd.getOptionValue( "i" );
 		this.outputPath = cmd.getOptionValue( "o" );
-		this.readAct = cmd.hasOption( "a" );
 		this.wait = cmd.hasOption( "w" );
 		if( cmd.hasOption( "c" ) ) {
 			this.configPath = cmd.getOptionValue( "c" );
