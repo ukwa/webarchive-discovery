@@ -355,6 +355,7 @@ public class WARCIndexer {
 			
 			// Query for currently known crawl dates:
 			HashSet<Date> currentCrawlDates = new HashSet<Date>();
+			// TODO Make this optional so it can be skipped when known to be superfluous.
 			SolrQuery q = new SolrQuery("id:\""+id+"\"");
 			q.addField("crawl_dates");
 			try {
@@ -376,11 +377,11 @@ public class WARCIndexer {
 			if( ! currentCrawlDates.contains(crawlDate) ) {
 				// Also allow dates to be merged under the CRAWL_DATES field:
 				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-				currentCrawlDates.add(crawlDate);
 			}
 			
 			// Sort the dates and find the earliest:
 			List<Date> dateList = new ArrayList<Date>(currentCrawlDates);
+			dateList.add(crawlDate);
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
 			solr.setField( SolrFields.CRAWL_DATE, formatter.format(firstDate) );
@@ -391,6 +392,9 @@ public class WARCIndexer {
 			
 			// If this is a revisit record, we should just return an update to the crawl_dates:
 			if(  WARCConstants.WARCRecordType.revisit.name().equals( header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
+				if( currentCrawlDates.contains(crawlDate) ) {
+					return null;
+				}
 				SolrRecord revisited = new SolrRecord();
 				revisited.addField(SolrFields.ID, id);
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );

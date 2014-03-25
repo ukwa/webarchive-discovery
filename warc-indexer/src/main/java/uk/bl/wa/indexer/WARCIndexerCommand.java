@@ -194,6 +194,9 @@ public class WARCIndexerCommand {
 		
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
+		// Commit to make sure index is up to date:
+		commit(solrWeb);
+		
 
 		// Also pass config down:
 		WARCIndexer windex = new WARCIndexer(conf);
@@ -250,7 +253,14 @@ public class WARCIndexerCommand {
 			}
 			curInputFile++;
 		}
+
+		// Commit the updates:
+		commit(solrWeb);
 		
+		System.out.println("WARC Indexer Finished");
+	}
+	
+	private static void commit( SolrWebServer solrWeb) {
 		// Commit any Solr Updates
 		if( solrWeb != null ) {
 			try {
@@ -261,7 +271,6 @@ public class WARCIndexerCommand {
 				log.warn( "IOException when committing.", i );
 			}
 		}
-		System.out.println("WARC Indexer Finished");
 	}
 
 	/**

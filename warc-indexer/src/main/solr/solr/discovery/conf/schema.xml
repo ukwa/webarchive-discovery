@@ -282,6 +282,13 @@
 
    <!-- Any Parse Error encountered while attempting to extract metadata and text: -->
    <field name="parse_error" type="string" indexed="true" stored="true" multiValued="true"/>
+   
+   <!-- Results of checking if PDFs are valid PDF/A: -->
+   <field name="pdf_pdfa_is_valid" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="pdf_pdfa_errors" type="string" indexed="true" stored="true" multiValued="true"/>
+   
+   <!-- Root namespace of XML documents: -->
+   <field name="xml_root_ns" type="string" indexed="true" stored="true" multiValued="false"/>
 
    <!-- Content-based fields -->
    

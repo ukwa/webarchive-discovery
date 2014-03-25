@@ -83,7 +83,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			long pixels = image.getWidth()*image.getHeight();
 			solr.addField(SolrFields.IMAGE_SIZE, ""+pixels);
 		} catch (IOException e) {
-			e.printStackTrace();
+			log.error("ImageIO.read failed: "+e);
 		}
 		
 		// Also attempt to extract faces:

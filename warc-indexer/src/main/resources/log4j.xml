@@ -3,7 +3,7 @@
 <log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
 
   <appender name="console" class="org.apache.log4j.ConsoleAppender"> 
-    <param name="Target" value="System.out"/> 
+    <param name="Target" value="System.out"/>
     <layout class="org.apache.log4j.PatternLayout"> 
       <param name="ConversionPattern" value="%-5p %c{1} - %m%n"/> 
     </layout> 
@@ -16,7 +16,12 @@
   <logger name="uk.bl.wa">
     <level value="info"/> 
   </logger>
-	
+  
+  <!-- Decrease logging from -->
+  <logger name="org.apache.pdfbox">
+    <level value="error"/> 
+  </logger>
+  
   <root> 
     <priority value="warn" /> 
     <appender-ref ref="console" />

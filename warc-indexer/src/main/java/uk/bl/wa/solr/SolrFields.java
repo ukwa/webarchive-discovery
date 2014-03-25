@@ -77,6 +77,10 @@ public interface SolrFields {
 	public static final String SERVER = "server";
 	public static final String PARSE_ERROR = "parse_error";
 	public static final String CONTENT_WARNING = "content_warning";
+	public static final String XML_ROOT_NS = "xml_root_ns";
+	public static final String PDFA_IS_VALID = "pdf_pdfa_is_valid";
+	public static final String PDFA_ERRORS = "pdf_pdfa_errors";
+	
 	public static final String SOLR_RECORD_TYPE = "record_type";
 	
 	public static final String CONTENT_LENGTH = "content_length";

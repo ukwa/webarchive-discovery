@@ -63,8 +63,11 @@ public class InputStreamDataSource implements DataSource {
     	if( read == false ) {
     		read = true;
             return inputStream;
+    	} else if( inputStream.markSupported()) {
+    		inputStream.reset();
+    		return inputStream;
     	} else {
-    		throw new IOException("Cannot re-initialise this InputStream");
+    		throw new IOException("InputStreamDataSource: Cannot re-initialise this InputStream!");
     	}
     }
 

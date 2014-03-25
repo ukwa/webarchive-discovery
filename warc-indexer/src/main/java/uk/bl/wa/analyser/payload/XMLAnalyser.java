@@ -71,7 +71,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing for XML Root Namespace: " + e.getMessage() );
 			}
-			solr.addField( "xml_ns_root_s", metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
+			solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
 		}
 	}
 

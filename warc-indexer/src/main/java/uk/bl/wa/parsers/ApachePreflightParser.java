@@ -87,6 +87,10 @@ public class ApachePreflightParser extends AbstractParser {
 			Metadata metadata, ParseContext context) throws IOException,
 			SAXException, TikaException {
 		
+		// Attempt to reduce logging of stacktraces:
+		//System.setProperty("log4j.logger.org.apache.pdfbox","");
+
+		// Set up the validation result:
 		ValidationResult result = null;
 
 		InputStreamDataSource isds = new InputStreamDataSource(stream);
@@ -106,7 +110,7 @@ public class ApachePreflightParser extends AbstractParser {
 		   */
 		  PreflightDocument document = parser.getPreflightDocument();
 		  document.validate();
-
+		  
 		  // Get validation result
 		  result = document.getResult();
 		  document.close();
@@ -123,13 +127,13 @@ public class ApachePreflightParser extends AbstractParser {
 		// display validation result
 		Set<String> rs = new HashSet<String>();
 		if (result.isValid()) {
-		  System.out.println("The resource is not a valid PDF/A-1b file");
+		  //System.out.println("The resource is not a valid PDF/A-1b file");
 		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
 		} else {
-		  System.out.println("The resource is not valid, error(s) :");
+		  //System.out.println("The resource is not valid, error(s) :");
 		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.FALSE.toString() );
 		  for (ValidationError error : result.getErrorsList()) {
-		    System.out.println(error.getErrorCode() + " : " + error.getDetails());
+		    //System.out.println(error.getErrorCode() + " : " + error.getDetails());
 		    rs.add(error.getErrorCode() + " : " + error.getDetails());
 		  }
 		}
