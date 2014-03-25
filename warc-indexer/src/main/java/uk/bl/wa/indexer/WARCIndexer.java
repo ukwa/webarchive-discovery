@@ -103,21 +103,12 @@ public class WARCIndexer {
 	private List<String> response_includes;
 	private List<String> record_type_includes;
 
-	private TikaExtractor tika = null;
-	private DroidDetector dd = null;
-	private boolean runDroid = true;
-	private boolean droidUseBinarySignaturesOnly = false;
-	private boolean passUriToFormatTools = false;
-
 	private MessageDigest md5 = null;
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	/** */
 	private boolean extractText = true;
-	private boolean extractContentFirstBytes = true;
 	private boolean hashUrlId = false;
-	private int firstBytesLength = 32;
-	private long bufferSize = ( 20L * 1024L * 1024L );
 
 	/** Wayback-style URI filtering: */
 	StaticMapExclusionFilterFactory smef = null;
@@ -149,11 +140,6 @@ public class WARCIndexer {
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
 		this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
-		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
-		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
-		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
-		this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
-		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
 		// URLs to exclude:
 		this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
 		// Protocols to include:
@@ -162,7 +148,6 @@ public class WARCIndexer {
 		this.response_includes = conf.getStringList( "warc.index.extract.response_include" );
 		// Record types to include:
 		this.record_type_includes = conf.getStringList( "warc.index.extract.record_type_include" );
-		this.bufferSize = conf.getLong( "warc.index.extract.buffer_size" );
 
 		// URL Filtering options:
 		if( conf.getBoolean( "warc.index.exclusions.enabled" ) ) {
@@ -179,16 +164,6 @@ public class WARCIndexer {
 
 		// Instanciate required helpers:
 		md5 = MessageDigest.getInstance( "MD5" );
-		// Attempt to set up Droid:
-		try {
-			dd = new DroidDetector();
-			dd.setBinarySignaturesOnly( droidUseBinarySignaturesOnly );
-			dd.setMaxBytesToScan( bufferSize );
-		} catch( CommandExecutionException e ) {
-			e.printStackTrace();
-			dd = null;
-		}
-		tika = new TikaExtractor( conf );
 		
 		// Also hook up to Solr server for queries:
 		if( this.checkSolrForDuplicates ) {
@@ -426,65 +401,19 @@ public class WARCIndexer {
 			// Mark the start of the payload.
 			tikainput.mark( ( int ) content_length );
 			
-			// Analyse with tika:
-			if( passUriToFormatTools ) {
-				solr = tika.extract( solr, tikainput, header.getUrl() );
-			} else {
-				solr = tika.extract( solr, tikainput, null );
-			}
-			
-			// Pull out the first few bytes, to hunt for new format by magic:
-			try {
-				tikainput.reset();
-				byte[] ffb = new byte[ this.firstBytesLength ];
-				int read = tikainput.read( ffb );
-				if( read >= 4 ) {
-					String hexBytes = Hex.encodeHexString( ffb );
-					solr.addField( SolrFields.CONTENT_FFB, hexBytes.substring( 0, 2 * 4 ) );
-					StringBuilder separatedHexBytes = new StringBuilder();
-					for( String hexByte : Splitter.fixedLength( 2 ).split( hexBytes ) ) {
-						separatedHexBytes.append( hexByte );
-						separatedHexBytes.append( " " );
-					}
-					if( this.extractContentFirstBytes ) {
-						solr.addField( SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim() );
-					}
-				}
-			} catch( IOException i ) {
-				log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
-			}
-
-			// Also run DROID (restricted range):
-			if( dd != null && runDroid == true ) {
-				try {
-					tikainput.reset();
-					// Pass the URL in so DROID can fall back on that:
-					Metadata metadata = new Metadata();
-					if( passUriToFormatTools ) {
-						UsableURI uuri = UsableURIFactory.getInstance( fullUrl );
-						// Droid seems unhappy about spaces in filenames, so hack to avoid:
-						String cleanUrl = uuri.getName().replace( " ", "+" );
-						metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );
-					}
-					// Run Droid:
-					MediaType mt = dd.detect( tikainput, metadata );
-					solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
-				} catch( Exception i ) {
-					// Note that DROID complains about some URLs with an IllegalArgumentException.
-					log.error( i + ": " + i.getMessage() + ";dd; " + fullUrl + " @" + header.getOffset() );
-				}
-			}
-
-			// Derive normalised/simplified content type:
-			processContentType( solr, header );
-
 			// Pass on to other extractors as required, resetting the stream before each:
 			this.wpa.analyse(header, tikainput, solr);
 			
 			// Clear up the caching of the payload:
 			hcis.cleanup();
 
-			// --- Now run analysis on text extracted from the payload ---
+			// Derive normalised/simplified content type:
+			processContentType( solr, header );
+
+			// -----------------------------------------------------
+			// Payload analysis complete, now performing text analysis:
+			// -----------------------------------------------------
+			
 			this.txa.analyse(solr);
 			
 			// Remove the Text Field if required
