@@ -138,6 +138,10 @@
                <groupId>org.apache.hadoop</groupId>
                <artifactId>hadoop-hdfs</artifactId>
             </exclusion>
+            <exclusion>
+            	<artifactId>commons-io</artifactId>
+            	<groupId>commons-io</groupId>
+            </exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -149,11 +153,6 @@
          <groupId>commons-lang</groupId>
          <artifactId>commons-lang</artifactId>
          <version>2.6</version>
-      </dependency>
-      <dependency>
-         <groupId>commons-io</groupId>
-         <artifactId>commons-io</artifactId>
-         <version>2.4</version>
       </dependency>
       <dependency>
          <groupId>uk.bl.wa.sentimentalj</groupId>
@@ -184,6 +183,12 @@
          <groupId>org.apache.pdfbox</groupId>
          <artifactId>preflight</artifactId>
          <version>1.8.3</version>
+         <exclusions>
+         	<exclusion>
+         		<artifactId>commons-io</artifactId>
+         		<groupId>commons-io</groupId>
+         	</exclusion>
+         </exclusions>
       </dependency>
       <!-- dependency needed for Solr integration test -->
       <dependency>
@@ -222,6 +227,41 @@
       	<groupId>org.slf4j</groupId>
       	<artifactId>slf4j-api</artifactId>
       	<version>1.7.6</version>
+      </dependency>
+      <dependency>
+      	<groupId>org.netpreserve.commons</groupId>
+      	<artifactId>webarchive-commons</artifactId>
+      	<version>1.1.2</version>
+      	<exclusions>
+      		<exclusion>
+      			<artifactId>slf4j-api</artifactId>
+      			<groupId>org.slf4j</groupId>
+      		</exclusion>
+      		<exclusion>
+      			<artifactId>commons-io</artifactId>
+      			<groupId>commons-io</groupId>
+      		</exclusion>
+      	</exclusions>
+      </dependency>
+      <dependency>
+      	<groupId>org.apache.solr</groupId>
+      	<artifactId>solr-solrj</artifactId>
+      	<version>${solr.version}</version>
+      	<exclusions>
+      		<exclusion>
+      			<artifactId>slf4j-api</artifactId>
+      			<groupId>org.slf4j</groupId>
+      		</exclusion>
+      		<exclusion>
+      			<artifactId>commons-io</artifactId>
+      			<groupId>commons-io</groupId>
+      		</exclusion>
+      	</exclusions>
+      </dependency>
+      <dependency>
+      	<groupId>commons-io</groupId>
+      	<artifactId>commons-io</artifactId>
+      	<version>2.4</version>
       </dependency>
 	</dependencies>
 </project>
