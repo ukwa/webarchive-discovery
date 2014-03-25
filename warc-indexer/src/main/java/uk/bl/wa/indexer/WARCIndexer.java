@@ -122,7 +122,8 @@ public class WARCIndexer {
 	StaticMapExclusionFilterFactory smef = null;
 
 	/** Hook to the solr server: */
-	private SolrWebServer solrServer;
+	private boolean checkSolrForDuplicates = false;
+	private SolrWebServer solrServer = null;
 
 	/* ------------------------------------------------------------ */
 
@@ -140,6 +141,7 @@ public class WARCIndexer {
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
+		this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
@@ -182,7 +184,9 @@ public class WARCIndexer {
 		tika = new TikaExtractor( conf );
 		
 		// Also hook up to Solr server for queries:
-		solrServer = new SolrWebServer(conf);
+		if( this.checkSolrForDuplicates ) {
+			solrServer = new SolrWebServer(conf);
+		}
 	}
 
 	/**
@@ -356,21 +360,23 @@ public class WARCIndexer {
 			// Query for currently known crawl dates:
 			HashSet<Date> currentCrawlDates = new HashSet<Date>();
 			// TODO Make this optional so it can be skipped when known to be superfluous.
-			SolrQuery q = new SolrQuery("id:\""+id+"\"");
-			q.addField("crawl_dates");
-			try {
-				QueryResponse results = solrServer.query(q);
-				if( results.getResults().size() > 0 ) {
-					SolrDocument fr = results.getResults().get(0);
-					if( fr.containsKey(SolrFields.CRAWL_DATES)) {
-						for( Object cds : fr.getFieldValues(SolrFields.CRAWL_DATES) ) {
-							currentCrawlDates.add((Date) cds);
+			if( solrServer != null ) {
+				SolrQuery q = new SolrQuery("id:\""+id+"\"");
+				q.addField("crawl_dates");
+				try {
+					QueryResponse results = solrServer.query(q);
+					if( results.getResults().size() > 0 ) {
+						SolrDocument fr = results.getResults().get(0);
+						if( fr.containsKey(SolrFields.CRAWL_DATES)) {
+							for( Object cds : fr.getFieldValues(SolrFields.CRAWL_DATES) ) {
+								currentCrawlDates.add((Date) cds);
+							}
 						}
 					}
+				} catch (SolrServerException e) {
+					e.printStackTrace();
+					// FIXME retry?
 				}
-			} catch (SolrServerException e) {
-				e.printStackTrace();
-				// FIXME retry?
 			}
 			
 			// Is this date already in?
