@@ -162,6 +162,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.set( "map.output.key.field.separator", "" );
 		// Compress the output from the maps, to cut down temp space requirements between map and reduce.
 		conf.setBoolean("mapreduce.map.output.compress", true);
+		// Ensure the JARs we provide take precedence over ones from Hadoop:
+		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
 		conf.setOutputKeyClass( Text.class );
 		conf.setOutputValueClass( Text.class );
