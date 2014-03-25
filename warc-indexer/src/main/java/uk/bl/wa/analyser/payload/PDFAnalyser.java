@@ -47,10 +47,8 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
-	private boolean extractApachePreflightErrors = true;
 	
 	public PDFAnalyser(Config conf) {
-		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 	}
 
 	/* (non-Javadoc)
@@ -60,7 +58,6 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
 			SolrRecord solr) {
 		Metadata metadata = new Metadata();
-		if( extractApachePreflightErrors ) {
 			metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
 			ParseRunner parser = new ParseRunner( app, tikainput, metadata, solr );
 			Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
@@ -81,7 +78,6 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 					solr.addField( SolrFields.PDFA_ERRORS, error );
 				}
 			}
-		}
 	}
 
 }

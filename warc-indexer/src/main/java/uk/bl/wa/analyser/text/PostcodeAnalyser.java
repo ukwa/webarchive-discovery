@@ -30,6 +30,8 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.extract.PostcodeGeomapper;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -38,13 +40,19 @@ import uk.bl.wa.solr.SolrRecord;
  * @author anj
  *
  */
-public class PostcodeAnalyser extends TextAnalyser {
+public class PostcodeAnalyser extends AbstractTextAnalyser {
 
 	private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
 
 	/** */
 	private PostcodeGeomapper pcg = new PostcodeGeomapper();
 	
+	/**
+	 * @param conf
+	 */
+	public PostcodeAnalyser(Config conf) {
+	}
+
 	/* (non-Javadoc)
 	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
 	 */

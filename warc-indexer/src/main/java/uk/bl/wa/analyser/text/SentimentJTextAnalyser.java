@@ -28,6 +28,8 @@ package uk.bl.wa.analyser.text;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wa.solr.SolrFields;
@@ -37,11 +39,17 @@ import uk.bl.wa.solr.SolrRecord;
  * @author anj
  *
  */
-public class SentimentJTextAnalyser extends TextAnalyser {
+public class SentimentJTextAnalyser extends AbstractTextAnalyser {
 	private static Log log = LogFactory.getLog( SentimentJTextAnalyser.class );
 
 	/** */
 	private static SentimentalJ sentij = new SentimentalJ();
+
+	/**
+	 * @param conf
+	 */
+	public SentimentJTextAnalyser(Config conf) {
+	}
 
 	/**
 	 * 

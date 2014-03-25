@@ -70,7 +70,8 @@ import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
-import uk.bl.wa.analyser.text.TextAnalyser;
+import uk.bl.wa.analyser.text.AbstractTextAnalyser;
+import uk.bl.wa.analyser.text.TextAnalysers;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
@@ -124,6 +125,12 @@ public class WARCIndexer {
 	/** Hook to the solr server: */
 	private boolean checkSolrForDuplicates = false;
 	private SolrWebServer solrServer = null;
+	
+	/** Payload Analysers */
+	WARCPayloadAnalysers wpa = null;
+	
+	/** Text Analysers */
+	TextAnalysers txa = null;
 
 	/* ------------------------------------------------------------ */
 
@@ -187,6 +194,10 @@ public class WARCIndexer {
 		if( this.checkSolrForDuplicates ) {
 			solrServer = new SolrWebServer(conf);
 		}
+		
+		// Set up analysers
+		this.wpa = new WARCPayloadAnalysers(conf);
+		this.txa = new TextAnalysers(conf);
 	}
 
 	/**
@@ -468,42 +479,13 @@ public class WARCIndexer {
 			processContentType( solr, header );
 
 			// Pass on to other extractors as required, resetting the stream before each:
-			// Entropy, compressibility, fuzzy hashes, etc.
-			try {
-				tikainput.reset();
-				String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
-				if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
-					WARCPayloadAnalysers.html.analyse(header, tikainput, solr);
-
-				} else if( mime.startsWith( "image" ) ) {
-					WARCPayloadAnalysers.image.analyse(header, tikainput, solr);
-
-				} else if( mime.startsWith( "application/pdf" ) ) {
-					WARCPayloadAnalysers.pdf.analyse(header, tikainput, solr);
-
-				} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
-					WARCPayloadAnalysers.xml.analyse(header, tikainput, solr);
-					
-				} else {
-					log.debug("No specific additional parser for: "+mime);
-				}
-			} catch( Exception i ) {
-				log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
-			}
+			this.wpa.analyse(header, tikainput, solr);
 			
 			// Clear up the caching of the payload:
 			hcis.cleanup();
 
 			// --- Now run analysis on text extracted from the payload ---
-			//
-			// Pull out the text:
-			if( solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ) != null ) {
-				String text = ( String ) solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ).getFirstValue();
-				text = text.trim();
-				if( !"".equals( text ) ) {
-					TextAnalyser.runAllAnalysers(text, solr);
-				}
-			}
+			this.txa.analyse(solr);
 			
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {

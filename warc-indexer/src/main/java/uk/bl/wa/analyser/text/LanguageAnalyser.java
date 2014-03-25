@@ -25,6 +25,8 @@ package uk.bl.wa.analyser.text;
  * #L%
  */
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -33,10 +35,16 @@ import uk.bl.wa.solr.SolrRecord;
  * @author anj
  *
  */
-public class LanguageAnalyser extends TextAnalyser {
+public class LanguageAnalyser extends AbstractTextAnalyser {
 	
 	/** */
 	private LanguageDetector ld = new LanguageDetector();
+
+	/**
+	 * @param conf
+	 */
+	public LanguageAnalyser(Config conf) {
+	}
 
 	/* (non-Javadoc)
 	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)

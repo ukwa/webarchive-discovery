@@ -25,9 +25,16 @@ package uk.bl.wa.analyser.payload;
  * #L%
  */
 
+import java.io.InputStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
 
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
+
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 
@@ -46,5 +53,36 @@ public class WARCPayloadAnalysers {
 
 	public static ImageAnalyser image = new ImageAnalyser(ConfigFactory.load());
 
+	private boolean extractApachePreflightErrors = true;
 
+	public WARCPayloadAnalysers( Config conf ) {
+		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
+	}
+	
+	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+		// Entropy, compressibility, fuzzy hashes, etc.
+		try {
+			tikainput.reset();
+			String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
+			if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
+				WARCPayloadAnalysers.html.analyse(header, tikainput, solr);
+
+			} else if( mime.startsWith( "image" ) ) {
+				WARCPayloadAnalysers.image.analyse(header, tikainput, solr);
+
+			} else if( mime.startsWith( "application/pdf" ) ) {
+				if( extractApachePreflightErrors ) {
+					WARCPayloadAnalysers.pdf.analyse(header, tikainput, solr);
+				}
+			} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
+				WARCPayloadAnalysers.xml.analyse(header, tikainput, solr);
+				
+			} else {
+				log.debug("No specific additional parser for: "+mime);
+			}
+		} catch( Exception i ) {
+			log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
+		}
+		
+	}
 }

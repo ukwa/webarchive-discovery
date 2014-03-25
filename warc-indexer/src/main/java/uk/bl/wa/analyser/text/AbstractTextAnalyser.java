@@ -25,43 +25,14 @@ package uk.bl.wa.analyser.text;
  * #L%
  */
 
-import java.util.ArrayList;
-import java.util.List;
-
 import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author anj
  *
  */
-public abstract class TextAnalyser {
+public abstract class AbstractTextAnalyser {
 
-	/**
-	 * Set up default analyser chain for text.
-	 */
-	static List<TextAnalyser> analysers = new ArrayList<TextAnalyser>();
-	static {
-		analysers.add( new LanguageAnalyser() );
-		analysers.add( new PostcodeAnalyser() );
-		analysers.add( new FuzzyHashAnalyser() );
-		// This runs ok, but does not give very good results:
-		//analysers.add( new SentimentJTextAnalyser() );
-		// This runs very slowly, but should give good results:
-		//analysers.add( new StanfordAnalyser() );
-	}
-	
-	/**
-	 * Run all configured analysers on the text.
-	 * 
-	 * @param text
-	 * @param solr
-	 */
-	public static void runAllAnalysers( String text, SolrRecord solr ) {
-		for( TextAnalyser ta : analysers ) {
-			ta.analyse(text, solr);
-		}
-	}
-	
 	/**
 	 * Sub-classes should implement this method to create text payload annotations for solr.
 	 * 

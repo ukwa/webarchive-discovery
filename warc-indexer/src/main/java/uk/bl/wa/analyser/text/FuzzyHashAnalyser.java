@@ -29,6 +29,8 @@ import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.typesafe.config.Config;
+
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
 import uk.bl.wa.solr.SolrFields;
@@ -38,7 +40,13 @@ import uk.bl.wa.solr.SolrRecord;
  * @author anj
  *
  */
-public class FuzzyHashAnalyser extends TextAnalyser {
+public class FuzzyHashAnalyser extends AbstractTextAnalyser {
+
+	/**
+	 * @param conf
+	 */
+	public FuzzyHashAnalyser(Config conf) {
+	}
 
 	/* (non-Javadoc)
 	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)

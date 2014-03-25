@@ -32,6 +32,8 @@ import java.util.Set;
 
 import org.apache.tika.metadata.Metadata;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.parsers.StanfordAnnotatorParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -40,11 +42,17 @@ import uk.bl.wa.solr.SolrRecord;
  * @author anj
  *
  */
-public class StanfordAnalyser extends TextAnalyser {
+public class StanfordAnalyser extends AbstractTextAnalyser {
 
 	StanfordAnnotatorParser parser = new StanfordAnnotatorParser();
 	
 	public static final int MAX_CHARS_TO_ANALYSE = 10000;
+
+	/**
+	 * @param conf
+	 */
+	public StanfordAnalyser(Config conf) {
+	}
 
 	/* (non-Javadoc)
 	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
