@@ -10,6 +10,9 @@
   </appender> 
 
   <!--  Increase logging from our code:  -->
+  <logger name="uk.bl.wap">
+    <level value="info"/> 
+  </logger>
   <logger name="uk.bl.wa">
     <level value="info"/> 
   </logger>

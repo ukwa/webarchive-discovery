@@ -9,15 +9,15 @@
     </layout> 
   </appender> 
 
-  <!--  Increase logging from this code  -->
+  <!--  Increase logging from our code:  -->
   <logger name="uk.bl.wap">
     <level value="info"/> 
   </logger>
   <logger name="uk.bl.wa">
     <level value="info"/> 
   </logger>
-  
-  <!-- Decrease logging from -->
+
+  <!-- Decrease logging from here: -->	
   <logger name="org.apache">
     <level value="error"/> 
   </logger>

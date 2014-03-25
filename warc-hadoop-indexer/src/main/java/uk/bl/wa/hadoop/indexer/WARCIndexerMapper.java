@@ -52,7 +52,12 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 				return;
 			}
 
-			Text oKey = new Text( ( String ) solr.getFieldValue( SolrFields.SOLR_HOST ) );
+			String host = ( String ) solr.getFieldValue( SolrFields.SOLR_HOST );
+			if( host == null ) {
+				host = "unknown.host";
+			}
+			
+			Text oKey = new Text( host );
 			try {
 				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
 				output.collect( oKey, wsolr );
