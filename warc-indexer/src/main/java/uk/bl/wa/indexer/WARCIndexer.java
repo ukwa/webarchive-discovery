@@ -42,7 +42,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
@@ -54,15 +53,12 @@ import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrDocument;
-import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
-import org.archive.url.UsableURI;
-import org.archive.url.UsableURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
 import org.archive.wayback.core.CaptureSearchResult;
@@ -70,18 +66,12 @@ import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
-import uk.bl.wa.analyser.text.AbstractTextAnalyser;
 import uk.bl.wa.analyser.text.TextAnalysers;
 import uk.bl.wa.extract.LinkExtractor;
-import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
-import uk.bl.wa.solr.TikaExtractor;
 import uk.bl.wa.util.HashedCachedInputStream;
-import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
-
-import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -138,6 +128,7 @@ public class WARCIndexer {
 	 * Preferred constructor, allows passing in configuration from execution environment.
 	 */
 	public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
+		log.info("Initialising WARCIndexer...");
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
@@ -169,6 +160,7 @@ public class WARCIndexer {
 		
 		// Also hook up to Solr server for queries:
 		if( this.checkSolrForDuplicates ) {
+			log.info("Initialisating connection to Solr...");
 			solrServer = new SolrWebServer(conf);
 		}
 		
@@ -178,8 +170,12 @@ public class WARCIndexer {
 		log.info("Hashing & Caching thresholds are: < "+this.inMemoryThreshold+" in memory, < "+this.onDiskThreshold+" on disk.");
 		
 		// Set up analysers
+		log.info("Setting up analysers...");
 		this.wpa = new WARCPayloadAnalysers(conf);
 		this.txa = new TextAnalysers(conf);
+		
+		// Log so it's clear this completed ok:
+		log.info("Initialisation of WARCIndexer complete.");
 	}
 
 	/**
@@ -376,7 +372,11 @@ public class WARCIndexer {
 			// Is this date already in?
 			if( ! currentCrawlDates.contains(crawlDate) ) {
 				// Also allow dates to be merged under the CRAWL_DATES field:
-				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				if( currentCrawlDates.size() == 0 ) {
+					solr.addField( SolrFields.CRAWL_DATES, crawlDateString );
+				} else {
+					solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				}
 			}
 			
 			// Sort the dates and find the earliest:
