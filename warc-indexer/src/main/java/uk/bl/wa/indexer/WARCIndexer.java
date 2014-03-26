@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Properties;
 import java.util.TimeZone;
 
 import org.apache.commons.codec.binary.Base64;
@@ -49,6 +50,7 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.QueryResponse;
@@ -72,6 +74,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -129,6 +132,14 @@ public class WARCIndexer {
 	 */
 	public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
 		log.info("Initialising WARCIndexer...");
+		try {
+			Properties props = new Properties();
+			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+			PropertyConfigurator.configure(props);
+		} catch (IOException e1) {
+			log.error("Failed to load log4j config from properties file.");
+		}
+
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
@@ -603,11 +614,12 @@ public class WARCIndexer {
 			solr.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
 
 			// Also add a more general, simplified type, as appropriate:
-			// FIXME clean up this messy code:
 			if( contentType.matches( "^image/.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
-			} else if( contentType.matches( "^(audio|video)/.*$" ) ) {
-				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "media" );
+			} else if( contentType.matches( "^audio/.*$" ) ) {
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "audio" );
+			} else if( contentType.matches( "^video/.*$" ) ) {
+				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "video" );
 			} else if( contentType.matches( "^text/htm.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
 			} else if( contentType.matches( "^application/pdf.*$" ) ) {

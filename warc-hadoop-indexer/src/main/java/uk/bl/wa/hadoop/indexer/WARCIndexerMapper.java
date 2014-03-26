@@ -2,6 +2,8 @@ package uk.bl.wa.hadoop.indexer;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.Properties;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
@@ -10,7 +12,9 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.log4j.PropertyConfigurator;
 import org.archive.io.ArchiveRecordHeader;
+
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;
@@ -35,6 +39,14 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
+			// Re-configure logging:
+			try {
+				Properties props = new Properties();
+				props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+				PropertyConfigurator.configure(props);
+			} catch (IOException e1) {
+				LOG.error("Failed to load log4j config from properties file.");
+			}
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error( "ArchiveTikaMapper.configure(): " + e.getMessage() );
 		}
