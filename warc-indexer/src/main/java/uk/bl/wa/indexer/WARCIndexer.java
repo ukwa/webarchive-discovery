@@ -373,7 +373,7 @@ public class WARCIndexer {
 			
 			// Query for currently known crawl dates:
 			HashSet<Date> currentCrawlDates = new HashSet<Date>();
-			if( solrServer != null ) {
+			if( this.checkSolrForDuplicates && solrServer != null ) {
 				SolrQuery q = new SolrQuery("id:\""+id+"\"");
 				q.addField(SolrFields.CRAWL_DATES);
 				try {
