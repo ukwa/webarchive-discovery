@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -13,6 +14,7 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -42,6 +44,14 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void configure( JobConf job ) {
 		log.info( "Configuring reducer, including Solr connection..." );
+		try {
+			Properties props = new Properties();
+			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+			PropertyConfigurator.configure(props);
+		} catch (IOException e1) {
+			log.error("Failed to load log4j config from properties file.");
+		}
+		
 		// Get config from job property:
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 
