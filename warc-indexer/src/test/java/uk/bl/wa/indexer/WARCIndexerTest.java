@@ -188,6 +188,7 @@ public class WARCIndexerTest {
 	private void testFilterBehaviourWithConfig(Config config2, int expectedNullCount ) throws MalformedURLException, IOException, NoSuchAlgorithmException {
 		// Instanciate the indexer:
 		WARCIndexer windex = new WARCIndexer(config2);
+		windex.setCheckSolrForDuplicates(false);
 		
 		String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
 		System.out.println("ArchiveUtils.isGZipped: "+ArchiveUtils.isGzipped( new FileInputStream(inputFile)));
