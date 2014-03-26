@@ -41,7 +41,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	 */
 	@Override
 	public void configure( JobConf job ) {
-		log.info( "Configuring..." );
+		log.info( "Configuring reducer, including Solr connection..." );
 		// Get config from job property:
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 
@@ -49,6 +49,7 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		
 		solrServer = new SolrWebServer(conf);
+		log.info( "Initialisation complete." );
 	}
 
 	@Override
