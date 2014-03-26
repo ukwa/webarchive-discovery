@@ -108,8 +108,8 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void mergeField( String solr_property, String value ) {
-		Map<String, List<String>> operation = new HashMap<String, List<String>>();
-		operation.put("add", Arrays.asList( value ));
+		Map<String, String> operation = new HashMap<String, String>();
+		operation.put("add", value );
 		doc.addField( solr_property, operation);
 	}
 

@@ -96,6 +96,8 @@ public class WARCPayloadAnalysers {
 			e.printStackTrace();
 			dd = null;
 		}
+		
+		// Set up Tika:
 		tika = new TikaExtractor( conf );
 		
 	}

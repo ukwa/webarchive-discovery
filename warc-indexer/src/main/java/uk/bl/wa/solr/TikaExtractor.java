@@ -33,6 +33,7 @@ import java.io.Writer;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -156,6 +157,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 	
 	private NonRecursiveEmbeddedDocumentExtractor embedded = null;
+
+	private int maxBytesToParser = -1;
 	
 	/**
 	 * 
@@ -169,7 +172,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	public SolrRecord extract( SolrRecord solr, InputStream is, String url ) throws IOException {
 		
 		// Set up the TikaInputStream:
-		TikaInputStream tikainput = TikaInputStream.get( new CloseShieldInputStream(is) );
+		TikaInputStream tikainput = null;
+		if( this.maxBytesToParser  > 0 ) {
+			tikainput = TikaInputStream.get( new BoundedInputStream( new CloseShieldInputStream(is), maxBytesToParser ) );
+		} else {
+			tikainput = TikaInputStream.get( new CloseShieldInputStream(is) );
+		}
 		
 		// Also pass URL as metadata to allow extension hints to work:
 		Metadata metadata = new Metadata();

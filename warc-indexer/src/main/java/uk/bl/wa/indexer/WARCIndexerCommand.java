@@ -185,6 +185,7 @@ public class WARCIndexerCommand {
 	 * @throws TransformerException
 	 */
 	public static void parseWarcFiles( String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages, int batchSize ) throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, IOException {
+		long startTime = System.currentTimeMillis();
 
 		// If the Solr URL is set initiate a connections
 		Config conf = ConfigFactory.load();
@@ -194,8 +195,6 @@ public class WARCIndexerCommand {
 		
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
-		// Commit to make sure index is up to date:
-		commit(solrWeb);
 		
 
 		// Also pass config down:
@@ -208,6 +207,8 @@ public class WARCIndexerCommand {
 					
 		// Loop through each Warc files
 		for( String inputFile : args ) {
+			// Commit to make sure index is up to date:
+			commit(solrWeb);
 								
 			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
 			File inFile = new File(inputFile);
@@ -256,8 +257,10 @@ public class WARCIndexerCommand {
 
 		// Commit the updates:
 		commit(solrWeb);
-		
-		System.out.println("WARC Indexer Finished");
+
+		long endTime = System.currentTimeMillis();
+
+		System.out.println("WARC Indexer Finished in "+((endTime-startTime)/1000.0)+" seconds.");
 	}
 	
 	private static void commit( SolrWebServer solrWeb) {

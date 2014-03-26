@@ -111,17 +111,19 @@ public class WARCIndexer {
 	private boolean hashUrlId = false;
 
 	/** Wayback-style URI filtering: */
-	StaticMapExclusionFilterFactory smef = null;
+	private StaticMapExclusionFilterFactory smef = null;
 
 	/** Hook to the solr server: */
 	private boolean checkSolrForDuplicates = false;
 	private SolrWebServer solrServer = null;
 	
 	/** Payload Analysers */
-	WARCPayloadAnalysers wpa = null;
+	private long inMemoryThreshold;
+	private long onDiskThreshold;
+	private WARCPayloadAnalysers wpa;
 	
 	/** Text Analysers */
-	TextAnalysers txa = null;
+	private TextAnalysers txa;
 
 	/* ------------------------------------------------------------ */
 
@@ -169,6 +171,11 @@ public class WARCIndexer {
 		if( this.checkSolrForDuplicates ) {
 			solrServer = new SolrWebServer(conf);
 		}
+		
+		// Set up hash-cache properties:
+		this.inMemoryThreshold = conf.getBytes( "warc.index.extract.inMemoryThreshold" );
+		this.onDiskThreshold = conf.getBytes( "warc.index.extract.onDiskThreshold" );
+		log.info("Hashing & Caching thresholds are: < "+this.inMemoryThreshold+" in memory, < "+this.onDiskThreshold+" on disk.");
 		
 		// Set up analysers
 		this.wpa = new WARCPayloadAnalysers(conf);
@@ -345,10 +352,9 @@ public class WARCIndexer {
 			
 			// Query for currently known crawl dates:
 			HashSet<Date> currentCrawlDates = new HashSet<Date>();
-			// TODO Make this optional so it can be skipped when known to be superfluous.
 			if( solrServer != null ) {
 				SolrQuery q = new SolrQuery("id:\""+id+"\"");
-				q.addField("crawl_dates");
+				q.addField(SolrFields.CRAWL_DATES);
 				try {
 					QueryResponse results = solrServer.query(q);
 					if( results.getResults().size() > 0 ) {
@@ -358,6 +364,8 @@ public class WARCIndexer {
 								currentCrawlDates.add((Date) cds);
 							}
 						}
+					} else {
+						log.debug("No matching entries found.");
 					}
 				} catch (SolrServerException e) {
 					e.printStackTrace();
@@ -388,9 +396,8 @@ public class WARCIndexer {
 					return null;
 				}
 				SolrRecord revisited = new SolrRecord();
-				revisited.addField(SolrFields.ID, id);
+				revisited.setField( SolrFields.ID, id );
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-				log.warn("Returning REVISIT update for "+fullUrl);
 				return revisited;
 			}
 			

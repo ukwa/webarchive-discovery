@@ -26,6 +26,7 @@ package uk.bl.wa.util;
  */
 
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -43,6 +44,7 @@ import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.io.IOUtils;
+import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.Base32;
 import org.jwat.common.RandomAccessFileInputStream;
@@ -78,6 +80,20 @@ public class HashedCachedInputStream {
 	private long onDiskThreshold = 1024*1024*100; // Up to 100MB cached on disk. 
 	
 	/**
+	 * 
+	 * @param header
+	 * @param in
+	 * @param length
+	 * @param inMemoryThreshold
+	 * @param onDiskThreshold
+	 */
+	public HashedCachedInputStream( ArchiveRecordHeader header, InputStream in, long length, long inMemoryThreshold, long onDiskThreshold ) {
+		this.inMemoryThreshold = inMemoryThreshold;
+		this.onDiskThreshold = onDiskThreshold;
+		init(header,in,length);
+	}
+
+	/**
 	 * Constructo, processed payload for hash and makes content available.
 	 * 
 	 * @param header
@@ -85,6 +101,15 @@ public class HashedCachedInputStream {
 	 * @param length
 	 */
 	public HashedCachedInputStream( ArchiveRecordHeader header, InputStream in, long length ) {
+		init(header,in,length);
+	}
+	
+	/**
+	 * @param header
+	 * @param in
+	 * @param length
+	 */
+	private void init(ArchiveRecordHeader header, InputStream in, long length) {
 		try {
 			digest =  MessageDigest.getInstance( MessageDigestAlgorithms.SHA_1);
 		} catch (NoSuchAlgorithmException e) {
@@ -124,13 +149,22 @@ public class HashedCachedInputStream {
 			}
 			
 			hash = "sha1:" + Base32.encode( digest.digest() );
-		    // Check the hash is consistent with any header hash:
+			
+		    // For response records, check the hash is consistent with any header hash:
 			if( headerHash != null ) {
-				if( ! headerHash.equals(hash)) {
-					log.error("Hashes are not equal for this input!");
-					throw new RuntimeException("Hash check failed!");
+				if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) &&
+					header.getHeaderValue( HEADER_KEY_TYPE ).equals(WARCConstants.WARCRecordType.response.toString())
+						) {
+					if( ! headerHash.equals(hash)) {
+						log.error("Hashes are not equal for this input!");
+						throw new RuntimeException("Hash check failed!");
+					} else {
+						log.debug("Hashes were found to match for "+header.getUrl());
+					}
 				} else {
-					log.debug("Hashes were found to match for "+header.getUrl());
+					// For revisit records, use the hash of the revisited payload:
+					// TODO this should actually only do it for revisit type records.
+					this.hash = this.headerHash;
 				}
 			}
 			
