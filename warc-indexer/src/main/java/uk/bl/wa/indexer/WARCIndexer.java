@@ -190,6 +190,20 @@ public class WARCIndexer {
 	}
 
 	/**
+	 * @return the checkSolrForDuplicates
+	 */
+	public boolean isCheckSolrForDuplicates() {
+		return checkSolrForDuplicates;
+	}
+
+	/**
+	 * @param checkSolrForDuplicates the checkSolrForDuplicates to set
+	 */
+	public void setCheckSolrForDuplicates(boolean checkSolrForDuplicates) {
+		this.checkSolrForDuplicates = checkSolrForDuplicates;
+	}
+
+	/**
 	 * This extracts metadata and text from the ArchiveRecord and creates a suitable SolrRecord.
 	 * 
 	 * @param archiveName
