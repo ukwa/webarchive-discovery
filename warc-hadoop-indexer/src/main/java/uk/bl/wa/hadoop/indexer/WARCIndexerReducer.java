@@ -35,7 +35,15 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
-	public WARCIndexerReducer() {}
+	public WARCIndexerReducer() {
+		try {
+			Properties props = new Properties();
+			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+			PropertyConfigurator.configure(props);
+		} catch (IOException e1) {
+			log.error("Failed to load log4j config from properties file.");
+		}
+	}
 
 	/**
 	 * Sets up our SolrServer.
@@ -44,13 +52,6 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 	@Override
 	public void configure( JobConf job ) {
 		log.info( "Configuring reducer, including Solr connection..." );
-		try {
-			Properties props = new Properties();
-			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (IOException e1) {
-			log.error("Failed to load log4j config from properties file.");
-		}
 		
 		// Get config from job property:
 		Config conf = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );

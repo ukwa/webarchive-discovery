@@ -30,6 +30,13 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 	private WARCIndexer windex;
 
 	public WARCIndexerMapper() {
+		try {
+			Properties props = new Properties();
+			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+			PropertyConfigurator.configure(props);
+		} catch (IOException e1) {
+			LOG.error("Failed to load log4j config from properties file.");
+		}
 	}
 
 	@Override
@@ -40,13 +47,6 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
 			// Re-configure logging:
-			try {
-				Properties props = new Properties();
-				props.load(getClass().getResourceAsStream("/log4j-override.properties"));
-				PropertyConfigurator.configure(props);
-			} catch (IOException e1) {
-				LOG.error("Failed to load log4j config from properties file.");
-			}
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error( "ArchiveTikaMapper.configure(): " + e.getMessage() );
 		}

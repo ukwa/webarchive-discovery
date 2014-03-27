@@ -35,8 +35,10 @@ import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -398,10 +400,12 @@ public class WARCIndexer {
 			if( ! currentCrawlDates.contains(crawlDate) ) {
 				//  Dates to be merged under the CRAWL_DATES field:
 				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				solr.mergeField( SolrFields.CRAWL_YEARS, extractYear( header.getDate() ) );
 			} else {
 				// Otherwise, ensure the all the known dates (i.e. including this one) are copied over:
 				for( Date ccd : currentCrawlDates ) {
 					solr.addField( SolrFields.CRAWL_DATES, formatter.format(ccd) );
+					solr.addField( SolrFields.CRAWL_YEARS, getYearFromDate(ccd) );
 				}
 				// TODO This could optionally skip re-submission instead?
 			}
@@ -412,10 +416,10 @@ public class WARCIndexer {
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
 			solr.setField( SolrFields.CRAWL_DATE, formatter.format(firstDate) );
+			solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
 			
-			// Also set other date fields:
+			// Use the current value as the waybackDate:
 			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
-			solr.setField( SolrFields.CRAWL_YEAR, extractYear( header.getDate() ) );
 			
 			// If this is a revisit record, we should just return an update to the crawl_dates:
 			if(  WARCConstants.WARCRecordType.revisit.name().equals( header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
@@ -425,6 +429,7 @@ public class WARCIndexer {
 				SolrRecord revisited = new SolrRecord();
 				revisited.setField( SolrFields.ID, id );
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
+				revisited.mergeField( SolrFields.CRAWL_YEARS, extractYear( header.getDate() ) );
 				return revisited;
 			}
 			
@@ -456,6 +461,16 @@ public class WARCIndexer {
 			}
 		}
 		return solr;
+	}
+
+	/**
+	 * @param firstDate
+	 * @return
+	 */
+	private String getYearFromDate(Date date) {
+		Calendar c = Calendar.getInstance();
+		c.setTime(date);
+		return ""+c.get(Calendar.YEAR);
 	}
 
 	/* ----------------------------------- */
