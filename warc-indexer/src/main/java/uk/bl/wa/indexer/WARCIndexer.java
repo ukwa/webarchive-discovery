@@ -146,6 +146,10 @@ public class WARCIndexer {
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
 		this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
+		if( this.hashUrlId == false && this.checkSolrForDuplicates == true ) {
+			log.warn("Checking Solr for duplicates may not work as expected when using the timestamp+md5(URL) key.");
+			log.warn("You need to use the payload-hash+md5(URL) key option to resolve revisit records.");
+		}
 		// URLs to exclude:
 		this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
 		// Protocols to include:
