@@ -394,16 +394,16 @@ public class WARCIndexer {
 				}
 			}
 			
-			// Is this date already in?
+			// Is the current date unknown? (inc. no-solr-check case):
 			if( ! currentCrawlDates.contains(crawlDate) ) {
-				// Also allow dates to be merged under the CRAWL_DATES field:
+				//  Dates to be merged under the CRAWL_DATES field:
 				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
 			} else {
-				// Otherwise, ensure they are copied over:
+				// Otherwise, ensure the all the known dates (i.e. including this one) are copied over:
 				for( Date ccd : currentCrawlDates ) {
 					solr.addField( SolrFields.CRAWL_DATES, formatter.format(ccd) );
 				}
-				// TODO This could optionally skip resubmission instead.
+				// TODO This could optionally skip re-submission instead?
 			}
 			
 			// Sort the dates and find the earliest:

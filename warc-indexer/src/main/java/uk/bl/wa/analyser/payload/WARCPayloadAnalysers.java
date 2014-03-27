@@ -103,7 +103,7 @@ public class WARCPayloadAnalysers {
 	}
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
-		log.info("Analysing "+header.getUrl());
+		log.debug("Analysing "+header.getUrl());
 		
 		// Analyse with tika:
 		try {
