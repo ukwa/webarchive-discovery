@@ -111,7 +111,7 @@
       <dependency>
          <groupId>eu.scape-project.nanite</groupId>
          <artifactId>nanite-core</artifactId>
-         <version>1.0.72.2</version>
+         <version>1.0.73.3</version>
          <exclusions>
          	<exclusion>
          		<artifactId>slf4j-api</artifactId>
