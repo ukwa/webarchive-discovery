@@ -39,6 +39,9 @@ import org.openimaj.math.geometry.shape.Rectangle;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
@@ -48,15 +51,32 @@ public class FaceDetectionParser extends AbstractParser {
 	/** */
 	private static final long serialVersionUID = -773080986108106790L;
 	
-	public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
-
-	public static final String DOM_COL = "DOMCOL";
-	
 	private static final Set<MediaType> SUPPORTED_TYPES =
 			Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
 					MediaType.image("jpg"))));
 	
+	public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
+	public static final String DOM_COL = "DOMCOL";
+
+	/** */
+	private boolean detectFaces;
+	
+	/** */
+	private boolean extractDominantColours;
+	
 	ColourMatcher cm = new ColourMatcher();
+
+	/** */
+	private ColourExtractor cep = new ColourExtractor();
+	
+
+	/**
+	 * @param conf
+	 */
+	public FaceDetectionParser(Config conf) {
+		this.detectFaces = conf.getBoolean("warc.index.extract.content.images.detectFaces");
+		this.extractDominantColours = conf.getBoolean("warc.index.extract.content.images.dominantColours");
+	}
 
 	/* (non-Javadoc)
 	 * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
@@ -78,11 +98,14 @@ public class FaceDetectionParser extends AbstractParser {
 		MBFImage image = ImageUtilities.readMBF(stream);
 		
 		// Pull out dominant colour:
-		Color dc = this.extractDominantColour(image);
-		ColourMatcher cm = new ColourMatcher();
-		metadata.add(DOM_COL, cm.getMatch(dc).getName());
+		if( this.extractDominantColours ) {
+			Color dc = this.extractDominantColour(image);
+			ColourMatcher cm = new ColourMatcher();
+			metadata.add(DOM_COL, cm.getMatch(dc).getName());
+		}
 			
 		// Detect faces:
+		if( this.detectFaces ) {
 		FaceDetector<KEDetectedFace,FImage> fd = new FKEFaceDetector(20);
 		//FaceDetector<DetectedFace,FImage> fd = new HaarCascadeDetector(20);
 		FImage fim = Transforms.calculateIntensity( image );
@@ -98,7 +121,7 @@ public class FaceDetectionParser extends AbstractParser {
 			// Output in standard form: http://www.w3.org/2008/WebVideo/Fragments/WD-media-fragments-spec/#naming-space
 			String xywh="xywh="+(int)b.x+","+(int)b.y+","+(int)b.width+","+(int)b.height;
 			metadata.add(FACE_FRAGMENT_ID, xywh);
-			
+		}
 		}
 		//DisplayUtilities.display(image);
 	}
@@ -181,7 +204,7 @@ public class FaceDetectionParser extends AbstractParser {
 	 * @throws FileNotFoundException 
 	 */
 	public static void main(String[] args) throws FileNotFoundException, IOException, SAXException, TikaException {
-		FaceDetectionParser p = new FaceDetectionParser();
+		FaceDetectionParser p = new FaceDetectionParser(ConfigFactory.load());
 		//
 		// http://www.flickr.com/photos/usnationalarchives/8161390041/sizes/z/in/set-72157631944278536/
 		//

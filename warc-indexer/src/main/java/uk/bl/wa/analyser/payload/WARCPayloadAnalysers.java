@@ -82,7 +82,7 @@ public class WARCPayloadAnalysers {
 		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
 
 		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
-		this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.extractImageFeatures");
+		this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.images.extractImageFeatures");
 		
 		// Attempt to set up Droid:
 		try {

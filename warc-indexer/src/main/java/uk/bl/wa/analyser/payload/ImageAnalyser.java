@@ -56,14 +56,10 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	/** */
 	private boolean extractFaces = true;
 	/** */
-	FaceDetectionParser fdp = new FaceDetectionParser();
-	
-	/** */
-	private boolean extractDominantColours = true;
-	/** */
-	ColourExtractor cep = new ColourExtractor();
+	FaceDetectionParser fdp;
 	
 	public ImageAnalyser(Config conf) {
+		fdp = new FaceDetectionParser(conf);
 	}
 
 	/* (non-Javadoc)
