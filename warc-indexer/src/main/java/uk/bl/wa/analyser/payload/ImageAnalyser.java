@@ -25,11 +25,7 @@ package uk.bl.wa.analyser.payload;
  * #L%
  */
 
-import java.awt.image.BufferedImage;
-import java.io.IOException;
 import java.io.InputStream;
-
-import javax.imageio.ImageIO;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,7 +36,6 @@ import com.typesafe.config.Config;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
-import uk.bl.wa.tika.parser.imagefeatures.ColourExtractor;
 import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
 
 /**
@@ -51,7 +46,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	private static Log log = LogFactory.getLog( ImageAnalyser.class );
 
 	/** Maximum file size of images to attempt to parse */
-	private static int max_size_bytes = 1024*1024;
+	private long max_size_bytes;
 	
 	/** */
 	private boolean extractFaces = true;
@@ -59,6 +54,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	FaceDetectionParser fdp;
 	
 	public ImageAnalyser(Config conf) {
+		this.max_size_bytes = conf.getBytes("warc.index.extract.content.images.maxSizeInBytes");
 		fdp = new FaceDetectionParser(conf);
 	}
 
@@ -73,15 +69,6 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 		if( header.getLength() > max_size_bytes ) {
 			return;
 		}
-		// Get basic info:
-		try {
-			BufferedImage image = ImageIO.read(tikainput);
-			long pixels = image.getWidth()*image.getHeight();
-			solr.addField(SolrFields.IMAGE_SIZE, ""+pixels);
-		} catch (IOException e) {
-			log.error("ImageIO.read failed: "+e);
-		}
-		
 		// Also attempt to extract faces:
 		if( this.extractFaces ) {
 			ParseRunner parser = new ParseRunner( fdp, tikainput, metadata, solr );
@@ -94,6 +81,10 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing for faces: " + e.getMessage() );
 			}
+			// Store basic image data:
+			solr.addField(SolrFields.IMAGE_HEIGHT, metadata.get( FaceDetectionParser.IMAGE_HEIGHT));
+			solr.addField(SolrFields.IMAGE_WIDTH, metadata.get( FaceDetectionParser.IMAGE_WIDTH));
+			solr.addField(SolrFields.IMAGE_SIZE, metadata.get( FaceDetectionParser.IMAGE_SIZE));
 			// Store faces in SOLR:
 			for( String face : metadata.getValues(FaceDetectionParser.FACE_FRAGMENT_ID) ) {
 				log.debug("Found a face!");

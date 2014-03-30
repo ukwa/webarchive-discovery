@@ -202,7 +202,11 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected.toString() ) ) {
-			solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM.toString() );
+			if( "".equals(detected.toString())) {
+				solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM.toString() );
+			} else {
+				solr.addField( SolrFields.SOLR_CONTENT_TYPE, detected.toString() );
+			}
 			return solr;
 		}
 		
