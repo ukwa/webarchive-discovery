@@ -113,7 +113,12 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 			} catch( Exception e ) {
 				// SOLR-5719 possibly hitting us here;
 				// CloudSolrServer.RouteException
-				log.error( "WARCIndexerReducer.reduce(): " + e.getMessage(), e );
+				log.error( "WARCIndexerReducer.reduce() - sleeping for 5 minutes: " + e.getMessage(), e );
+				try {
+				    Thread.sleep(1000*60*5);
+				} catch(InterruptedException ex) {
+					log.warn("Sleep between Solr submissions was interrupted!");
+				}
 			}
 		}
 	}
