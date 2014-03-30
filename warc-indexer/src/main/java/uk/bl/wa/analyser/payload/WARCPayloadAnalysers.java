@@ -62,7 +62,6 @@ public class WARCPayloadAnalysers {
 	private DroidDetector dd = null;
 	private boolean runDroid = true;
 	private boolean droidUseBinarySignaturesOnly = false;
-	private long bufferSize = ( 20L * 1024L * 1024L );
 
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
@@ -81,7 +80,6 @@ public class WARCPayloadAnalysers {
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
 		this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
 		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
-		this.bufferSize = conf.getLong( "warc.index.extract.buffer_size" );
 
 		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.extractImageFeatures");
@@ -90,8 +88,6 @@ public class WARCPayloadAnalysers {
 		try {
 			dd = new DroidDetector();
 			dd.setBinarySignaturesOnly( droidUseBinarySignaturesOnly );
-			// TODO Remove this when Nanite can detect seek/resetable inputstreams.
-			dd.setMaxBytesToScan( bufferSize );
 		} catch( CommandExecutionException e ) {
 			e.printStackTrace();
 			dd = null;

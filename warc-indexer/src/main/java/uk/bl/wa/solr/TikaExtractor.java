@@ -90,7 +90,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	private Tika tika;
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
-	private Long max_text_length; 
+	private int max_text_length; 
 
 	/* --- --- --- --- */
 	
@@ -111,7 +111,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		this.parseTimeout = conf.getLong( "warc.index.tika.parse_timeout");
 		log.info("Config: Parser timeout (ms) " + parseTimeout);
 		
-		this.max_text_length = conf.getBytes( "warc.index.tika.max_text_length");
+		this.max_text_length = conf.getBytes( "warc.index.tika.max_text_length").intValue(); 
 		log.info("Config: Maximum length of text to extract (characters) "+ this.max_text_length);
 	}
 
@@ -236,6 +236,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			// Copy the body text, forcing a UTF-8 encoding:
 			String output = new String( content.toString().getBytes( "UTF-8" ) );
 			if( runner.complete || !output.equals( "" ) ) {
+				if( output.length() > this.max_text_length ) {
+					output = output.substring(0, this.max_text_length);
+				}
 				//log.debug("Extracted text from: "+url);				
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
@@ -390,7 +393,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length.intValue() );
+		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length );
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter
