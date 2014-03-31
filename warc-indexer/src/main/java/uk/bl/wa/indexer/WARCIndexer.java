@@ -545,7 +545,7 @@ public class WARCIndexer {
 						solr.doc.addField( "xml_ns_root_s", metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
 					}
 				} else {
-					log.info("No specific additional parser for: "+mime);
+					log.debug("No specific additional parser for: "+mime);
 				}
 			} catch( Exception i ) {
 				log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
