@@ -86,10 +86,15 @@ import com.typesafe.config.ConfigRenderOptions;
 
 
 /**
- * Public API for a MapReduce batch job driver that creates a set of Solr index shards from a set of
- * input files and writes the indexes into HDFS, in a flexible, scalable and fault-tolerant manner.
- * Also supports merging the output shards into a set of live customer facing Solr servers,
- * typically a SolrCloud.
+ * This is based on MapReduceIndexerTool and should be more powerful than
+ * hacking it together manually, but depends on Hadoop 2.x.x series code so has
+ * problems running against our aging cluster.
+ * 
+ * Public API for a MapReduce batch job driver that creates a set of Solr index
+ * shards from a set of input files and writes the indexes into HDFS, in a
+ * flexible, scalable and fault-tolerant manner. Also supports merging the
+ * output shards into a set of live customer facing Solr servers, typically a
+ * SolrCloud.
  */
 public class WARCIndexerJob extends Configured implements Tool {
 
