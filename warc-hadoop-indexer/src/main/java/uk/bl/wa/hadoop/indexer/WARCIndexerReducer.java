@@ -8,6 +8,9 @@ import java.util.Properties;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -15,8 +18,12 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.hadoop.Solate;
 
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
@@ -27,13 +34,19 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 @SuppressWarnings( { "deprecation" } )
-public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, WritableSolrRecord, Text, Text> {
+public class WARCIndexerReducer extends MapReduceBase implements
+		Reducer<IntWritable, WritableSolrRecord, Text, Text> {
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
-	private SolrWebServer solrServer;
+	private SolrServer solrServer;
 	private int batchSize;
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+
+	private FileSystem fs;
+	private Path solrHomeDir = null;
+	private Path outputDir;
+	private String shardPrefix = "shard";
 
 	public WARCIndexerReducer() {
 		try {
@@ -59,15 +72,37 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
 		
-		solrServer = new SolrWebServer(conf);
+		try {
+			// Filesystem:
+			fs = FileSystem.get(job);
+			// Input:
+			solrHomeDir = Solate.findSolrConfig(job,
+					WARCIndexerRunner.solrHomeZipName);
+			log.info("Found solrHomeDir " + solrHomeDir);
+		} catch (IOException e) {
+			e.printStackTrace();
+			log.error("FAILED in reducer configuration: " + e);
+		}
+		// Output:
+		outputDir = new Path(conf.getString(SolrWebServer.HDFS_OUTPUT_PATH));
+
+		// solrServer = new SolrWebServer(conf);
 		log.info( "Initialisation complete." );
 	}
 
 	@Override
-	public void reduce( Text key, Iterator<WritableSolrRecord> values, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
+	public void reduce(IntWritable key, Iterator<WritableSolrRecord> values,
+			OutputCollector<Text, Text> output, Reporter reporter)
+			throws IOException {
 		WctEnricher wct;
 		WritableSolrRecord wsr;
 		SolrRecord solr;
+
+		int slice = key.get();
+		Path outputShardDir = new Path(outputDir, this.shardPrefix + slice);
+
+		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
+				outputDir, outputShardDir);
 
 		while( values.hasNext() ) {
 			wsr = values.next();
@@ -86,6 +121,14 @@ public class WARCIndexerReducer extends MapReduceBase implements Reducer<Text, W
 				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.getField( "id" ).getFirstValue() );
 			}
 		}
+
+		try {
+			solrServer.commit();
+			((EmbeddedSolrServer) solrServer).shutdown();
+		} catch (SolrServerException e) {
+			log.error("ERROR on commit: " + e);
+		}
+
 	}
 
 	/**

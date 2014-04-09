@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -14,6 +15,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -21,9 +23,12 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.solr.hadoop.Solate;
+import org.apache.zookeeper.KeeperException;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
+import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.ConfigPrinter;
 
 import com.typesafe.config.Config;
@@ -45,6 +50,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
+	protected static String solrHomeZipName = "solr_home.zip";
+
 	private String inputPath;
 	private String outputPath;
 	private String configPath;
@@ -57,8 +64,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	 * @return
 	 * @throws IOException
 	 * @throws ParseException
+	 * @throws InterruptedException
+	 * @throws KeeperException
 	 */
-	protected void createJobConf( JobConf conf, String[] args ) throws IOException, ParseException {
+	protected void createJobConf(JobConf conf, String[] args)
+			throws IOException, ParseException, KeeperException,
+			InterruptedException {
 		// Parse the command-line parameters.
 		this.setup( args );
 
@@ -121,8 +132,17 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		// Ensure the JARs we provide take precedence over ones from Hadoop:
 		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
+		// Grab the Solr config from ZK and cache it for during the job.
+		Solate.cacheSolrHome(conf,
+				index_conf.getString(SolrWebServer.CONF_ZOOKEEPERS),
+				index_conf.getString(SolrWebServer.COLLECTION),
+				solrHomeZipName);
+
+		// TODO Check num_shards == num reducers
+
 		conf.setOutputKeyClass( Text.class );
 		conf.setOutputValueClass( Text.class );
+		conf.setMapOutputKeyClass(IntWritable.class);
 		conf.setMapOutputValueClass( WritableSolrRecord.class );
 		conf.setNumReduceTasks( numReducers );
 	}
@@ -132,8 +152,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	 * 
 	 * Run the job:
 	 * 
+	 * @throws InterruptedException
+	 * @throws KeeperException
+	 * 
 	 */
-	public int run( String[] args ) throws IOException, ParseException {
+	public int run(String[] args) throws IOException, ParseException,
+			KeeperException, InterruptedException {
 		// Set up the base conf:
 		JobConf conf = new JobConf( getConf(), WARCIndexerRunner.class );
 

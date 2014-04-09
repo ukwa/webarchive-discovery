@@ -58,6 +58,12 @@ public class SolrWebServer {
 
 	public static final String CONF_HTTP_SERVER = "warc.solr.server";
 
+	public static final String COLLECTION = "warc.solr.collection";
+
+	public static final String NUM_SHARDS = "warc.solr.num_shards";
+
+	public static final String HDFS_OUTPUT_PATH = "warc.solr.hdfs_output_path";
+
 	/**
 	 * Initializes the Solr connection
 	 */
@@ -74,7 +80,7 @@ public class SolrWebServer {
 				solrServer = new CloudSolrServer(
 						conf.getString(CONF_ZOOKEEPERS));
 				((CloudSolrServer) solrServer).setDefaultCollection(conf
-						.getString("warc.solr.collection"));
+						.getString(COLLECTION));
 				
 			} else if (conf.hasPath(CONF_HTTP_SERVERS)) {
 				log.info("Setting up LBHttpSolrServer client from servers list.");
