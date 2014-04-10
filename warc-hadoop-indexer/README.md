@@ -13,11 +13,11 @@ Running with config
 
 We use [Typesafe config][1], so to override the settings, add this parameter when starting the job:
 
-    -Dconfig.file=configs/jisc.conf
+    -c configs/jisc.conf
 
 e.g.
 
-    $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar uk.bl.wa.hadoop.indexer.WARCIndexerRunner -Dconfig.file=configs/jisc.conf input_list.txt hdfs_output_folder 
+    $ hadoop jar warc-hadoop-indexer/target/warc-hadoop-indexer-2.0.0-SNAPSHOT-job.jar uk.bl.wa.hadoop.indexer.WARCIndexerRunner -c configs/jisc-vmtest.conf -i <inputs.txt> -o <output-folder> -w
 
 where input_list.txt is the list of HDFS file paths of the ARCs and WARCs you want to index, and hdfs_output_folder is where you would like the logs and summary output to be placed.
 

@@ -212,12 +212,19 @@ public class Solate {
 				.getZkClient(zkHost);
 		String configName = zki.readConfigName(zkClient, collection);
 		File tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
-			
+
+		// Create a ZIP file:
+		File solrHomeLocalZip = File.createTempFile("", solrHomeZipName);
+		Zipper.zipDir(tmpSolrHomeDir, solrHomeLocalZip);
+
+		// Add to HDFS:
 		FileSystem fs = FileSystem.get(conf);
-		// fs.copyFromLocalFile(new Path(solrHomeZip.toString()), zipPath);
+		fs.copyFromLocalFile(new Path(solrHomeLocalZip.toString()), new Path(
+				tmpSolrHomeDir.toString()));
 		final URI baseZipUrl = fs.getUri().resolve(
 				tmpSolrHomeDir.toString() + '#' + solrHomeZipName);
 
+		// Cache it:
 		DistributedCache.addCacheArchive(baseZipUrl, conf);
 	}
 }
