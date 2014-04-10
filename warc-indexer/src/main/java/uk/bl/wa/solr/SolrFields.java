@@ -93,7 +93,7 @@ public interface SolrFields {
 	public static final String CRAWL_DATE = "crawl_date";
 	public static final String CRAWL_DATES = "crawl_dates";
 	public static final String CRAWL_YEAR = "crawl_year";
-	//public static final String CRAWL_YEARS = "crawl_years";
+	public static final String CRAWL_YEARS = "crawl_years";
 	public static final String PUBLICATION_DATE = "publication_date";
 	public static final String PUBLICATION_YEAR = "publication_year";
 	public static final String LAST_MODIFIED = "last_modified";

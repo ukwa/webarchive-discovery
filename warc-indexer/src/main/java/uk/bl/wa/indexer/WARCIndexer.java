@@ -38,7 +38,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
@@ -404,12 +403,13 @@ public class WARCIndexer {
 			if( ! currentCrawlDates.contains(crawlDate) ) {
 				//  Dates to be merged under the CRAWL_DATES field:
 				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-//				solr.mergeField( SolrFields.CRAWL_YEARS, extractYear( header.getDate() ) );
+				solr.mergeField(SolrFields.CRAWL_YEARS,
+						extractYear(header.getDate()));
 			} else {
 				// Otherwise, ensure the all the known dates (i.e. including this one) are copied over:
 				for( Date ccd : currentCrawlDates ) {
 					solr.addField( SolrFields.CRAWL_DATES, formatter.format(ccd) );
-//					solr.addField( SolrFields.CRAWL_YEARS, getYearFromDate(ccd) );
+					solr.addField(SolrFields.CRAWL_YEARS, getYearFromDate(ccd));
 				}
 				// TODO This could optionally skip re-submission instead?
 			}
@@ -433,7 +433,8 @@ public class WARCIndexer {
 				SolrRecord revisited = new SolrRecord();
 				revisited.setField( SolrFields.ID, id );
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-//				revisited.mergeField( SolrFields.CRAWL_YEARS, extractYear( header.getDate() ) );
+				revisited.mergeField(SolrFields.CRAWL_YEARS,
+						extractYear(header.getDate()));
 				return revisited;
 			}
 			
