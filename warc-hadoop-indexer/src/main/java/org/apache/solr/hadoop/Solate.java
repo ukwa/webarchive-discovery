@@ -175,6 +175,9 @@ public class Solate {
 		props.setProperty("solr.home", solrHomeDir.toString());
 		props.setProperty("solr.solr.home", solrHomeDir.toString());
 		props.setProperty("solr.hdfs.home", outputDir.toString());
+		System.setProperty("solr.directoryFactory",
+				HdfsDirectoryFactory.class.getName());
+		System.setProperty("solr.lock.type", "hdfs");
 
 		SolrResourceLoader loader = new SolrResourceLoader(
 				solrHomeDir.toString(), null, props);
