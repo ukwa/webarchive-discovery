@@ -176,6 +176,8 @@ public class Solate {
 		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
 		props.setProperty("solr.lock.type", "hdfs");
+		props.setProperty("solr.directoryFactory",
+				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.data.dir", dataDirStr);
 		System.setProperty("solr.home", solrHomeDir.toString());
 		System.setProperty("solr.solr.home", solrHomeDir.toString());
