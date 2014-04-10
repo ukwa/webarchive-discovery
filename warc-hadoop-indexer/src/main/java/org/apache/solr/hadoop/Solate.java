@@ -9,6 +9,7 @@ import java.net.URI;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 
 import org.apache.hadoop.filecache.DistributedCache;
@@ -24,6 +25,7 @@ import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
 import org.apache.solr.core.CoreDescriptor;
+import org.apache.solr.core.HdfsDirectoryFactory;
 import org.apache.solr.core.SolrCore;
 import org.apache.solr.core.SolrResourceLoader;
 import org.apache.zookeeper.KeeperException;
@@ -200,6 +202,62 @@ public class Solate {
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
 
+		return solr;
+	}
+
+	public static EmbeddedSolrServer createEmbeddedSolrServer(Path solrHomeDir,
+			FileSystem fs, Path outputShardDir) throws IOException {
+
+		if (solrHomeDir == null) {
+			throw new IOException("Unable to find solr home setting");
+		}
+		LOG.info("Creating embedded Solr server with solrHomeDir: "
+				+ solrHomeDir + ", fs: " + fs + ", outputShardDir: "
+				+ outputShardDir);
+
+		Path solrDataDir = new Path(outputShardDir, "data");
+
+		String dataDirStr = solrDataDir.toUri().toString();
+
+		SolrResourceLoader loader = new SolrResourceLoader(
+				solrHomeDir.toString(), null, null);
+
+		LOG.info(String
+				.format(Locale.ENGLISH,
+						"Constructed instance information solr.home %s (%s), instance dir %s, conf dir %s, writing index to solr.data.dir %s, with permdir %s",
+						solrHomeDir, solrHomeDir.toUri(),
+						loader.getInstanceDir(), loader.getConfigDir(),
+						dataDirStr, outputShardDir));
+
+		// TODO: This is fragile and should be well documented
+		System.setProperty("solr.directoryFactory",
+				HdfsDirectoryFactory.class.getName());
+		System.setProperty("solr.lock.type", "hdfs");
+		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
+		System.setProperty("solr.hdfs.blockcache.enabled", "false");
+		System.setProperty("solr.autoCommit.maxTime", "600000");
+		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
+
+		CoreContainer container = new CoreContainer(loader);
+		container.load();
+
+		Properties props = new Properties();
+		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
+
+		CoreDescriptor descr = new CoreDescriptor(container, "core1",
+				solrHomeDir.toString(), props);
+
+		SolrCore core = container.create(descr);
+
+		if (!(core.getDirectoryFactory() instanceof HdfsDirectoryFactory)) {
+			throw new UnsupportedOperationException(
+					"Invalid configuration. Currently, the only DirectoryFactory supported is "
+							+ HdfsDirectoryFactory.class.getSimpleName());
+		}
+
+		container.register(core, false);
+
+		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
 		return solr;
 	}
 
