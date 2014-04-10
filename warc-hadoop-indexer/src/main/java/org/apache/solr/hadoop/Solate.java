@@ -220,11 +220,7 @@ public class Solate {
 		String dataDirStr = solrDataDir.toUri().toString();
 
 		Properties props = new Properties();
-		props.setProperty("solr.data.dir", dataDirStr);
-		props.setProperty("solr.home", solrHomeDir.toString());
-		props.setProperty("solr.solr.home", solrHomeDir.toString());
-		props.setProperty("solr.hdfs.home", outputShardDir.getParent()
-				.toString());
+		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 
 		SolrResourceLoader loader = new SolrResourceLoader(
 				solrHomeDir.toString(), null, props);
@@ -240,6 +236,7 @@ public class Solate {
 		System.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
+		System.setProperty("solr.hdfs.home", outputShardDir.getParent().toString());
 		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
 		System.setProperty("solr.hdfs.blockcache.enabled", "false");
 		System.setProperty("solr.autoCommit.maxTime", "600000");
@@ -248,8 +245,6 @@ public class Solate {
 		LOG.info("Loading container...");
 		CoreContainer container = new CoreContainer(loader);
 		container.load();
-
-		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 
 		LOG.info("Creating core descriptor...");
 		CoreDescriptor descr = new CoreDescriptor(container, "core1", new Path(
