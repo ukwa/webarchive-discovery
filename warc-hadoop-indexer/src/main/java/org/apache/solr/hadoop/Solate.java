@@ -218,7 +218,7 @@ public class Solate {
 		Zipper.zipDir(tmpSolrHomeDir, solrHomeLocalZip);
 
 		// Add to HDFS:
-		String hdfsSolrHomeDir = "/solr/tempHome/" + solrHomeZipName;
+		String hdfsSolrHomeDir = "solr/tempHome/" + solrHomeZipName;
 		FileSystem fs = FileSystem.get(conf);
 		fs.copyFromLocalFile(new Path(solrHomeLocalZip.toString()), new Path(
 				hdfsSolrHomeDir));
