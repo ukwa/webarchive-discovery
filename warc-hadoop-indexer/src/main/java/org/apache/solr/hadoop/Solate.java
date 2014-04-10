@@ -157,6 +157,7 @@ public class Solate {
 		if (solrHomeDir == null) {
 			throw new IOException("Unable to find solr home setting");
 		}
+
 		LOG.info("Creating embedded Solr server with solrHomeDir: "
 				+ solrHomeDir + ", fs: " + fs + ", outputShardDir: "
 				+ outputShardDir);
@@ -171,16 +172,18 @@ public class Solate {
 		}
 
 		String dataDirStr = solrDataDir.toUri().toString();
-		LOG.info("Attempting to set data dir to:" + dataDirStr);
+		LOG.info("Attempting to set data dir to: " + dataDirStr);
 		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
-		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, outputDir.toString());
+		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
+		props.setProperty("solr.lock.type", "hdfs");
+		System.setProperty("solr.hdfs.blockcache.direct.memory.allocation",
+				"false");
 		System.setProperty("solr.data.dir", dataDirStr);
 		System.setProperty("solr.home", solrHomeDir.toString());
 		System.setProperty("solr.solr.home", solrHomeDir.toString());
 		System.setProperty("solr.hdfs.home", outputDir.toString());
-		System.setProperty("solr.directoryFactory",
-				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
+
 
 		SolrResourceLoader loader = new SolrResourceLoader(
 				solrHomeDir.toString(), null, null);
@@ -195,7 +198,7 @@ public class Solate {
 		container.load();
 		LOG.error("Setting up core1 descriptor...");
 		CoreDescriptor descr = new CoreDescriptor(container, "core1", new Path(
-				solrHomeDir, "collection1").toString(), props);
+				solrHomeDir, "discovery").toString(), props);
 
 		LOG.error("Creating core1... " + descr.getConfigName());
 		SolrCore core = container.create(descr);

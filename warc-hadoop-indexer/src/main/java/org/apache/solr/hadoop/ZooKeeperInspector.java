@@ -47,7 +47,7 @@ import com.google.common.io.Files;
 /**
  * Extracts SolrCloud information from ZooKeeper.
  */
-final class ZooKeeperInspector {
+public final class ZooKeeperInspector {
 
 	private static final Logger LOG = LoggerFactory
 			.getLogger(ZooKeeperInspector.class);
