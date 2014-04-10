@@ -103,7 +103,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 				this.shardPrefix + slice);
 
 		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
-				outputShardDir);
+				outputDir, outputShardDir);
 
 		while( values.hasNext() ) {
 			wsr = values.next();

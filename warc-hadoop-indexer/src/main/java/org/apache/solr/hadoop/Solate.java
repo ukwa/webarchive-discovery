@@ -188,8 +188,8 @@ public class Solate {
 		CoreContainer container = new CoreContainer(loader);
 		container.load();
 		LOG.error("Setting up core1 descriptor...");
-		CoreDescriptor descr = new CoreDescriptor(container, "core1",
-				solrHomeDir.toString(), props);
+		CoreDescriptor descr = new CoreDescriptor(container, "core1", new Path(
+				solrHomeDir, "collection1").toString(), props);
 
 		LOG.error("Creating core1... " + descr.getConfigName());
 		SolrCore core = container.create(descr);
@@ -242,8 +242,9 @@ public class Solate {
 		System.setProperty("solr.autoCommit.maxTime", "600000");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 
-		LOG.info("Loading container...");
+		LOG.info("Instanciating container...");
 		CoreContainer container = new CoreContainer(loader);
+		LOG.info("Loading container...");
 		container.load();
 
 		LOG.info("Creating core descriptor...");
