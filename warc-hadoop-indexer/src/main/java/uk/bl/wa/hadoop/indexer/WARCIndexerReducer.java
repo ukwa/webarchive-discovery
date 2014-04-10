@@ -99,7 +99,8 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		SolrRecord solr;
 
 		int slice = key.get();
-		Path outputShardDir = new Path(outputDir, this.shardPrefix + slice);
+		Path outputShardDir = new Path(fs.getHomeDirectory() + "/" + outputDir,
+				this.shardPrefix + slice);
 
 		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
 				outputShardDir);

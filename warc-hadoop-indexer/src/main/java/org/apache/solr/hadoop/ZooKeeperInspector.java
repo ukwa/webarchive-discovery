@@ -25,6 +25,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.solr.cloud.ZkController;
 import org.apache.solr.common.SolrException;
 import org.apache.solr.common.cloud.Aliases;
@@ -45,12 +46,6 @@ import com.google.common.io.Files;
 
 /**
  * Extracts SolrCloud information from ZooKeeper.
- * 
- * Taken from Cloudera Search, just to avoid bringing in a large set of
- * unnecessary dependencies.
- * 
- * @see com.cloudera.search:search-mr:1.2.0
- * 
  */
 final class ZooKeeperInspector {
 
@@ -199,21 +194,13 @@ final class ZooKeeperInspector {
 			throws IOException, InterruptedException, KeeperException {
 		File dir = Files.createTempDir();
 		dir.deleteOnExit();
-		ZkController.downloadConfigDir(zkClient, configName, dir);
-		File confDir = new File(dir, "conf");
-		if (!confDir.isDirectory()) {
-			// create a temporary directory with "conf" subdir and mv the config
-			// in there. This is
-			// necessary because of CDH-11188; solrctl does not generate nor
-			// accept directories with e.g.
-			// conf/solrconfig.xml which is necessary for proper solr operation.
-			// This should work
-			// even if solrctl changes.
-			confDir = new File(Files.createTempDir().getAbsolutePath(), "conf");
-			confDir.getParentFile().deleteOnExit();
-			Files.move(dir, confDir);
-			dir = confDir.getParentFile();
-		}
+		File collectionDir = new File(dir, "collection1");
+		File confDir = new File(collectionDir, "conf");
+		ZkController.downloadConfigDir(zkClient, configName, confDir);
+		FileUtils.writeStringToFile(new File(dir, "solr.xml"), "<solr></solr>",
+				"UTF-8");
+		FileUtils.writeStringToFile(new File(collectionDir, "core.properties"),
+				"name=collection1", "UTF-8");
 		verifyConfigDir(confDir);
 		return dir;
 	}

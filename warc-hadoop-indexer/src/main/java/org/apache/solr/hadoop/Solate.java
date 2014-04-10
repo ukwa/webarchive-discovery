@@ -238,15 +238,18 @@ public class Solate {
 		System.setProperty("solr.autoCommit.maxTime", "600000");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 
+		LOG.info("Loading container...");
 		CoreContainer container = new CoreContainer(loader);
 		container.load();
 
 		Properties props = new Properties();
 		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 
+		LOG.info("Creating core descriptor...");
 		CoreDescriptor descr = new CoreDescriptor(container, "core1",
 				solrHomeDir.toString(), props);
 
+		LOG.info("Creating core...");
 		SolrCore core = container.create(descr);
 
 		if (!(core.getDirectoryFactory() instanceof HdfsDirectoryFactory)) {
@@ -255,8 +258,10 @@ public class Solate {
 							+ HdfsDirectoryFactory.class.getSimpleName());
 		}
 
+		LOG.info("Registering core...");
 		container.register(core, false);
 
+		LOG.info("Returning EmbeddedSolrServer...");
 		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
 		return solr;
 	}

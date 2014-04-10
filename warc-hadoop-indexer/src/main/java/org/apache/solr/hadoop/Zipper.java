@@ -10,6 +10,10 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.zookeeper.KeeperException;
+
+import com.google.common.io.Files;
+
 public class Zipper {
 
 	public static void zipDir(File dirName, File nameZipFile)
@@ -66,7 +70,27 @@ public class Zipper {
 		}
 	}
 
-	public static void main(String[] args) throws IOException {
-		Zipper.zipDir(new File("src/test"), new File("temp.zip"));
+	public static void main(String[] args) throws IOException, KeeperException,
+			InterruptedException {
+		String zkHost = "openstack2.ad.bl.uk:2181,openstack4.ad.bl.uk:2181,openstack5.ad.bl.uk:2181/solr";
+		String collection = "jisc2";
+		String solrHomeZipName = "cloud-config.zip";
+
+		ZooKeeperInspector zki = new ZooKeeperInspector();
+		org.apache.solr.common.cloud.SolrZkClient zkClient = zki
+				.getZkClient(zkHost);
+		String configName = zki.readConfigName(zkClient, collection);
+		File tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
+
+		// Create a ZIP file:
+		File solrHomeLocalZip = File.createTempFile("tmp-", solrHomeZipName);
+		solrHomeLocalZip.deleteOnExit();
+		Zipper.zipDir(tmpSolrHomeDir, solrHomeLocalZip);
+		System.out.println("Written to " + solrHomeLocalZip);
+		Files.copy(solrHomeLocalZip, new File("target/" + solrHomeZipName));
+		System.out.println("Written to " + solrHomeZipName);
+
+		//
+		Zipper.zipDir(new File("src/test"), new File("target/temp.zip"));
 	}
 }
