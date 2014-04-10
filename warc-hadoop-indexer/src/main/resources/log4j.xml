@@ -19,7 +19,10 @@
 
   <!-- Decrease logging from here: -->	
   <logger name="org.apache">
-    <level value="error"/> 
+    <level value="info"/> 
+  </logger>
+  <logger name="org.apache.solr.hadoop">
+    <level value="info"/> 
   </logger>
 	
   <root>
