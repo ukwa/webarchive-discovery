@@ -219,8 +219,15 @@ public class Solate {
 
 		String dataDirStr = solrDataDir.toUri().toString();
 
+		Properties props = new Properties();
+		props.setProperty("solr.data.dir", dataDirStr);
+		props.setProperty("solr.home", solrHomeDir.toString());
+		props.setProperty("solr.solr.home", solrHomeDir.toString());
+		props.setProperty("solr.hdfs.home", outputShardDir.getParent()
+				.toString());
+
 		SolrResourceLoader loader = new SolrResourceLoader(
-				solrHomeDir.toString(), null, null);
+				solrHomeDir.toString(), null, props);
 
 		LOG.info(String
 				.format(Locale.ENGLISH,
@@ -242,12 +249,11 @@ public class Solate {
 		CoreContainer container = new CoreContainer(loader);
 		container.load();
 
-		Properties props = new Properties();
 		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 
 		LOG.info("Creating core descriptor...");
-		CoreDescriptor descr = new CoreDescriptor(container, "core1",
-				solrHomeDir.toString(), props);
+		CoreDescriptor descr = new CoreDescriptor(container, "core1", new Path(
+				solrHomeDir, "collection1").toString(), props);
 
 		LOG.info("Creating core...");
 		SolrCore core = container.create(descr);

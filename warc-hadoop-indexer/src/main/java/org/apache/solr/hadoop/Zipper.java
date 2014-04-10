@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
+import org.apache.hadoop.fs.Path;
 import org.apache.zookeeper.KeeperException;
 
 import com.google.common.io.Files;
@@ -90,6 +91,9 @@ public class Zipper {
 		Files.copy(solrHomeLocalZip, new File("target/" + solrHomeZipName));
 		System.out.println("Written to " + solrHomeZipName);
 
+		// Try to make a core:
+		Solate.createEmbeddedSolrServer(new Path(tmpSolrHomeDir.toString()),
+				null, new Path("target/core"));
 		//
 		Zipper.zipDir(new File("src/test"), new File("target/temp.zip"));
 	}
