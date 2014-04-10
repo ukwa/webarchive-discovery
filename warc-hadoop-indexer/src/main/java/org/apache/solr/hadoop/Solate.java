@@ -214,7 +214,7 @@ public class Solate {
 		File tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
 
 		// Create a ZIP file:
-		File solrHomeLocalZip = File.createTempFile("", solrHomeZipName);
+		File solrHomeLocalZip = File.createTempFile("tmp-", solrHomeZipName);
 		Zipper.zipDir(tmpSolrHomeDir, solrHomeLocalZip);
 
 		// Add to HDFS:
