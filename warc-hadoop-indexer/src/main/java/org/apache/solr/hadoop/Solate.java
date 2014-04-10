@@ -199,6 +199,7 @@ public class Solate {
 		System.setProperty("solr.autoCommit.maxTime", "-1");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
+
 		return solr;
 	}
 
