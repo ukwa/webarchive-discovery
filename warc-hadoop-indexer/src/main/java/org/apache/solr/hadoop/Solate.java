@@ -162,6 +162,7 @@ public class Solate {
 				+ outputShardDir);
 
 		Properties props = new Properties();
+
 		// FIXME note this is odd (no scheme) given Solr doesn't currently
 		// support uris (just abs/relative path)
 		Path solrDataDir = new Path(outputShardDir, "data");
@@ -171,16 +172,18 @@ public class Solate {
 
 		String dataDirStr = solrDataDir.toUri().toString();
 		LOG.info("Attempting to set data dir to:" + dataDirStr);
-		props.setProperty("solr.data.dir", dataDirStr);
-		props.setProperty("solr.home", solrHomeDir.toString());
-		props.setProperty("solr.solr.home", solrHomeDir.toString());
+		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
+		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, outputDir.toString());
+		System.setProperty("solr.data.dir", dataDirStr);
+		System.setProperty("solr.home", solrHomeDir.toString());
+		System.setProperty("solr.solr.home", solrHomeDir.toString());
 		System.setProperty("solr.hdfs.home", outputDir.toString());
 		System.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
 
 		SolrResourceLoader loader = new SolrResourceLoader(
-				solrHomeDir.toString(), null, props);
+				solrHomeDir.toString(), null, null);
 
 		LOG.info(String
 				.format("Constructed instance information solr.home %s (%s), instance dir %s, conf dir %s, writing index to solr.data.dir %s, with permdir %s",
@@ -196,6 +199,13 @@ public class Solate {
 
 		LOG.error("Creating core1... " + descr.getConfigName());
 		SolrCore core = container.create(descr);
+
+		if (!(core.getDirectoryFactory() instanceof HdfsDirectoryFactory)) {
+			throw new UnsupportedOperationException(
+					"Invalid configuration. Currently, the only DirectoryFactory supported is "
+							+ HdfsDirectoryFactory.class.getSimpleName());
+		}
+
 		LOG.error("Registering core1...");
 		container.register(core, false);
 
