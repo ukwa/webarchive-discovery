@@ -34,7 +34,6 @@ import org.apache.solr.common.util.NamedList;
 import org.apache.solr.store.blockcache.BlockCache;
 import org.apache.solr.store.blockcache.BlockDirectory;
 import org.apache.solr.store.blockcache.BlockDirectoryCache;
-import org.apache.solr.store.blockcache.BufferStore;
 import org.apache.solr.store.blockcache.Cache;
 import org.apache.solr.store.blockcache.Metrics;
 import org.apache.solr.store.hdfs.HdfsDirectory;
@@ -133,7 +132,9 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
       int bufferSize = params.getInt("solr.hdfs.blockcache.bufferstore.buffersize", 128);
       int bufferCount = params.getInt("solr.hdfs.blockcache.bufferstore.buffercount", 128 * 128);
       
-      BufferStore.initNewBuffer(bufferSize, bufferCount);
+			// BufferStore.initNewBuffer(bufferSize, bufferCount);
+			// BufferStore.putBuffer(buffer);
+			LOG.warn("BlockCache properties bufferSize and bufferCount are being ignored!");
       long totalMemory = (long) bankCount * (long) numberOfBlocksPerBank
           * (long) blockSize;
       try {
