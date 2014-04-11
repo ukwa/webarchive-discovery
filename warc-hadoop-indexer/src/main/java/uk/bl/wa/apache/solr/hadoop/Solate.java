@@ -192,17 +192,16 @@ public class Solate {
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 
 
-		SolrResourceLoader loader = new SolrResourceLoader(
-				solrHomeDir.toString(), Thread.currentThread()
-						.getContextClassLoader(), props);
+		/*
+		 * SolrResourceLoader loader = new SolrResourceLoader(
+		 * solrHomeDir.toString(), Thread.currentThread()
+		 * .getContextClassLoader(), props); LOG.info(String .format(
+		 * "Constructed instance information solr.home %s (%s),\n instance dir %s,\n conf dir %s,\n writing index to solr.data.dir %s, with permdir %s"
+		 * , solrHomeDir, solrHomeDir.toUri(), loader.getInstanceDir(),
+		 * loader.getConfigDir(), dataDirStr, outputShardDir));
+		 */
 
-		LOG.info(String
-				.format("Constructed instance information solr.home %s (%s),\n instance dir %s,\n conf dir %s,\n writing index to solr.data.dir %s, with permdir %s",
-						solrHomeDir, solrHomeDir.toUri(),
-						loader.getInstanceDir(), loader.getConfigDir(),
-						dataDirStr, outputShardDir));
-
-		CoreContainer container = new CoreContainer(loader);
+		CoreContainer container = new CoreContainer();
 		container.load();
 		/*
 		 * LOG.error("Setting up core1 descriptor..."); CoreDescriptor descr =
@@ -297,6 +296,10 @@ public class Solate {
 				.getZkClient(zkHost);
 		String configName = zki.readConfigName(zkClient, collection);
 		File tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
+
+		// HACK to override with local config:
+		tmpSolrHomeDir = new File("../warc-indexer/src/main/solr/solr/")
+				.getAbsoluteFile();
 
 		// Create a ZIP file:
 		File solrHomeLocalZip = File.createTempFile("tmp-", solrHomeZipName);
