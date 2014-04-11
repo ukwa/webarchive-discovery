@@ -1,3 +1,4 @@
+package uk.bl.wa.apache.solr.hadoop;
 ///**
 // * 
 // */

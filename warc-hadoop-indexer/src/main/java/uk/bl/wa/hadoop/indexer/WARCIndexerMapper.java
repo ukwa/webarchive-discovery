@@ -14,9 +14,9 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.solr.hadoop.Solate;
 import org.archive.io.ArchiveRecordHeader;
 
+import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;

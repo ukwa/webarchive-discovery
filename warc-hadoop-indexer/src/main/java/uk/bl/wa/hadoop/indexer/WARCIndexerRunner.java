@@ -23,9 +23,9 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.solr.hadoop.Solate;
 import org.apache.zookeeper.KeeperException;
 
+import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
 import uk.bl.wa.solr.SolrWebServer;

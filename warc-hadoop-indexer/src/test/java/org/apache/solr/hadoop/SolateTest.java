@@ -13,6 +13,10 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.bl.wa.apache.solr.hadoop.Solate;
+import uk.bl.wa.apache.solr.hadoop.Zipper;
+import uk.bl.wa.apache.solr.hadoop.ZooKeeperInspector;
+
 import com.google.common.io.Files;
 
 public class SolateTest {
@@ -70,8 +74,10 @@ public class SolateTest {
 		File tmpSolrHomeDir = new File("../warc-indexer/src/main/solr/solr/")
 				.getAbsoluteFile();
 		
-		Path outputShardDir = new Path("/");
-		Path hdfsDirPath = new Path("/data");
+		Path outputShardDir = this.dfsCluster.getFileSystem()
+				.getWorkingDirectory();
+		Path hdfsDirPath = new Path(this.dfsCluster.getFileSystem()
+				.getWorkingDirectory(), "/data");
 
 		FileSystem fileSystem = FileSystem.newInstance(
 				new Path("/data").toUri(), conf);
@@ -86,6 +92,10 @@ public class SolateTest {
 				log.error("Created " + hdfsDirPath);
 			}
 		}
+		/*
+		 * HdfsDirectory dir = new HdfsDirectory(hdfsDirPath, conf);
+		 * log.warn("Got dir: " + dir.getHdfsDirPath());
+		 */
 
 		// Try to make a core:
 		Solate.createEmbeddedSolrServer(new Path(tmpSolrHomeDir.toString()),

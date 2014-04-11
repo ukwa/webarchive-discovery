@@ -1,7 +1,7 @@
 /**
  * 
  */
-package org.apache.solr.hadoop;
+package uk.bl.wa.apache.solr.hadoop;
 
 import java.io.File;
 import java.io.IOException;
@@ -173,7 +173,7 @@ public class Solate {
 
 		String dataDirStr = solrDataDir.toUri().toString();
 		LOG.info("Attempting to set data dir to: " + dataDirStr);
-		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
+		props.setProperty(CoreDescriptor.CORE_DATADIR, "hdfs");
 		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
 		props.setProperty("solr.lock.type", "hdfs");
 		props.setProperty("solr.directoryFactory",
@@ -186,9 +186,15 @@ public class Solate {
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
 
+		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
+		System.setProperty("solr.hdfs.blockcache.enabled", "false");
+		System.setProperty("solr.autoCommit.maxTime", "-1");
+		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
+
 
 		SolrResourceLoader loader = new SolrResourceLoader(
-				solrHomeDir.toString(), null, null);
+				solrHomeDir.toString(), Thread.currentThread()
+						.getContextClassLoader(), props);
 
 		LOG.info(String
 				.format("Constructed instance information solr.home %s (%s), instance dir %s, conf dir %s, writing index to solr.data.dir %s, with permdir %s",
@@ -214,10 +220,6 @@ public class Solate {
 		LOG.error("Registering core1...");
 		container.register(core, false);
 
-		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
-		System.setProperty("solr.hdfs.blockcache.enabled", "false");
-		System.setProperty("solr.autoCommit.maxTime", "-1");
-		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
 
 		return solr;

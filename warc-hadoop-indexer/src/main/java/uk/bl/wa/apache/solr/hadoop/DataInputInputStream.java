@@ -15,7 +15,7 @@
  * limitations under the License.
  */
 
-package org.apache.solr.hadoop;
+package uk.bl.wa.apache.solr.hadoop;
 
 import java.io.DataInput;
 import java.io.IOException;

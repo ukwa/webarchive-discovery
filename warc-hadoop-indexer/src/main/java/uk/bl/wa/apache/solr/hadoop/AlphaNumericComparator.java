@@ -20,7 +20,7 @@
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
 // IN THE SOFTWARE.
 
-package org.apache.solr.hadoop;
+package uk.bl.wa.apache.solr.hadoop;
 
 import java.util.Comparator;
 
