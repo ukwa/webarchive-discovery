@@ -33,9 +33,6 @@ import org.apache.solr.common.util.DataInputInputStream;
 import org.apache.solr.common.util.FastInputStream;
 import org.apache.solr.common.util.FastOutputStream;
 import org.apache.solr.common.util.JavaBinCodec;
-import org.apache.solr.update.CommitUpdateCommand;
-import org.apache.solr.update.TransactionLog;
-import org.apache.solr.update.UpdateLog;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -88,7 +85,7 @@ public class HdfsTransactionLog extends TransactionLog {
         fs.delete(tlogFile, false);
         
         tlogOutStream = fs.create(tlogFile, (short)1);
-        tlogOutStream.hsync();
+				tlogOutStream.sync();
       }
 
       fos = new FastOutputStream(tlogOutStream, new byte[65536], 0);
@@ -135,7 +132,7 @@ public class HdfsTransactionLog extends TransactionLog {
     long size;
     synchronized (this) {
       fos.flush();
-      tlogOutStream.hflush();
+			tlogOutStream.flush();
       size = fos.size();
     }
 
@@ -165,7 +162,7 @@ public class HdfsTransactionLog extends TransactionLog {
     synchronized (this) {
       assert snapshot_size == pos;
       fos.flush();
-      tlogOutStream.hflush();
+			tlogOutStream.flush();
       // TODO: how do we rollback with hdfs?? We need HDFS-3107
       //raf.setLength(pos);
       fos.setWritten(pos);
@@ -222,7 +219,7 @@ public class HdfsTransactionLog extends TransactionLog {
         endRecord(pos);
         
         fos.flush();  // flush since this will be the last record in a log fill
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
 
         //assert fos.size() == channel.size();
 
@@ -248,7 +245,7 @@ public class HdfsTransactionLog extends TransactionLog {
         fos.flushBuffer();
         
         // flush to hdfs
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
         /***
          System.out.println("###flushBuffer to " + fos.size() + " raf.length()=" + raf.length() + " pos="+pos);
         if (fos.size() != raf.length() || pos >= fos.size() ) {
@@ -282,7 +279,7 @@ public class HdfsTransactionLog extends TransactionLog {
         // TODO: we probably don't need to
         // hsync below if we do this - I
         // think they are equivalent.
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
       }
 
       if (syncLevel == UpdateLog.SyncLevel.FSYNC) {
@@ -291,7 +288,7 @@ public class HdfsTransactionLog extends TransactionLog {
         // we just need to be aware of it when reading).
         
         //raf.getFD().sync();
-        tlogOutStream.hsync();
+				tlogOutStream.sync();
       }
 
     } catch (IOException e) {
@@ -308,7 +305,7 @@ public class HdfsTransactionLog extends TransactionLog {
 
       synchronized (this) {
         fos.flush();
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
         fos.close();
 
         tlogOutStream.close();
@@ -375,7 +372,7 @@ public class HdfsTransactionLog extends TransactionLog {
         }
        
         fos.flushBuffer();
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
         
         // we actually need a new reader
         fis.close();
@@ -399,7 +396,7 @@ public class HdfsTransactionLog extends TransactionLog {
         }
       }
 
-      tlogOutStream.hflush();
+			tlogOutStream.flush();
       Object o = codec.readVal(fis);
 
       // skip over record size
@@ -449,7 +446,7 @@ public class HdfsTransactionLog extends TransactionLog {
         fos.flushBuffer();
         
         // this must be an hflush
-        tlogOutStream.hflush();
+				tlogOutStream.flush();
         sz = fos.size();
         //assert sz == channel.size();
       }
