@@ -5,7 +5,6 @@ import java.io.File;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.zookeeper.KeeperException;
@@ -76,26 +75,7 @@ public class SolateTest {
 		
 		Path outputShardDir = this.dfsCluster.getFileSystem()
 				.getWorkingDirectory();
-		Path hdfsDirPath = new Path(this.dfsCluster.getFileSystem()
-				.getWorkingDirectory(), "/data");
 
-		FileSystem fileSystem = FileSystem.get(
-				new Path("/data").toUri(), conf);
-
-		if (!fileSystem.exists(hdfsDirPath)) {
-			log.error("No " + hdfsDirPath);
-			boolean success = fileSystem.mkdirs(hdfsDirPath);
-			if (!success) {
-				log.error("Failed! " + hdfsDirPath);
-				return;
-			} else {
-				log.error("Created " + hdfsDirPath);
-			}
-		}
-		/*
-		 * HdfsDirectory dir = new HdfsDirectory(hdfsDirPath, conf);
-		 * log.warn("Got dir: " + dir.getHdfsDirPath());
-		 */
 
 		// Try to make a core:
 		Solate.createEmbeddedSolrServer(new Path(tmpSolrHomeDir.toString()),

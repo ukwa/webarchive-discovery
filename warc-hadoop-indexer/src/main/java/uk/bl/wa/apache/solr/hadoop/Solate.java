@@ -173,7 +173,7 @@ public class Solate {
 
 		String dataDirStr = solrDataDir.toUri().toString();
 		LOG.info("Attempting to set data dir to: " + dataDirStr);
-		props.setProperty(CoreDescriptor.CORE_DATADIR, "hdfs");
+		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
 		props.setProperty("solr.lock.type", "hdfs");
 		props.setProperty("solr.directoryFactory",
@@ -197,30 +197,30 @@ public class Solate {
 						.getContextClassLoader(), props);
 
 		LOG.info(String
-				.format("Constructed instance information solr.home %s (%s), instance dir %s, conf dir %s, writing index to solr.data.dir %s, with permdir %s",
+				.format("Constructed instance information solr.home %s (%s),\n instance dir %s,\n conf dir %s,\n writing index to solr.data.dir %s, with permdir %s",
 						solrHomeDir, solrHomeDir.toUri(),
 						loader.getInstanceDir(), loader.getConfigDir(),
 						dataDirStr, outputShardDir));
 
 		CoreContainer container = new CoreContainer(loader);
 		container.load();
-		LOG.error("Setting up core1 descriptor...");
-		CoreDescriptor descr = new CoreDescriptor(container, "core1", new Path(
-				solrHomeDir, "discovery").toString(), props);
+		/*
+		 * LOG.error("Setting up core1 descriptor..."); CoreDescriptor descr =
+		 * new CoreDescriptor(container, "core1", new Path( solrHomeDir,
+		 * "discovery").toString(), null);
+		 * 
+		 * LOG.error("Creating core1... " + descr.getConfigName()); SolrCore
+		 * core = container.create(descr);
+		 * 
+		 * if (!(core.getDirectoryFactory() instanceof HdfsDirectoryFactory)) {
+		 * throw new UnsupportedOperationException(
+		 * "Invalid configuration. Currently, the only DirectoryFactory supported is "
+		 * + HdfsDirectoryFactory.class.getSimpleName()); }
+		 * 
+		 * LOG.error("Registering core1..."); container.register(core, false);
+		 */
 
-		LOG.error("Creating core1... " + descr.getConfigName());
-		SolrCore core = container.create(descr);
-
-		if (!(core.getDirectoryFactory() instanceof HdfsDirectoryFactory)) {
-			throw new UnsupportedOperationException(
-					"Invalid configuration. Currently, the only DirectoryFactory supported is "
-							+ HdfsDirectoryFactory.class.getSimpleName());
-		}
-
-		LOG.error("Registering core1...");
-		container.register(core, false);
-
-		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "core1");
+		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "");
 
 		return solr;
 	}

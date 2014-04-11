@@ -74,12 +74,11 @@
 		a particular implementation via solr.MMapDirectoryFactory, solr.NIOFSDirectoryFactory, 
 		or solr.SimpleFSDirectoryFactory. solr.RAMDirectoryFactory is memory based, 
 		not persistent, and doesn't work with replication. -->
-      <!-- 
 	<directoryFactory name="DirectoryFactory"
 		class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
-       -->
+      <!-- 
       
-    <directoryFactory name="DirectoryFactory" class="uk.bl.wa.apache.solr.core.HdfsDirectoryFactory">
+    <directoryFactory name="DirectoryFactory" class="org.apache.solr.core.HdfsDirectoryFactory">
   <str name="solr.hdfs.home">${solr.hdfs.home:}</str>
   <bool name="solr.hdfs.blockcache.enabled">false</bool>
   <int name="solr.hdfs.blockcache.slab.count">1</int>
@@ -91,6 +90,7 @@
   <int name="solr.hdfs.nrtcachingdirectory.maxmergesizemb">16</int>
   <int name="solr.hdfs.nrtcachingdirectory.maxcachedmb">192</int>
 </directoryFactory>      
+       -->
 
 	<!-- The CodecFactory for defining the format of the inverted index.
        The default implementation is SchemaCodecFactory, which is the official Lucene
