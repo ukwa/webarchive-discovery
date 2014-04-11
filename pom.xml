@@ -93,6 +93,10 @@
 					<artifactId>commons-web</artifactId>
 					<groupId>org.netpreserve.commons</groupId>
 				</exclusion>
+				<exclusion>
+				   <artifactId>je</artifactId>
+				   <groupId>com.sleepycat</groupId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
