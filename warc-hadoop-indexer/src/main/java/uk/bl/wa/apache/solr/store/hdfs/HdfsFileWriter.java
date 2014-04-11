@@ -19,15 +19,10 @@ package uk.bl.wa.apache.solr.store.hdfs;
 
 import java.io.Closeable;
 import java.io.IOException;
-import java.util.EnumSet;
 
-import org.apache.hadoop.conf.Configuration;
-import org.apache.hadoop.fs.CreateFlag;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.FsServerDefaults;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.fs.permission.FsPermission;
 import org.apache.lucene.store.DataOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,17 +40,15 @@ public class HdfsFileWriter extends DataOutput implements Closeable {
     LOG.debug("Creating writer on {}", path);
     this.path = path;
     
-    Configuration conf = fileSystem.getConf();
-    FsServerDefaults fsDefaults = fileSystem.getServerDefaults(path);
-    EnumSet<CreateFlag> flags = EnumSet.of(CreateFlag.CREATE,
-        CreateFlag.OVERWRITE);
-    if (Boolean.getBoolean(HDFS_SYNC_BLOCK)) {
-      flags.add(CreateFlag.SYNC_BLOCK);
-    }
-    outputStream = fileSystem.create(path, FsPermission.getDefault()
-        .applyUMask(FsPermission.getUMask(conf)), flags, fsDefaults
-        .getFileBufferSize(), fsDefaults.getReplication(), fsDefaults
-        .getBlockSize(), null);
+		/*
+		 * Configuration conf = fileSystem.getConf(); FsServerDefaults
+		 * fsDefaults = fileSystem.getServerDefaults(path); EnumSet<CreateFlag>
+		 * flags = EnumSet.of(CreateFlag.CREATE, CreateFlag.OVERWRITE); if
+		 * (Boolean.getBoolean(HDFS_SYNC_BLOCK)) {
+		 * flags.add(CreateFlag.SYNC_BLOCK); }
+		 */
+
+		outputStream = fileSystem.create(path, true);
   }
   
   public long length() {

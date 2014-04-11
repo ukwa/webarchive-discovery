@@ -168,7 +168,7 @@ public class HdfsDirectory extends BaseDirectory {
       return new String[] {};
     }
     for (FileStatus status : listStatus) {
-      if (!status.isDirectory()) {
+			if (!status.isDir()) {
         files.add(status.getPath().getName());
       }
     }
