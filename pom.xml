@@ -10,7 +10,13 @@
 	<artifactId>warc-discovery</artifactId>
 	<version>2.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
+    <organization>
+        <name>The UK Web Archive</name>
+        <url>http://www.webarchive.org.uk/</url>
+    </organization>
+    <inceptionYear>2013</inceptionYear>
 	<modules>
+		<module>solr-shade</module>
 		<module>warc-hadoop-recordreaders</module>
 		<module>warc-hadoop-indexer</module>
 		<module>warc-indexer</module>
@@ -47,7 +53,7 @@
 		<url>git@github.com:ukwa/warc-discovery.git</url>
 	</scm>
 	<properties>
-		<solr.version>4.6.1</solr.version>
+		<solr.version>4.7.1</solr.version>
 		<tika.version>1.5</tika.version>
 		<webarchive.commons.version>1.1.2</webarchive.commons.version>
 		<jdk.version>1.6</jdk.version>
@@ -138,17 +144,12 @@
 			</exclusions>
 		</dependency>
 	</dependencies>
-	<organization>
-		<name>The UK Web Archive</name>
-		<url>http://www.webarchive.org.uk/</url>
-	</organization>
-	<inceptionYear>2013</inceptionYear>
 
-  <repositories>
-    <repository>
-      <id>cloudera</id>
-      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
-    </repository>
-  </repositories>
-  
+   <repositories>
+      <repository>
+         <id>maven-restlet</id>
+         <name>Public online Restlet repository</name>
+         <url>http://maven.restlet.org</url>
+      </repository>
+   </repositories>
 </project>

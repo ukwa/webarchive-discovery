@@ -115,35 +115,9 @@
          <scope>test</scope>
       </dependency>
       <dependency>
-         <groupId>org.apache.solr</groupId>
-         <artifactId>solr-core</artifactId>
-         <version>${solr.version}</version>
-         <exclusions>
-            <exclusion>
-               <artifactId>jcl-over-slf4j</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.hadoop</groupId>
-               <artifactId>hadoop-common</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.hadoop</groupId>
-               <artifactId>hadoop-auth</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.hadoop</groupId>
-               <artifactId>hadoop-annotations</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.apache.hadoop</groupId>
-               <artifactId>hadoop-hdfs</artifactId>
-            </exclusion>
-            <exclusion>
-            	<artifactId>commons-io</artifactId>
-            	<groupId>commons-io</groupId>
-            </exclusion>
-         </exclusions>
+        <groupId>uk.bl.wa.discovery</groupId>
+        <artifactId>solr-shade</artifactId>
+        <version>2.0.0-SNAPSHOT</version>
       </dependency>
       <dependency>
          <groupId>commons-codec</groupId>
@@ -279,6 +253,11 @@
       	<groupId>commons-io</groupId>
       	<artifactId>commons-io</artifactId>
       	<version>2.4</version>
+      </dependency>
+      <dependency>
+         <groupId>org.restlet.jse</groupId>
+         <artifactId>org.restlet</artifactId>
+         <version>2.0.12</version>
       </dependency>
 	</dependencies>
 </project>

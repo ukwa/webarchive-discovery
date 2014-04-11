@@ -82,6 +82,7 @@ public class SolateTest {
 				this.dfsCluster.getFileSystem(), new Path("output"),
 				outputShardDir);
 
+		Thread.sleep(10 * 1000);
 	}
 
 }
