@@ -74,11 +74,12 @@
 		a particular implementation via solr.MMapDirectoryFactory, solr.NIOFSDirectoryFactory, 
 		or solr.SimpleFSDirectoryFactory. solr.RAMDirectoryFactory is memory based, 
 		not persistent, and doesn't work with replication. -->
+      <!-- 
 	<directoryFactory name="DirectoryFactory"
 		class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
+       -->
       
-      <!-- 
-    <directoryFactory name="DirectoryFactory" class="solr.HdfsDirectoryFactory">
+    <directoryFactory name="DirectoryFactory" class="uk.bl.wa.apache.solr.core.HdfsDirectoryFactory">
   <str name="solr.hdfs.home">${solr.hdfs.home:}</str>
   <bool name="solr.hdfs.blockcache.enabled">false</bool>
   <int name="solr.hdfs.blockcache.slab.count">1</int>
@@ -90,7 +91,6 @@
   <int name="solr.hdfs.nrtcachingdirectory.maxmergesizemb">16</int>
   <int name="solr.hdfs.nrtcachingdirectory.maxcachedmb">192</int>
 </directoryFactory>      
-       -->
 
 	<!-- The CodecFactory for defining the format of the inverted index.
        The default implementation is SchemaCodecFactory, which is the official Lucene
@@ -158,6 +158,7 @@
 			is default for Solr3.6 and later, otherwise 'simple' is the default More 
 			details on the nuances of each LockFactory... http://wiki.apache.org/lucene-java/AvailableLockFactories -->
         <!-- <lockType>native</lockType> -->
+        <lockType>hdfs</lockType>
 
 		<!-- Unlock On Startup If true, unlock any held write or commit locks on 
 			startup. This defeats the locking mechanism that allows multiple processes 
