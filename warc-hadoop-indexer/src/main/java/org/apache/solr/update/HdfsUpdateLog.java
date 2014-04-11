@@ -37,14 +37,8 @@ import org.apache.solr.common.SolrException;
 import org.apache.solr.common.SolrException.ErrorCode;
 import org.apache.solr.core.PluginInfo;
 import org.apache.solr.core.SolrCore;
-import org.apache.solr.update.TransactionLog;
-import org.apache.solr.update.UpdateHandler;
-import org.apache.solr.update.UpdateLog;
-import org.apache.solr.update.UpdateLog.LogPtr;
-import org.apache.solr.update.UpdateLog.SyncLevel;
 import org.apache.solr.util.HdfsUtil;
 import org.apache.solr.util.IOUtils;
-import org.hibernate.sql.Update;
 
 /** @lucene.experimental */
 public class HdfsUpdateLog extends UpdateLog {
@@ -129,7 +123,7 @@ public class HdfsUpdateLog extends UpdateLog {
     }
     
     try {
-      fs = FileSystem.newInstance(new Path(dataDir).toUri(), getConf());
+			fs = FileSystem.get(new Path(dataDir).toUri(), getConf());
     } catch (IOException e) {
       throw new SolrException(ErrorCode.SERVER_ERROR, e);
     }

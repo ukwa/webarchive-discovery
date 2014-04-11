@@ -79,7 +79,7 @@ public class SolateTest {
 		Path hdfsDirPath = new Path(this.dfsCluster.getFileSystem()
 				.getWorkingDirectory(), "/data");
 
-		FileSystem fileSystem = FileSystem.newInstance(
+		FileSystem fileSystem = FileSystem.get(
 				new Path("/data").toUri(), conf);
 
 		if (!fileSystem.exists(hdfsDirPath)) {

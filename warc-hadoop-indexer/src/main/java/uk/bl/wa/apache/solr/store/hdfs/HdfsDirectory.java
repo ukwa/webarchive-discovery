@@ -57,7 +57,7 @@ public class HdfsDirectory extends BaseDirectory {
     setLockFactory(NoLockFactory.getNoLockFactory());
     this.hdfsDirPath = hdfsDirPath;
     this.configuration = configuration;
-    fileSystem = FileSystem.newInstance(hdfsDirPath.toUri(), configuration);
+		fileSystem = FileSystem.get(hdfsDirPath.toUri(), configuration);
     
     while (true) {
       try {

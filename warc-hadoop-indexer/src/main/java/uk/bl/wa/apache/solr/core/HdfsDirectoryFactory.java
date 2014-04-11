@@ -24,7 +24,6 @@ import java.net.URLEncoder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NRTCachingDirectory;
 import org.apache.solr.cloud.ZkController;
@@ -177,7 +176,7 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
     Configuration conf = getConf();
     FileSystem fileSystem = null;
     try {
-      fileSystem = FileSystem.newInstance(hdfsDirPath.toUri(), conf);
+			fileSystem = FileSystem.get(hdfsDirPath.toUri(), conf);
       return fileSystem.exists(hdfsDirPath);
     } catch (IOException e) {
       LOG.error("Error checking if hdfs path exists", e);
@@ -199,7 +198,7 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
     Configuration conf = getConf();
     FileSystem fileSystem = null;
     try {
-      fileSystem = FileSystem.newInstance(new URI(cacheValue.path), conf);
+			fileSystem = FileSystem.get(new URI(cacheValue.path), conf);
       boolean success = fileSystem.delete(new Path(cacheValue.path), true);
       if (!success) {
         throw new RuntimeException("Could not remove directory");
@@ -276,15 +275,16 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
         kerberosInit = new Boolean(true);
         Configuration conf = new Configuration();
         conf.set("hadoop.security.authentication", "kerberos");
-        UserGroupInformation.setConfiguration(conf);
+				// UserGroupInformation.setConfiguration(conf);
         LOG.info(
             "Attempting to acquire kerberos ticket with keytab: {}, principal: {} ",
             keytabFile, principal);
-        try {
-          UserGroupInformation.loginUserFromKeytab(principal, keytabFile);
-        } catch (IOException ioe) {
-          throw new RuntimeException(ioe);
-        }
+				// try {
+					// UserGroupInformation.loginUserFromKeytab(principal,
+					// keytabFile);
+				// } catch (IOException ioe) {
+				// throw new RuntimeException(ioe);
+				// }
         LOG.info("Got Kerberos ticket");
       }
     }
