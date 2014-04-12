@@ -159,9 +159,11 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			} catch( Exception e ) {
 				// SOLR-5719 possibly hitting us here;
 				// CloudSolrServer.RouteException
-				log.error( "WARCIndexerReducer.reduce() - sleeping for 5 minutes: " + e.getMessage(), e );
+				log.error(
+						"WARCIndexerReducer.reduce() - sleeping for 1 minute: "
+								+ e.getMessage(), e);
 				try {
-				    Thread.sleep(1000*60*5);
+					Thread.sleep(1000 * 60 * 1);
 				} catch(InterruptedException ex) {
 					log.warn("Sleep between Solr submissions was interrupted!");
 				}
