@@ -30,6 +30,17 @@ public class HdfsUtil {
     "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml", "hadoop-site.xml"};
   
   public static void addHdfsResources(Configuration conf, String confDir) {
+  // This is required in order for FileSystem.get to be thread-safe:
+  conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+  // Avoiding DMA here: THIS DOES NOTHING:
+  //conf.setBoolean("solr.hdfs.blockcache.direct.memory.allocation",false);
+  /*
+   * Caused by: java.lang.RuntimeException: The max direct memory is likely too low.  
+   * Either increase it (by adding -XX:MaxDirectMemorySize=<size>g -XX:+UseLargePages to your 
+   * containers startup args) or disable direct allocation using solr.hdfs.blockcache.direct.memory.allocation=false 
+   * in solrconfig.xml. If you are putting the block cache on the heap, your java heap size might not be large 
+   * enough. Failed allocating ~134.217728 MB.
+   */
   if (confDir != null && confDir.length() > 0) {
     File confDirFile = new File(confDir);
     if (!confDirFile.exists()) {

@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
-import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -155,10 +154,6 @@ public class Solate {
 			FileSystem fs, Path outputDir, Path outputShardDir)
 			throws IOException {
 
-		// Try to ensure thread-safely:
-		Configuration conf = fs.getConf();
-		conf.setBoolean("fs.hdfs.impl.disable.cache", true);
-		fs.setConf(conf);
 
 		if (solrHomeDir == null) {
 			throw new IOException("Unable to find solr home setting");
@@ -167,8 +162,6 @@ public class Solate {
 		LOG.info("Creating embedded Solr server with solrHomeDir: "
 				+ solrHomeDir + ", fs: " + fs + ", outputShardDir: "
 				+ outputShardDir);
-
-		Properties props = new Properties();
 
 		// FIXME note this is odd (no scheme) given Solr doesn't currently
 		// support uris (just abs/relative path)
@@ -179,13 +172,6 @@ public class Solate {
 
 		String dataDirStr = solrDataDir.toUri().toString();
 		LOG.info("Attempting to set data dir to: " + dataDirStr);
-		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
-		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
-		props.setProperty("solr.lock.type", "hdfs");
-		props.setProperty("solr.hdfs.nrtcachingdirectory.enable", "false");
-		props.setProperty("solr.hdfs.blockcache.enabled", "false");
-		props.setProperty("solr.directoryFactory",
-				HdfsDirectoryFactory.class.getName());
 
 		System.setProperty("solr.data.dir", dataDirStr);
 		System.setProperty("solr.home", solrHomeDir.toString());
@@ -194,10 +180,8 @@ public class Solate {
 		System.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
-		System.setProperty("solr.hdfs.nrtcachingdirectory.enable", "false");
-
-		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
-		System.setProperty("solr.hdfs.blockcache.enabled", "false");
+		System.setProperty("solr.hdfs.nrtcachingdirectory.enable", "true");
+		System.setProperty("solr.hdfs.blockcache.enabled", "true");
 		System.setProperty("solr.autoCommit.maxTime", "-1");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 

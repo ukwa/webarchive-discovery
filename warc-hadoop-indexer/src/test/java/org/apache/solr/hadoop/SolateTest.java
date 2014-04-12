@@ -92,7 +92,6 @@ public class SolateTest {
 		Path outputShardDir = new Path("/").makeQualified(this.dfsCluster
 				.getFileSystem());
 
-
 		// Try to make a core:
 		EmbeddedSolrServer solr = Solate.createEmbeddedSolrServer(new Path(
 				tmpSolrHomeDir.toString()), this.dfsCluster.getFileSystem(),
