@@ -24,7 +24,6 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.ipc.RemoteException;
-import org.apache.hadoop.mapred.FileAlreadyExistsException;
 import org.apache.lucene.store.Lock;
 import org.apache.lucene.store.LockFactory;
 import org.apache.lucene.store.LockReleaseFailedException;
@@ -59,7 +58,7 @@ public class HdfsLockFactory extends LockFactory {
   public void clearLock(String lockName) throws IOException {
     FileSystem fs = null;
     try {
-			fs = FileSystem.get(lockPath.toUri(), configuration);
+      fs = FileSystem.get(lockPath.toUri(), configuration);
       while (true) {
         if (fs.exists(lockPath)) {
           if (lockPrefix != null) {
@@ -115,7 +114,7 @@ public class HdfsLockFactory extends LockFactory {
     @Override
     public boolean obtain() throws IOException {
       FSDataOutputStream file = null;
-			FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
+      FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
       try {
         while (true) {
           try {
@@ -132,8 +131,6 @@ public class HdfsLockFactory extends LockFactory {
             
             file = fs.create(new Path(lockPath, lockName), false);
             break;
-          } catch (FileAlreadyExistsException e) {
-            return false;
           } catch (RemoteException e) {
             if (e.getClassName().equals(
                 "org.apache.hadoop.hdfs.server.namenode.SafeModeException")) {
@@ -161,8 +158,8 @@ public class HdfsLockFactory extends LockFactory {
     }
     
     @Override
-		public void close() throws IOException {
-			FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
+    public void close() throws IOException {
+      FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
       try {
         if (fs.exists(new Path(lockPath, lockName))
             && !fs.delete(new Path(lockPath, lockName), false)) throw new LockReleaseFailedException(
@@ -175,7 +172,7 @@ public class HdfsLockFactory extends LockFactory {
     @Override
     public boolean isLocked() throws IOException {
       boolean isLocked = false;
-			FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
+      FileSystem fs = FileSystem.get(lockPath.toUri(), conf);
       try {
         isLocked = fs.exists(new Path(lockPath, lockName));
       } finally {

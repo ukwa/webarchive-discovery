@@ -123,7 +123,7 @@ public class HdfsUpdateLog extends UpdateLog {
     }
     
     try {
-			fs = FileSystem.get(new Path(dataDir).toUri(), getConf());
+      fs = FileSystem.get(new Path(dataDir).toUri(), getConf());
     } catch (IOException e) {
       throw new SolrException(ErrorCode.SERVER_ERROR, e);
     }
