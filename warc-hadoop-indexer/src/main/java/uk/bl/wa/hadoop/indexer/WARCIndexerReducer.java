@@ -74,6 +74,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		
 		try {
 			// Filesystem:
+			job.setBoolean("fs.hdfs.impl.disable.cache", true);
 			fs = FileSystem.get(job);
 			// Input:
 			solrHomeDir = Solate.findSolrConfig(job,

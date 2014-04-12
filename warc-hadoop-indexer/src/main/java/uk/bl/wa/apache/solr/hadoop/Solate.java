@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.filecache.DistributedCache;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -153,6 +154,11 @@ public class Solate {
 	public static EmbeddedSolrServer createEmbeddedSolrServer(Path solrHomeDir,
 			FileSystem fs, Path outputDir, Path outputShardDir)
 			throws IOException {
+
+		// Try to ensure thread-safely:
+		Configuration conf = fs.getConf();
+		conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+		fs.setConf(conf);
 
 		if (solrHomeDir == null) {
 			throw new IOException("Unable to find solr home setting");
