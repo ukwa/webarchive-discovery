@@ -125,6 +125,11 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		}
 
 		try {
+			/**
+			 * If we have at least one document unsubmitted, make sure we submit
+			 * it.
+			 */
+			checkSubmission(docs, 1);
 			solrServer.commit();
 			((EmbeddedSolrServer) solrServer).shutdown();
 		} catch (SolrServerException e) {
@@ -133,12 +138,8 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 	}
 
-	/**
-	 * If we have at least one document unsubmitted, make sure we submit it.
-	 */
 	@Override
 	public void close() {
-		checkSubmission( docs, 1 );
 	}
 
 	/**
