@@ -176,8 +176,11 @@ public class Solate {
 		props.setProperty(CoreDescriptor.CORE_DATADIR, dataDirStr);
 		props.setProperty(HdfsDirectoryFactory.HDFS_HOME, dataDirStr);
 		props.setProperty("solr.lock.type", "hdfs");
+		props.setProperty("solr.hdfs.nrtcachingdirectory.enable", "false");
+		props.setProperty("solr.hdfs.blockcache.enabled", "false");
 		props.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
+
 		System.setProperty("solr.data.dir", dataDirStr);
 		System.setProperty("solr.home", solrHomeDir.toString());
 		System.setProperty("solr.solr.home", solrHomeDir.toString());
@@ -185,12 +188,12 @@ public class Solate {
 		System.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
+		System.setProperty("solr.hdfs.nrtcachingdirectory.enable", "false");
 
 		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
 		System.setProperty("solr.hdfs.blockcache.enabled", "false");
 		System.setProperty("solr.autoCommit.maxTime", "-1");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
-
 
 		/*
 		 * SolrResourceLoader loader = new SolrResourceLoader(
@@ -201,6 +204,7 @@ public class Solate {
 		 * loader.getConfigDir(), dataDirStr, outputShardDir));
 		 */
 
+		LOG.info("Loading the container...");
 		CoreContainer container = new CoreContainer();
 		container.load();
 		/*
@@ -217,10 +221,15 @@ public class Solate {
 		 * + HdfsDirectoryFactory.class.getSimpleName()); }
 		 * 
 		 * LOG.error("Registering core1..."); container.register(core, false);
+		 * 
+		 * try { Thread.sleep(10 * 1000); } catch (InterruptedException e) { //
+		 * TODO Auto-generated catch block e.printStackTrace(); }
 		 */
+		LOG.error("Now firing up the server...");
 
-		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "");
+		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "discovery");
 
+		LOG.error("Server was fired up.");
 		return solr;
 	}
 

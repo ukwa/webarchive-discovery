@@ -30,6 +30,7 @@ public class HdfsUtil {
     "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml", "hadoop-site.xml"};
   
   public static void addHdfsResources(Configuration conf, String confDir) {
+  conf.setBoolean("fs.hdfs.impl.disable.cache", true);
   if (confDir != null && confDir.length() > 0) {
     File confDirFile = new File(confDir);
     if (!confDirFile.exists()) {

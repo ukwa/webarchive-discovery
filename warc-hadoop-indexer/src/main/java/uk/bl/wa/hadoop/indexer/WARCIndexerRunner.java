@@ -138,6 +138,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 				index_conf.getString(SolrWebServer.COLLECTION),
 				solrHomeZipName);
 
+		// Note that we need this to ensure FileSystem.get is thread-safe:
+		// @see https://issues.apache.org/jira/browse/HDFS-925
+		// @see
+		// https://mail-archives.apache.org/mod_mbox/hadoop-user/201208.mbox/%3CCA+4kjVt-QE2L83p85uELjWXiog25bYTKOZXdc1Ahun+oBSJYpQ@mail.gmail.com%3E
+		conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+
 		// TODO Check num_shards == num reducers
 
 		conf.setOutputKeyClass( Text.class );

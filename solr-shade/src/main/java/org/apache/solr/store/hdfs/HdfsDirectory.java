@@ -57,8 +57,10 @@ public class HdfsDirectory extends BaseDirectory {
     setLockFactory(NoLockFactory.getNoLockFactory());
     this.hdfsDirPath = hdfsDirPath;
     this.configuration = configuration;
+		configuration.setBoolean("fs.hdfs.impl.disable.cache", true);
 		fileSystem = FileSystem.get(hdfsDirPath.toUri(), configuration);
-    
+		fileSystem.setConf(configuration);
+
     while (true) {
       try {
         if (!fileSystem.exists(hdfsDirPath)) {
