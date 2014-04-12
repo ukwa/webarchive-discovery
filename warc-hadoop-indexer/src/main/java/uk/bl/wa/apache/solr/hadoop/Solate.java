@@ -213,6 +213,14 @@ public class Solate {
 		LOG.info("Loading the container...");
 		CoreContainer container = new CoreContainer();
 		container.load();
+		for (String s : container.getAllCoreNames()) {
+			LOG.warn("Got core name: " + s);
+		}
+		String coreName = "";
+		if (container.getCoreNames().size() > 0) {
+			coreName = container.getCoreNames().iterator().next();
+		}
+
 		/*
 		 * LOG.error("Setting up core1 descriptor..."); CoreDescriptor descr =
 		 * new CoreDescriptor(container, "core1", new Path( solrHomeDir,
@@ -233,7 +241,7 @@ public class Solate {
 		 */
 		LOG.error("Now firing up the server...");
 
-		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, "discovery");
+		EmbeddedSolrServer solr = new EmbeddedSolrServer(container, coreName);
 
 		LOG.error("Server was fired up.");
 		return solr;
