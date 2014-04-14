@@ -20,7 +20,6 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.embedded.EmbeddedSolrServer;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -130,8 +129,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			 * it.
 			 */
 			checkSubmission(docs, 1);
-			solrServer.commit();
-			((EmbeddedSolrServer) solrServer).shutdown();
+			// Commit, and block until the changes have been flushed.
+			solrServer.commit(true, false);
+			solrServer.shutdown();
 		} catch (SolrServerException e) {
 			log.error("ERROR on commit: " + e);
 		}
