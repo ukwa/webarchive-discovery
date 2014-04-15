@@ -133,10 +133,14 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
 		// Grab the Solr config from ZK and cache it for during the job.
-		Solate.cacheSolrHome(conf,
+		if (index_conf.hasPath(SolrWebServer.CONF_ZOOKEEPERS)) {
+			Solate.cacheSolrHome(conf,
 				index_conf.getString(SolrWebServer.CONF_ZOOKEEPERS),
 				index_conf.getString(SolrWebServer.COLLECTION),
 				solrHomeZipName);
+		} else {
+			Solate.cacheSolrHome(conf, null, null, solrHomeZipName);
+		}
 
 		// Note that we need this to ensure FileSystem.get is thread-safe:
 		// @see https://issues.apache.org/jira/browse/HDFS-925

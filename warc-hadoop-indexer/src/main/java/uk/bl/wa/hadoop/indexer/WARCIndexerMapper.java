@@ -33,10 +33,12 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 	private WARCIndexer windex;
 
-	private Solate sp;
+	private Solate sp = null;
+	private int numShards = 1;
 
 	public WARCIndexerMapper() {
 		try {
+			// Re-configure logging:
 			Properties props = new Properties();
 			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
 			PropertyConfigurator.configure(props);
@@ -52,11 +54,13 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
-			// Re-configure logging:
-			String zkHost = config.getString(SolrWebServer.CONF_ZOOKEEPERS);
-			String collection = config.getString(SolrWebServer.COLLECTION);
-			int numShards = config.getInt(SolrWebServer.NUM_SHARDS);
-			sp = new Solate(zkHost, collection, numShards);
+			// Set up sharding:
+			numShards = config.getInt(SolrWebServer.NUM_SHARDS);
+			if (config.hasPath(SolrWebServer.CONF_ZOOKEEPERS)) {
+				String zkHost = config.getString(SolrWebServer.CONF_ZOOKEEPERS);
+				String collection = config.getString(SolrWebServer.COLLECTION);
+				sp = new Solate(zkHost, collection, numShards);
+			}
 
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
@@ -82,8 +86,15 @@ public class WARCIndexerMapper extends MapReduceBase implements
 				host = "unknown.host";
 			}
 			
-			IntWritable oKey = new IntWritable(sp.getPartition(null,
+			IntWritable oKey = null;
+			if (sp != null) {
+				oKey = new IntWritable(sp.getPartition(null,
 					solr.getSolrDocument()));
+			} else {
+				// Otherwise use a random assignment:
+				int iKey = (int) (Math.round(Math.random() * numShards));
+				oKey = new IntWritable( iKey );
+			}
 			try {
 				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
 				output.collect( oKey, wsolr );

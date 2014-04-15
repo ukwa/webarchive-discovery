@@ -158,7 +158,7 @@
 			is default for Solr3.6 and later, otherwise 'simple' is the default More 
 			details on the nuances of each LockFactory... http://wiki.apache.org/lucene-java/AvailableLockFactories -->
         <!-- <lockType>native</lockType> -->
-        <lockType>hdfs</lockType>
+        <lockType>${solr.lock.type:native}</lockType>
 
 		<!-- Unlock On Startup If true, unlock any held write or commit locks on 
 			startup. This defeats the locking mechanism that allows multiple processes 

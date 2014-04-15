@@ -19,7 +19,6 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.client.solrj.SolrServer;
-import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
@@ -98,13 +97,18 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		WritableSolrRecord wsr;
 		SolrRecord solr;
 
-		int slice = key.get();
+		// Get the slice number, but counting from 1 instead of 0:
+		int slice = key.get() + 1;
+
+		// Defined the output directory accordingly:
 		Path outputShardDir = new Path(fs.getHomeDirectory() + "/" + outputDir,
 				this.shardPrefix + slice);
 
+		// Fire up a server:
 		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
 				outputDir, outputShardDir);
 
+		// Go through the documents for this shard:
 		while( values.hasNext() ) {
 			wsr = values.next();
 			solr = wsr.getSolrRecord();
@@ -133,8 +137,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			solrServer.commit(true, false);
 			// And shut it down.
 			solrServer.shutdown();
-		} catch (SolrServerException e) {
+		} catch (Exception e) {
 			log.error("ERROR on commit: " + e);
+			e.printStackTrace();
 		}
 
 	}

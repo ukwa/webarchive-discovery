@@ -9,6 +9,13 @@
     </layout> 
   </appender> 
 
+  <logger name="org.apache">
+    <level value="warn"/> 
+  </logger>
+  <logger name="org.apache.solr.hadoop">
+    <level value="info"/> 
+  </logger>
+
   <!--  Reduce logging from PDFBox  -->
   <logger name="org.apache.pdfbox">
     <level value="warn"/> 
@@ -22,6 +29,9 @@
     
   <!--  Increase logging from this code  -->
   <logger name="uk.bl.wap">
+    <level value="info"/> 
+  </logger>
+  <logger name="uk.bl.wa">
     <level value="info"/> 
   </logger>
     

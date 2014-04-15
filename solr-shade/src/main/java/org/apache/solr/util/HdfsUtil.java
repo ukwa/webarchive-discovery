@@ -32,6 +32,8 @@ public class HdfsUtil {
   public static void addHdfsResources(Configuration conf, String confDir) {
   // This is required in order for FileSystem.get to be thread-safe:
   conf.setBoolean("fs.hdfs.impl.disable.cache", true);
+  // Attempt to force HDFS locking:
+  conf.set("solr.lock.type", "hdfs");
   // Avoiding DMA here: THIS DOES NOTHING:
   //conf.setBoolean("solr.hdfs.blockcache.direct.memory.allocation",false);
   /*

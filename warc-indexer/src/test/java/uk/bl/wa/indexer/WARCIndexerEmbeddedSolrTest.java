@@ -27,7 +27,7 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,7 +55,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrRecord;
 
 /**
@@ -78,13 +77,16 @@ public class WARCIndexerEmbeddedSolrTest {
 	public void setUp() throws Exception {
 		
 		// Note that the following property could be set through JVM level arguments too
-		  System.setProperty("solr.solr.home", "src/main/solr/solr");
-		  System.setProperty("solr.data.dir", "target/solr-test-home");
-		  CoreContainer coreContainer = new CoreContainer();
-		  coreContainer.load();
-		  server = new EmbeddedSolrServer(coreContainer, "");
-		  // Remove any items from previous executions:
-		  server.deleteByQuery("*:*");
+		System.setProperty("solr.solr.home", "src/main/solr/solr");
+		System.setProperty("solr.data.dir", "target/solr-test-home");
+		System.setProperty("solr.lock.type", "native");
+		System.out.println("Loading container...");
+		CoreContainer coreContainer = new CoreContainer();
+		coreContainer.load();
+		System.out.println("Setting up embedded server...");
+		server = new EmbeddedSolrServer(coreContainer, "discovery");
+		// Remove any items from previous executions:
+		server.deleteByQuery("*:*");
 	}
 
 	/**

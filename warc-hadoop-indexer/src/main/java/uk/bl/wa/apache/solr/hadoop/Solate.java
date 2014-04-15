@@ -21,6 +21,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.cloud.DocCollection;
 import org.apache.solr.common.cloud.DocRouter;
 import org.apache.solr.common.cloud.Slice;
+import org.apache.solr.common.cloud.SolrZkClient;
 import org.apache.solr.common.params.MapSolrParams;
 import org.apache.solr.common.params.SolrParams;
 import org.apache.solr.core.CoreContainer;
@@ -125,7 +126,7 @@ public class Solate {
 			throws IOException {
 		Path solrHome = null;
 		Path[] localArchives = DistributedCache.getLocalCacheArchives(conf);
-		if (localArchives.length == 0) {
+		if (localArchives == null || localArchives.length == 0) {
 			LOG.error("No local cache archives.");
 			throw new IOException(String.format("No local cache archives."));
 		}
@@ -184,15 +185,6 @@ public class Solate {
 		System.setProperty("solr.hdfs.blockcache.enabled", "true");
 		System.setProperty("solr.autoCommit.maxTime", "-1");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
-
-		/*
-		 * SolrResourceLoader loader = new SolrResourceLoader(
-		 * solrHomeDir.toString(), Thread.currentThread()
-		 * .getContextClassLoader(), props); LOG.info(String .format(
-		 * "Constructed instance information solr.home %s (%s),\n instance dir %s,\n conf dir %s,\n writing index to solr.data.dir %s, with permdir %s"
-		 * , solrHomeDir, solrHomeDir.toUri(), loader.getInstanceDir(),
-		 * loader.getConfigDir(), dataDirStr, outputShardDir));
-		 */
 
 		LOG.info("Loading the container...");
 		CoreContainer container = new CoreContainer();
@@ -297,14 +289,17 @@ public class Solate {
 	public static void cacheSolrHome(JobConf conf, String zkHost,
 			String collection, String solrHomeZipName) throws KeeperException,
 			InterruptedException, IOException {
-		// use the config that this collection uses for the SolrHomeCache.
-		ZooKeeperInspector zki = new ZooKeeperInspector();
-		org.apache.solr.common.cloud.SolrZkClient zkClient = zki
-				.getZkClient(zkHost);
-		String configName = zki.readConfigName(zkClient, collection);
-		File tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
 
-		// HACK to override with local config:
+		// use the config that this collection uses for the SolrHomeCache.
+		File tmpSolrHomeDir;
+		if (zkHost != null) {
+			ZooKeeperInspector zki = new ZooKeeperInspector();
+			SolrZkClient zkClient = zki
+				.getZkClient(zkHost);
+			String configName = zki.readConfigName(zkClient, collection);
+			tmpSolrHomeDir = zki.downloadConfigDir(zkClient, configName);
+		}
+		// Override with local config:
 		tmpSolrHomeDir = new File("../warc-indexer/src/main/solr/solr/")
 				.getAbsoluteFile();
 
