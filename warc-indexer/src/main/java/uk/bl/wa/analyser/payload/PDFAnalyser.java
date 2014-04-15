@@ -26,17 +26,18 @@ package uk.bl.wa.analyser.payload;
  */
 
 import java.io.InputStream;
+import java.util.HashMap;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
-import com.typesafe.config.Config;
-
 import uk.bl.wa.parsers.ApachePreflightParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+
+import com.typesafe.config.Config;
 
 /**
  * @author anj
@@ -47,7 +48,7 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 
 	/** */
 	private ApachePreflightParser app = new ApachePreflightParser();
-	
+
 	public PDFAnalyser(Config conf) {
 	}
 
@@ -58,26 +59,44 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
 			SolrRecord solr) {
 		Metadata metadata = new Metadata();
-			metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
-			ParseRunner parser = new ParseRunner( app, tikainput, metadata, solr );
-			Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
-			try {
-				thread.start();
-				thread.join( 30000L );
-				thread.interrupt();
-			} catch( Exception e ) {
-				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with Apache Preflight: " + e.getMessage() );
-			}
-			
-			String isValid = metadata.get( ApachePreflightParser.PDF_PREFLIGHT_VALID );
-			solr.addField( SolrFields.PDFA_IS_VALID, isValid );
-			String[] errors = metadata.getValues( ApachePreflightParser.PDF_PREFLIGHT_ERRORS );
-			if( errors != null ) {
-				for( String error : errors ) {
-					solr.addField( SolrFields.PDFA_ERRORS, error );
+		metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
+		ParseRunner parser = new ParseRunner(app, tikainput, metadata, solr);
+		Thread thread = new Thread(parser, Long.toString(System
+				.currentTimeMillis()));
+		try {
+			thread.start();
+			thread.join(30000L);
+			thread.interrupt();
+		} catch (Exception e) {
+			log.error("WritableSolrRecord.extract(): " + e.getMessage());
+			solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()
+					+ " when parsing with Apache Preflight: " + e.getMessage());
+		}
+
+		String isValid = metadata
+				.get(ApachePreflightParser.PDF_PREFLIGHT_VALID);
+		solr.addField(SolrFields.PDFA_IS_VALID, isValid);
+		String[] errors = metadata
+				.getValues(ApachePreflightParser.PDF_PREFLIGHT_ERRORS);
+		// The same errors can occur multiple times, but in this context that
+		// count is not terribly useful. We just want to know which errors are
+		// present in which resources.
+		if (errors != null) {
+			// Add found errors to a Set, counting them up as we go:
+			HashMap<String, Integer> uniqueErrors = new HashMap<String, Integer>();
+			for (String error : errors) {
+				if (uniqueErrors.containsKey(error)) {
+					uniqueErrors.put(error, uniqueErrors.get(error) + 1);
+				} else {
+					uniqueErrors.put(error, 0);
+
 				}
 			}
+			// Store the Set as the result (the count is ignored at present):
+			for (String error : uniqueErrors.keySet()) {
+				solr.addField(SolrFields.PDFA_ERRORS, error);
+			}
+		}
 	}
 
 }

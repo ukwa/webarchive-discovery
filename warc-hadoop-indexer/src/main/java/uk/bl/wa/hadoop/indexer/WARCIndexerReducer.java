@@ -131,6 +131,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			checkSubmission(docs, 1);
 			// Commit, and block until the changes have been flushed.
 			solrServer.commit(true, false);
+			// And shut it down.
 			solrServer.shutdown();
 		} catch (SolrServerException e) {
 			log.error("ERROR on commit: " + e);
