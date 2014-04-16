@@ -36,8 +36,10 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 /**
- * @author anj
- *
+ * 
+ * 
+ * @author Roger Coram, Andrew Jackson
+ * 
  */
 public class AnnotationEngine {
 	private static Log LOG = LogFactory.getLog( AnnotationEngine.class );
