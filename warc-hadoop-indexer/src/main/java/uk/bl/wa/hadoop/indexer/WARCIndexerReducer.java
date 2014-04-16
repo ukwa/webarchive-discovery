@@ -46,6 +46,10 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	private Path outputDir;
 	private String shardPrefix = "shard";
 
+	static enum MyCounters {
+		NUM_RECORDS, NUM_ERRORS
+	}
+
 	public WARCIndexerReducer() {
 		try {
 			Properties props = new Properties();
@@ -109,9 +113,11 @@ public class WARCIndexerReducer extends MapReduceBase implements
 				outputDir, outputShardDir);
 
 		// Go through the documents for this shard:
+		long noValues = 0;
 		while( values.hasNext() ) {
 			wsr = values.next();
 			solr = wsr.getSolrRecord();
+			noValues++;
 
 			// Add additional metadata for WCT Instances.
 			if( solr.containsKey( WctFields.WCT_INSTANCE_ID ) ) {
@@ -121,9 +127,15 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			if( !dummyRun ) {
 				docs.add( solr.getSolrDocument() );
 				// Have we exceeded the batchSize?
-				checkSubmission( docs, batchSize );
+				checkSubmission(docs, batchSize, reporter);
 			} else {
 				log.info( "DUMMY_RUN: Skipping addition of doc: " + solr.getField( "id" ).getFirstValue() );
+			}
+
+			// Occasionally update application-level status:
+			if ((noValues % 1000) == 0) {
+				reporter.setStatus("For shard " + this.shardPrefix
+						+ ", processed " + noValues + " documents.");
 			}
 		}
 
@@ -132,7 +144,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			 * If we have at least one document unsubmitted, make sure we submit
 			 * it.
 			 */
-			checkSubmission(docs, 1);
+			checkSubmission(docs, 1, reporter);
 			// Commit, and block until the changes have been flushed.
 			solrServer.commit(true, false);
 			// And shut it down.
@@ -149,25 +161,34 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	}
 
 	/**
-	 * Checks whether a List of docs has exceeded a given limit
-	 * and if so, submits them.
+	 * Checks whether a List of docs has exceeded a given limit and if so,
+	 * submits them.
 	 * 
 	 * @param docs
 	 * @param limit
+	 * @param reporter
 	 */
-	private void checkSubmission( List<SolrInputDocument> docs, int limit ) {
+	private void checkSubmission(List<SolrInputDocument> docs, int limit,
+			Reporter reporter) {
 		UpdateResponse response;
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			try {
+				// Inform that there is progress (still-alive):
+				reporter.progress();
+				// Add the documents:
 				response = solrServer.add( docs );
 				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
 				docs.clear();
+				// Update document counter:
+				reporter.incrCounter(MyCounters.NUM_RECORDS, docs.size());
 			} catch( Exception e ) {
 				// SOLR-5719 possibly hitting us here;
 				// CloudSolrServer.RouteException
 				log.error(
 						"WARCIndexerReducer.reduce() - sleeping for 1 minute: "
 								+ e.getMessage(), e);
+				// Also add a report for this condition:
+				reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 				try {
 					Thread.sleep(1000 * 60 * 1);
 				} catch(InterruptedException ex) {

@@ -19,7 +19,6 @@ import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 
@@ -30,6 +29,14 @@ import com.typesafe.config.ConfigFactory;
 public class WARCIndexerMapper extends MapReduceBase implements
 		Mapper<Text, WritableArchiveRecord, IntWritable, WritableSolrRecord> {
 	private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
+
+	static enum MyCounters {
+		NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS
+	}
+
+	private String mapTaskId;
+	private String inputFile;
+	private int noRecords = 0;
 
 	private WARCIndexer windex;
 
@@ -61,6 +68,9 @@ public class WARCIndexerMapper extends MapReduceBase implements
 				String collection = config.getString(SolrWebServer.COLLECTION);
 				sp = new Solate(zkHost, collection, numShards);
 			}
+			// Other properties:
+			mapTaskId = job.get("mapred.task.id");
+			inputFile = job.get("map.input.file");
 
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
@@ -73,34 +83,66 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			Reporter reporter) throws IOException {
 		ArchiveRecordHeader header = value.getRecord().getHeader();
 
-		if( !header.getHeaderFields().isEmpty() ) {
-			SolrRecord solr = windex.extract( key.toString(), value.getRecord() );
+		noRecords++;
 
-			if( solr == null ) {
-				LOG.debug( "WARCIndexer returned NULL for: " + header.getUrl() );
-				return;
-			}
+		try {
+			if (!header.getHeaderFields().isEmpty()) {
+				// Do the indexing:
+				SolrRecord solr = windex.extract(key.toString(),
+						value.getRecord());
 
-			String host = ( String ) solr.getFieldValue( SolrFields.SOLR_HOST );
-			if( host == null ) {
-				host = "unknown.host";
-			}
-			
-			IntWritable oKey = null;
-			if (sp != null) {
-				oKey = new IntWritable(sp.getPartition(null,
-					solr.getSolrDocument()));
-			} else {
-				// Otherwise use a random assignment:
-				int iKey = (int) (Math.round(Math.random() * numShards));
-				oKey = new IntWritable( iKey );
-			}
-			try {
+				// If there is no result, report it
+				if (solr == null) {
+					LOG.debug("WARCIndexer returned NULL for: "
+							+ header.getUrl());
+					reporter.incrCounter(MyCounters.NUM_NULLS, 1);
+					return;
+				}
+
+				// String host = (String)
+				// solr.getFieldValue(SolrFields.SOLR_HOST);
+				// if (host == null) {
+				// host = "unknown.host";
+				// }
+
+				// Get the right key for the right partition:
+				IntWritable oKey = null;
+				if (sp != null) {
+					oKey = new IntWritable(sp.getPartition(null,
+							solr.getSolrDocument()));
+				} else {
+					// Otherwise use a random assignment:
+					int iKey = (int) (Math.round(Math.random() * numShards));
+					oKey = new IntWritable(iKey);
+				}
+
+				// Wrap up and collect the result:
 				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
 				output.collect( oKey, wsolr );
-			} catch( Exception e ) {
-				LOG.error( e.getClass().getName() + ": " + e.getMessage() + "; " + header.getUrl() + "; " + oKey + "; " + solr );
+
+				// Increment record counter:
+				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
+
+				// Assure framework that we are making progress:
+				reporter.progress();
+
+				// Occasionally update application-level status
+				if ((noRecords % 1000) == 0) {
+					reporter.setStatus(mapTaskId + " processed " + noRecords
+							+ " from input-file: " + inputFile);
+				}
+
+			} else {
+				// Report headerless records:
+				reporter.incrCounter(MyCounters.NUM_EMPTY_HEADERS, 1);
+
 			}
+
+		} catch (Exception e) {
+			LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; "
+					+ header.getUrl() + "; " + header.getOffset());
+			// Increment error counter
+			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 		}
 	}
 
