@@ -9,15 +9,14 @@
     </layout> 
   </appender> 
 
+  <!--  Reduce logging from Apache code, e.g. PDFBox  -->
   <logger name="org.apache">
     <level value="warn"/> 
   </logger>
-  <logger name="org.apache.solr.hadoop">
-    <level value="info"/> 
-  </logger>
-
-  <!--  Reduce logging from PDFBox  -->
   <logger name="org.apache.pdfbox">
+    <level value="warn"/> 
+  </logger>
+  <logger name="org.apache.solr.hadoop">
     <level value="warn"/> 
   </logger>
   
