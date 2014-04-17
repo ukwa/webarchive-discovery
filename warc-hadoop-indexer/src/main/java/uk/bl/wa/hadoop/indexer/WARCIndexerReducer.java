@@ -178,10 +178,10 @@ public class WARCIndexerReducer extends MapReduceBase implements
 				// Add the documents:
 				UpdateResponse response = solrServer.add(docs);
 				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
-				docs.clear();
 				// Update document counter:
 				reporter.incrCounter(MyCounters.NUM_RECORDS, docs.size());
 				// All good:
+				docs.clear();
 				numberOfSequentialFails = 0;
 			} catch( Exception e ) {
 				// Count up repeated fails:
