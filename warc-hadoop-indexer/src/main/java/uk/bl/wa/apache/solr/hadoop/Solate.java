@@ -144,6 +144,15 @@ public class Solate {
 
 	/**
 	 * 
+	 * https://github.com/cloudera/search/blob/master/search-mr/src/main/java/
+	 * org/apache/solr/hadoop/SolrRecordWriter.java#L154
+	 * 
+	 * https://github.com/apache/lucene-solr/blob/9
+	 * c961e68a981dfd9b3ca4df2195caca2cd70869b
+	 * /solr/contrib/map-reduce/src/java/org
+	 * /apache/solr/hadoop/SolrRecordWriter.java#L155
+	 * 
+	 * 
 	 * @param solrHomeDir
 	 * @param fs
 	 * @param outputDir
@@ -181,9 +190,9 @@ public class Solate {
 		System.setProperty("solr.directoryFactory",
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
-		System.setProperty("solr.hdfs.nrtcachingdirectory.enable", "true");
-		System.setProperty("solr.hdfs.blockcache.enabled", "true");
-		System.setProperty("solr.autoCommit.maxTime", "-1");
+		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
+		System.setProperty("solr.hdfs.blockcache.enabled", "false");
+		System.setProperty("solr.autoCommit.maxTime", "600000");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 
 		LOG.info("Loading the container...");
