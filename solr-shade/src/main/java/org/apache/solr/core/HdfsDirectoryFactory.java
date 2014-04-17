@@ -110,7 +110,7 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
       metrics = new Metrics(conf);
     }
     
-    boolean blockCacheEnabled = params.getBool(BLOCKCACHE_ENABLED, false);
+    boolean blockCacheEnabled = params.getBool(BLOCKCACHE_ENABLED, true);
     boolean blockCacheReadEnabled = params.getBool(BLOCKCACHE_READ_ENABLED, true);
     boolean blockCacheWriteEnabled = params.getBool(BLOCKCACHE_WRITE_ENABLED, true);
     

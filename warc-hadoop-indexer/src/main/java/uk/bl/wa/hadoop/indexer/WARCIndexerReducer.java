@@ -135,8 +135,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 			// Occasionally update application-level status:
 			if ((noValues % 1000) == 0) {
-				reporter.setStatus("For shard " + this.shardPrefix
-						+ ", processed " + noValues + " documents.");
+				reporter.setStatus(this.shardPrefix + slice + ": processed "
+						+ noValues + ", dropped "
+						+ reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS));
 			}
 		}
 
