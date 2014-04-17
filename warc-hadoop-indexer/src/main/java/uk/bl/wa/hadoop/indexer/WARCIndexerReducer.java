@@ -40,6 +40,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	private int batchSize;
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+	private int numberOfSequentialFails = 0;
 
 	private FileSystem fs;
 	private Path solrHomeDir = null;
@@ -47,7 +48,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	private String shardPrefix = "shard";
 
 	static enum MyCounters {
-		NUM_RECORDS, NUM_ERRORS
+		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS
 	}
 
 	public WARCIndexerReducer() {
@@ -170,22 +171,36 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	 */
 	private void checkSubmission(List<SolrInputDocument> docs, int limit,
 			Reporter reporter) {
-		UpdateResponse response;
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			try {
 				// Inform that there is progress (still-alive):
 				reporter.progress();
 				// Add the documents:
-				response = solrServer.add( docs );
+				UpdateResponse response = solrServer.add(docs);
 				log.info( "Submitted " + docs.size() + " docs [" + response.getStatus() + "]" );
 				docs.clear();
 				// Update document counter:
 				reporter.incrCounter(MyCounters.NUM_RECORDS, docs.size());
+				// All good:
+				numberOfSequentialFails = 0;
 			} catch( Exception e ) {
+				// Count up repeated fails:
+				numberOfSequentialFails++;
+
+				// If there have been a lot of fails, drop the records
+				// (we have seen some "Invalid UTF-8 character 0xfffe at char"
+				// so this avoids bad data blocking job completion)
+				if (this.numberOfSequentialFails >= 3) {
+					log.error("Submission has repeatedly failed - assuming bad data and dropping these "
+							+ docs.size() + " records.");
+					reporter.incrCounter(MyCounters.NUM_DROPPED_RECORDS,
+							docs.size());
+					docs.clear();
+				}
+
 				// SOLR-5719 possibly hitting us here;
 				// CloudSolrServer.RouteException
-				log.error(
-						"WARCIndexerReducer.reduce() - sleeping for 1 minute: "
+				log.error("Sleeping for 1 minute: "
 								+ e.getMessage(), e);
 				// Also add a report for this condition:
 				reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
