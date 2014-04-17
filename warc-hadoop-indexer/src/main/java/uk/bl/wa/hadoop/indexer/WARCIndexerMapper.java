@@ -123,14 +123,14 @@ public class WARCIndexerMapper extends MapReduceBase implements
 				// Increment record counter:
 				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
 
-				// Assure framework that we are making progress:
-				reporter.progress();
-
 				// Occasionally update application-level status
 				if ((noRecords % 1000) == 0) {
-					reporter.setStatus(mapTaskId + " processed " + noRecords
-							+ " from input-file: " + inputFile);
+					reporter.setStatus(noRecords + " processed from "
+							+ inputFile);
+					// Also assure framework that we are making progress:
+					reporter.progress();
 				}
+
 
 			} else {
 				// Report headerless records:
