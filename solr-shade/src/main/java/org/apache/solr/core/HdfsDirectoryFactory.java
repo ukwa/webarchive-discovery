@@ -24,7 +24,6 @@ import java.net.URLEncoder;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.security.UserGroupInformation;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.NRTCachingDirectory;
 import org.apache.solr.cloud.ZkController;
@@ -44,6 +43,16 @@ import org.apache.solr.util.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+/**
+ * 
+ * NOTE defaults have been tweaked to be consistent with:
+ * @see https://github.com/apache/lucene-solr/blob/9c961e68a981dfd9b3ca4df2195caca2cd70869b/solr/contrib/map-reduce/src/java/org/apache/solr/hadoop/SolrRecordWriter.java#L155
+ * 
+ * i.e. block caching and NRT wrapper disabled.
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 public class HdfsDirectoryFactory extends CachingDirectoryFactory {
   public static Logger LOG = LoggerFactory
       .getLogger(HdfsDirectoryFactory.class);
@@ -101,7 +110,7 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
       metrics = new Metrics(conf);
     }
     
-    boolean blockCacheEnabled = params.getBool(BLOCKCACHE_ENABLED, true);
+    boolean blockCacheEnabled = params.getBool(BLOCKCACHE_ENABLED, false);
     boolean blockCacheReadEnabled = params.getBool(BLOCKCACHE_READ_ENABLED, true);
     boolean blockCacheWriteEnabled = params.getBool(BLOCKCACHE_WRITE_ENABLED, true);
     
@@ -155,7 +164,7 @@ public class HdfsDirectoryFactory extends CachingDirectoryFactory {
       dir = new HdfsDirectory(new Path(path), conf);
     }
     
-    boolean nrtCachingDirectory = params.getBool(NRTCACHINGDIRECTORY_ENABLE, true);
+    boolean nrtCachingDirectory = params.getBool(NRTCACHINGDIRECTORY_ENABLE, false);
     if (nrtCachingDirectory) {
       double nrtCacheMaxMergeSizeMB = params.getInt(
           NRTCACHINGDIRECTORY_MAXMERGESIZEMB, 16);

@@ -30,10 +30,11 @@ public class HdfsUtil {
     "hdfs-site.xml", "mapred-site.xml", "yarn-site.xml", "hadoop-site.xml"};
   
   public static void addHdfsResources(Configuration conf, String confDir) {
+  // Hack in some configuration here as we don't necessarily have a HdfsDirectoryFactory in solrconfig.xml
   // This is required in order for FileSystem.get to be thread-safe:
   conf.setBoolean("fs.hdfs.impl.disable.cache", true);
-  // Attempt to force HDFS locking:
-  conf.set("solr.lock.type", "hdfs");
+  conf.setBoolean("solr.hdfs.nrtcachingdirectory", false);
+  conf.setBoolean("solr.hdfs.blockcache.enabled", false);
   // Avoiding DMA here: THIS DOES NOTHING:
   //conf.setBoolean("solr.hdfs.blockcache.direct.memory.allocation",false);
   /*
