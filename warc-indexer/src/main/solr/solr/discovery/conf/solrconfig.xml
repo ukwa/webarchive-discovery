@@ -78,19 +78,24 @@
 		class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}" />
       <!-- 
       
-    <directoryFactory name="DirectoryFactory" class="org.apache.solr.core.HdfsDirectoryFactory">
-  <str name="solr.hdfs.home">${solr.hdfs.home:}</str>
-  <bool name="solr.hdfs.blockcache.enabled">false</bool>
-  <int name="solr.hdfs.blockcache.slab.count">1</int>
-  <bool name="solr.hdfs.blockcache.direct.memory.allocation">false</bool>
-  <int name="solr.hdfs.blockcache.blocksperbank">16384</int>
-  <bool name="solr.hdfs.blockcache.read.enabled">true</bool>
-  <bool name="solr.hdfs.blockcache.write.enabled">true</bool>
-  <bool name="solr.hdfs.nrtcachingdirectory.enable">true</bool>
-  <int name="solr.hdfs.nrtcachingdirectory.maxmergesizemb">16</int>
-  <int name="solr.hdfs.nrtcachingdirectory.maxcachedmb">192</int>
-</directoryFactory>      
-       -->
+  <directoryFactory name="DirectoryFactory" class="org.apache.solr.core.HdfsDirectoryFactory">
+    <str name="solr.hdfs.home">${solr.hdfs.home:}</str>
+    <str name="solr.hdfs.confdir">${solr.hdfs.confdir:}</str>
+    <str name="solr.hdfs.security.kerberos.enabled">${solr.hdfs.security.kerberos.enabled:false}</str>
+    <str name="solr.hdfs.security.kerberos.keytabfile">${solr.hdfs.security.kerberos.keytabfile:}</str>
+    <str name="solr.hdfs.security.kerberos.principal">${solr.hdfs.security.kerberos.principal:}</str>
+    <bool name="solr.hdfs.blockcache.enabled">${solr.hdfs.blockcache.enabled:true}</bool>
+    <int name="solr.hdfs.blockcache.slab.count">${solr.hdfs.blockcache.slab.count:1}</int>
+    <bool name="solr.hdfs.blockcache.direct.memory.allocation">${solr.hdfs.blockcache.direct.memory.allocation:true}</bool>
+    <int name="solr.hdfs.blockcache.blocksperbank">${solr.hdfs.blockcache.blocksperbank:16384}</int>
+    <bool name="solr.hdfs.blockcache.read.enabled">${solr.hdfs.blockcache.read.enabled:true}</bool>
+    <bool name="solr.hdfs.blockcache.write.enabled">${solr.hdfs.blockcache.write.enabled:true}</bool>
+    <bool name="solr.hdfs.nrtcachingdirectory.enable">${solr.hdfs.nrtcachingdirectory.enable:true}</bool>
+    <int name="solr.hdfs.nrtcachingdirectory.maxmergesizemb">${solr.hdfs.nrtcachingdirectory.maxmergesizemb:16}</int>
+    <int name="solr.hdfs.nrtcachingdirectory.maxcachedmb">${solr.hdfs.nrtcachingdirectory.maxcachedmb:192}</int>
+  </directoryFactory>
+  
+  -->
 
 	<!-- The CodecFactory for defining the format of the inverted index.
        The default implementation is SchemaCodecFactory, which is the official Lucene
@@ -220,7 +225,7 @@
 			storage, but does not cause a new searcher to be opened to make those changes 
 			visible. -->
 		<autoCommit>
-			<maxTime>15000</maxTime>
+			<maxTime>${solr.autoCommit.maxTime:60000}</maxTime>
 			<openSearcher>false</openSearcher>
 		</autoCommit>
 
@@ -228,7 +233,9 @@
 			which only ensures that changes are visible but does not ensure that data 
 			is synced to disk. This is faster and more near-realtime friendly than a 
 			hard commit. -->
-		<!-- <autoSoftCommit> <maxTime>1000</maxTime> </autoSoftCommit> -->
+		<autoSoftCommit>
+          <maxTime>${solr.autoSoftCommit.maxTime:1000}</maxTime>
+        </autoSoftCommit>
 
 		<!-- Update Related Event Listeners Various IndexWriter related events 
 			can trigger Listeners to take actions. postCommit - fired after every commit 
