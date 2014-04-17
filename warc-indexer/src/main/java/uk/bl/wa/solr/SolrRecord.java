@@ -28,12 +28,16 @@ package uk.bl.wa.solr;
  */
 
 import java.io.Serializable;
-import java.util.Arrays;
+import java.nio.ByteBuffer;
+import java.nio.CharBuffer;
+import java.nio.charset.CharacterCodingException;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetDecoder;
+import java.nio.charset.CharsetEncoder;
+import java.nio.charset.CodingErrorAction;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import org.apache.commons.httpclient.NameValuePair;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
@@ -61,9 +65,40 @@ public class SolrRecord implements Serializable {
 	 * @return
 	 */
 	private String removeControlCharacters( String value ) {
-		return value.trim().replaceAll( "\\p{Cntrl}", "" );
+		try {
+			return sanitiseUTF8(value.trim().replaceAll("\\p{Cntrl}", ""));
+		} catch (CharacterCodingException e) {
+			return "";
+		}
 	}
 	
+	/**
+	 * Aim to prevent "Invalid UTF-8 character 0xfffe" slipping into the text
+	 * payload.
+	 * 
+	 * The encodes and decodes a String that may not be UTF-8 compliant as
+	 * UTF-8. Any dodgy characters are replaced.
+	 * 
+	 * @param value
+	 * @return
+	 * @throws CharacterCodingException
+	 */
+	private String sanitiseUTF8(String value) throws CharacterCodingException {
+		// Take a string, map it to bytes as UTF-8:
+		CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+		encoder.onMalformedInput(CodingErrorAction.REPLACE);
+		encoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		ByteBuffer bytes = encoder.encode(CharBuffer.wrap(value));
+		// Now decode back again:
+		CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
+		decoder.onMalformedInput(CodingErrorAction.REPLACE);
+		decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+		CharBuffer parsed = decoder.decode(bytes);
+		// And return the string:
+		return parsed.toString();
+	}
+
+
 	/**
 	 * Also shorten to avoid bad data filling 'small' fields with 'big' data.
 	 * 
