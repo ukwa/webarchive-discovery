@@ -72,7 +72,7 @@
        The examples below can be used to load some solr-contribs along 
        with their external dependencies.
     -->
-  <!-- 
+  <!-- BL commented out jar libs
   <lib dir="../../../contrib/extraction/lib" regex=".*\.jar" />
   <lib dir="../../../dist/" regex="solr-cell-\d.*\.jar" />
 
@@ -84,7 +84,7 @@
 
   <lib dir="../../../contrib/velocity/lib" regex=".*\.jar" />
   <lib dir="../../../dist/" regex="solr-velocity-\d.*\.jar" />
-    -->
+    BL -->
 
   <!-- an exact 'path' can be used instead of a 'dir' to specify a 
        specific jar file.  This will cause a serious error to be logged 
@@ -118,18 +118,11 @@
        solr.RAMDirectoryFactory is memory based, not
        persistent, and doesn't work with replication.
     -->
-
-
-
-  <!-- # BL-specific: DirectoryFactory changed to MMapDirectory
+  <!-- BL changed directoryFactory to MMapDirectoryFactory -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.NRTCachingDirectoryFactory}"/> 
-    -->
-  <directoryFactory name="DirectoryFactory" 
-                      class="${solr.directoryFactory:solr.MMapDirectoryFactory}"/>
-  <!-- :BL-specific # -->
-
-
+                    class="${solr.directoryFactory:solr.MMapDirectoryFactory}">
+    <!-- BL -->
+    
          
     <!-- These will be used if you are using the solr.HdfsDirectoryFactory,
          otherwise they will be ignored. If you don't plan on using hdfs,
@@ -391,15 +384,10 @@
          If the updateLog is enabled, then it's highly recommended to
          have some sort of hard autoCommit to limit the log size.
       -->
-
-  <!-- # BL-specific: autoCommit maxTime upped to 60 secs -->
      <autoCommit> 
-       <maxTime>${solr.autoCommit.maxTime:60000}</maxTime> 
+       <maxTime>${solr.autoCommit.maxTime:15000}</maxTime> 
        <openSearcher>false</openSearcher> 
      </autoCommit>
-  <!-- :BL-specific # -->
-
-
 
     <!-- softAutoCommit is like autoCommit except it causes a
          'soft' commit which only ensures that changes are visible
@@ -407,13 +395,11 @@
          faster and more near-realtime friendly than a hard commit.
       -->
 
-  <!-- # BL-specific: autoSoftCommit commented out
+     <!-- BL commented out autoSoftCommit
      <autoSoftCommit> 
        <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime> 
      </autoSoftCommit>
-  BL-specific # -->
-
-
+     BL -->
 
     <!-- Update Related Event Listeners
          
@@ -1302,13 +1288,9 @@
      -->
   <searchComponent name="spellcheck" class="solr.SpellCheckComponent">
 
-
-
-  <!-- # BL-specific changed to textSpell -->
+    <!-- BL changed from text_general -->
     <str name="queryAnalyzerFieldType">textSpell</str>
-  <!-- :BL-specific # -->
-
-
+    <!-- BL -->
 
     <!-- Multiple "Spell Checkers" can be declared and used by this
          component
@@ -1318,13 +1300,9 @@
     <lst name="spellchecker">
       <str name="name">default</str>
 
-
-
-  <!-- # BL-specific changed to spell -->
+      <!-- BL changed from text -->
       <str name="field">spell</str>
-  <!-- :BL-specific # -->
-
-
+      <!-- BL -->
 
       <str name="classname">solr.DirectSolrSpellChecker</str>
       <!-- the spellcheck distance measure used, the default is the internal levenshtein -->
@@ -1549,12 +1527,9 @@
       <bool name="clustering.results">true</bool>
       <!-- Field name with the logical "title" of a each document (optional) -->
 
-
-  <!-- # BL-specific: 'name' changed to 'title'  -->
+      <!-- BL changed from name -->
       <str name="carrot.title">title</str>
-  <!-- :BL-specific # -->
-
-
+      <!-- BL -->
 
       <!-- Field name with the logical "URL" of a each document (optional) -->
       <str name="carrot.url">id</str>
@@ -1905,39 +1880,367 @@
      <transformer name="qecBooster" class="org.apache.solr.response.transform.EditorialMarkerFactory" />
     -->
 
+  <!-- BL autosuggest from Kinman -->
+<searchComponent class="solr.SpellCheckComponent" name="suggestTitle">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">title</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
 
-  <!-- # BL-specific: autosuggest from Kinman -->
-        <searchComponent class="solr.SpellCheckComponent" name="suggest">
-                <lst name="spellchecker">
-                        <str name="name">suggest</str>
-                        <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
-                        <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
-                        <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory 
-                                [finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory 
-                                [weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory 
-                                [default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory 
-                                [ternary trees] -->
-                        <str name="field">title</str>  <!-- the indexed field to derive suggestions from -->
-                        <float name="threshold">0.005</float>
-                        <str name="buildOnCommit">true</str>
-                        <!-- <str name="sourceLocation">american-english</str> -->
-                </lst>
-        </searchComponent>
-        <requestHandler class="org.apache.solr.handler.component.SearchHandler"
-                name="/suggest">
-                <lst name="defaults">
-                        <str name="spellcheck">true</str>
-                        <str name="spellcheck.dictionary">suggest</str>
-                        <str name="spellcheck.onlyMorePopular">true</str>
-                        <str name="spellcheck.count">5</str>
-                        <str name="spellcheck.collate">true</str>
-                </lst>
-                <arr name="components">
-                        <str>suggest</str>
-                </arr>
-        </requestHandler>
-  <!-- :BL-specific # -->
-    
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestTitle">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestTitle</str>
+    </arr>
+  </requestHandler>
+
+  <searchComponent class="solr.SpellCheckComponent" name="suggestUrl">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">url</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestUrl">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestUrl</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestFileFormat">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">content_type_ext</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestFileFormat">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestFileFormat</str>
+    </arr>
+  </requestHandler>
+
+  <searchComponent class="solr.SpellCheckComponent" name="suggestLinksHosts">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">links_hosts</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestLinksHosts">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestLinksHosts</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestLinksDomains">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">links_domains</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestLinksDomains">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestLinksDomains</str>
+    </arr>
+  </requestHandler>
+
+  <searchComponent class="solr.SpellCheckComponent" name="suggestLinksPublicSuffixes">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">links_public_suffixes</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestLinksPublicSuffixes">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestLinksPublicSuffixes</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestHost">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">host</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestHost">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestHost</str>
+    </arr>
+  </requestHandler>
+
+  <searchComponent class="solr.SpellCheckComponent" name="suggestDomain">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">domain</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestDomain">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestDomain</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestPublicSuffix">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">public_suffix</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestPublicSuffix">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestPublicSuffix</str>
+    </arr>
+  </requestHandler>
+
+  <searchComponent class="solr.SpellCheckComponent" name="suggestAuthor">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">author</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestAuthor">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestAuthor</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestCollection">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">collection</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestCollection">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestCollection</str>
+    </arr>
+  </requestHandler>
+  
+  <searchComponent class="solr.SpellCheckComponent" name="suggestCollections">
+    <lst name="spellchecker">
+      <str name="name">suggest</str>
+      <str name="classname">org.apache.solr.spelling.suggest.Suggester</str>
+      <str name="lookupImpl">org.apache.solr.spelling.suggest.tst.TSTLookupFactory</str>
+      <!-- Alternatives to lookupImpl: org.apache.solr.spelling.suggest.fst.FSTLookupFactory
+[finite state automaton] org.apache.solr.spelling.suggest.fst.WFSTLookupFactory
+[weighted finite state automaton] org.apache.solr.spelling.suggest.jaspell.JaspellLookupFactory
+[default, jaspell-based] org.apache.solr.spelling.suggest.tst.TSTLookupFactory
+[ternary trees] -->
+      <str name="field">collections</str> <!-- the indexed field to derive suggestions from -->
+      <float name="threshold">0.005</float>
+      <str name="buildOnCommit">true</str>
+      <!-- <str name="sourceLocation">american-english</str> -->
+    </lst>
+  </searchComponent>
+
+  <requestHandler class="org.apache.solr.handler.component.SearchHandler" name="/suggestCollections">
+    <lst name="defaults">
+      <str name="spellcheck">true</str>
+      <str name="spellcheck.dictionary">suggest</str>
+      <str name="spellcheck.onlyMorePopular">true</str>
+      <str name="spellcheck.count">5</str>
+      <str name="spellcheck.collate">true</str>
+    </lst>
+    <arr name="components">
+      <str>suggestCollections</str>
+    </arr>
+  </requestHandler> 
+  <!-- BL -->
 
   <!-- Legacy config for the admin interface -->
   <admin>
