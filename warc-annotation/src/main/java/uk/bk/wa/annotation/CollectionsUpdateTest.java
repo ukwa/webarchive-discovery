@@ -1,0 +1,96 @@
+/**
+ * 
+ */
+package uk.bk.wa.annotation;
+
+import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
+
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.common.SolrInputDocument;
+import org.apache.solr.common.params.SolrParams;
+
+/**
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
+public class CollectionsUpdateTest {
+
+	/**
+	 * 
+	 * @see http://192.168.1.204:8990/solr/ldwa/select?q=id%3A20130428112038%2F
+	 *      nUmQeJ6sh5vz9%2BEBlCHGNA%3D%3D&wt=json&indent=true
+	 * @id "20130428112038/nUmQeJ6sh5vz9+EBlCHGNA==";
+	 * 
+	 * @param args
+	 * @throws SolrServerException
+	 * @throws IOException
+	 */
+	public static void main(String[] args) throws SolrServerException,
+			IOException {
+
+		String id = "sha1:P566LTRHGUBUAQ7I7FFPNKWESWNXVL3I/fYJsnswpD+25KXMfiuOAlA==";
+		String server = "http://localhost:8080/discovery";
+
+		String collection = "Health and Social Care Act 2012 - NHS Reforms";
+		String collections = "Health and Social Care Act 2012 - NHS Reforms"
+				+ "|" + "NHS" + "|" + "Acute Trusts";
+
+		SolrServer ss = new HttpSolrServer(server);
+
+		doQuery(ss, id);
+
+		doUpdate(ss, id, collection, collections);
+
+		doQuery(ss, id);
+
+		doUpdate(ss, id, null, null);
+
+		doQuery(ss, id);
+
+	}
+
+	private static void doUpdate(SolrServer ss, String id, String collection,
+			String collections) throws SolrServerException, IOException {
+
+		ss.add(createUpdateDocument(id, collection, collections));
+
+		ss.commit(true, true);
+
+		System.out.println("Updated.");
+	}
+
+	private static SolrInputDocument createUpdateDocument(String id,
+			String collection, String collections) {
+		SolrInputDocument doc = new SolrInputDocument();
+		doc.addField("id", id);
+
+		Map<String, String> collection_op = new HashMap<String, String>();
+		collection_op.put("set", collection);
+		doc.addField("collection", collection_op);
+
+		Map<String, String> collections_op = new HashMap<String, String>();
+		collections_op.put("set", collections);
+		doc.addField("collections", collections_op);
+
+		return doc;
+	}
+
+	public static void doQuery(SolrServer ss, String id)
+			throws SolrServerException {
+		SolrParams p = new SolrQuery("id:\"" + id + "\"");
+		QueryResponse r = ss.query(p);
+		System.out.println("GOT collection "
+				+ r.getResults().get(0).getFieldValue("collection"));
+		System.out.println("GOT collections "
+				+ r.getResults().get(0).getFieldValue("collections"));
+		System.out.println("STILL GOT crawl_date "
+				+ r.getResults().get(0).getFieldValue("crawl_date"));
+	}
+
+}
