@@ -139,16 +139,17 @@
         using copyField below. This is to save space. Use this field for returning and
         highlighting document content. Use the "text" field to search the content. -->
    <!-- BL: -->
-   <field name="content_text" type="text_general" indexed="false" stored="true" multiValued="true"/>
+   <field name="content_text" type="text_general" indexed="false" stored="true" multiValued="true" />
    <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
    <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
-   <!-- -BL -->
 
    <!-- catchall field, containing all other searchable text fields (implemented
-        via copyField further on in this schema  -->
-   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
+        via copyField further on in this schema) - also modified to support termVectors/Positions/Offsets for highlights etc. -->
+   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>  -->
+   
+   <!-- -BL -->
 
    <!-- catchall text field that indexes tokens both normally and in reverse for efficient
         leading wildcard queries. -->
