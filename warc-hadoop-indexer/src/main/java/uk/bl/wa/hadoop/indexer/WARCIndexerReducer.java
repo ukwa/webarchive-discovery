@@ -34,6 +34,7 @@ import com.typesafe.config.ConfigFactory;
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerReducer extends MapReduceBase implements
 		Reducer<IntWritable, WritableSolrRecord, Text, Text> {
+
 	private static Log log = LogFactory.getLog( WARCIndexerReducer.class );
 
 	private SolrServer solrServer;
@@ -41,6 +42,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 	private int numberOfSequentialFails = 0;
+	private static final int SUBMISSION_PAUSE_MINS = 5;
 
 	private FileSystem fs;
 	private Path solrHomeDir = null;
@@ -137,7 +139,8 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			if ((noValues % 1000) == 0) {
 				reporter.setStatus(this.shardPrefix + slice + ": processed "
 						+ noValues + ", dropped "
-						+ reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS));
+						+ reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS)
+								.getValue());
 			}
 		}
 
@@ -201,12 +204,13 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 				// SOLR-5719 possibly hitting us here;
 				// CloudSolrServer.RouteException
-				log.error("Sleeping for 1 minute: "
+				log.error("Sleeping for " + SUBMISSION_PAUSE_MINS
+						+ " minute(s): "
 								+ e.getMessage(), e);
 				// Also add a report for this condition:
 				reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 				try {
-					Thread.sleep(1000 * 60 * 1);
+					Thread.sleep(1000 * 60 * SUBMISSION_PAUSE_MINS);
 				} catch(InterruptedException ex) {
 					log.warn("Sleep between Solr submissions was interrupted!");
 				}
