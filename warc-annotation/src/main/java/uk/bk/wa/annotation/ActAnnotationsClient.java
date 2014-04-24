@@ -280,12 +280,8 @@ public class ActAnnotationsClient {
 		}
 	}
 
-	public HashMap<String, HashMap<String, UriCollection>> getCollections() {
-		return this.collections;
-	}
-
-	public HashMap<String, DateRange> getCollectionDateRanges() {
-		return this.collectionDateRanges;
+	public Annotations getAnnotations() {
+		return new Annotations(this.collections, this.collectionDateRanges);
 	}
 	
 }

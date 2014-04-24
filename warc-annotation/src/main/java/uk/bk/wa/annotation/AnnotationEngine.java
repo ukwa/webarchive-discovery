@@ -31,18 +31,30 @@ public class AnnotationEngine {
 	
 	private ActAnnotationsClient act;
 
+	private Annotations annotations;
+
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	
-	private HashMap<String, HashMap<String, UriCollection>> collections;
-	private HashMap<String, DateRange> collectionDateRanges;
 
+	/**
+	 * By default we pull annotations from ACT.
+	 * 
+	 * @throws IOException
+	 * @throws JDOMException
+	 */
 	public AnnotationEngine() throws IOException, JDOMException {
-
 		act = new ActAnnotationsClient();
+		this.annotations = act.getAnnotations();
 
-		this.collections = act.getCollections();
-		this.collectionDateRanges = act.getCollectionDateRanges();
+	}
 
+	/**
+	 * Allow annotations to be defined outside of ACT.
+	 * 
+	 * @param annotations
+	 */
+	public AnnotationEngine(Annotations annotations) {
+		this.annotations = annotations;
 	}
 
 	/**
@@ -57,18 +69,23 @@ public class AnnotationEngine {
 	private void processCollectionScopes(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
 		// "Just this URL".
-		if( collections.get( "resource" ).keySet().contains( canon.urlStringToKey( uri.toString() ) ) ) {
-			updateCollections( collections.get( "resource" ).get( uri.toString() ), solr );
+		if (this.annotations.getCollections().get("resource").keySet()
+				.contains(canon.urlStringToKey(uri.toString()))) {
+			updateCollections(this.annotations.getCollections().get("resource")
+					.get(uri.toString()), solr);
 		}
 		// "All URLs that start like this".
 		String prefix = uri.getScheme() + "://" + uri.getHost();
-		if( collections.get( "root" ).keySet().contains( prefix ) ) {
-			updateCollections( collections.get( "root" ).get( prefix ), solr );
+		if (this.annotations.getCollections().get("root").keySet()
+				.contains(prefix)) {
+			updateCollections(this.annotations.getCollections().get("root")
+					.get(prefix), solr);
 		}
 		// "All URLs that match match this host or any subdomains".
 		String host;
 		String domain = uri.getHost().replaceAll( "^www\\.", "" );
-		HashMap<String, UriCollection> subdomains = collections.get( "subdomains" );
+		HashMap<String, UriCollection> subdomains = this.annotations
+				.getCollections().get("subdomains");
 		for( String key : subdomains.keySet() ) {
 			host = new URI( key ).getHost();
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
@@ -92,7 +109,11 @@ public class AnnotationEngine {
 		LOG.info( "Updating collections for " + solr.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection
 		if( collection.collectionCategories != null && collection.collectionCategories.length() > 0 ) {
-			if( collectionDateRanges.containsKey( collection.collectionCategories ) && collectionDateRanges.get( collection.collectionCategories ).isInDateRange( date ) ) {
+			if (this.annotations.getCollectionDateRanges().containsKey(
+					collection.collectionCategories)
+					&& this.annotations.getCollectionDateRanges()
+							.get(collection.collectionCategories)
+							.isInDateRange(date)) {
 				setUpdateField(solr, SolrFields.SOLR_COLLECTION,
 						collection.collectionCategories);
 				LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.getField( SolrFields.SOLR_URL ) );
@@ -101,7 +122,9 @@ public class AnnotationEngine {
 		// Iterate over the hierarchical collections
 		if( collection.allCollections != null && collection.allCollections.length > 0 ) {
 			for( String col : collection.allCollections ) {
-				if( collectionDateRanges.containsKey( col ) && collectionDateRanges.get( col ).isInDateRange( date ) ) {
+				if (this.annotations.getCollectionDateRanges().containsKey(col)
+						&& this.annotations.getCollectionDateRanges().get(col)
+								.isInDateRange(date)) {
 					setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
 					LOG.info( "Added collection '" + col + "' to " + solr.getField( SolrFields.SOLR_URL ) );
 				}
@@ -110,7 +133,10 @@ public class AnnotationEngine {
 		// Iterate over the subjects
 		if( collection.subject != null && collection.subject.length > 0 ) {
 			for( String subject : collection.subject ) {
-				if( collectionDateRanges.containsKey( subject ) && collectionDateRanges.get( subject ).isInDateRange( date ) ) {
+				if (this.annotations.getCollectionDateRanges().containsKey(
+						subject)
+						&& this.annotations.getCollectionDateRanges()
+								.get(subject).isInDateRange(date)) {
 					setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
 					LOG.info( "Added collection '" + subject + "' to " + solr.getField( SolrFields.SOLR_URL ) );
 				}
@@ -141,7 +167,8 @@ public class AnnotationEngine {
 		// Needs ID CrawlDate
 		// SolrFields.CRAWL_DATE;
 		// SolrFields.ID;
-		// Uses SOLR_URL for logging:
+
+		// Uses SOLR_URL for logging only:
 		// SolrFields.SOLR_URL;
 
 		ae.processCollectionScopes( uri, solr );
