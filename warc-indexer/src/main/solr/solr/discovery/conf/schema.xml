@@ -145,12 +145,15 @@
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
    <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
 
-   <!-- catchall field, containing all other searchable text fields (implemented
-        via copyField further on in this schema) - also modified to support termVectors/Positions/Offsets for highlights etc. -->
-   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>  -->
-   
+   <!-- Perhaps need this in the future? - to support termVectors/Positions/Offsets for highlights etc.
+   field name="text" type="text_general" indexed="true" stored="false" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
+   -->
    <!-- -BL -->
-
+   
+   <!-- catchall field, containing all other searchable text fields (implemented
+        via copyField further on in this schema)  -->
+   <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
+   
    <!-- catchall text field that indexes tokens both normally and in reverse for efficient
         leading wildcard queries. -->
    <field name="text_rev" type="text_general_rev" indexed="true" stored="false" multiValued="true"/>
