@@ -74,7 +74,7 @@ public class WARCPayloadAnalysers {
 	private boolean extractApachePreflightErrors;
 	private boolean extractImageFeatures;
 
-	public WARCPayloadAnalysers( Config conf ) {
+	public WARCPayloadAnalysers(Config conf) {
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
