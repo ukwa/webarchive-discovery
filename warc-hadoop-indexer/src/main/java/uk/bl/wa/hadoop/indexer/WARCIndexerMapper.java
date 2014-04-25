@@ -143,6 +143,13 @@ public class WARCIndexerMapper extends MapReduceBase implements
 					+ header.getUrl() + "; " + header.getOffset());
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+
+		} catch (OutOfMemoryError e) {
+			// Allow processing to continue if a record causes OOME:
+			LOG.error("OOME" + e.getClass().getName() + ": " + e.getMessage()
+					+ "; " + header.getUrl() + "; " + header.getOffset());
+			// Increment error counter
+			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 		}
 	}
 

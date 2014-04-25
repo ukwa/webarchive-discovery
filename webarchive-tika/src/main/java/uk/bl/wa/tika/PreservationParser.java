@@ -5,20 +5,12 @@ package uk.bl.wa.tika;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
-import javax.activation.MimeTypeParseException;
-
 import org.apache.log4j.Logger;
-import org.apache.tika.detect.CompositeDetector;
-import org.apache.tika.detect.Detector;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
-import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
-import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
@@ -27,8 +19,6 @@ import org.apache.tika.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
-
-import uk.bl.wa.tika.detect.HighlightJSDetector;
 import uk.bl.wa.tika.parser.iso9660.ISO9660Parser;
 import uk.bl.wa.tika.parser.warc.ARCParser;
 import uk.bl.wa.tika.parser.warc.WARCParser;
@@ -50,39 +40,6 @@ public class PreservationParser extends AutoDetectParser {
 	 * 
 	 */
 	private static final long serialVersionUID = 6809061887891839162L;
-	
-	public class NonRecursiveEmbeddedDocumentExtractor extends ParsingEmbeddedDocumentExtractor {
-
-		/** Parse embedded documents? Defaults to TRUE */
-		private boolean parseEmbedded = true;
-
-		public NonRecursiveEmbeddedDocumentExtractor(ParseContext context) {
-			super(context);
-		}
-
-		/* (non-Javadoc)
-		 * @see org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor#shouldParseEmbedded(org.apache.tika.metadata.Metadata)
-		 */
-		@Override
-		public boolean shouldParseEmbedded(Metadata metadata) {
-			return this.parseEmbedded;
-		}
-		
-		/**
-		 * @return the parseEmbedded
-		 */
-		public boolean isParseEmbedded() {
-			return parseEmbedded;
-		}
-
-		/**
-		 * @param parseEmbedded the parseEmbedded to set
-		 */
-		public void setParseEmbedded(boolean parseEmbedded) {
-			this.parseEmbedded = parseEmbedded;
-		}
-
-	}
 	
 	/**
 	 * Modify the configuration as needed:
