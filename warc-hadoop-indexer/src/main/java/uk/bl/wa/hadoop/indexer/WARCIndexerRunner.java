@@ -71,7 +71,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 	HttpURLConnection connection = (HttpURLConnection) login
 		.openConnection();
-	connection.setRequestMethod("POST");
 	StringBuilder credentials = new StringBuilder();
 	credentials.append(loginConf.getString("act.username"));
 	credentials.append(":");
