@@ -54,6 +54,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
     private String outputPath;
     private String configPath;
     private boolean readAct;
+    private String actFile;
     private boolean wait;
     private boolean dumpConfig;
 
@@ -119,7 +120,11 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		.render(ConfigRenderOptions.concise()));
 	LOG.info("Loaded warc config.");
 	LOG.info(index_conf.getString("warc.title"));
-	LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
+	if (this.actFile != null) {
+	    LOG.info("ACT file: " + this.actFile);
+	} else {
+	    LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
+	}
 	LOG.info("ACT Collection URL: "
 		+ index_conf.getString("warc.act.collections.url"));
 	if (index_conf.getBoolean("warc.solr.use_hash_url_id")) {
@@ -138,9 +143,16 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	    LOG.info("Reading Collections from ACT...");
 	    conf.set("warc.act.collections.xml",
 		    readAct(index_conf.getString("warc.act.collections.url")));
-	    LOG.info("Reading records from ACT...");
-	    conf.set("warc.act.xml",
-		    readAct(index_conf.getString("warc.act.url")));
+	    if (this.actFile != null) {
+		LOG.info("Reading ACT records from file...");
+		Scanner scanner = new Scanner(new File(this.actFile));
+		scanner.useDelimiter("\\Z");
+		conf.set("warc.act.xml", scanner.next());
+	    } else {
+		LOG.info("Reading records from ACT...");
+		conf.set("warc.act.xml",
+			readAct(index_conf.getString("warc.act.url")));
+	    }
 	    LOG.info("Read " + conf.get("warc.act.xml").length() + " bytes.");
 	}
 	// Also set reduce speculative execution off, avoiding duplicate
@@ -243,6 +255,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	options.addOption("o", true, "output directory");
 	options.addOption("c", true, "path to configuration");
 	options.addOption("a", false, "read data from ACT");
+	options.addOption("f", false, "read ACT records from file");
 	options.addOption("w", false, "wait for job to finish");
 	options.addOption("d", false, "dump configuration");
 	// TODO: Problematic with "hadoop jar"?
@@ -261,6 +274,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	this.inputPath = cmd.getOptionValue("i");
 	this.outputPath = cmd.getOptionValue("o");
 	this.readAct = cmd.hasOption("a");
+	this.actFile = cmd.getOptionValue("f");
 	this.wait = cmd.hasOption("w");
 	if (cmd.hasOption("c")) {
 	    this.configPath = cmd.getOptionValue("c");

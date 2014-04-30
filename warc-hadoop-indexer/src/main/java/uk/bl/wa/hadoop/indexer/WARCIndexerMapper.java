@@ -49,7 +49,7 @@ public class WARCIndexerMapper extends MapReduceBase implements Mapper<Text, Wri
 
 	private WARCIndexer windex;
 	private HashMap<String, HashMap<String, UriCollection>> collections;
-	private HashMap<String, DateRange> collectionDateRanges;
+	private HashMap<String, DateRange> collectionDateRanges = new HashMap<String, DateRange>();
 	private boolean processCollections = false;
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
