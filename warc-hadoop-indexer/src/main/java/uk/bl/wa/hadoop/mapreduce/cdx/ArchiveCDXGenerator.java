@@ -46,6 +46,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 	private String cdxFormat;
 	private boolean hdfs;
 	private boolean wait;
+	private boolean gzip;
 	private int numReducers;
 
 	private void setup( String args[], Configuration conf ) throws ParseException, URISyntaxException {
@@ -58,6 +59,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 		options.addOption( "w", false, "Wait for completion." );
 		options.addOption( "r", true, "Num. Reducers" );
 		options.addOption( "a", true, "ARK identifier lookup" );
+		options.addOption( "g", true, "Compress output with gzip" );
 		options.addOption( OptionBuilder.withArgName( "property=value" ).hasArgs(2).withValueSeparator().withDescription( "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
@@ -68,6 +70,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 		this.cdxFormat = cmd.getOptionValue( "c", " CDX A b a m s k r M V g" );
 		this.hdfs = cmd.hasOption( "h" );
 		this.wait = cmd.hasOption( "w" );
+		this.gzip = cmd.hasOption( "g" );
 		this.numReducers = Integer.parseInt( cmd.getOptionValue( "r" ) );
 		if( cmd.hasOption( "a" ) ) {
 			URI lookup = new URI( cmd.getOptionValue( "a" ) );
@@ -113,6 +116,10 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 		conf.set( "mapred.map.tasks.speculative.execution", "false" );
 		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
 		AlphaPartitioner.setPartitionPath( conf, this.splitFile );
+		if( this.gzip ) {
+			conf.set( "mapred.output.compress", "true" );
+			conf.set( "mapred.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec" );
+		}
 
 		job.setMapperClass( Mapper.class );
 		job.setMapOutputKeyClass( Text.class );
