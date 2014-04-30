@@ -1,7 +1,5 @@
 package uk.bl.wa.hadoop.indexer;
 
-import static org.archive.io.warc.WARCConstants.HEADER_KEY_TYPE;
-
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.URI;

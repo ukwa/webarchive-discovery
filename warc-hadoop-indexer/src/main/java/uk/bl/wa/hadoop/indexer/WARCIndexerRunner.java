@@ -114,6 +114,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.set( CONFIG_PROPERTIES, index_conf.withOnlyPath( "warc" ).root().render( ConfigRenderOptions.concise() ) );
 		LOG.info( "Loaded warc config." );
 		LOG.info( index_conf.getString( "warc.title" ) );
+		LOG.info( "ACT URL: " + index_conf.getString( "warc.act.url" ) );
+		LOG.info( "ACT Collection URL: " + index_conf.getString( "warc.act.collections.url" ) );
 		if( index_conf.getBoolean( "warc.solr.use_hash_url_id" ) ) {
 			LOG.info( "Using hash-based ID." );
 		}
@@ -125,10 +127,10 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
 		// Pull in ACT metadata
 		if( this.readAct ) {
-			LOG.info( "Reading records from ACT..." );
-			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
 			LOG.info( "Reading Collections from ACT..." );
 			conf.set( "warc.collections.xml", readAct( index_conf.getString( "warc.act.collections.url" ) ) );
+			LOG.info( "Reading records from ACT..." );
+			conf.set( "warc.act.xml", readAct( index_conf.getString( "warc.act.url" ) ) );
 			LOG.info( "Read " + conf.get( "warc.act.xml" ).length() + " bytes." );
 		}
 		// Also set reduce speculative execution off, avoiding duplicate submissions to Solr.
