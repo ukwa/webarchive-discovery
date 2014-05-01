@@ -208,8 +208,9 @@ public class WARCIndexerMapper extends MapReduceBase implements
     private void updateCollections(UriCollection collection, SolrRecord solr) {
 	// Trac #2243; This should only happen if the record's timestamp is
 	// within the range set by the Collection.
-	Date date = WARCIndexer.getWaybackDate((String) solr.doc.getField(
-		SolrFields.CRAWL_DATE).getValue());
+	String timestamp = ((String) solr.doc.getField(SolrFields.CRAWL_DATE)
+		.getValue()).replaceAll("[^0-9]", "");
+	Date date = WARCIndexer.getWaybackDate(timestamp);
 
 	LOG.info("Updating collections for "
 		+ solr.doc.getField(SolrFields.SOLR_URL));
