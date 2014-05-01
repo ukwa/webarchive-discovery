@@ -15,6 +15,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
@@ -145,9 +146,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		    readAct(index_conf.getString("warc.act.collections.url")));
 	    if (this.actFile != null) {
 		LOG.info("Reading ACT records from file...");
-		Scanner scanner = new Scanner(new File(this.actFile));
-		scanner.useDelimiter("\\Z");
-		conf.set("warc.act.xml", scanner.next());
+		conf.set("warc.act.xml",
+			FileUtils.readFileToString(new File(this.actFile)));
 	    } else {
 		LOG.info("Reading records from ACT...");
 		conf.set("warc.act.xml",
@@ -255,7 +255,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	options.addOption("o", true, "output directory");
 	options.addOption("c", true, "path to configuration");
 	options.addOption("a", false, "read data from ACT");
-	options.addOption("f", false, "read ACT records from file");
+	options.addOption("f", true, "read ACT records from file");
 	options.addOption("w", false, "wait for job to finish");
 	options.addOption("d", false, "dump configuration");
 	// TODO: Problematic with "hadoop jar"?
