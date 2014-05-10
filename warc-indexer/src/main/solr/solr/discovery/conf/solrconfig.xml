@@ -395,11 +395,9 @@
          faster and more near-realtime friendly than a hard commit.
       -->
 
-     <!-- BL commented out autoSoftCommit
      <autoSoftCommit> 
        <maxTime>${solr.autoSoftCommit.maxTime:-1}</maxTime> 
      </autoSoftCommit>
-     BL -->
 
     <!-- Update Related Event Listeners
          
