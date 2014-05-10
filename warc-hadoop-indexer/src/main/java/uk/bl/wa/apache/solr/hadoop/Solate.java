@@ -191,7 +191,7 @@ public class Solate {
 				HdfsDirectoryFactory.class.getName());
 		System.setProperty("solr.lock.type", "hdfs");
 		System.setProperty("solr.hdfs.nrtcachingdirectory", "false");
-		System.setProperty("solr.hdfs.blockcache.enabled", "false");
+		System.setProperty("solr.hdfs.blockcache.enabled", "true");
 		System.setProperty("solr.autoCommit.maxTime", "600000");
 		System.setProperty("solr.autoSoftCommit.maxTime", "-1");
 
