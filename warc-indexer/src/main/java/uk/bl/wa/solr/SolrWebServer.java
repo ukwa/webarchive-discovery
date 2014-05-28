@@ -99,6 +99,10 @@ public class SolrWebServer {
 		}
 	}
 
+	public SolrServer getSolrServer() {
+		return this.solrServer;
+	}
+
 	/**
 	 * Post a List of docs.
 	 * 

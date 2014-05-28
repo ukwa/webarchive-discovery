@@ -48,6 +48,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	private Path solrHomeDir = null;
 	private Path outputDir;
 	private String shardPrefix = "shard";
+	private boolean useEmbeddedServer = false;
 
 	static enum MyCounters {
 		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS
@@ -76,7 +77,19 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 		this.dummyRun = conf.getBoolean( "warc.solr.dummy_run" );
 		this.batchSize = conf.getInt( "warc.solr.batch_size" );
-		
+		this.useEmbeddedServer = conf.getBoolean("warc.solr.hdfs");
+
+		// Decide between to-HDFS and to-SolrCloud indexing modes:
+		if (this.useEmbeddedServer) {
+			initEmbeddedServerConfig(job, conf);
+		} else {
+			solrServer = new SolrWebServer(conf).getSolrServer();
+		}
+
+		log.info("Initialisation complete.");
+	}
+
+	private void initEmbeddedServerConfig(JobConf job, Config conf) {
 		try {
 			// Filesystem:
 			job.setBoolean("fs.hdfs.impl.disable.cache", true);
@@ -91,9 +104,18 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		}
 		// Output:
 		outputDir = new Path(conf.getString(SolrWebServer.HDFS_OUTPUT_PATH));
+	}
 
-		// solrServer = new SolrWebServer(conf);
-		log.info( "Initialisation complete." );
+	private void initEmbeddedServer(int slice) throws IOException {
+
+		// Defined the output directory accordingly:
+		Path outputShardDir = new Path(fs.getHomeDirectory() + "/" + outputDir,
+				this.shardPrefix + slice);
+
+		// Fire up a server:
+		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
+				outputDir, outputShardDir);
+
 	}
 
 	@Override
@@ -107,13 +129,11 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		// Get the slice number, but counting from 1 instead of 0:
 		int slice = key.get() + 1;
 
-		// Defined the output directory accordingly:
-		Path outputShardDir = new Path(fs.getHomeDirectory() + "/" + outputDir,
-				this.shardPrefix + slice);
+		// For indexing into HDFS, set up a new server per key:
+		if (useEmbeddedServer) {
+			this.initEmbeddedServer(slice);
+		}
 
-		// Fire up a server:
-		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
-				outputDir, outputShardDir);
 
 		// Go through the documents for this shard:
 		long noValues = 0;
