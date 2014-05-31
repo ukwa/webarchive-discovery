@@ -170,10 +170,15 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			 * it.
 			 */
 			checkSubmission(docs, 1, reporter);
-			// Commit, and block until the changes have been flushed.
-			solrServer.commit(true, false);
-			// And shut it down.
-			solrServer.shutdown();
+
+			// If we are indexing to HDFS, shut the shard down:
+			if (useEmbeddedServer) {
+				// Commit, and block until the changes have been flushed.
+				solrServer.commit(true, false);
+				// And shut it down.
+				solrServer.shutdown();
+			}
+
 		} catch (Exception e) {
 			log.error("ERROR on commit: " + e);
 			e.printStackTrace();
