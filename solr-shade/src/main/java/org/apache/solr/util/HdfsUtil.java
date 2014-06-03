@@ -33,10 +33,6 @@ public class HdfsUtil {
   // Hack in some configuration here as we don't necessarily have a HdfsDirectoryFactory in solrconfig.xml
   // This is required in order for FileSystem.get to be thread-safe:
   conf.setBoolean("fs.hdfs.impl.disable.cache", true);
-  //conf.setBoolean("solr.hdfs.nrtcachingdirectory", false);
-  //conf.setBoolean("solr.hdfs.blockcache.enabled", false);
-  // Avoiding DMA here: THIS DOES NOTHING:
-  //conf.setBoolean("solr.hdfs.blockcache.direct.memory.allocation",false);
   /*
    * Caused by: java.lang.RuntimeException: The max direct memory is likely too low.  
    * Either increase it (by adding -XX:MaxDirectMemorySize=<size>g -XX:+UseLargePages to your 
