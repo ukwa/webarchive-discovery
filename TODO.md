@@ -75,6 +75,15 @@ Detector detector=Detector.create("haarcascade_frontalface_default.xml");
 List<Rectangle> res=detector.getFaces(fileName, 1.2f,1.1f,.05f, 2,true);
 
 
+### Image Similarity Ideas ###
+
+* [http://qanda.digipres.org/58/what-techniques-there-detecting-similar-images-large-scale](What techniques are there for detecting similar images at large scale?)
+* LIRE:
+    * https://bitbucket.org/dermotte/liresolr
+    * http://www.semanticmetadata.net/wiki/doku.php?id=lire:createindex
+* http://pastebin.com/Pj9d8jt5 ImagePHash.java
+* http://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html
+
 Notes
 =====
 
