@@ -115,6 +115,7 @@ Similar Systems
 
 Other approaches to look at, compare against, and perhaps consider merging with in the future.
 
+ * [NetarchiveSuite NetSearch](https://github.com/netarchivesuite/netsearch/), which appears to build on webarchive-discovery. Some more tech and scaling details can be found [here](https://plus.google.com/+TokeEskildsen/posts/4yPvzrQo8A7).
  * [WEARI](https://bitbucket.org/cdl/weari): Very similar project from CDL. Mostly written in Scala.
  * [Warcbase](https://github.com/lintool/warcbase)
  * [HDFS (W)ARC-to-HBase](http://docs.lucidworks.com/display/bigdata/Custom+Ingestion+Implementation).
