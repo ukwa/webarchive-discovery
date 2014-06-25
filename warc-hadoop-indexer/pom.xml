@@ -102,6 +102,16 @@
 			<groupId>org.archive.heritrix</groupId>
 			<artifactId>heritrix-commons</artifactId>
 			<version>3.2.0</version>
+			<exclusions>
+			   <exclusion>
+			      <artifactId>poi-scratchpad</artifactId>
+			      <groupId>poi</groupId>
+			   </exclusion>
+			   <exclusion>
+			      <artifactId>poi</artifactId>
+			      <groupId>poi</groupId>
+			   </exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.archive.heritrix</groupId>
