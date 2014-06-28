@@ -139,15 +139,16 @@
         using copyField below. This is to save space. Use this field for returning and
         highlighting document content. Use the "text" field to search the content. -->
    <!-- BL: -->
-   <field name="content_text" type="text_general" indexed="false" stored="true" multiValued="true" />
+   <field name="content" type="text_general" indexed="false" stored="true" multiValued="true" />
    <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
    <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
 
-   <!-- Perhaps need this in the future? - to support termVectors/Positions/Offsets for highlights etc.
-   field name="text" type="text_general" indexed="true" stored="false" multiValued="true" termVectors="true" termPositions="true" termOffsets="true"/>
-   -->
+   <!--  Perhaps useful in the future:
+        termVectors="true" termPositions="true" termOffsets="true"/>
+        -->
+   
    <!-- -BL -->
    
    <!-- catchall field, containing all other searchable text fields (implemented
@@ -412,13 +413,14 @@
 
    <!-- wa.bl.uk copies begin -->
    <!-- Metadata fields to add to default search: -->
-   <copyField source="title" dest="text"/> <!-- Selective -->
+   <copyField source="title" dest="text"/>
    <copyField source="author" dest="text"/>
    <copyField source="keywords" dest="text"/>
    <copyField source="description" dest="text"/>
    <copyField source="wct_title" dest="text"/>
    <copyField source="wct_description" dest="text"/>
    <copyField source="url" dest="text"/>
+   <copyField source="content" dest="text"/>
    
    <!-- Old fields to remove? -->
 <!--    <copyField source="text" dest="spell"/> Selective -->
