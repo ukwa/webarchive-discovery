@@ -420,6 +420,7 @@
    <copyField source="wct_title" dest="text"/>
    <copyField source="wct_description" dest="text"/>
    <copyField source="url" dest="text"/>
+   <!-- Also copy in the actual text payload to ensure it is actually indexed: -->
    <copyField source="content" dest="text"/>
    
    <!-- Old fields to remove? -->
