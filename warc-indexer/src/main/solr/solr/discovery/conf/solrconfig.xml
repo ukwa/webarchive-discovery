@@ -120,7 +120,7 @@
     -->
   <!-- BL changed directoryFactory to MMapDirectoryFactory -->
   <directoryFactory name="DirectoryFactory" 
-                    class="${solr.directoryFactory:solr.MMapDirectoryFactory}">
+                    class="${solr.directoryFactory:solr.NIOFSDirectoryFactory}">
     <!-- BL -->
     
          
