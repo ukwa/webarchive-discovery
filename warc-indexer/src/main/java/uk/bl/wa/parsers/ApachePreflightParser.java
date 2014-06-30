@@ -95,47 +95,60 @@ public class ApachePreflightParser extends AbstractParser {
 
 		InputStreamDataSource isds = new InputStreamDataSource(stream);
 		PreflightParser parser = new PreflightParser(isds);
+		PreflightDocument document = null;
 		try {
 
 		  /* Parse the PDF file with PreflightParser that inherits from the NonSequentialParser.
 		   * Some additional controls are present to check a set of PDF/A requirements. 
 		   * (Stream length consistency, EOL after some Keyword...)
 		   */
-		  parser.parse();
+			parser.parse();
 
 		  /* Once the syntax validation is done, 
 		   * the parser can provide a PreflightDocument 
 		   * (that inherits from PDDocument) 
 		   * This document process the end of PDF/A validation.
 		   */
-		  PreflightDocument document = parser.getPreflightDocument();
-		  document.validate();
+			document = parser.getPreflightDocument();
+			document.validate();
 		  
-		  // Get validation result
-		  result = document.getResult();
-		  document.close();
+			// Get validation result
+			result = document.getResult();
 
 		} catch (SyntaxValidationException e) {
-		  /* the parse method can throw a SyntaxValidationException 
-		   *if the PDF file can't be parsed.
-		   *
-		   *In this case, the exception contains an instance of ValidationResult
-		   */
-		  result = e.getResult();
+			/*
+			 * the parse method can throw a SyntaxValidationExceptionif the PDF
+			 * file can't be parsed.
+			 * 
+			 * In this case, the exception contains an instance of
+			 * ValidationResult
+			 */
+			result = e.getResult();
+		} catch (Exception e) {
+			// Otherwise, a NULL result:
+			result = null;
+
+		} finally {
+			// Ensure the document is always closed:
+			if (document != null)
+				document.close();
 		}
 
 		// display validation result
 		Set<String> rs = new HashSet<String>();
-		if (result.isValid()) {
+		if (result != null && result.isValid()) {
 		  //System.out.println("The resource is not a valid PDF/A-1b file");
 		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
 		} else {
 		  //System.out.println("The resource is not valid, error(s) :");
 		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.FALSE.toString() );
-		  for (ValidationError error : result.getErrorsList()) {
-		    //System.out.println(error.getErrorCode() + " : " + error.getDetails());
-		    rs.add(error.getErrorCode() + " : " + error.getDetails());
-		  }
+			if (result != null) {
+				for (ValidationError error : result.getErrorsList()) {
+					// System.out.println(error.getErrorCode() + " : " +
+					// error.getDetails());
+					rs.add(error.getErrorCode() + " : " + error.getDetails());
+				}
+			}
 		}
 
 	    metadata.set( PDF_PREFLIGHT_ERRORS , rs.toArray( new String[] {} ));
