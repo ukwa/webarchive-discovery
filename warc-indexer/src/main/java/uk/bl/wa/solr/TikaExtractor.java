@@ -46,6 +46,7 @@ import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.sax.ToTextContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.joda.time.DateTime;
@@ -55,10 +56,10 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
+import uk.bl.wa.extract.Times;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-
-import uk.bl.wa.extract.Times;
 
 
 /**
@@ -91,6 +92,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
 	private int max_text_length; 
+
+	/** Whether or not to use the Boilerpipe boilerplate remover */
+	private boolean useBoilerpipe = false;
 
 	/* --- --- --- --- */
 	
@@ -397,7 +401,17 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length );
+		// Set up the to-text handler
+		ContentHandler ch = new ToTextContentHandler(new SpaceTrimWriter(out));
+		// Optionally wrap in the 'boilerpipe' boilerplate-remover:
+		if (this.useBoilerpipe) {
+			BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch);
+			bpch.setIncludeMarkup(true);
+			ch = bpch;
+		}
+		// Finally, wrap in a limiteed write-out to avoid hanging processing
+		// very large or malformed streams.
+		return new WriteOutContentHandler(ch, max_text_length);
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter

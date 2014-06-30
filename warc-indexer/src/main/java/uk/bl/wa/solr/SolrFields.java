@@ -86,7 +86,7 @@ public interface SolrFields {
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";
-	public static final String SOLR_EXTRACTED_TEXT = "content_text";
+	public static final String SOLR_EXTRACTED_TEXT = "content";
 	public static final String SOLR_EXTRACTED_TEXT_LENGTH = "content_text_length";
 	public static final String SOLR_TIKA_METADATA = "content_metadata";
 	public static final String WAYBACK_DATE = "wayback_date";
