@@ -28,7 +28,6 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
@@ -42,7 +41,6 @@ import org.archive.io.ArchiveRecord;
 import org.archive.util.ArchiveUtils;
 import org.junit.Test;
 
-import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
@@ -215,44 +213,4 @@ public class WARCIndexerTest {
 		assertEquals(expectedNullCount, nullCount);
 	}
 
-	/**
-	 * @throws NoSuchAlgorithmException
-	 * @throws IOException
-	 * @throws FileNotFoundException
-	 * 
-	 */
-	@Test
-	public void testAudioID() throws NoSuchAlgorithmException,
-			FileNotFoundException, IOException {
-		WARCIndexer windex = new WARCIndexer();
-		windex.setCheckSolrForDuplicates(false);
-
-		String inputFile = "src/test/resources/archived-mp3-test.warc.gz";
-		System.out.println("ArchiveUtils.isGZipped: "
-				+ ArchiveUtils.isGzipped(new FileInputStream(inputFile)));
-		ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
-		Iterator<ArchiveRecord> ir = reader.iterator();
-		int recordCount = 0;
-		int nullCount = 0;
-
-		// Iterate though each record in the WARC file
-		while (ir.hasNext()) {
-			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract("", rec);
-			recordCount++;
-			if (doc == null) {
-				nullCount++;
-			} else {
-				System.out.println("TIKA: "
-						+ doc.getField(SolrFields.CONTENT_TYPE_TIKA));
-				System.out.println("DROID: "
-						+ doc.getField(SolrFields.CONTENT_TYPE_DROID));
-			}
-		}
-
-		System.out.println("recordCount: " + recordCount + " nullCount: "
-				+ nullCount);
-		assertEquals(36, recordCount);
-
-	}
 }
