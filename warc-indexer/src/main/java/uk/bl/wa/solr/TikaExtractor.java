@@ -264,13 +264,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			
 			// Attempt to record all metadata discovered:
 			for (String m : metadata.names()) {
-				if (Metadata.RESOURCE_NAME_KEY.equals(m)
-						|| TikaCoreProperties.TITLE.getName().equals(m)
-						|| "title".equals("m") || "description".equals("m")
-						|| Metadata.CONTENT_ENCODING.equals(m)
-						|| Metadata.CONTENT_LOCATION.equals(m)
-						|| "ACTINICTITLE".equals(m)
-						|| Metadata.CONTENT_TYPE.equals(m)) {
+				if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
+						|| TikaCoreProperties.TITLE.getName().equalsIgnoreCase(
+								m) || "title".equals("m")
+						|| "description".equalsIgnoreCase("m")
+						|| Metadata.CONTENT_ENCODING.equalsIgnoreCase(m)
+						|| Metadata.CONTENT_LOCATION.equalsIgnoreCase(m)
+						|| "ACTINICTITLE".equalsIgnoreCase(m)
+						|| Metadata.CONTENT_TYPE.equalsIgnoreCase(m)) {
 					continue;
 				}
 				// Record in the document:

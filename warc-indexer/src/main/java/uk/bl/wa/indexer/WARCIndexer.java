@@ -256,7 +256,7 @@ public class WARCIndexer {
 
 			// Basic metadata:
 			solr.setField(SolrFields.SOURCE_FILE,
-					archiveName + "#" + record.getPosition());
+					archiveName + "@" + header.getOffset());
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
