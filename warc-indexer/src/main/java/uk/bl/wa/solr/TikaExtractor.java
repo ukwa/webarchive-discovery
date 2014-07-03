@@ -44,7 +44,6 @@ import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
@@ -265,9 +264,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			// Attempt to record all metadata discovered:
 			for (String m : metadata.names()) {
 				if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
-						|| TikaCoreProperties.TITLE.getName().equalsIgnoreCase(
-								m) || "title".equals("m")
-						|| "description".equalsIgnoreCase("m")
+						|| "dc:title".equalsIgnoreCase(m)
+						|| "title".equalsIgnoreCase(m)
+						|| "description".equalsIgnoreCase(m)
+						|| "keywords".equalsIgnoreCase(m)
 						|| Metadata.CONTENT_ENCODING.equalsIgnoreCase(m)
 						|| Metadata.CONTENT_LOCATION.equalsIgnoreCase(m)
 						|| "ACTINICTITLE".equalsIgnoreCase(m)
