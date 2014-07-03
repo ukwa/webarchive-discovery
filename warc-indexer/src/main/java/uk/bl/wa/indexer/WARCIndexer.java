@@ -47,7 +47,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -256,6 +255,8 @@ public class WARCIndexer {
 			// --- Basic headers ---
 
 			// Basic metadata:
+			solr.setField(SolrFields.SOURCE_FILE,
+					archiveName + "#" + record.getPosition());
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
@@ -270,20 +271,18 @@ public class WARCIndexer {
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
 			try {
-				url = new URL( "http://" + canon.urlStringToKey( fullUrl ) );
-			} catch( URIException u ) {
-				// Some URIs still causing problems in canonicalizer; in which case try with the full URL.
-				log.error( u.getMessage() );
+				url = new URL(fullUrl);
+			} catch (MalformedURLException e) {
+				// Some URIs causing problem, so try the canonicalizer; in which
+				// case try with the full URL.
+				log.error(e.getMessage());
 				try {
-					url = new URL( fullUrl );
-				} catch( MalformedURLException e ) {
+					url = new URL("http://" + canon.urlStringToKey(fullUrl));
+				} catch (Exception e2) {
 					// If this fails, abandon all hope.
-					log.error( e.getMessage() );
+					log.error(e2.getMessage());
 					return null;
 				}
-			} catch( MalformedURLException e ) {
-				log.error( e.getMessage() );
-				return null;
 			}
 			// Spot 'slash pages':
 			if( url.getPath().equals( "/" ) || url.getPath().equals( "" ) || url.getPath().matches( "/index\\.[a-z]+$" ) )

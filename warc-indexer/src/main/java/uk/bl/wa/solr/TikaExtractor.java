@@ -44,6 +44,7 @@ import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
@@ -254,19 +255,40 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				//log.debug("Failed to extract any text from: "+url);
 			}
 			
-			/*
 			// Noisily report all metadata properties:
-			for( String m : metadata.names() ) {
-				log.info("For "+url.substring(url.length() - (int) Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m));
-			}
-			*/
+			/*
+			 * for( String m : metadata.names() ) {
+			 * log.info("For "+url.substring(url.length() - (int)
+			 * Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m)); }
+			 */
 			
+			// Attempt to record all metadata discovered:
+			for (String m : metadata.names()) {
+				if (Metadata.RESOURCE_NAME_KEY.equals(m)
+						|| TikaCoreProperties.TITLE.getName().equals(m)
+						|| "title".equals("m") || "description".equals("m")
+						|| Metadata.CONTENT_ENCODING.equals(m)
+						|| Metadata.CONTENT_LOCATION.equals(m)
+						|| "ACTINICTITLE".equals(m)
+						|| Metadata.CONTENT_TYPE.equals(m)) {
+					continue;
+				}
+				// Record in the document:
+				solr.addField(SolrFields.SOLR_TIKA_METADATA,
+						m + "=" + metadata.get(m));
+			}
+
+			// Also Pick out particular metadata:
 			String contentType = metadata.get( Metadata.CONTENT_TYPE );
-			solr.addField( SolrFields.SOLR_CONTENT_TYPE, contentType );
-			solr.addField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ) );
-			solr.addField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ) );
-			solr.addField( SolrFields.SOLR_AUTHOR, metadata.get( DublinCore.CREATOR) );
-			solr.addField( SolrFields.CONTENT_ENCODING, metadata.get( Metadata.CONTENT_ENCODING ) );
+			solr.addField(SolrFields.SOLR_CONTENT_TYPE, contentType);
+			solr.addField(SolrFields.SOLR_TITLE, metadata.get(DublinCore.TITLE));
+			solr.addField(SolrFields.SOLR_DESCRIPTION,
+					metadata.get(DublinCore.DESCRIPTION));
+			solr.addField(SolrFields.SOLR_KEYWORDS, metadata.get("keywords"));
+			solr.addField(SolrFields.SOLR_AUTHOR,
+					metadata.get(DublinCore.CREATOR));
+			solr.addField(SolrFields.CONTENT_ENCODING,
+					metadata.get(Metadata.CONTENT_ENCODING));
 
 			// Parse out any embedded date that can act as a created/modified date.
 			String date = null;
