@@ -274,9 +274,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 						|| Metadata.CONTENT_TYPE.equalsIgnoreCase(m)) {
 					continue;
 				}
-				// Record in the document:
-				solr.addField(SolrFields.SOLR_TIKA_METADATA,
-						m + "=" + metadata.get(m));
+				// Record in the document, but trim big ones:
+				String value = metadata.get(m);
+				if (value != null && value.length() > 100) {
+					value = value.substring(0, 100);
+				}
+				solr.addField(SolrFields.SOLR_TIKA_METADATA, m + "=" + value);
 			}
 
 			// Also Pick out particular metadata:

@@ -636,13 +636,6 @@ public class WARCIndexer {
 		if( contentType != null )
 			solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
 
-		// Fall back on serverType for plain text:
-		if( contentType != null && contentType.startsWith( "text/plain" ) ) {
-			if( serverType != null ) {
-				contentType = serverType;
-			}
-		}
-
 		// Content-Type can still be null
 		if( contentType != null ) {
 			// Strip parameters out of main type field:
