@@ -195,7 +195,7 @@
         <checksumPolicy>warn</checksumPolicy>
       </snapshots>
     </repository>
-
+<!--
       <repository>
          <id>weka</id>
          <name>Weka unofficial repository</name>
@@ -205,6 +205,7 @@
             <enabled>false</enabled>
          </snapshots>
       </repository>
+-->
       <repository>
          <id>apache-snapshots-repo</id>
          <name>ASF snapshots</name>
