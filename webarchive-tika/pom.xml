@@ -148,32 +148,4 @@
          <version>0.97-incubator</version>
       </dependency>
    </dependencies>
-   <repositories>
-      <repository>
-         <id>weka</id>
-         <name>Weka unofficial repository</name>
-         <layout>default</layout>
-         <url>http://maven.ch.cam.ac.uk/m2repo/</url>
-         <snapshots>
-            <enabled>false</enabled>
-         </snapshots>
-      </repository>
-      <repository>
-         <id>apache-snapshots-repo</id>
-         <name>ASF snapshots</name>
-         <releases>
-            <enabled>false</enabled>
-         </releases>
-         <snapshots>
-            <enabled>true</enabled>
-         </snapshots>
-         <url>https://repository.apache.org/snapshots/</url>
-      </repository>
-      <repository>
-         <id>openimaj</id>
-         <name>OpenIMAJ Maven Repository</name>
-         <url>http://maven.openimaj.org/</url>
-         <layout>default</layout>
-      </repository>
-   </repositories>
 </project>

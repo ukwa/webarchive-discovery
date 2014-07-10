@@ -47,24 +47,6 @@
 			</plugin>
 		</plugins>
 	</build>
-	<repositories>
-		<repository>
-			<releases>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-				<updatePolicy>daily</updatePolicy>
-				<checksumPolicy>warn</checksumPolicy>
-			</snapshots>
-			<id>internetarchive</id>
-			<name>Internet Archive Maven Repository</name>
-			<url>http://builds.archive.org:8080/maven2</url>
-			<layout>default</layout>
-		</repository>
-	</repositories>
 	<dependencies>
 		<dependency>
 			<groupId>uk.bl.wa.discovery</groupId>

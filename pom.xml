@@ -160,5 +160,67 @@
          <name>Public online Restlet repository</name>
          <url>http://maven.restlet.org</url>
       </repository>
+<repository>
+      <id>internetarchive</id>
+      <name>Internet Archive Maven Repository</name>
+      <url>http://builds.archive.org:8080/maven2</url>
+      <layout>default</layout>
+
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </snapshots>
+    </repository>
+
+    <repository>
+      <id>cloudera</id>
+      <name>Cloudera Hadoop</name>
+      <url>https://repository.cloudera.com/artifactory/cloudera-repos/</url>
+      <layout>default</layout>
+
+      <releases>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </releases>
+      <snapshots>
+        <enabled>true</enabled>
+        <updatePolicy>daily</updatePolicy>
+        <checksumPolicy>warn</checksumPolicy>
+      </snapshots>
+    </repository>
+
+      <repository>
+         <id>weka</id>
+         <name>Weka unofficial repository</name>
+         <layout>default</layout>
+         <url>http://maven.ch.cam.ac.uk/m2repo/</url>
+         <snapshots>
+            <enabled>false</enabled>
+         </snapshots>
+      </repository>
+      <repository>
+         <id>apache-snapshots-repo</id>
+         <name>ASF snapshots</name>
+         <releases>
+            <enabled>false</enabled>
+         </releases>
+         <snapshots>
+            <enabled>true</enabled>
+         </snapshots>
+         <url>https://repository.apache.org/snapshots/</url>
+      </repository>
+      <repository>
+         <id>openimaj</id>
+         <name>OpenIMAJ Maven Repository</name>
+         <url>http://maven.openimaj.org/</url>
+         <layout>default</layout>
+      </repository>
    </repositories>
 </project>
