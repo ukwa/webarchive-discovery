@@ -124,10 +124,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	if (this.actFile != null) {
 	    LOG.info("ACT file: " + this.actFile);
 	} else {
-	    LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
+        if (this.readAct) {
+	        LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
+	        LOG.info("ACT Collection URL: "
+		        + index_conf.getString("warc.act.collections.url"));
+        }
 	}
-	LOG.info("ACT Collection URL: "
-		+ index_conf.getString("warc.act.collections.url"));
 	if (index_conf.getBoolean("warc.solr.use_hash_url_id")) {
 	    LOG.info("Using hash-based ID.");
 	}
