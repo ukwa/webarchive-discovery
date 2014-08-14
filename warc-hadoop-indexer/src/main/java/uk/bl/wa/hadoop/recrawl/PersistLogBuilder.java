@@ -31,6 +31,7 @@ public class PersistLogBuilder extends Configured implements Tool {
     private static final String CLI_HEADER = "PersistLogBuilder - MapReduce method for building persistlog data from WARCS.";
     private String input;
     private String output;
+    private int reducers = 1;
 
     public int run(String[] args) throws IOException, ParseException {
 	JobConf conf = new JobConf(getConf(), PersistLogBuilder.class);
@@ -55,7 +56,7 @@ public class PersistLogBuilder extends Configured implements Tool {
 	conf.setOutputKeyClass(Text.class);
 	conf.setOutputValueClass(Text.class);
 	conf.setOutputFormat(TextOutputFormat.class);
-	conf.setNumReduceTasks(1);
+	conf.setNumReduceTasks(reducers);
 	this.setProperties(conf);
 	JobClient client = new JobClient(conf);
 	client.submitJob(conf);
@@ -66,6 +67,7 @@ public class PersistLogBuilder extends Configured implements Tool {
 	Options options = new Options();
 	options.addOption("i", true, "input file list");
 	options.addOption("o", true, "output directory");
+	options.addOption("r", true, "number of reducers");
 
 	CommandLineParser parser = new PosixParser();
 	CommandLine cmd = parser.parse(options, args);
@@ -77,7 +79,9 @@ public class PersistLogBuilder extends Configured implements Tool {
 	}
 	this.input = cmd.getOptionValue("i");
 	this.output = cmd.getOptionValue("o");
-
+	if (cmd.hasOption("r")) {
+	    reducers = Integer.parseInt(cmd.getOptionValue("r"));
+	}
     }
 
     public static void main(String[] args) throws Exception {
