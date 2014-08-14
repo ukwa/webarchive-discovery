@@ -46,6 +46,7 @@ import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.sax.ToTextContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.joda.time.DateTime;
@@ -55,10 +56,10 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
+import uk.bl.wa.extract.Times;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-
-import uk.bl.wa.extract.Times;
 
 
 /**
@@ -91,6 +92,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	
 	/** Maximum number of characters of text to pull out of any given resource: */
 	private int max_text_length; 
+
+	/** Whether or not to use the Boilerpipe boilerplate remover */
+	private boolean useBoilerpipe = false;
 
 	/* --- --- --- --- */
 	
@@ -250,19 +254,45 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				//log.debug("Failed to extract any text from: "+url);
 			}
 			
-			/*
 			// Noisily report all metadata properties:
-			for( String m : metadata.names() ) {
-				log.info("For "+url.substring(url.length() - (int) Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m));
-			}
-			*/
+			/*
+			 * for( String m : metadata.names() ) {
+			 * log.info("For "+url.substring(url.length() - (int)
+			 * Math.pow(url.length(),0.85))+": "+m+" -> "+metadata.get(m)); }
+			 */
 			
+			// Attempt to record all metadata discovered:
+			for (String m : metadata.names()) {
+				if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
+						|| "dc:title".equalsIgnoreCase(m)
+						|| "title".equalsIgnoreCase(m)
+						|| "description".equalsIgnoreCase(m)
+						|| "keywords".equalsIgnoreCase(m)
+						|| Metadata.CONTENT_ENCODING.equalsIgnoreCase(m)
+						|| Metadata.CONTENT_LOCATION.equalsIgnoreCase(m)
+						|| "ACTINICTITLE".equalsIgnoreCase(m)
+						|| Metadata.CONTENT_TYPE.equalsIgnoreCase(m)) {
+					continue;
+				}
+				// Record in the document, but trim big ones:
+				String value = metadata.get(m);
+				if (value != null && value.length() > 100) {
+					value = value.substring(0, 100);
+				}
+				solr.addField(SolrFields.SOLR_TIKA_METADATA, m + "=" + value);
+			}
+
+			// Also Pick out particular metadata:
 			String contentType = metadata.get( Metadata.CONTENT_TYPE );
-			solr.addField( SolrFields.SOLR_CONTENT_TYPE, contentType );
-			solr.addField( SolrFields.SOLR_TITLE, metadata.get( DublinCore.TITLE ) );
-			solr.addField( SolrFields.SOLR_DESCRIPTION, metadata.get( DublinCore.DESCRIPTION ) );
-			solr.addField( SolrFields.SOLR_AUTHOR, metadata.get( DublinCore.CREATOR) );
-			solr.addField( SolrFields.CONTENT_ENCODING, metadata.get( Metadata.CONTENT_ENCODING ) );
+			solr.addField(SolrFields.SOLR_CONTENT_TYPE, contentType);
+			solr.addField(SolrFields.SOLR_TITLE, metadata.get(DublinCore.TITLE));
+			solr.addField(SolrFields.SOLR_DESCRIPTION,
+					metadata.get(DublinCore.DESCRIPTION));
+			solr.addField(SolrFields.SOLR_KEYWORDS, metadata.get("keywords"));
+			solr.addField(SolrFields.SOLR_AUTHOR,
+					metadata.get(DublinCore.CREATOR));
+			solr.addField(SolrFields.CONTENT_ENCODING,
+					metadata.get(Metadata.CONTENT_ENCODING));
 
 			// Parse out any embedded date that can act as a created/modified date.
 			String date = null;
@@ -397,7 +427,17 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	public ContentHandler getHandler( Writer out ) {
-		return new WriteOutContentHandler( new ToTextContentHandler( new SpaceTrimWriter(out) ), max_text_length );
+		// Set up the to-text handler
+		ContentHandler ch = new ToTextContentHandler(new SpaceTrimWriter(out));
+		// Optionally wrap in the 'boilerpipe' boilerplate-remover:
+		if (this.useBoilerpipe) {
+			BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch);
+			bpch.setIncludeMarkup(true);
+			ch = bpch;
+		}
+		// Finally, wrap in a limiteed write-out to avoid hanging processing
+		// very large or malformed streams.
+		return new WriteOutContentHandler(ch, max_text_length);
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter

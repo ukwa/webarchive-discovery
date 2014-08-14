@@ -110,7 +110,7 @@ public class Solate {
 					+ docCollection);
 		}
 
-		LOG.debug("Slice " + slice.getName() + " == #" + rootShard);
+		// LOG.debug("Slice " + slice.getName() + " == #" + rootShard);
 
 	    return rootShard;
 	}

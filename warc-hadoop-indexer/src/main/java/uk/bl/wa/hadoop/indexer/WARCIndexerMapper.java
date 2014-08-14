@@ -42,6 +42,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 	private Solate sp = null;
 	private int numShards = 1;
+	private Config config;
 
 	public WARCIndexerMapper() {
 		try {
@@ -58,7 +59,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 	public void configure( JobConf job ) {
 		try {
 			// Get config from job property:
-			Config config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
+			config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
 			// Set up sharding:
@@ -146,7 +147,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		} catch (OutOfMemoryError e) {
 			// Allow processing to continue if a record causes OOME:
-			LOG.error("OOME" + e.getClass().getName() + ": " + e.getMessage()
+			LOG.error("OOME " + e.getClass().getName() + ": " + e.getMessage()
 					+ "; " + header.getUrl() + "; " + header.getOffset());
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);

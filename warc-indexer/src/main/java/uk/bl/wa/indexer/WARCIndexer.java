@@ -47,7 +47,6 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
-import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -256,6 +255,8 @@ public class WARCIndexer {
 			// --- Basic headers ---
 
 			// Basic metadata:
+			solr.setField(SolrFields.SOURCE_FILE,
+					archiveName + "@" + header.getOffset());
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
@@ -270,20 +271,18 @@ public class WARCIndexer {
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
 			try {
-				url = new URL( "http://" + canon.urlStringToKey( fullUrl ) );
-			} catch( URIException u ) {
-				// Some URIs still causing problems in canonicalizer; in which case try with the full URL.
-				log.error( u.getMessage() );
+				url = new URL(fullUrl);
+			} catch (MalformedURLException e) {
+				// Some URIs causing problem, so try the canonicalizer; in which
+				// case try with the full URL.
+				log.error(e.getMessage());
 				try {
-					url = new URL( fullUrl );
-				} catch( MalformedURLException e ) {
+					url = new URL("http://" + canon.urlStringToKey(fullUrl));
+				} catch (Exception e2) {
 					// If this fails, abandon all hope.
-					log.error( e.getMessage() );
+					log.error(e2.getMessage());
 					return null;
 				}
-			} catch( MalformedURLException e ) {
-				log.error( e.getMessage() );
-				return null;
 			}
 			// Spot 'slash pages':
 			if( url.getPath().equals( "/" ) || url.getPath().equals( "" ) || url.getPath().matches( "/index\\.[a-z]+$" ) )
@@ -452,7 +451,7 @@ public class WARCIndexer {
 			hcis.cleanup();
 
 			// Derive normalised/simplified content type:
-			processContentType( solr, header );
+			processContentType(solr, header);
 
 			// -----------------------------------------------------
 			// Payload analysis complete, now performing text analysis:
@@ -489,8 +488,13 @@ public class WARCIndexer {
 			// Get the other headers:
 			for( Header h : httpHeaders ) {
 				// Get the type from the server
-				if( h.getName().equals( HttpHeaders.CONTENT_TYPE ) && solr.getField( SolrFields.CONTENT_TYPE_SERVED ) == null )
-					solr.addField( SolrFields.CONTENT_TYPE_SERVED, h.getValue() );
+				if (h.getName().equals(HttpHeaders.CONTENT_TYPE)
+						&& solr.getField(SolrFields.CONTENT_TYPE_SERVED) == null) {
+					String servedType = h.getValue();
+					if (servedType.length() > 200)
+						servedType = servedType.substring(0, 200);
+					solr.addField(SolrFields.CONTENT_TYPE_SERVED, servedType);
+				}
 				// Also, grab the X-Powered-By or Server headers if present:
 				if( h.getName().equals( "X-Powered-By" ) )
 					solr.addField( SolrFields.SERVER, h.getValue() );
@@ -603,7 +607,6 @@ public class WARCIndexer {
 	private void processContentType( SolrRecord solr, ArchiveRecordHeader header ) {
 		// Get the current content-type:
 		String contentType = ( String ) solr.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
-		String serverType = ( String ) solr.getFieldValue( SolrFields.CONTENT_TYPE_SERVED );
 
 		// Store the raw content type from Tika:
 		solr.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
@@ -636,13 +639,6 @@ public class WARCIndexer {
 		// Determine content type:
 		if( contentType != null )
 			solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
-
-		// Fall back on serverType for plain text:
-		if( contentType != null && contentType.startsWith( "text/plain" ) ) {
-			if( serverType != null ) {
-				contentType = serverType;
-			}
-		}
 
 		// Content-Type can still be null
 		if( contentType != null ) {

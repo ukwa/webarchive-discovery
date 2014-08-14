@@ -24,7 +24,7 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -41,13 +41,12 @@ import org.archive.io.ArchiveRecord;
 import org.archive.util.ArchiveUtils;
 import org.junit.Test;
 
+import uk.bl.wa.solr.SolrRecord;
+
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueFactory;
-
-import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.solr.SolrRecord;
 
 public class WARCIndexerTest {
 	
@@ -213,4 +212,5 @@ public class WARCIndexerTest {
 		System.out.println("nullCount: "+nullCount);
 		assertEquals(expectedNullCount, nullCount);
 	}
+
 }
