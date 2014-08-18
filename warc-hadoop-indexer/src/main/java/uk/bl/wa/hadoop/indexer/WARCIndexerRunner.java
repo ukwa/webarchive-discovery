@@ -47,7 +47,7 @@ import com.typesafe.config.ConfigRenderOptions;
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerRunner extends Configured implements Tool {
     private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
-    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-a] [Read from ACT.] [-d] [Dump config.] [-w] [Wait for completion.]";
+    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-a] [Read from ACT.] [-f] [Read ACT data from file] [-d] [Dump config.] [-w] [Wait for completion.] [-x] [output XML in OAI-PMH format]";
     private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
@@ -58,6 +58,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
     private String actFile;
     private boolean wait;
     private boolean dumpConfig;
+    private boolean exportXml;
 
     private String cookie;
     private String csrf;
@@ -124,11 +125,11 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	if (this.actFile != null) {
 	    LOG.info("ACT file: " + this.actFile);
 	} else {
-        if (this.readAct) {
-	        LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
-	        LOG.info("ACT Collection URL: "
-		        + index_conf.getString("warc.act.collections.url"));
-        }
+	    if (this.readAct) {
+		LOG.info("ACT URL: " + index_conf.getString("warc.act.url"));
+		LOG.info("ACT Collection URL: "
+			+ index_conf.getString("warc.act.collections.url"));
+	    }
 	}
 	if (index_conf.getBoolean("warc.solr.use_hash_url_id")) {
 	    LOG.info("Using hash-based ID.");
@@ -199,6 +200,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	conf.setOutputValueClass(Text.class);
 	conf.setMapOutputValueClass(WritableSolrRecord.class);
 	conf.setNumReduceTasks(numReducers);
+	conf.setBoolean("mapred.output.oai-pmh", this.exportXml);
     }
 
     /**
@@ -260,6 +262,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	options.addOption("f", true, "read ACT records from file");
 	options.addOption("w", false, "wait for job to finish");
 	options.addOption("d", false, "dump configuration");
+	options.addOption("x", false, "output XML in OAI-PMH format");
 	// TODO: Problematic with "hadoop jar"?
 	// options.addOption( OptionBuilder.withArgName( "property=value"
 	// ).hasArgs( 2 ).withValueSeparator().withDescription(
@@ -282,6 +285,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	    this.configPath = cmd.getOptionValue("c");
 	}
 	this.dumpConfig = cmd.hasOption("d");
+	this.exportXml = cmd.hasOption("x");
     }
 
     /**
