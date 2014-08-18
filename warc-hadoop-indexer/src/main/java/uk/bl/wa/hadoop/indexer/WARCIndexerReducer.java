@@ -23,6 +23,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.apache.solr.hadoop.Solate;
+import uk.bl.wa.util.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
@@ -81,7 +82,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
 	this.dummyRun = conf.getBoolean("warc.solr.dummy_run");
 	this.batchSize = conf.getInt("warc.solr.batch_size");
 	this.useEmbeddedServer = conf.getBoolean("warc.solr.hdfs");
-	this.exportXml = conf.getBoolean("mapred.output.oai-pmh");
+	if (job.get("mapred.output.oai-pmh") != null)
+	    this.exportXml = Boolean.parseBoolean(job
+	        .get("mapred.output.oai-pmh"));
 
 	// Decide between to-HDFS and to-SolrCloud indexing modes:
 	if (this.useEmbeddedServer) {
@@ -169,11 +172,14 @@ public class WARCIndexerReducer extends MapReduceBase implements
 			+ reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS)
 				.getValue());
 	    }
-	    if (this.exportXml) {
+	    if (this.exportXml
+		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null
+		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(
+			    SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
 		output.collect(
 			new Text(""),
-			new Text(MetadataBuilder.SolrDocumentToElement(solr
-				.getSolrDocument())));
+			new Text(MetadataBuilder
+				.SolrDocumentToElement(solr.doc)));
 	    }
 	}
 
