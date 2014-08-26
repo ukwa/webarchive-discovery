@@ -23,7 +23,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.apache.solr.hadoop.Solate;
-import uk.bl.wa.util.solr.SolrFields;
+import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
@@ -173,13 +173,16 @@ public class WARCIndexerReducer extends MapReduceBase implements
 				.getValue());
 	    }
 	    if (this.exportXml
-		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null
-		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(
+					&& solr.getSolrDocument().getFieldValue(
+							SolrFields.SOLR_URL_TYPE) != null
+					&& solr.getSolrDocument()
+							.getFieldValue(SolrFields.SOLR_URL_TYPE)
+							.equals(
 			    SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
-		output.collect(
-			new Text(""),
-			new Text(MetadataBuilder
-				.SolrDocumentToElement(solr.doc)));
+				output.collect(
+						new Text(""),
+						new Text(MetadataBuilder.SolrDocumentToElement(solr
+								.getSolrDocument())));
 	    }
 	}
 
