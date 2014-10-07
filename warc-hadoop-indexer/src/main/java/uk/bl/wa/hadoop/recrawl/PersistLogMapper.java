@@ -22,6 +22,8 @@ import java.util.HashMap;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.lang.SerializationUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -49,6 +51,7 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 @SuppressWarnings({ "unchecked", "deprecation" })
 public class PersistLogMapper extends MapReduceBase implements
 	Mapper<Text, WritableArchiveRecord, Text, Text> {
+    private static final Log LOGGER = LogFactory.getLog(PersistLogMapper.class);
 
     ArchiveRecordHeader responseHeader = null;
     CrawlURI curi = null;
@@ -64,9 +67,11 @@ public class PersistLogMapper extends MapReduceBase implements
 	    OutputCollector<Text, Text> output, Reporter reporter)
 	    throws IOException {
 	ArchiveRecord record = value.getRecord();
+	String type = (String) record.getHeader().getHeaderValue(
+		HEADER_KEY_TYPE);
 	try {
-	    if (record.getHeader().getHeaderValue(HEADER_KEY_TYPE)
-		    .equals(WARCRecordType.response.toString())) {
+	    if (type.equals(WARCRecordType.response.toString())
+		    || type.equals(WARCRecordType.revisit.toString())) {
 		responseHeader = record.getHeader();
 		latestFetch = new HashMap<String, Object>();
 		if (responseHeader.getUrl().startsWith("http")) {
@@ -74,18 +79,20 @@ public class PersistLogMapper extends MapReduceBase implements
 		    if (statusLine != null && statusLine.startsWith("HTTP")) {
 			int status = Integer
 				.parseInt(statusLine.split("\\s+")[1].trim());
-			// Only include successes.
-			if (status > 0 && status < 400) {
-			    latestFetch.put(A_STATUS, status);
-			}
+			latestFetch.put(A_STATUS, status);
 		    }
 		}
 	    } else {
-		if (value.getRecord().getHeader()
-			.getHeaderValue(HEADER_KEY_TYPE)
-			.equals(WARCRecordType.metadata.toString())) {
-		    // If we haven't added a status line, skip.
-		    if (latestFetch == null || latestFetch.size() == 0) {
+		if (type.equals(WARCRecordType.metadata.toString())) {
+		    // We MUST have hit a response/revisit which matches this
+		    // metadata record.
+		    if (responseHeader == null
+			    || !record.getHeader().getUrl()
+				    .equals(responseHeader.getUrl())
+			    || latestFetch == null || latestFetch.size() == 0) {
+			LOGGER.warn("Found metadata:"
+				+ record.getHeader().getUrl()
+				+ " without response.");
 			return;
 		    }
 		    // Store the key:value pairs...
@@ -133,11 +140,13 @@ public class PersistLogMapper extends MapReduceBase implements
 					    .getPersistentDataMap())));
 		    output.collect(new Text(surt), new Text(surt + " "
 			    + persist));
+
+		    responseHeader = null;
+		    latestFetch = null;
 		}
 	    }
 	} catch (Exception e) {
 	    e.printStackTrace();
 	}
     }
-
 }
