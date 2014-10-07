@@ -106,10 +106,11 @@ public class WARCIndexerReducer extends MapReduceBase implements
 		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null
 		    && solr.doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(
 			    SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
-		output.collect(
-			new Text(""),
-			new Text(MetadataBuilder
-				.SolrDocumentToElement(solr.doc)));
+		String element = MetadataBuilder
+			.SolrDocumentToElement(solr.doc);
+		if (element != null) {
+		    output.collect(new Text(""), new Text(element));
+		}
 	    }
 	}
     }

@@ -287,8 +287,12 @@ public class WARCIndexer {
 			// Record the domain (strictly, the host):
 			String host = url.getHost();
 			solr.doc.setField( SolrFields.SOLR_HOST, host );
-			solr.doc.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
-			solr.doc.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
+			String domain = LinkExtractor.extractPrivateSuffixFromHost( host );
+			if (domain != null)
+			    solr.doc.setField( SolrFields.DOMAIN, domain );
+			String publicSuffix = LinkExtractor.extractPublicSuffixFromHost( host );
+			if (publicSuffix != null)
+			    solr.doc.setField( SolrFields.PUBLIC_SUFFIX, publicSuffix);
 
 			InputStream tikainput = null;
 
