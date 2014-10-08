@@ -133,7 +133,7 @@ public class PersistLogMapper extends MapReduceBase implements
 		    HashMap<String, Object>[] history = new HashMap[] { latestFetch };
 		    curi.getData().put(A_FETCH_HISTORY, history);
 
-		    String surt = SURT.fromURI(curi.getUURI().getURI(), true);
+		    String surt = SURT.fromURI(curi.getUURI().getEscapedURI(), true);
 		    String persist = new String(
 			    Base64.encodeBase64(SerializationUtils
 				    .serialize((Serializable) curi
