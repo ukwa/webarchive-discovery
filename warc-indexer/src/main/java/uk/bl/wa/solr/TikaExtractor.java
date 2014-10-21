@@ -190,7 +190,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
 		StringBuilder detected = new StringBuilder();
 		try {
-			DetectRunner detect = new DetectRunner( tika, tikainput, detected );
+			DetectRunner detect = new DetectRunner(tika, tikainput, detected,
+					metadata);
 			Thread detectThread = new Thread( detect, Long.toString( System.currentTimeMillis() ) );
 			detectThread.start();
 			detectThread.join( 10000L );
@@ -394,11 +395,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		private Tika tika;
 		private InputStream input;
 		private StringBuilder mime;
+		private Metadata metadata;
 
-		public DetectRunner( Tika tika, InputStream input, StringBuilder mime ) {
+		public DetectRunner(Tika tika, InputStream input, StringBuilder mime,
+				Metadata metadata) {
 			this.tika = tika;
 			this.input = input;
 			this.mime = mime;
+			this.metadata = metadata;
 		}
 
 		@Override
@@ -407,9 +411,11 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				mime.append( this.tika.detect( this.input ) );
 			} catch( NoSuchFieldError e ) {
 				// Apache POI version issue?
-				log.error( "Tika.detect(): " + e.getMessage() );
+				log.error("Tika.detect(): " + e.getMessage());
+				addExceptionMetadata(metadata, new Exception(e));
 			} catch( Exception e ) {
 				log.error( "Tika.detect(): " + e.getMessage() );
+				addExceptionMetadata(metadata, e);
 			}
 		}
 	}
