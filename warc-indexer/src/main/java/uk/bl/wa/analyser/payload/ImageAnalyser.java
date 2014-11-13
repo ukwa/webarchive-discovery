@@ -53,15 +53,26 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	private long sampleCount = 0;
 
 	/** */
-	private final boolean extractFaces = true;
+	private final boolean extractFaces;
+
+	/** */
+	private final boolean extractDominantColours;
 
 	/** */
 	FaceDetectionParser fdp;
 
 	public ImageAnalyser(Config conf) {
+		this.extractFaces = conf
+				.getBoolean("warc.index.extract.content.images.detectFaces");
+		this.extractDominantColours = conf
+				.getBoolean("warc.index.extract.content.images.dominantColours");
+		log.info("Image - detect faces = " + this.extractFaces);
 		this.max_size_bytes = conf.getBytes("warc.index.extract.content.images.maxSizeInBytes");
+		log.info("Image - max size in bytes " + this.max_size_bytes);
 		this.sampleRate = 1.0 / conf
 				.getInt("warc.index.extract.content.images.analysisSamplingRate");
+		log.info("Image sample rate " + this.sampleRate);
+		// Set up the parser:
 		fdp = new FaceDetectionParser(conf);
 	}
 
@@ -84,8 +95,8 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			// Increment number of images sampled:
 			sampleCount++;
 
-			// Attempt to extract faces:
-			if (this.extractFaces) {
+			// Attempt to extract faces etc.:
+			if (this.extractFaces || this.extractDominantColours) {
 				ParseRunner parser = new ParseRunner(fdp, tikainput, metadata,
 						solr);
 				Thread thread = new Thread(parser, Long.toString(System
@@ -109,19 +120,23 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 						metadata.get(FaceDetectionParser.IMAGE_WIDTH));
 				solr.addField(SolrFields.IMAGE_SIZE,
 						metadata.get(FaceDetectionParser.IMAGE_SIZE));
-				// Store faces in SOLR:
-				for (String face : metadata
-						.getValues(FaceDetectionParser.FACE_FRAGMENT_ID)) {
-					log.debug("Found a face!");
-					solr.addField(SolrFields.IMAGE_FACES, face);
+				if (this.extractFaces) {
+					// Store faces in SOLR:
+					for (String face : metadata
+							.getValues(FaceDetectionParser.FACE_FRAGMENT_ID)) {
+						log.debug("Found a face!");
+						solr.addField(SolrFields.IMAGE_FACES, face);
+					}
+					int faces = metadata
+							.getValues(FaceDetectionParser.FACE_FRAGMENT_ID).length;
+					if (faces > 0)
+						solr.setField(SolrFields.IMAGE_FACES_COUNT, "" + faces);
 				}
-				int faces = metadata
-						.getValues(FaceDetectionParser.FACE_FRAGMENT_ID).length;
-				if (faces > 0)
-					solr.setField(SolrFields.IMAGE_FACES_COUNT, "" + faces);
-				// Store colour:
-				solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
-						metadata.get(FaceDetectionParser.DOM_COL));
+				if (this.extractDominantColours) {
+					// Store colour:
+					solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
+							metadata.get(FaceDetectionParser.DOM_COL));
+				}
 			}
 
 		}

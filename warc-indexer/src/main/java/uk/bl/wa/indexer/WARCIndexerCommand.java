@@ -95,6 +95,7 @@ public class WARCIndexerCommand {
 		CommandLineParser parser = new PosixParser();
 		String outputDir = null;
 		String solrUrl = null;
+		String configFile = null;
 		boolean isTextRequired = false;
 		boolean slashPages = false;
 		int batchSize = 1;
@@ -105,6 +106,7 @@ public class WARCIndexerCommand {
 		options.addOption( "t", "text", false, "Include text in XML in output files" );
 		options.addOption( "r", "slash", false, "Only process slash (root) pages." );
 		options.addOption( "b", "batch", true, "Batch size for submissions." );
+		options.addOption("c", "config", true, "Configuration to use.");
 		
 		try {
 		    // parse the command line arguments
@@ -154,6 +156,10 @@ public class WARCIndexerCommand {
 		   		batchSize = Integer.parseInt( line.getOptionValue( "b" ) );
 		   	}
 		   	
+			if (line.hasOption("c")) {
+				configFile = line.getOptionValue("c");
+			}
+
 		   	// Check that either an output dir or Solr URL is supplied
 		   	if(outputDir == null && solrUrl == null){
 		   		System.out.println( "A Solr URL or an Output Directory must be supplied" );
@@ -168,7 +174,8 @@ public class WARCIndexerCommand {
 		   		System.exit( 0 );
 		   	}
 	   	
-			parseWarcFiles( outputDir, solrUrl, cli_args, isTextRequired, slashPages, batchSize );
+			parseWarcFiles(configFile, outputDir, solrUrl, cli_args,
+					isTextRequired, slashPages, batchSize);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -184,11 +191,23 @@ public class WARCIndexerCommand {
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles( String outputDir, String solrUrl, String[] args, boolean isTextRequired, boolean slashPages, int batchSize ) throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, IOException {
+	public static void parseWarcFiles(String configFile, String outputDir,
+			String solrUrl, String[] args, boolean isTextRequired,
+			boolean slashPages, int batchSize) throws NoSuchAlgorithmException,
+			TransformerFactoryConfigurationError, TransformerException,
+			IOException {
 		long startTime = System.currentTimeMillis();
 
 		// If the Solr URL is set initiate a connections
 		Config conf = ConfigFactory.load();
+		if (configFile != null) {
+			log.info("Loading config from log file: " + configFile);
+			conf = ConfigFactory.parseFile(new File(configFile));
+			// ConfigPrinter.print(conf);
+			// conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
+			log.info("Loaded warc config.");
+			log.info(conf.getString("warc.title"));
+		}
 		if(solrUrl != null) {
 			conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
 		}

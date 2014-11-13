@@ -94,7 +94,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	private int max_text_length; 
 
 	/** Whether or not to use the Boilerpipe boilerplate remover */
-	private boolean useBoilerpipe = false;
+	private boolean useBoilerpipe;
+
+	/** Extract all metadata? */
+	private boolean extractAllMetadata;
 
 	/* --- --- --- --- */
 	
@@ -117,6 +120,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		
 		this.max_text_length = conf.getBytes( "warc.index.tika.max_text_length").intValue(); 
 		log.info("Config: Maximum length of text to extract (characters) "+ this.max_text_length);
+		
+		this.extractAllMetadata = conf
+				.getBoolean("warc.index.tika.extract_all_metadata");
+		log.info("Config: extractAllMetadata "+this.extractAllMetadata);
+
+		this.useBoilerpipe = conf.getBoolean("warc.index.tika.use_boilerpipe");
+		log.info("Config: useBoilerpipe " + this.useBoilerpipe);
+
 	}
 
 
@@ -263,24 +274,28 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			 */
 			
 			// Attempt to record all metadata discovered:
-			for (String m : metadata.names()) {
-				if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
-						|| "dc:title".equalsIgnoreCase(m)
-						|| "title".equalsIgnoreCase(m)
-						|| "description".equalsIgnoreCase(m)
-						|| "keywords".equalsIgnoreCase(m)
-						|| Metadata.CONTENT_ENCODING.equalsIgnoreCase(m)
-						|| Metadata.CONTENT_LOCATION.equalsIgnoreCase(m)
-						|| "ACTINICTITLE".equalsIgnoreCase(m)
-						|| Metadata.CONTENT_TYPE.equalsIgnoreCase(m)) {
-					continue;
+			if (this.extractAllMetadata) {
+				for (String m : metadata.names()) {
+					// Ignore these as they are not very interesting:
+					if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
+							|| "dc:title".equalsIgnoreCase(m)
+							|| "title".equalsIgnoreCase(m)
+							|| "description".equalsIgnoreCase(m)
+							|| "keywords".equalsIgnoreCase(m)
+							|| Metadata.CONTENT_ENCODING.equalsIgnoreCase(m)
+							|| Metadata.CONTENT_LOCATION.equalsIgnoreCase(m)
+							|| "ACTINICTITLE".equalsIgnoreCase(m)
+							|| Metadata.CONTENT_TYPE.equalsIgnoreCase(m)) {
+						continue;
+					}
+					// Record in the document, but trim big ones:
+					String value = metadata.get(m);
+					if (value != null && value.length() > 100) {
+						value = value.substring(0, 100);
+					}
+					solr.addField(SolrFields.SOLR_TIKA_METADATA, m + "="
+							+ value);
 				}
-				// Record in the document, but trim big ones:
-				String value = metadata.get(m);
-				if (value != null && value.length() > 100) {
-					value = value.substring(0, 100);
-				}
-				solr.addField(SolrFields.SOLR_TIKA_METADATA, m + "=" + value);
 			}
 
 			// Also Pick out particular metadata:

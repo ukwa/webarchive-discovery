@@ -49,16 +49,20 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private static Log log = LogFactory.getLog( HTMLAnalyser.class );
 
 	private HtmlFeatureParser hfp = new HtmlFeatureParser();
-	private boolean extractLinkDomains = true;
-	private boolean extractLinkHosts = true;
-	private boolean extractLinks = false;
-	private boolean extractElementsUsed = true;
+	private boolean extractLinkDomains;
+	private boolean extractLinkHosts;
+	private boolean extractLinks;
+	private boolean extractElementsUsed;
 
 	public HTMLAnalyser( Config conf ) {
 		this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
+		log.info("HTML - Extract resource links " + this.extractLinks);
 		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
+		log.info("HTML - Extract host links " + this.extractLinkHosts);
 		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
+		log.info("HTML - Extract domain links " + this.extractLinkDomains);
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+		log.info("HTML - Extract elements used " + this.extractElementsUsed);
 	}
 	/**
 	 *  JSoup link extractor for (x)html, deposit in 'links' field.

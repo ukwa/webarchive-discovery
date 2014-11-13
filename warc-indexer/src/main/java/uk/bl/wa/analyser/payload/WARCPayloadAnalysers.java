@@ -44,7 +44,6 @@ import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 
 import com.google.common.base.Splitter;
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 
 /**
@@ -66,10 +65,10 @@ public class WARCPayloadAnalysers {
 	private boolean extractContentFirstBytes = true;
 	private int firstBytesLength = 32;
 
-	public static HTMLAnalyser html = new HTMLAnalyser(ConfigFactory.load());
-	public static PDFAnalyser pdf = new PDFAnalyser(ConfigFactory.load());
-	public static XMLAnalyser xml = new XMLAnalyser(ConfigFactory.load());
-	public static ImageAnalyser image = new ImageAnalyser(ConfigFactory.load());
+	public HTMLAnalyser html;
+	public PDFAnalyser pdf;
+	public XMLAnalyser xml;
+	public ImageAnalyser image;
 
 	private boolean extractApachePreflightErrors;
 	private boolean extractImageFeatures;
@@ -83,6 +82,7 @@ public class WARCPayloadAnalysers {
 
 		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
 		this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.images.enabled");
+		log.info("Image feature extraction = " + this.extractImageFeatures);
 		
 		// Attempt to set up Droid:
 		try {
@@ -96,6 +96,15 @@ public class WARCPayloadAnalysers {
 		// Set up Tika:
 		tika = new TikaExtractor( conf );
 		
+		// Set up other extractors:
+		html = new HTMLAnalyser(conf);
+		if (this.extractApachePreflightErrors) {
+			pdf = new PDFAnalyser(conf);
+		}
+		xml = new XMLAnalyser(conf);
+		if (this.extractImageFeatures) {
+			image = new ImageAnalyser(conf);
+		}
 	}
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
@@ -158,20 +167,20 @@ public class WARCPayloadAnalysers {
 			tikainput.reset();
 			String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
 			if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
-				WARCPayloadAnalysers.html.analyse(header, tikainput, solr);
+				html.analyse(header, tikainput, solr);
 
 			} else if( mime.startsWith( "image" ) ) {
 				if( this.extractImageFeatures ) {
-					WARCPayloadAnalysers.image.analyse(header, tikainput, solr);
+					image.analyse(header, tikainput, solr);
 				}
 				
 			} else if( mime.startsWith( "application/pdf" ) ) {
 				if( extractApachePreflightErrors ) {
-					WARCPayloadAnalysers.pdf.analyse(header, tikainput, solr);
+					pdf.analyse(header, tikainput, solr);
 				}
 				
 			} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
-				WARCPayloadAnalysers.xml.analyse(header, tikainput, solr);
+				xml.analyse(header, tikainput, solr);
 				
 			} else {
 				log.debug("No specific additional parser for: "+mime);

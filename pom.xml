@@ -52,8 +52,8 @@
       <url>git@github.com:ukwa/warc-discovery.git</url>
    </scm>
    <properties>
-      <solr.version>4.7.1</solr.version>
-      <tika.version>1.5</tika.version>
+      <solr.version>4.10.2</solr.version>
+      <tika.version>1.6</tika.version>
       <webarchive.commons.version>1.1.2</webarchive.commons.version>
       <jdk.version>1.6</jdk.version>
       <hadoop.version>0.20.2</hadoop.version>
@@ -216,12 +216,6 @@
             <enabled>true</enabled>
          </snapshots>
          <url>https://repository.apache.org/snapshots/</url>
-      </repository>
-      <repository>
-         <id>openimaj</id>
-         <name>OpenIMAJ Maven Repository</name>
-         <url>http://maven.openimaj.org/</url>
-         <layout>default</layout>
       </repository>
    </repositories>
 </project>
