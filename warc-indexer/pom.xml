@@ -185,7 +185,7 @@
       </dependency>
       <dependency>
       	<groupId>uk.bl.wa.discovery</groupId>
-      	<artifactId>webarchive-tika</artifactId>
+      	<artifactId>digipres-tika</artifactId>
       	<version>2.0.1-SNAPSHOT</version>
          <exclusions>
          	<exclusion>

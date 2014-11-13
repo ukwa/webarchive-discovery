@@ -6,7 +6,7 @@
                          <version>2.0.1-SNAPSHOT</version>
       <relativePath>..</relativePath>
    </parent>
-   <artifactId>webarchive-tika</artifactId>
+   <artifactId>digipres-tika</artifactId>
    <licenses>
       <license>
          <name>Apache 2</name>

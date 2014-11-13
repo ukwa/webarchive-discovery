@@ -19,7 +19,7 @@
       <module>warc-hadoop-recordreaders</module>
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
-      <module>webarchive-tika</module>
+      <module>digipres-tika</module>
       <module>warc-annotation</module>
       <module>warc-solr-test-server</module>
    </modules>
