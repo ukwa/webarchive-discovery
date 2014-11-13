@@ -27,7 +27,7 @@ import uk.bl.wa.hadoop.TextOutputFormat;
 
 @SuppressWarnings("deprecation")
 public class PersistLogBuilder extends Configured implements Tool {
-    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>]";
+    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <number of reducers>]";
     private static final String CLI_HEADER = "PersistLogBuilder - MapReduce method for building persistlog data from WARCS.";
     private String input;
     private String output;
@@ -92,6 +92,7 @@ public class PersistLogBuilder extends Configured implements Tool {
     private void setProperties(JobConf conf) throws IOException {
 	conf.set("mapred.reduce.tasks.speculative.execution", "false");
 	conf.set("mapred.output.compress", "true");
+	conf.set("mapred.compress.map.output", "true");
 	conf.setClass("mapred.output.compression.codec", GzipCodec.class,
 		CompressionCodec.class);
     }
