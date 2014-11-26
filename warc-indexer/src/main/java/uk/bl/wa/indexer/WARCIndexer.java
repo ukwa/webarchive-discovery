@@ -100,8 +100,9 @@ public class WARCIndexer {
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	/** */
-	private boolean extractText = true;
-	private boolean hashUrlId = false;
+	private boolean extractText;
+	private boolean storeText;
+	private boolean hashUrlId;
 
 	/** Wayback-style URI filtering: */
 	private StaticMapExclusionFilterFactory smef = null;
@@ -142,7 +143,12 @@ public class WARCIndexer {
 
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
+		log.info("Extract text = " + extractText);
+		this.storeText = conf
+				.getBoolean("warc.index.extract.content.text_stored");
+		log.info("Store text = " + storeText);
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
+		log.info("hashUrlId = " + hashUrlId);
 		this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
 		if( this.hashUrlId == false && this.checkSolrForDuplicates == true ) {
 			log.warn("Checking Solr for duplicates may not work as expected when using the timestamp+md5(URL) key.");
@@ -462,6 +468,19 @@ public class WARCIndexer {
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {
 				solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
+
+			} else {
+				// Otherwise, decide whether to store or both store and index
+				// the text:
+				if (storeText == false) {
+					// Copy the text into the indexed (but not stored) field:
+					solr.setField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED,
+							(String) solr.getField(
+									SolrFields.SOLR_EXTRACTED_TEXT)
+									.getFirstValue());
+					// Take the text out of the original (stored) field.
+					solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+				}
 			}
 		}
 		return solr;
