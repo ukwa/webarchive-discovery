@@ -193,6 +193,10 @@
          		<artifactId>logback-classic</artifactId>
          		<groupId>ch.qos.logback</groupId>
          	</exclusion>
+         	<exclusion>
+         	   <artifactId>guava</artifactId>
+         	   <groupId>com.google.guava</groupId>
+         	</exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -224,7 +228,7 @@
          <groupId>org.apache.solr</groupId>
          <artifactId>solr-core</artifactId>
          <version>${solr.version}</version>
-         <!--  <scope>test</scope>  -->
+         <!--  <scope>test</scope> -->
          <exclusions>
             <exclusion>
                <artifactId>jcl-over-slf4j</artifactId>
