@@ -113,7 +113,7 @@ public class LinkExtractor {
 		// Parse out the public suffix:
 		InternetDomainName domainName;
 		try {
-			domainName = InternetDomainName.fromLenient(host);
+			domainName = InternetDomainName.from(host);
 		} catch( Exception e ) {
 			return null;
 		}
@@ -121,14 +121,15 @@ public class LinkExtractor {
 		if( host.endsWith(".uk")) {
 			ImmutableList<String> parts = domainName.parts();
 			if( parts.size() >= 2 ) {
-				suffix = InternetDomainName.fromLenient( parts.get(parts.size()-2) +"."+ parts.get(parts.size()-1) );
+				suffix = InternetDomainName.from(parts.get(parts.size() - 2)
+						+ "." + parts.get(parts.size() - 1));
 			}
 		} else {
 			suffix = domainName.publicSuffix();
 		}
 		// Return a value:
 		if( suffix == null ) return null;
-		return suffix.name();
+		return suffix.toString();
 	}
 	
 	public static String extractPrivateSuffix( String url ) {
@@ -146,7 +147,7 @@ public class LinkExtractor {
 		// Parse out the public suffix:
 		InternetDomainName domainName;
 		try {
-			domainName = InternetDomainName.fromLenient(host);
+			domainName = InternetDomainName.from(host);
 		} catch( Exception e ) {
 			return null;
 		}
@@ -154,7 +155,9 @@ public class LinkExtractor {
 		if( host.endsWith(".uk")) {
 			ImmutableList<String> parts = domainName.parts();
 			if( parts.size() >= 3 ) {
-				suffix = InternetDomainName.fromLenient( parts.get(parts.size()-3) +"."+parts.get(parts.size()-2) +"."+ parts.get(parts.size()-1) );
+				suffix = InternetDomainName.from(parts.get(parts.size() - 3)
+						+ "." + parts.get(parts.size() - 2) + "."
+						+ parts.get(parts.size() - 1));
 			}
 		} else {
 			if( domainName.isTopPrivateDomain() || domainName.isUnderPublicSuffix() ) {
@@ -165,7 +168,7 @@ public class LinkExtractor {
 		}
 		// Return a value:
 		if( suffix == null ) return null;
-		return suffix.name();    	
+		return suffix.toString();
     }
 	
 	public static void main( String[] args ) {
