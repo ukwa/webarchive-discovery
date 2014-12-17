@@ -254,6 +254,10 @@
                 <artifactId>commons-io</artifactId>
                 <groupId>commons-io</groupId>
             </exclusion>
+            <exclusion>
+               <artifactId>antlr-runtime</artifactId>
+               <groupId>org.antlr</groupId>
+            </exclusion>
          </exclusions>
       </dependency>      
       <dependency>

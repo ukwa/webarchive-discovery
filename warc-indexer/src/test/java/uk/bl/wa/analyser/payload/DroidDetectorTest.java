@@ -76,11 +76,12 @@ public class DroidDetectorTest {
 		metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
 
 		// Test identification two ways:
+		assertEquals("ID of " + filename + " as File, failed.", expected, dd
+				.detect(file).getBaseType().toString());
+
 		assertEquals("ID of " + filename + " as InputStream, failed.",
 				expected, dd.detect(new FileInputStream(file), metadata)
 						.getBaseType().toString());
 
-		assertEquals("ID of " + filename + " as File, failed.", expected, dd
-				.detect(file).getBaseType().toString());
 	}
 }
