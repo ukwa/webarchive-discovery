@@ -37,9 +37,9 @@ import org.junit.Test;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class WARCIndexerRunnerTest {
+public class WARCIndexerRunnerIntegrationTest {
 	
-	private static final Log log = LogFactory.getLog(WARCIndexerRunnerTest.class);
+	private static final Log log = LogFactory.getLog(WARCIndexerRunnerIntegrationTest.class);
 
 	// Test cluster:
 	private MiniDFSCluster dfsCluster = null;

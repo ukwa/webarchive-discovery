@@ -1,6 +1,6 @@
 package uk.bl.wa.hadoop.mapreduce.warcstats;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -8,9 +8,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
-import java.io.Writer;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
@@ -33,9 +30,10 @@ import org.junit.Test;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
-public class WARCStatsToolTest {
+public class WARCStatsToolIntegrationTest {
 
-	private static final Log log = LogFactory.getLog(WARCStatsToolTest.class);
+	private static final Log log = LogFactory
+			.getLog(WARCStatsToolIntegrationTest.class);
 
 	// Test cluster:
 	private MiniDFSCluster dfsCluster = null;
