@@ -42,6 +42,12 @@
                             <name>solr.data.dir</name>
                             <value>${project.build.directory}/solr/data</value>
                         </systemProperty>
+<!--
+			<systemProperty>
+			    <name>jetty.port</name>
+ 			    <value>8983</value>
+                        </systemProperty>
+-->
                     </systemProperties>
                 </configuration>
                 <executions>
