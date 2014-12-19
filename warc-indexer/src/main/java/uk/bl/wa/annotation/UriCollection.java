@@ -1,5 +1,12 @@
 package uk.bl.wa.annotation;
 
+/**
+ * 
+ * Part of the @Annotations data model.
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ * 
+ */
 public class UriCollection {
 	protected String collectionCategories;
 	protected String[] allCollections;

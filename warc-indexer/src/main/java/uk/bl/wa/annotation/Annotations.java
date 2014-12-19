@@ -6,8 +6,13 @@ package uk.bl.wa.annotation;
 import java.util.HashMap;
 
 /**
+ * 
+ * This is the data model for the annotations.
+ * 
+ * Currently supports Collections and associated date ranges.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
- *
+ * 
  */
 public class Annotations {
 

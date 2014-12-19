@@ -22,30 +22,30 @@ import uk.bl.wa.solr.SolrFields;
 
 /**
  * 
+ * This is the core annotation class that applies the annotations to a
+ * SolrInputDocument.
  * 
  * @author Roger Coram, Andrew Jackson
  * 
  */
-public class AnnotationEngine {
-	private static Log LOG = LogFactory.getLog( AnnotationEngine.class );
+public class Annotator {
+	private static Log LOG = LogFactory.getLog( Annotator.class );
 	
-	private ActAnnotationsClient act;
-
 	private Annotations annotations;
 
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	
 
 	/**
-	 * By default we pull annotations from ACT.
+	 * Factory method to pull annotations from ACT.
 	 * 
 	 * @throws IOException
 	 * @throws JDOMException
 	 */
-	public AnnotationEngine() throws IOException, JDOMException {
-		act = new ActAnnotationsClient();
-		this.annotations = act.getAnnotations();
-
+	public static Annotator annotationsFromAct() throws IOException,
+			JDOMException {
+		AnnotationsFromAct act = new AnnotationsFromAct();
+		return new Annotator(act.getAnnotations());
 	}
 
 	/**
@@ -53,7 +53,7 @@ public class AnnotationEngine {
 	 * 
 	 * @param annotations
 	 */
-	public AnnotationEngine(Annotations annotations) {
+	public Annotator(Annotations annotations) {
 		this.annotations = annotations;
 	}
 
@@ -66,7 +66,7 @@ public class AnnotationEngine {
 	 * @throws URISyntaxException
 	 * @throws URIException
 	 */
-	private void processCollectionScopes(URI uri, SolrInputDocument solr)
+	public void applyAnnotations(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
 		// "Just this URL".
 		if (this.annotations.getCollections().get("resource").keySet()
@@ -160,7 +160,7 @@ public class AnnotationEngine {
 	 */
 	public static void main(String[] args) throws IOException, JDOMException, URISyntaxException {
 		
-		AnnotationEngine ae = new AnnotationEngine();
+		Annotator ae = Annotator.annotationsFromAct();
 		
 		URI uri = URI.create("http://news.bbc.co.uk/");
 		SolrInputDocument solr = new SolrInputDocument();
@@ -171,7 +171,7 @@ public class AnnotationEngine {
 		// Uses SOLR_URL for logging only:
 		// SolrFields.SOLR_URL;
 
-		ae.processCollectionScopes( uri, solr );
+		ae.applyAnnotations(uri, solr);
 		
 		// Loop over URL known to ACT:
 

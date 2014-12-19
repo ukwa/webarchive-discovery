@@ -5,6 +5,8 @@ import java.util.Date;
 /**
  * DateRange: holds a start/end date for mapping Collection timeframes.
  * 
+ * Part of the @Annotations data model.
+ * 
  * @author rcoram
  * 
  */

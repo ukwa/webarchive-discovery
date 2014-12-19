@@ -32,15 +32,17 @@ import com.typesafe.config.ConfigFactory;
 
 /**
  * 
+ * This downloads the data from the ACT prototype (based on Drupal) and creates
+ * a set of @Annotations from the appropriate taxonomy.
  * 
  * @author Roger Coram, Andrew Jackson
  * 
  */
-public class ActAnnotationsClient {
+public class AnnotationsFromAct {
 	public static String WARC_ACT_URL = "";
 	public static String WARC_COLLECTIONS_URL = "";
 
-	private static Log LOG = LogFactory.getLog( ActAnnotationsClient.class );
+	private static Log LOG = LogFactory.getLog( AnnotationsFromAct.class );
 	
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
@@ -58,15 +60,15 @@ public class ActAnnotationsClient {
 	private HashMap<String, HashMap<String, UriCollection>> collections;
 	private HashMap<String, DateRange> collectionDateRanges;
 
-	public ActAnnotationsClient() throws IOException, JDOMException {
+	public AnnotationsFromAct() throws IOException, JDOMException {
 		collections = new HashMap<String, HashMap<String, UriCollection>>();
 		collections.put( "resource", new HashMap<String, UriCollection>() );
 		collections.put( "plus1", new HashMap<String, UriCollection>() );
 		collections.put( "root", new HashMap<String, UriCollection>() );
 		collections.put( "subdomains", new HashMap<String, UriCollection>() );
 
-		String recordXml = readAct(ActAnnotationsClient.WARC_ACT_URL);
-		String collectionXml = readAct(ActAnnotationsClient.WARC_COLLECTIONS_URL);
+		String recordXml = readAct(AnnotationsFromAct.WARC_ACT_URL);
+		String collectionXml = readAct(AnnotationsFromAct.WARC_COLLECTIONS_URL);
 		LOG.info("Parsing collection XML...");
 		parseCollectionXml(collectionXml);
 		LOG.info("Parsing record XML...");

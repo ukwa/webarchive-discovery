@@ -16,8 +16,11 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
 
 /**
+ * 
+ * This is a test class to check we understand how updates work.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
- *
+ * 
  */
 public class CollectionsUpdateTest {
 
