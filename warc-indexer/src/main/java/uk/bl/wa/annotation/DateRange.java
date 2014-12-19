@@ -1,4 +1,4 @@
-package uk.bk.wa.annotation;
+package uk.bl.wa.annotation;
 
 import java.util.Date;
 

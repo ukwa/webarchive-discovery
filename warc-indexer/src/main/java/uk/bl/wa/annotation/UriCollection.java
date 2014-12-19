@@ -1,4 +1,4 @@
-package uk.bk.wa.annotation;
+package uk.bl.wa.annotation;
 
 public class UriCollection {
 	protected String collectionCategories;
