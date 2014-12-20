@@ -3,6 +3,7 @@
  */
 package uk.bl.wa.annotation;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
@@ -39,8 +40,11 @@ import com.typesafe.config.ConfigFactory;
  * 
  */
 public class AnnotationsFromAct {
-	public static String WARC_ACT_URL = "";
-	public static String WARC_COLLECTIONS_URL = "";
+	
+	public String[] crawlFreqs = new String[] { "nevercrawl", "domaincrawl",
+			"annual", "sixmonthly", "quarterly", "monthly", "weekly", "daily" };
+	public static String WARC_ACT_URL = "http://www.webarchive.org.uk/act/websites/export/daily";
+	public static String WARC_COLLECTIONS_URL = "http://www.webarchive.org.uk/act/taxonomy_term.xml?sort=name&direction=ASC&vocabulary=5&limit=100&page=0";
 
 	private static Log LOG = LogFactory.getLog( AnnotationsFromAct.class );
 	
@@ -57,20 +61,20 @@ public class AnnotationsFromAct {
 	private static final String FIELD_START_DATE = "value";
 	private static final String FIELD_END_DATE = "value2";
 	
-	private HashMap<String, HashMap<String, UriCollection>> collections;
-	private HashMap<String, DateRange> collectionDateRanges;
+	private Annotations ann = new Annotations();
 
 	public AnnotationsFromAct() throws IOException, JDOMException {
-		collections = new HashMap<String, HashMap<String, UriCollection>>();
-		collections.put( "resource", new HashMap<String, UriCollection>() );
-		collections.put( "plus1", new HashMap<String, UriCollection>() );
-		collections.put( "root", new HashMap<String, UriCollection>() );
-		collections.put( "subdomains", new HashMap<String, UriCollection>() );
-
-		String recordXml = readAct(AnnotationsFromAct.WARC_ACT_URL);
+		// Populate
+		LOG.info("Logging into ACT...");
+		this.actLogin();
+		// Get the collections export:
+		LOG.info("Getting collections export from ACT...");
 		String collectionXml = readAct(AnnotationsFromAct.WARC_COLLECTIONS_URL);
 		LOG.info("Parsing collection XML...");
 		parseCollectionXml(collectionXml);
+		// Get all Targets:
+		LOG.info("Getting main export from ACT...");
+		String recordXml = readAct(AnnotationsFromAct.WARC_ACT_URL);
 		LOG.info("Parsing record XML...");
 		parseRecordXml(recordXml);
 
@@ -81,17 +85,19 @@ public class AnnotationsFromAct {
 	 * Performs login operation to ACT, setting Cookie and CSRF.
 	 * @throws IOException
 	 */
-	protected void actLogin() throws IOException {
-		Config loginConf = ConfigFactory.load( "credentials.conf" );
+	private void actLogin() throws IOException {
+		Config loginConf = ConfigFactory
+				.parseFile(new File("credentials.conf"));
 		URL login = new URL( loginConf.getString( "act.login" ) );
+		LOG.info("Logging in at " + login);
 
 		HttpURLConnection connection = ( HttpURLConnection ) login.openConnection();
 		StringBuilder credentials = new StringBuilder();
-		credentials.append( "Basic " );
 		credentials.append( loginConf.getString( "act.username" ) );
 		credentials.append( ":" );
 		credentials.append( loginConf.getString( "act.password" ) );
 		connection.setRequestProperty( "Authorization", "Basic " + Base64.encode( credentials.toString() ) );
+		connection.setRequestProperty("Content-Type", "text/plain");
 
 		Scanner scanner;
 		if( connection.getResponseCode() != 200 ) {
@@ -153,12 +159,17 @@ public class AnnotationsFromAct {
 		for( int i = 0; i < list.size(); i++ ) {
 			node = ( Element ) list.get( i );
 			publish = node.getChildText( FIELD_PUBLISH );
+			name = node.getChildText(FIELD_NAME);
 			if( publish != null && publish.equals( OK_PUBLISH ) ) {
-				name = node.getChildText( FIELD_NAME );
 				start = node.getChild( FIELD_DATES ).getChildText( FIELD_START_DATE );
 				end = node.getChild( FIELD_DATES ).getChildText( FIELD_END_DATE );
 				dateRange = new DateRange( start, end );
-				collectionDateRanges.put( name, dateRange );
+				LOG.info("Adding collection " + name + " with dateRange "
+						+ dateRange);
+				ann.getCollectionDateRanges().put(name, dateRange);
+			} else {
+				LOG.info("Skipping collection \"" + name
+						+ "\" (not ok to publish)");
 			}
 		}
 	}
@@ -173,7 +184,7 @@ public class AnnotationsFromAct {
 	 */
 	private UriCollection filterUriCollection( String collectionCategories, String allCollections, String subject ) {
 		UriCollection output = null;
-		Set<String> validCollections = collectionDateRanges.keySet();
+		Set<String> validCollections = ann.getCollectionDateRanges().keySet();
 
 		if( collectionCategories != null && !validCollections.contains( collectionCategories ) )
 			collectionCategories = null;
@@ -238,21 +249,28 @@ public class AnnotationsFromAct {
 			allCollections = node.getChildText( "allCollections" );
 			subject = node.getChildText( "subject" );
 			scope = node.getChildText( "scope" );
+			LOG.info("Looking at scope [" + scope + "] subject [" + subject
+					+ "] collectionCategories [" + collectionCategories
+					+ "] w/ collections [" + allCollections + "]");
 			// As long as one of the fields is populated we have something to do...
 			if( collectionCategories != null || allCollections != null || subject != null ) {
 				UriCollection collection = filterUriCollection( collectionCategories, allCollections, subject );
+				LOG.info("Filtered to " + collection);
 				// There should be no scope beyond those created in the Constructor.
 				if( collection != null )
 					addCollection( scope, urls, collection );
 			}
 		}
-		for( String key : collections.keySet() ) {
-			LOG.info( "Processed " + collections.get( key ).size() + " URIs for collection " + key );
+		for (String key : ann.getCollections().keySet()) {
+			LOG.info("Processed " + ann.getCollections().get(key).size()
+					+ " URIs for collection " + key);
 		}
 	}
 
 	private void addCollection( String scope, String urls, UriCollection collection ) {
-		HashMap<String, UriCollection> relevantCollection = collections.get( scope );
+		LOG.info("Adding " + urls + " to collection " + collection);
+		HashMap<String, UriCollection> relevantCollection = ann
+				.getCollections().get(scope);
 		for( String url : urls.split( "\\s+" ) ) {
 			if( scope.equals( "resource" ) ) {
 				try {
@@ -283,7 +301,7 @@ public class AnnotationsFromAct {
 	}
 
 	public Annotations getAnnotations() {
-		return new Annotations(this.collections, this.collectionDateRanges);
+		return ann;
 	}
 	
 }

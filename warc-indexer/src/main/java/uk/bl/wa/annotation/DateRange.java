@@ -29,4 +29,8 @@ public class DateRange {
 	public boolean isInDateRange(Date date) {
 		return (date.after(start) && date.before(end));
 	}
+
+	public String toString() {
+		return "[" + start + "," + end + "]";
+	}
 }

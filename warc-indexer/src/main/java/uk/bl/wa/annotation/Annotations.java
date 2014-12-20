@@ -19,11 +19,16 @@ public class Annotations {
 	private HashMap<String, HashMap<String, UriCollection>> collections;
 	private HashMap<String, DateRange> collectionDateRanges;
 
-	public Annotations(
-			HashMap<String, HashMap<String, UriCollection>> collections2,
-			HashMap<String, DateRange> collectionDateRanges2) {
-		this.collections = collections2;
-		this.collectionDateRanges = collectionDateRanges2;
+	public Annotations() {
+		// Initialise the collection maps:
+		collections = new HashMap<String, HashMap<String, UriCollection>>();
+		collections.put("resource", new HashMap<String, UriCollection>());
+		collections.put("plus1", new HashMap<String, UriCollection>());
+		collections.put("root", new HashMap<String, UriCollection>());
+		collections.put("subdomains", new HashMap<String, UriCollection>());
+
+		// An the date ranges:
+		collectionDateRanges = new HashMap<String, DateRange>();
 	}
 
 	public HashMap<String, HashMap<String, UriCollection>> getCollections() {

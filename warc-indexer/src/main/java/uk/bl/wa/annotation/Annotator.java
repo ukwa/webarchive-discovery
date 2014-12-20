@@ -4,10 +4,14 @@
 package uk.bl.wa.annotation;
 
 import java.io.IOException;
+import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.URIException;
@@ -151,7 +155,25 @@ public class Annotator {
 		operation.put("set", value);
 		doc.addField(field, operation);
 	}
-	
+
+	/**
+	 * Pretty-print each solrDocument in the results to stdout
+	 * 
+	 * @param out
+	 * @param doc
+	 */
+	private static void prettyPrint(PrintStream out, SolrInputDocument doc) {
+		List<String> sortedFieldNames = new ArrayList<String>(
+				doc.getFieldNames());
+		Collections.sort(sortedFieldNames);
+		out.println();
+		for (String field : sortedFieldNames) {
+			out.println(String.format("\t%s: %s", field,
+					doc.getFieldValue(field)));
+		}
+		out.println();
+	}
+
 	/**
 	 * @param args
 	 * @throws IOException 
@@ -172,6 +194,7 @@ public class Annotator {
 		// SolrFields.SOLR_URL;
 
 		ae.applyAnnotations(uri, solr);
+		prettyPrint(System.out, solr);
 		
 		// Loop over URL known to ACT:
 
