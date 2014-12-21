@@ -23,6 +23,13 @@ public class UriCollection {
 	protected UriCollection() {
 	}
 
+	public UriCollection(String collectionCategories, String[] allCollections,
+			String[] subjects) {
+		this.collectionCategories = collectionCategories;
+		this.allCollections = allCollections;
+		this.subject = subjects;
+	}
+
 	public UriCollection(String collectionCategories, String allCollections,
 			String subject) {
 		if (collectionCategories != null && collectionCategories.length() > 0)
@@ -31,5 +38,9 @@ public class UriCollection {
 			this.allCollections = allCollections.split("\\s*\\|\\s*");
 		if (subject != null && subject.length() > 0)
 			this.subject = subject.split("\\s*\\|\\s*");
+	}
+
+	public String toString() {
+		return collectionCategories + " : " + allCollections + " : " + subject;
 	}
 }
