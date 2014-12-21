@@ -14,6 +14,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
@@ -21,6 +22,10 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.JsonParser;
+import org.codehaus.jackson.map.ObjectMapper;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
@@ -44,7 +49,8 @@ public class AnnotationsFromAct {
 	public String[] crawlFreqs = new String[] { "nevercrawl", "domaincrawl",
 			"annual", "sixmonthly", "quarterly", "monthly", "weekly", "daily" };
 	public static String WARC_ACT_URL = "http://www.webarchive.org.uk/act/websites/export/daily";
-	public static String WARC_COLLECTIONS_URL = "http://www.webarchive.org.uk/act/taxonomy_term.xml?sort=name&direction=ASC&vocabulary=5&limit=100&page=0";
+	public static String WARC_COLLECTIONS_URL = "http://www.webarchive.org.uk/act/taxonomy_term.xml?sort=name&direction=ASC&vocabulary=5&limit=500&page=0";
+	public static String WARC_COLLECTIONS_URL_JSON = "http://www.webarchive.org.uk/act/taxonomy_term.json?vocabulary=5&limit=500&page=0";
 
 	private static Log LOG = LogFactory.getLog( AnnotationsFromAct.class );
 	
@@ -77,7 +83,9 @@ public class AnnotationsFromAct {
 		String recordXml = readAct(AnnotationsFromAct.WARC_ACT_URL);
 		LOG.info("Parsing record XML...");
 		parseRecordXml(recordXml);
+	}
 
+	protected AnnotationsFromAct(String dummy) {
 	}
 
 
@@ -304,4 +312,155 @@ public class AnnotationsFromAct {
 		return ann;
 	}
 	
+	private void getTargetsViaJson() throws IOException {
+		String actUrl = "http://www.webarchive.org.uk/act/node.json?type=url";
+		int page = 0;
+		do {
+			page++;
+			LOG.info("Getting page " + page + " of targets export from ACT... "
+					+ actUrl);
+			String targets = readAct(actUrl);
+
+			ObjectMapper mapper = new ObjectMapper();
+			JsonParser jp = mapper.getJsonFactory().createJsonParser(targets);
+			JsonNode root = jp.readValueAsTree();
+
+			for (JsonNode node : root.get("list")) {
+				LOG.info("Got \"" + node.get("title").getTextValue()
+						+ "\" with scope: "
+						+ node.get("field_scope").getTextValue());
+				for (JsonNode url : node.get("field_url")) {
+					LOG.info("Got " + url.get("url").getTextValue());
+				}
+				for (JsonNode cat : node.get("field_collection_categories")) {
+					LOG.info("collectionCategories: "
+							+ cat.get("id").getTextValue());
+				}
+			}
+
+			// Look up the next page URL:
+			actUrl = root.path("next").getTextValue();
+			if (actUrl != null)
+				actUrl = actUrl.replaceFirst("\\?", "\\.json\\?");
+		} while (actUrl != null);
+	}
+
+	private void getCollectionsViaJson() throws JsonParseException, IOException {
+		// Get the collections export:
+		String nextUrl = AnnotationsFromAct.WARC_COLLECTIONS_URL_JSON;
+		String thisUrl = null;
+		// Map of all categories:
+		Map<Integer, JsonNode> cm = new HashMap<Integer, JsonNode>();
+		do {
+			// Load the content:
+			thisUrl = nextUrl;
+			LOG.info("Getting collections export from ACT... " + thisUrl);
+			String collectionXml = readAct(thisUrl);
+
+			// Map it to JsonNode tree:
+			ObjectMapper mapper = new ObjectMapper();
+			JsonParser jp = mapper.getJsonFactory().createJsonParser(
+					collectionXml);
+			JsonNode root = jp.readValueAsTree();
+
+			// Add to the map of the categories:
+			for (JsonNode node : root.get("list")) {
+				// LOG.info("node: " + node);
+				// LOG.info("node tid: " + node.get("tid").getTextValue());
+				Integer ci = Integer.parseInt(node.get("tid").getTextValue());
+				// LOG.info("node ctid: " + ci);
+				cm.put(ci, node);
+			}
+			// Look up the next URL:
+			nextUrl = root.path("next").getTextValue();
+			if( nextUrl != null)
+				nextUrl = nextUrl.replaceFirst("\\?", "\\.json\\?");
+		} while (nextUrl != null);
+
+		// Now patch up the parent-child relationships
+		for (JsonNode node : cm.values()) {
+			// LOG.info("node: " + node);
+			// LOG.info("Got " + node.get("tid").getTextValue()
+			// + " " + node.get("name").getTextValue() + " start "
+			// + node.get("field_dates").get("value") + " end "
+			// + node.get("field_dates").get("value2"));
+			List<JsonNode> cats = new ArrayList<JsonNode>();
+			// Find all the parents:
+			this.resolveParents(cm, node, cats);
+			// LOG.info("Collection Root: "
+			// + cats.get(0).get("name").getTextValue());
+			// Build up the full path string:
+			StringBuilder catPath = new StringBuilder();
+			for (int i = 0; i < cats.size(); i++) {
+				JsonNode cat = cats.get(i);
+				catPath.append(cat.get("name").getTextValue());
+				// Append a separator if this is not the last entry:
+				if (i < cats.size() - 1)
+					catPath.append("|");
+			}
+
+			// Look to see if the root collection is marked as published:
+			Boolean publish = cats.get(0).get("field_publish")
+					.getBooleanValue();
+			if (publish) {
+				LOG.info("Collection Path: " + catPath + " PUBLISHED");
+				// Add to list of collections, w/ date ranges:
+				String name = catPath.toString();
+				String start = null;
+				if (cats.get(0).get("start") != null) {
+					start = cats.get(0).get("start").getTextValue();
+				}
+				String end = null;
+				if (cats.get(0).get("end") != null) {
+					end = cats.get(0).get("end").getTextValue();
+				}
+				DateRange dateRange = new DateRange(start, end);
+				LOG.info("Adding collection " + name + " with dateRange "
+						+ dateRange);
+				ann.getCollectionDateRanges().put(name, dateRange);
+			} else {
+				LOG.debug("Skipping unpublished collection with path: "
+						+ catPath);
+			}
+		}
+
+	}
+
+	private void resolveParents(Map<Integer, JsonNode> cm, JsonNode c,
+			List<JsonNode> cats) {
+		// Store this item:
+		cats.add(0, c);
+		// Loop through the parents (although there is only ever one in this
+		// dataset):
+		for (JsonNode parentRef : c.get("parent")) {
+			Integer ci = parentRef.get("id").getIntValue();
+			JsonNode parent = cm.get(ci);
+			resolveParents(cm, parent, cats);
+		}
+	}
+
+	/**
+	 * 
+	 * @param args
+	 * @throws IOException
+	 * @throws MalformedURLException
+	 * @throws JsonParseException
+	 * @throws JDOMException
+	 */
+	public static void main(String[] args) throws JsonParseException,
+			MalformedURLException, IOException, JDOMException {
+
+		// Populate
+		LOG.info("Logging into ACT...");
+		AnnotationsFromAct act = new AnnotationsFromAct("dummy");
+		act.actLogin();
+
+		act.getCollectionsViaJson();
+
+		LOG.info(act.getAnnotations().toJson());
+
+		// act.getTargetsViaJson();
+
+	}
+
 }

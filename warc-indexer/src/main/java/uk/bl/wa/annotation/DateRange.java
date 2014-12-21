@@ -2,6 +2,8 @@ package uk.bl.wa.annotation;
 
 import java.util.Date;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /**
  * DateRange: holds a start/end date for mapping Collection timeframes.
  * 
@@ -11,8 +13,15 @@ import java.util.Date;
  * 
  */
 public class DateRange {
+
+	@JsonProperty
 	protected Date start;
+
+	@JsonProperty
 	protected Date end;
+
+	protected DateRange() {
+	}
 
 	public DateRange(String start, String end) {
 		if (start != null)

@@ -1,5 +1,7 @@
 package uk.bl.wa.annotation;
 
+import org.codehaus.jackson.annotate.JsonProperty;
+
 /**
  * 
  * Part of the @Annotations data model.
@@ -8,9 +10,18 @@ package uk.bl.wa.annotation;
  * 
  */
 public class UriCollection {
+
+	@JsonProperty
 	protected String collectionCategories;
+
+	@JsonProperty
 	protected String[] allCollections;
+
+	@JsonProperty
 	protected String[] subject;
+	
+	protected UriCollection() {
+	}
 
 	public UriCollection(String collectionCategories, String allCollections,
 			String subject) {
