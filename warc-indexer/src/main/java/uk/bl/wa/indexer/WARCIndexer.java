@@ -560,7 +560,8 @@ public class WARCIndexer {
 	 * Timestamp parsing, for the Crawl Date.
 	 */
 
-	private static SimpleDateFormat formatter = new SimpleDateFormat( "yyyy-MM-dd'T'HH:mm:ss'Z'" );
+	public static SimpleDateFormat formatter = new SimpleDateFormat(
+			"yyyy-MM-dd'T'HH:mm:ss'Z'");
 	static {
 		formatter.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
 	}

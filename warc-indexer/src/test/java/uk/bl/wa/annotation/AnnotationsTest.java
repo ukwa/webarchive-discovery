@@ -40,7 +40,7 @@ public class AnnotationsTest {
 		//
 		ann.getCollections()
 				.get("subdomains")
-				.put("wikipedia.org",
+				.put("http://en.wikipedia.org",
 						new UriCollection("Wikipedia",
 								new String[] { "Wikipedia" },
 								new String[] { "Crowdsourcing" }));

@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -91,6 +92,7 @@ public class Annotator {
 		HashMap<String, UriCollection> subdomains = this.annotations
 				.getCollections().get("subdomains");
 		for( String key : subdomains.keySet() ) {
+			LOG.info("key: " + key);
 			host = new URI( key ).getHost();
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
 				updateCollections( subdomains.get( key ), solr );
@@ -108,7 +110,15 @@ public class Annotator {
 			SolrInputDocument solr) {
 		// Trac #2243; This should only happen if the record's timestamp is
 		// within the range set by the Collection.
-		Date date = WARCIndexer.getWaybackDate( ( String ) solr.getField( SolrFields.CRAWL_DATE ).getValue() );
+		String dateString = (String) solr.getField(SolrFields.CRAWL_DATE)
+				.getValue();
+		Date date;
+		try {
+			date = WARCIndexer.formatter.parse(dateString);
+		} catch (ParseException e) {
+			LOG.error("Could not parse date: " + dateString);
+			return;
+		}
 
 		LOG.info( "Updating collections for " + solr.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection

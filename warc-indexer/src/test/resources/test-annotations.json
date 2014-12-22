@@ -1,7 +1,7 @@
 {
   "collections" : {
     "subdomains" : {
-      "wikipedia.org" : {
+      "http://en.wikipedia.org" : {
         "collection" : "Wikipedia",
         "collections" : [ "Wikipedia" ],
         "subject" : [ "Crowdsourcing" ]
@@ -27,7 +27,7 @@
   "collectionDateRanges" : {
     "Wikipedia" : {
       "start" : "1970-01-01T00:00:00.000+0000",
-      "end" : "9999-12-22T22:36:20.871+0000"
+      "end" : "9999-12-22T22:45:06.989+0000"
     }
   }
 }
