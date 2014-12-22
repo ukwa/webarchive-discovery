@@ -12,10 +12,10 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class UriCollection {
 
 	@JsonProperty
-	protected String collectionCategories;
+	protected String collection;
 
 	@JsonProperty
-	protected String[] allCollections;
+	protected String[] collections;
 
 	@JsonProperty
 	protected String[] subject;
@@ -23,24 +23,24 @@ public class UriCollection {
 	protected UriCollection() {
 	}
 
-	public UriCollection(String collectionCategories, String[] allCollections,
+	public UriCollection(String collection, String[] collections,
 			String[] subjects) {
-		this.collectionCategories = collectionCategories;
-		this.allCollections = allCollections;
+		this.collection = collection;
+		this.collections = collections;
 		this.subject = subjects;
 	}
 
-	public UriCollection(String collectionCategories, String allCollections,
+	public UriCollection(String collection, String collections,
 			String subject) {
-		if (collectionCategories != null && collectionCategories.length() > 0)
-			this.collectionCategories = collectionCategories;
-		if (allCollections != null && allCollections.length() > 0)
-			this.allCollections = allCollections.split("\\s*\\|\\s*");
+		if (collection != null && collection.length() > 0)
+			this.collection = collection;
+		if (collections != null && collections.length() > 0)
+			this.collections = collections.split("\\s*\\|\\s*");
 		if (subject != null && subject.length() > 0)
 			this.subject = subject.split("\\s*\\|\\s*");
 	}
 
 	public String toString() {
-		return collectionCategories + " : " + allCollections + " : " + subject;
+		return collection + " : " + collections + " : " + subject;
 	}
 }

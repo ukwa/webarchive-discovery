@@ -20,12 +20,31 @@ public class AnnotationsTest {
 	@Test
 	public void testJsonSerialisation() throws JsonParseException,
 			JsonMappingException, IOException {
+		//
 		Annotations ann = new Annotations();
+		//
 		ann.getCollections()
 				.get("resource")
 				.put("en.wikipedia.org/wiki/Mona_Lisa",
-						new UriCollection("Wikipedia", "Wikipedia|Mona Lisa",
-								"Crowdsourcing"));
+						new UriCollection("Wikipedia", new String[] {
+								"Wikipedia", "Wikipedia|Main Site",
+								"Wikipedia|Main Site|Mona Lisa" },
+								new String[] { "Crowdsourcing" }));
+		//
+		ann.getCollections()
+				.get("root")
+				.put("http://en.wikipedia.org/",
+						new UriCollection("Wikipedia", new String[] {
+								"Wikipedia", "Wikipedia|Main Site" },
+								new String[] { "Crowdsourcing" }));
+		//
+		ann.getCollections()
+				.get("subdomains")
+				.put("wikipedia.org",
+						new UriCollection("Wikipedia",
+								new String[] { "Wikipedia" },
+								new String[] { "Crowdsourcing" }));
+		// Date ranges:
 		ann.getCollectionDateRanges().put("Wikipedia",
 				new DateRange(null, null));
 		String json = ann.toJson();

@@ -112,20 +112,22 @@ public class Annotator {
 
 		LOG.info( "Updating collections for " + solr.getField( SolrFields.SOLR_URL ) );
 		// Update the single, main collection
-		if( collection.collectionCategories != null && collection.collectionCategories.length() > 0 ) {
+		if (collection.collection != null && collection.collection.length() > 0) {
 			if (this.annotations.getCollectionDateRanges().containsKey(
-					collection.collectionCategories)
+					collection.collection)
 					&& this.annotations.getCollectionDateRanges()
-							.get(collection.collectionCategories)
+							.get(collection.collection)
 							.isInDateRange(date)) {
 				setUpdateField(solr, SolrFields.SOLR_COLLECTION,
-						collection.collectionCategories);
-				LOG.info( "Added collection " + collection.collectionCategories + " to " + solr.getField( SolrFields.SOLR_URL ) );
+						collection.collection);
+				LOG.info("Added collection " + collection.collection + " to "
+						+ solr.getField(SolrFields.SOLR_URL));
 			}
 		}
 		// Iterate over the hierarchical collections
-		if( collection.allCollections != null && collection.allCollections.length > 0 ) {
-			for( String col : collection.allCollections ) {
+		if (collection.collections != null
+				&& collection.collections.length > 0) {
+			for (String col : collection.collections) {
 				if (this.annotations.getCollectionDateRanges().containsKey(col)
 						&& this.annotations.getCollectionDateRanges().get(col)
 								.isInDateRange(date)) {
