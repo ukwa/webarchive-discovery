@@ -73,16 +73,20 @@ public class Annotator {
 	 */
 	public void applyAnnotations(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
-		// "Just this URL".
+		// "Just this URL"
+		String normd = canon.urlStringToKey(uri.toString());
+		LOG.info("Comparing with " + normd);
 		if (this.annotations.getCollections().get("resource").keySet()
-				.contains(canon.urlStringToKey(uri.toString()))) {
+				.contains(normd)) {
+			LOG.info("Applying resource-level annotations...");
 			updateCollections(this.annotations.getCollections().get("resource")
-					.get(uri.toString()), solr);
+					.get(normd), solr);
 		}
 		// "All URLs that start like this".
 		String prefix = uri.getScheme() + "://" + uri.getHost();
 		if (this.annotations.getCollections().get("root").keySet()
 				.contains(prefix)) {
+			LOG.info("Applying root-level annotations...");
 			updateCollections(this.annotations.getCollections().get("root")
 					.get(prefix), solr);
 		}
@@ -92,8 +96,8 @@ public class Annotator {
 		HashMap<String, UriCollection> subdomains = this.annotations
 				.getCollections().get("subdomains");
 		for( String key : subdomains.keySet() ) {
-			LOG.info("key: " + key);
-			host = new URI( key ).getHost();
+			LOG.info("Applying subdomain annotations for: " + key);
+			host = key;
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
 				updateCollections( subdomains.get( key ), solr );
 			}
@@ -120,7 +124,9 @@ public class Annotator {
 			return;
 		}
 
-		LOG.info( "Updating collections for " + solr.getField( SolrFields.SOLR_URL ) );
+		LOG.info("Updating collections for "
+				+ solr.getField(SolrFields.SOLR_URL));
+		LOG.info("Using collection: " + collection);
 		// Update the single, main collection
 		if (collection.collection != null && collection.collection.length() > 0) {
 			if (this.annotations.getCollectionDateRanges().containsKey(
@@ -138,6 +144,8 @@ public class Annotator {
 		if (collection.collections != null
 				&& collection.collections.length > 0) {
 			for (String col : collection.collections) {
+				LOG.info("Considering adding collection '" + col + "' to "
+						+ solr.getField(SolrFields.SOLR_URL));
 				if (this.annotations.getCollectionDateRanges().containsKey(col)
 						&& this.annotations.getCollectionDateRanges().get(col)
 								.isInDateRange(date)) {
@@ -163,6 +171,7 @@ public class Annotator {
 
 	private static void setUpdateField(SolrInputDocument doc, String field,
 			String value) {
+		LOG.info("Adding field value: " + value + " to field: " + field);
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("set", value);
 		doc.addField(field, operation);

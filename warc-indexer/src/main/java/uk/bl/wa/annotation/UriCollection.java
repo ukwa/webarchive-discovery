@@ -1,5 +1,7 @@
 package uk.bl.wa.annotation;
 
+import java.util.Arrays;
+
 import org.codehaus.jackson.annotate.JsonProperty;
 
 /**
@@ -41,6 +43,7 @@ public class UriCollection {
 	}
 
 	public String toString() {
-		return collection + " : " + collections + " : " + subject;
+		return collection + " : " + Arrays.toString(collections) + " : "
+				+ Arrays.toString(subject);
 	}
 }

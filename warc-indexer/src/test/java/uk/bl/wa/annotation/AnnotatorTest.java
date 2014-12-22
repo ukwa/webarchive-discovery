@@ -42,20 +42,21 @@ public class AnnotatorTest {
 		System.out.println("SOLR: " + solr.toString());
 		int found = 0;
 		//
-		@SuppressWarnings("unchecked")
-		Map<String, String> cmap = (Map<String, String>) solr
-				.getFieldValue(SolrFields.SOLR_COLLECTIONS);
 		//
-		for (String item : cmap.values()) {
-			System.out.println("Map contains... " + item);
-			if ("Wikipedia".equals(item))
-				found++;
-			if ("Wikipedia|Main Site".equals(item))
-				found++;
-			if ("Wikipedia|Main Site|Mona Lisa".equals(item))
-				found++;
+		for (Object val : solr.getFieldValues(SolrFields.SOLR_COLLECTIONS)) {
+			@SuppressWarnings("unchecked")
+			Map<String, String> cmap = (Map<String, String>) val;
+			for (String item : cmap.values()) {
+				System.out.println("Map contains... " + item);
+				if ("Wikipedia".equals(item))
+					found++;
+				if ("Wikipedia|Main Site".equals(item))
+					found++;
+				if ("Wikipedia|Main Site|Mona Lisa".equals(item))
+					found++;
+			}
 		}
-		assertTrue("Can't find expected entries in 'collections.", found == 3);
+		assertTrue("Can't find expected entries in 'collections.", found >= 3);
 	}
 
 }

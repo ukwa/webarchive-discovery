@@ -22,10 +22,10 @@ public class AnnotationsTest {
 			JsonMappingException, IOException {
 		//
 		Annotations ann = new Annotations();
-		//
+		// canon.urlStringToKey(uri)
 		ann.getCollections()
 				.get("resource")
-				.put("en.wikipedia.org/wiki/Mona_Lisa",
+				.put("en.wikipedia.org/wiki/mona_lisa",
 						new UriCollection("Wikipedia", new String[] {
 								"Wikipedia", "Wikipedia|Main Site",
 								"Wikipedia|Main Site|Mona Lisa" },
@@ -40,12 +40,16 @@ public class AnnotationsTest {
 		//
 		ann.getCollections()
 				.get("subdomains")
-				.put("http://en.wikipedia.org",
+				.put("en.wikipedia.org",
 						new UriCollection("Wikipedia",
 								new String[] { "Wikipedia" },
 								new String[] { "Crowdsourcing" }));
 		// Date ranges:
 		ann.getCollectionDateRanges().put("Wikipedia",
+				new DateRange(null, null));
+		ann.getCollectionDateRanges().put("Wikipedia|Main Site",
+				new DateRange(null, null));
+		ann.getCollectionDateRanges().put("Wikipedia|Main Site|Mona Lisa",
 				new DateRange(null, null));
 		String json = ann.toJson();
 		Annotations ann2 = Annotations.fromJson(json);
