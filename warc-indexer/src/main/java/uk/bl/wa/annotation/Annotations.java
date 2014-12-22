@@ -62,7 +62,8 @@ public class Annotations {
 	public String toJson() {
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			return mapper.writeValueAsString(this);
+			return mapper.writerWithDefaultPrettyPrinter()
+					.writeValueAsString(this);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

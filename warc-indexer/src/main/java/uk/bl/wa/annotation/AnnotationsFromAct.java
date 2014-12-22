@@ -292,7 +292,7 @@ public class AnnotationsFromAct {
 	 * @param collection
 	 */
 	private void addCollection( String scope, String urls, UriCollection collection ) {
-		LOG.info("Adding " + urls + " to collection " + collection);
+		LOG.info("Adding " + urls + " to collection " + collection.toString());
 		HashMap<String, UriCollection> relevantCollection = ann
 				.getCollections().get(scope);
 		for( String url : urls.split( "\\s+" ) ) {
@@ -332,6 +332,12 @@ public class AnnotationsFromAct {
 		return ann;
 	}
 	
+	/**
+	 * 
+	 * @param map
+	 * @param startUrl
+	 * @throws IOException
+	 */
 	private void getTaxonomyViaJson(Map<Integer, JsonNode> map, String startUrl)
 			throws IOException {
 		// Get the collections export:
@@ -368,45 +374,42 @@ public class AnnotationsFromAct {
 	 * @throws JsonParseException
 	 * @throws IOException
 	 */
-	private void getCollectionsViaJson() throws JsonParseException, IOException {
+	private void getCollectionsViaJson() throws IOException {
 		// Get the subjects taxonomy:
 		this.getTaxonomyViaJson(sm, AnnotationsFromAct.WARC_SUBJECTS_URL_JSON);
 		// Get the collections taxonomy:
 		this.getTaxonomyViaJson(cm,
 				AnnotationsFromAct.WARC_COLLECTIONS_URL_JSON);
-		// Now patch up the parent-child relationships
+
+		// Now patch up the parent-child relationships etc.
 		for (JsonNode node : cm.values()) {
-			List<JsonNode> cats = new ArrayList<JsonNode>();
-			// Find all the parents:
-			this.resolveParents(node, cats);
-			// Build up the full path string:
-			StringBuilder catPath = new StringBuilder();
-			for (int i = 0; i < cats.size(); i++) {
-				JsonNode cat = cats.get(i);
-				catPath.append(cat.get("name").getTextValue());
-				// Append a separator if this is not the last entry:
-				if (i < cats.size() - 1)
-					catPath.append("|");
-			}
+
+			// Get the parent categories:
+			List<JsonNode> cats = this.resolveParents(node);
+
+			// Turn that into a string representation:
+			String catPath = this.getCatPath(cats);
 
 			// Look to see if the root collection is marked as published:
 			Boolean publish = cats.get(0).get("field_publish")
 					.getBooleanValue();
 			if (publish) {
-				LOG.info("Collection Path: " + catPath + " PUBLISHED");
+				// LOG.info("Collection Path: " + catPath + " PUBLISHED");
 				// Add to list of collections, w/ date ranges:
-				String name = catPath.toString();
+				String name = catPath;
 				String start = null;
-				if (cats.get(0).get("start") != null) {
-					start = cats.get(0).get("start").getTextValue();
+				if (cats.get(0).get("field_dates").get("value") != null) {
+					start = cats.get(0).get("field_dates").get("value")
+							.getTextValue();
 				}
 				String end = null;
-				if (cats.get(0).get("end") != null) {
-					end = cats.get(0).get("end").getTextValue();
+				if (cats.get(0).get("field_dates").get("value2") != null) {
+					end = cats.get(0).get("field_dates").get("value2")
+							.getTextValue();
 				}
 				DateRange dateRange = new DateRange(start, end);
-				LOG.info("Adding collection " + name + " with dateRange "
-						+ dateRange);
+				// LOG.info("Adding collection " + name + " with dateRange "
+				// + dateRange);
 				ann.getCollectionDateRanges().put(name, dateRange);
 			} else {
 				LOG.debug("Skipping unpublished collection with path: "
@@ -414,6 +417,24 @@ public class AnnotationsFromAct {
 			}
 		}
 
+	}
+
+	/**
+	 * 
+	 * @param cats
+	 * @return
+	 */
+	private String getCatPath(List<JsonNode> cats) {
+		// Build up the full path string:
+		StringBuilder catPath = new StringBuilder();
+		for (int i = 0; i < cats.size(); i++) {
+			JsonNode cat = cats.get(i);
+			catPath.append(cat.get("name").getTextValue());
+			// Append a separator if this is not the last entry:
+			if (i < cats.size() - 1)
+				catPath.append("|");
+		}
+		return catPath.toString();
 	}
 
 	/**
@@ -431,6 +452,15 @@ public class AnnotationsFromAct {
 			JsonNode parent = cm.get(ci);
 			resolveParents(parent, cats);
 		}
+	}
+
+	private List<JsonNode> resolveParents(JsonNode c) {
+		// Get the parent categories:
+		List<JsonNode> cats = new ArrayList<JsonNode>();
+		// Find all the parents:
+		this.resolveParents(c, cats);
+		// And return:
+		return cats;
 	}
 
 	/**
@@ -453,22 +483,42 @@ public class AnnotationsFromAct {
 
 			for (JsonNode node : root.get("list")) {
 				String scope = node.get("field_scope").getTextValue();
-				LOG.info("Got \"" + node.get("title").getTextValue()
+				LOG.debug("Got \"" + node.get("title").getTextValue()
 						+ "\" with scope: " + scope);
 				String collectionCategories = null;
 				List<String> allCollections = new ArrayList<String>();
 				String[] subjects = null;
+				// Add on the categories:
 				for (JsonNode cat : node.get("field_collection_categories")) {
 					Integer cid = Integer
 							.parseInt(cat.get("id").getTextValue());
-					LOG.info("collectionCategories: "
-							+ cm.get(cid).get("name").getTextValue());
-					allCollections.add(cm.get(cid).get("name").getTextValue());
+					JsonNode catd = cm.get(cid);
+					LOG.debug("collectionCategories: "
+							+ catd.get("name").getTextValue());
+					// Get the parent categories:
+					List<JsonNode> catds = this.resolveParents(catd);
+					// Turn that into a string representation:
+					String catPath = this.getCatPath(catds);
+					allCollections.add(catPath);
+					if (collectionCategories == null) {
+						collectionCategories = catds.get(0).get("name")
+								.getTextValue();
+					}
+				}
+				// Get the Subject:
+				if( node.get("field_subject") != null ) {
+					Integer sid = Integer.parseInt(node.get("field_subject")
+							.get("id").getTextValue());
+					String subject = sm.get(sid).get("name").getTextValue();
+					LOG.info("Found a SUBJECT: "
+							+ node.get("field_subject").get("id") + " > "
+							+ subject);
+					subjects = new String[] { subject };
 				}
 				UriCollection uc = new UriCollection(collectionCategories,
 						allCollections.toArray(new String[1]), subjects);
 				for (JsonNode url : node.get("field_url")) {
-					LOG.info("Got " + url.get("url").getTextValue());
+					LOG.debug("Got " + url.get("url").getTextValue());
 					// Add to the collection:
 					addCollection(scope, url.get("url").getTextValue(), uc);
 				}
