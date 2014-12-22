@@ -4,7 +4,10 @@
 package uk.bl.wa.annotation;
 
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.io.StringReader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
@@ -292,7 +295,7 @@ public class AnnotationsFromAct {
 	 * @param collection
 	 */
 	private void addCollection( String scope, String urls, UriCollection collection ) {
-		LOG.info("Adding " + urls + " to collection " + collection.toString());
+		LOG.debug("Adding " + urls + " to collection " + collection.toString());
 		HashMap<String, UriCollection> relevantCollection = ann
 				.getCollections().get(scope);
 		for( String url : urls.split( "\\s+" ) ) {
@@ -301,7 +304,8 @@ public class AnnotationsFromAct {
 					// Trac #2271: try keying on canonicalized URL.
 					url = canon.urlStringToKey( url );
 				} catch( URIException u ) {
-					LOG.warn( u.getMessage() + ": " + url );
+					LOG.warn("Problem parsing URL: " + u.getMessage() + ": "
+							+ url);
 				}
 				relevantCollection.put( url, collection );
 			} else {
@@ -470,7 +474,7 @@ public class AnnotationsFromAct {
 	private void getTargetsViaJson() throws IOException {
 		String actUrl = "http://www.webarchive.org.uk/act/node.json?type=url";
 		int page = 0;
-		int max_page = 2;
+		int max_page = -1;
 		do {
 			page++;
 			LOG.info("Getting page " + page + " of targets export from ACT... "
@@ -493,6 +497,11 @@ public class AnnotationsFromAct {
 					Integer cid = Integer
 							.parseInt(cat.get("id").getTextValue());
 					JsonNode catd = cm.get(cid);
+					if (catd == null) {
+						LOG.warn("NULL catd for id=" + cid + " from: "
+								+ node.asText());
+						continue;
+					}
 					LOG.debug("collectionCategories: "
 							+ catd.get("name").getTextValue());
 					// Get the parent categories:
@@ -510,7 +519,7 @@ public class AnnotationsFromAct {
 					Integer sid = Integer.parseInt(node.get("field_subject")
 							.get("id").getTextValue());
 					String subject = sm.get(sid).get("name").getTextValue();
-					LOG.info("Found a SUBJECT: "
+					LOG.debug("Found a SUBJECT: "
 							+ node.get("field_subject").get("id") + " > "
 							+ subject);
 					subjects = new String[] { subject };
@@ -528,7 +537,13 @@ public class AnnotationsFromAct {
 			actUrl = root.path("next").getTextValue();
 			if (actUrl != null)
 				actUrl = actUrl.replaceFirst("\\?", "\\.json\\?");
-		} while (actUrl != null && (page <= max_page || max_page < 0));
+		} while (actUrl != null && (page < max_page || max_page < 0));
+
+		// Summarise the result:
+		for (String key : ann.getCollections().keySet()) {
+			LOG.info("Processed " + ann.getCollections().get(key).size()
+					+ " URIs for collection " + key);
+		}
 	}
 
 	/**
@@ -551,8 +566,11 @@ public class AnnotationsFromAct {
 
 		act.getTargetsViaJson();
 
-		LOG.info(act.getAnnotations().toJson());
+		String filename = "annotations.json";
 
+		LOG.info("Writing annotations to: " + filename);
+		act.getAnnotations().toJsonFile(filename);
+		LOG.info("...done.");
 	}
 
 }

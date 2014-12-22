@@ -3,13 +3,20 @@
  */
 package uk.bl.wa.annotation;
 
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.HashMap;
 
+import org.apache.commons.io.FileUtils;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.map.SerializationConfig;
 
 /**
  * 
@@ -54,20 +61,39 @@ public class Annotations {
 		return this.collectionDateRanges;
 	}
 
+	private static ObjectMapper getObjectMapper() {
+		ObjectMapper mapper = new ObjectMapper();
+		mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+				false);
+		return mapper;
+	}
+
 	/**
 	 * 
 	 * @param ann
 	 * @return
 	 */
 	public String toJson() {
-		ObjectMapper mapper = new ObjectMapper();
 		try {
+			ObjectMapper mapper = getObjectMapper();
 			return mapper.writerWithDefaultPrettyPrinter()
 					.writeValueAsString(this);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
 		return null;
+	}
+
+	/**
+	 * 
+	 * @param filename
+	 * @throws FileNotFoundException
+	 */
+	public void toJsonFile(String filename) throws FileNotFoundException {
+		final OutputStream os = new FileOutputStream(filename);
+		final PrintStream printStream = new PrintStream(os);
+		printStream.print(this.toJson());
+		printStream.close();
 	}
 
 	/**
@@ -80,12 +106,21 @@ public class Annotations {
 	 */
 	public static Annotations fromJson(String json) throws JsonParseException,
 			JsonMappingException, IOException {
-		ObjectMapper mapper = new ObjectMapper();
-		// TypeFactory typeFactory = mapper.getTypeFactory();
-		// MapType mapType = typeFactory.constructMapType(HashMap.class,
-		// String.class, DateRange.class);
-		// HashMap<String, DateRange> map = mapper.readValue(json, mapType);
+		ObjectMapper mapper = getObjectMapper();
 		return mapper.readValue(json, Annotations.class);
+	}
+
+	/**
+	 * 
+	 * @param filename
+	 * @return
+	 * @throws IOException
+	 * @throws JsonMappingException
+	 * @throws JsonParseException
+	 */
+	public static Annotations fromJsonFile(String filename)
+			throws JsonParseException, JsonMappingException, IOException {
+		return fromJson(FileUtils.readFileToString(new File(filename)));
 	}
 
 }

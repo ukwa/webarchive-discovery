@@ -1,0 +1,23 @@
+{
+  "collections" : {
+    "subdomains" : {
+    },
+    "root" : {
+    },
+    "plus1" : {
+    },
+    "resource" : {
+      "en.wikipedia.org/wiki/Mona_Lisa" : {
+        "collectionCategories" : "Wikipedia",
+        "allCollections" : [ "Wikipedia", "Mona Lisa" ],
+        "subject" : [ "Crowdsourcing" ]
+      }
+    }
+  },
+  "collectionDateRanges" : {
+    "Wikipedia" : {
+      "start" : "1970-01-01T00:00:00.000+0000",
+      "end" : "9999-12-22T22:23:19.692+0000"
+    }
+  }
+}

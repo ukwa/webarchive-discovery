@@ -1,5 +1,6 @@
 package uk.bl.wa.annotation;
 
+import java.util.Calendar;
 import java.util.Date;
 
 import org.codehaus.jackson.annotate.JsonProperty;
@@ -31,8 +32,9 @@ public class DateRange {
 
 		if (end != null)
 			this.end = new Date(Long.parseLong(end) * 1000L);
-		else
-			this.end = new Date(Long.MAX_VALUE);
+		else {
+			this.end = getDistantFutureDate();
+		}
 	}
 
 	public boolean isInDateRange(Date date) {
@@ -41,5 +43,11 @@ public class DateRange {
 
 	public String toString() {
 		return "[" + start + "," + end + "]";
+	}
+
+	private Date getDistantFutureDate() {
+		Calendar calendar = Calendar.getInstance();
+		calendar.set(Calendar.YEAR, 9999);
+		return calendar.getTime();
 	}
 }

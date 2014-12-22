@@ -22,12 +22,15 @@ public class AnnotationsTest {
 			JsonMappingException, IOException {
 		Annotations ann = new Annotations();
 		ann.getCollections()
-				.get("root")
-				.put("test_key_1", new UriCollection("test1", "test2", "test3"));
-		ann.getCollectionDateRanges().put("test_key_2",
+				.get("resource")
+				.put("en.wikipedia.org/wiki/Mona_Lisa",
+						new UriCollection("Wikipedia", "Wikipedia|Mona Lisa",
+								"Crowdsourcing"));
+		ann.getCollectionDateRanges().put("Wikipedia",
 				new DateRange(null, null));
 		String json = ann.toJson();
 		Annotations ann2 = Annotations.fromJson(json);
+		ann2.toJsonFile("src/test/resources/test-annotations.json");
 		String json2 = ann2.toJson();
 		// Having performed a full Json-Java-Json cycle, check the Json is the
 		// same:
