@@ -8,7 +8,7 @@
       }
     },
     "root" : {
-      "http://en.wikipedia.org/" : {
+      "http://en.wikipedia.org" : {
         "collection" : "Wikipedia",
         "collections" : [ "Wikipedia", "Wikipedia|Main Site" ],
         "subject" : [ "Crowdsourcing" ]
@@ -27,15 +27,15 @@
   "collectionDateRanges" : {
     "Wikipedia|Main Site" : {
       "start" : "1970-01-01T00:00:00.000+0000",
-      "end" : "9999-12-23T17:57:42.809+0000"
+      "end" : "9999-12-23T18:09:41.595+0000"
     },
     "Wikipedia" : {
       "start" : "1970-01-01T00:00:00.000+0000",
-      "end" : "9999-12-23T17:57:42.749+0000"
+      "end" : "9999-12-23T18:09:41.594+0000"
     },
     "Wikipedia|Main Site|Mona Lisa" : {
       "start" : "1970-01-01T00:00:00.000+0000",
-      "end" : "9999-12-23T17:57:42.809+0000"
+      "end" : "9999-12-23T18:09:41.595+0000"
     }
   }
 }

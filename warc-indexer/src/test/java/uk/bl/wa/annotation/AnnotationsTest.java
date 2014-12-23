@@ -3,6 +3,28 @@
  */
 package uk.bl.wa.annotation;
 
+/*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2014 The UK Web Archive
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
 import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
@@ -17,6 +39,8 @@ import org.junit.Test;
  */
 public class AnnotationsTest {
 
+	public static final String ML_ANNOTATIONS = "src/test/resources/annotations/mona-lisa-annotations.json";
+
 	@Test
 	public void testJsonSerialisation() throws JsonParseException,
 			JsonMappingException, IOException {
@@ -25,7 +49,7 @@ public class AnnotationsTest {
 		// canon.urlStringToKey(uri)
 		ann.getCollections()
 				.get("resource")
-				.put("en.wikipedia.org/wiki/mona_lisa",
+				.put("http://en.wikipedia.org/wiki/Mona_Lisa",
 						new UriCollection("Wikipedia", new String[] {
 								"Wikipedia", "Wikipedia|Main Site",
 								"Wikipedia|Main Site|Mona Lisa" },
@@ -33,7 +57,7 @@ public class AnnotationsTest {
 		//
 		ann.getCollections()
 				.get("root")
-				.put("http://en.wikipedia.org/",
+				.put("http://en.wikipedia.org",
 						new UriCollection("Wikipedia", new String[] {
 								"Wikipedia", "Wikipedia|Main Site" },
 								new String[] { "Crowdsourcing" }));
@@ -53,11 +77,13 @@ public class AnnotationsTest {
 				new DateRange(null, null));
 		String json = ann.toJson();
 		Annotations ann2 = Annotations.fromJson(json);
-		ann2.toJsonFile("src/test/resources/test-annotations.json");
+		ann2.toJsonFile(ML_ANNOTATIONS);
 		String json2 = ann2.toJson();
 		// Having performed a full Json-Java-Json cycle, check the Json is the
 		// same:
-		assertEquals("A serialisation cycle was not lossless", json, json2);
+		assertEquals(
+				"The test Json-Java-Json serialisation cycle was not lossless",
+				json, json2);
 	}
 
 }

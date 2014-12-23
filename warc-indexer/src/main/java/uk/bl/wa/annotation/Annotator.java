@@ -3,11 +3,32 @@
  */
 package uk.bl.wa.annotation;
 
+/*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2014 The UK Web Archive
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
 import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -18,11 +39,18 @@ import java.util.Map;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.client.solrj.SolrQuery;
+import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.response.QueryResponse;
+import org.apache.solr.client.solrj.util.ClientUtils;
+import org.apache.solr.common.SolrDocument;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jdom.JDOMException;
 
-import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;
 
 /**
@@ -74,7 +102,8 @@ public class Annotator {
 	public void applyAnnotations(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
 		// "Just this URL"
-		String normd = canon.urlStringToKey(uri.toString());
+		// String normd = canon.urlStringToKey(uri.toString());
+		String normd = uri.toString();
 		LOG.info("Comparing with " + normd);
 		if (this.annotations.getCollections().get("resource").keySet()
 				.contains(normd)) {
@@ -114,15 +143,7 @@ public class Annotator {
 			SolrInputDocument solr) {
 		// Trac #2243; This should only happen if the record's timestamp is
 		// within the range set by the Collection.
-		String dateString = (String) solr.getField(SolrFields.CRAWL_DATE)
-				.getValue();
-		Date date;
-		try {
-			date = WARCIndexer.formatter.parse(dateString);
-		} catch (ParseException e) {
-			LOG.error("Could not parse date: " + dateString);
-			return;
-		}
+		Date date = (Date) solr.getField(SolrFields.CRAWL_DATE).getValue();
 
 		LOG.info("Updating collections for "
 				+ solr.getField(SolrFields.SOLR_URL));
@@ -199,7 +220,7 @@ public class Annotator {
 	 * @param out
 	 * @param doc
 	 */
-	private static void prettyPrint(PrintStream out, SolrInputDocument doc) {
+	protected static void prettyPrint(PrintStream out, SolrInputDocument doc) {
 		List<String> sortedFieldNames = new ArrayList<String>(
 				doc.getFieldNames());
 		Collections.sort(sortedFieldNames);
@@ -211,34 +232,86 @@ public class Annotator {
 		out.println();
 	}
 
+	private static void searchAndApplyAnnotations(Annotator anr,
+			SolrServer solr, SolrQuery parameters) throws SolrServerException,
+			URISyntaxException, IOException {
+		QueryResponse response = solr.query(parameters);
+		SolrDocumentList list = response.getResults();
+		for (SolrDocument doc : list) {
+			SolrInputDocument solrInDoc = new SolrInputDocument();
+			solrInDoc.setField(SolrFields.ID, doc.getFieldValue(SolrFields.ID));
+			solrInDoc.setField(SolrFields.CRAWL_DATE,
+					doc.getFieldValue(SolrFields.CRAWL_DATE));
+			solrInDoc.setField(SolrFields.SOLR_URL,
+					doc.getFieldValue(SolrFields.SOLR_URL));
+			String uriString = (String) solrInDoc
+					.getFieldValue(SolrFields.SOLR_URL);
+			URI uri = new URI(uriString);
+			// Update all of those records with the applicable
+			// categories etc.
+			anr.applyAnnotations(uri, solrInDoc);
+			solr.add(solrInDoc);
+		}
+	}
+
+	private static void searchAndApplyAnnotations(Annotations ann,
+			String solrServer) throws SolrServerException, URISyntaxException,
+			IOException {
+		// Connect to solr:
+		SolrServer solr = new HttpSolrServer(solrServer);
+
+		// Set up annotator:
+		Annotator anr = new Annotator(ann);
+
+		// Loop over URL known to ACT:
+		for (String scope : ann.getCollections().keySet()) {
+			if ("resource".equals(scope)) {
+
+				// Search for all matching URLs in SOLR:
+				for (String uriKey : ann.getCollections().get(scope).keySet()) {
+					LOG.info("Looking for URL: " + uriKey);
+					SolrQuery parameters = new SolrQuery();
+					parameters.set("q",
+							"url:" + ClientUtils.escapeQueryChars(uriKey));
+					searchAndApplyAnnotations(anr, solr, parameters);
+				}
+
+			} else if ("root".equals(scope)) {
+
+				// Search for all matching URLs in SOLR:
+				for (String uriKey : ann.getCollections().get(scope).keySet()) {
+					LOG.info("Looking for URLs starting with: " + uriKey);
+					SolrQuery parameters = new SolrQuery();
+					parameters
+							.set("q",
+									"url:"
+											+ ClientUtils
+													.escapeQueryChars(uriKey)
+											+ "*");
+					searchAndApplyAnnotations(anr, solr, parameters);
+				}
+
+			} else {
+				LOG.warn("Ignoring annotations scoped as: " + scope);
+			}
+		}
+
+		// And commit:
+		solr.commit();
+
+	}
+
 	/**
 	 * @param args
-	 * @throws IOException 
-	 * @throws JDOMException 
-	 * @throws URISyntaxException 
+	 * @throws IOException
+	 * @throws JDOMException
+	 * @throws URISyntaxException
+	 * @throws SolrServerException
 	 */
-	public static void main(String[] args) throws IOException, JDOMException, URISyntaxException {
-		
-		Annotator ae = Annotator.annotationsFromAct();
-		
-		URI uri = URI.create("http://news.bbc.co.uk/");
-		SolrInputDocument solr = new SolrInputDocument();
-		// Needs ID CrawlDate
-		// SolrFields.CRAWL_DATE;
-		// SolrFields.ID;
-
-		// Uses SOLR_URL for logging only:
-		// SolrFields.SOLR_URL;
-
-		ae.applyAnnotations(uri, solr);
-		prettyPrint(System.out, solr);
-		
-		// Loop over URL known to ACT:
-
-		// Search for all matching URLs in SOLR:
-
-		// Update all of those records with the applicable categories etc.
-		
+	public static void main(String[] args) throws IOException, JDOMException,
+			URISyntaxException, SolrServerException {
+		Annotations ann = Annotations.fromJsonFile(args[0]);
+		searchAndApplyAnnotations(ann, args[1]);
 	}
 
 }
