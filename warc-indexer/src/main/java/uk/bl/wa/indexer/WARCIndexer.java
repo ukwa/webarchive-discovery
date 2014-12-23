@@ -29,6 +29,7 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
+import java.net.URISyntaxException;
 import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -69,6 +70,8 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalysers;
+import uk.bl.wa.annotation.Annotations;
+import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -118,6 +121,9 @@ public class WARCIndexer {
 	
 	/** Text Analysers */
 	private TextAnalysers txa;
+
+	/** Annotations */
+	private Annotator ant = null;
 
 	/* ------------------------------------------------------------ */
 
@@ -197,6 +203,14 @@ public class WARCIndexer {
 		
 		// Log so it's clear this completed ok:
 		log.info("Initialisation of WARCIndexer complete.");
+	}
+
+	/**
+	 * 
+	 * @param ann
+	 */
+	public void setAnnotations(Annotations ann) {
+		this.ant = new Annotator(ann);
 	}
 
 	/**
@@ -424,7 +438,7 @@ public class WARCIndexer {
 			dateList.add(crawlDate);
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
-			solr.setField( SolrFields.CRAWL_DATE, formatter.format(firstDate) );
+			solr.getSolrDocument().setField(SolrFields.CRAWL_DATE, firstDate);
 			solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
 			
 			// Use the current value as the waybackDate:
@@ -443,6 +457,18 @@ public class WARCIndexer {
 				return revisited;
 			}
 			
+			// -----------------------------------------------------
+			// Apply any annotations:
+			// -----------------------------------------------------
+			if (ant != null) {
+				try {
+					ant.applyAnnotations(url.toURI(), solr.getSolrDocument());
+				} catch (URISyntaxException e) {
+					e.printStackTrace();
+					log.error("Failed to annotate " + url + " : " + e);
+				}
+			}
+
 			// -----------------------------------------------------
 			// Payload duplication has been checked, ready to parse:
 			// -----------------------------------------------------

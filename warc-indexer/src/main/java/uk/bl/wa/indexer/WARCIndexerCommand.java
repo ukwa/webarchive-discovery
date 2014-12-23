@@ -60,6 +60,7 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 
+import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
@@ -99,13 +100,20 @@ public class WARCIndexerCommand {
 		boolean isTextRequired = false;
 		boolean slashPages = false;
 		int batchSize = 1;
+		String annotationsFile = null;
 		
 		Options options = new Options();
-		options.addOption( "o", "output", true, "The directory to contain the output XML files" );
-		options.addOption( "s", "solr", true, "The URL of the required Solr Instance" );
-		options.addOption( "t", "text", false, "Include text in XML in output files" );
-		options.addOption( "r", "slash", false, "Only process slash (root) pages." );
-		options.addOption( "b", "batch", true, "Batch size for submissions." );
+		options.addOption("o", "output", true,
+				"The directory to contain the output XML files");
+		options.addOption("s", "solr", true,
+				"The URL of the required Solr Instance");
+		options.addOption("t", "text", false,
+				"Include text in XML in output files");
+		options.addOption("r", "slash", false,
+				"Only process slash (root) pages.");
+		options.addOption("a", "annotations", true,
+				"A JSON file containing the annotations to apply during indexing.");
+		options.addOption("b", "batch", true, "Batch size for submissions.");
 		options.addOption("c", "config", true, "Configuration to use.");
 		
 		try {
@@ -173,9 +181,14 @@ public class WARCIndexerCommand {
 		   		printUsage(options);
 		   		System.exit( 0 );
 		   	}
-	   	
+
+			// Pick up any annotations specified:
+			if (line.hasOption("a")) {
+				annotationsFile = line.getOptionValue("a");
+			}
+
 			parseWarcFiles(configFile, outputDir, solrUrl, cli_args,
-					isTextRequired, slashPages, batchSize);
+					isTextRequired, slashPages, batchSize, annotationsFile);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -193,7 +206,8 @@ public class WARCIndexerCommand {
 	 */
 	public static void parseWarcFiles(String configFile, String outputDir,
 			String solrUrl, String[] args, boolean isTextRequired,
-			boolean slashPages, int batchSize) throws NoSuchAlgorithmException,
+			boolean slashPages, int batchSize, String annotationsFile)
+			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
 		long startTime = System.currentTimeMillis();
@@ -218,6 +232,12 @@ public class WARCIndexerCommand {
 
 		// Also pass config down:
 		WARCIndexer windex = new WARCIndexer(conf);
+
+		// Add in annotations, if set:
+		if (annotationsFile != null) {
+			Annotations ann = Annotations.fromJsonFile(annotationsFile);
+			windex.setAnnotations(ann);
+		}
 		
 		// To be indexed:
 		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 

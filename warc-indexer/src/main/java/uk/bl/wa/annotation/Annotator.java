@@ -104,10 +104,10 @@ public class Annotator {
 		// "Just this URL"
 		// String normd = canon.urlStringToKey(uri.toString());
 		String normd = uri.toString();
-		LOG.info("Comparing with " + normd);
+		LOG.debug("Comparing with " + normd);
 		if (this.annotations.getCollections().get("resource").keySet()
 				.contains(normd)) {
-			LOG.info("Applying resource-level annotations...");
+			LOG.debug("Applying resource-level annotations...");
 			updateCollections(this.annotations.getCollections().get("resource")
 					.get(normd), solr);
 		}
@@ -115,7 +115,7 @@ public class Annotator {
 		String prefix = uri.getScheme() + "://" + uri.getHost();
 		if (this.annotations.getCollections().get("root").keySet()
 				.contains(prefix)) {
-			LOG.info("Applying root-level annotations...");
+			LOG.debug("Applying root-level annotations...");
 			updateCollections(this.annotations.getCollections().get("root")
 					.get(prefix), solr);
 		}
@@ -125,7 +125,7 @@ public class Annotator {
 		HashMap<String, UriCollection> subdomains = this.annotations
 				.getCollections().get("subdomains");
 		for( String key : subdomains.keySet() ) {
-			LOG.info("Applying subdomain annotations for: " + key);
+			LOG.debug("Applying subdomain annotations for: " + key);
 			host = key;
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
 				updateCollections( subdomains.get( key ), solr );
@@ -145,9 +145,9 @@ public class Annotator {
 		// within the range set by the Collection.
 		Date date = (Date) solr.getField(SolrFields.CRAWL_DATE).getValue();
 
-		LOG.info("Updating collections for "
+		LOG.debug("Updating collections for "
 				+ solr.getField(SolrFields.SOLR_URL));
-		LOG.info("Using collection: " + collection);
+		LOG.debug("Using collection: " + collection);
 		// Update the single, main collection
 		if (collection.collection != null && collection.collection.length() > 0) {
 			if (this.annotations.getCollectionDateRanges().containsKey(
@@ -157,7 +157,7 @@ public class Annotator {
 							.isInDateRange(date)) {
 				setUpdateField(solr, SolrFields.SOLR_COLLECTION,
 						collection.collection);
-				LOG.info("Added collection " + collection.collection + " to "
+				LOG.debug("Added collection " + collection.collection + " to "
 						+ solr.getField(SolrFields.SOLR_URL));
 			}
 		}
@@ -165,13 +165,14 @@ public class Annotator {
 		if (collection.collections != null
 				&& collection.collections.length > 0) {
 			for (String col : collection.collections) {
-				LOG.info("Considering adding collection '" + col + "' to "
+				LOG.debug("Considering adding collection '" + col + "' to "
 						+ solr.getField(SolrFields.SOLR_URL));
 				if (this.annotations.getCollectionDateRanges().containsKey(col)
 						&& this.annotations.getCollectionDateRanges().get(col)
 								.isInDateRange(date)) {
 					setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
-					LOG.info( "Added collection '" + col + "' to " + solr.getField( SolrFields.SOLR_URL ) );
+					LOG.debug("Added collection '" + col + "' to "
+							+ solr.getField(SolrFields.SOLR_URL));
 				}
 			}
 		}
@@ -183,7 +184,8 @@ public class Annotator {
 						&& this.annotations.getCollectionDateRanges()
 								.get(subject).isInDateRange(date)) {
 					setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
-					LOG.info( "Added collection '" + subject + "' to " + solr.getField( SolrFields.SOLR_URL ) );
+					LOG.debug("Added collection '" + subject + "' to "
+							+ solr.getField(SolrFields.SOLR_URL));
 				}
 			}
 		}
@@ -206,10 +208,11 @@ public class Annotator {
 		}
 		// Add it if it is a new value:
 		if (newValue) {
-			LOG.info("Adding field value: " + value + " to field: " + field);
+			LOG.info("Adding value: " + value + " to field: " + field
+					+ " for URI " + doc.getFieldValue(SolrFields.SOLR_URL));
 			doc.addField(field, operation);
 		} else {
-			LOG.info("Skipping addition of existing field value: " + value
+			LOG.debug("Skipping addition of existing field value: " + value
 					+ " to field: " + field);
 		}
 	}
