@@ -171,10 +171,26 @@ public class Annotator {
 
 	private static void setUpdateField(SolrInputDocument doc, String field,
 			String value) {
-		LOG.info("Adding field value: " + value + " to field: " + field);
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("set", value);
-		doc.addField(field, operation);
+		// Check to see if this value is already in:
+		boolean newValue = true;
+		if (doc.getFieldValues(field) != null) {
+			for (Object val : doc.getFieldValues(field)) {
+				@SuppressWarnings("unchecked")
+				Map<String, String> cmap = (Map<String, String>) val;
+				if (cmap.values().contains(value))
+					newValue = false;
+			}
+		}
+		// Add it if it is a new value:
+		if (newValue) {
+			LOG.info("Adding field value: " + value + " to field: " + field);
+			doc.addField(field, operation);
+		} else {
+			LOG.info("Skipping addition of existing field value: " + value
+					+ " to field: " + field);
+		}
 	}
 
 	/**

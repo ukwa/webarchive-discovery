@@ -56,7 +56,7 @@ public class AnnotatorTest {
 					found++;
 			}
 		}
-		assertTrue("Can't find expected entries in 'collections.", found >= 3);
+		assertTrue("Can't find expected entries in 'collections.", found == 3);
 	}
 
 }

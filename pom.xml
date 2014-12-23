@@ -20,7 +20,6 @@
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
       <module>digipres-tika</module>
-      <module>warc-annotation</module>
       <module>warc-solr-test-server</module>
    </modules>
    <licenses>
