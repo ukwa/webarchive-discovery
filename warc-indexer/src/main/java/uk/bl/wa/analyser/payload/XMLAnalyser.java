@@ -32,11 +32,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
-import com.typesafe.config.Config;
-
 import uk.bl.wa.parsers.XMLRootNamespaceParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+
+import com.typesafe.config.Config;
 
 /**
  * @author anj
@@ -69,7 +69,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 				thread.interrupt();
 			} catch( Exception e ) {
 				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing for XML Root Namespace: " + e.getMessage() );
+				solr.addParseException("when parsing for XML Root Namespace", e);
 			}
 			solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
 		}

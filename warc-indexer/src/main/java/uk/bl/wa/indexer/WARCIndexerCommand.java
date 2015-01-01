@@ -265,8 +265,21 @@ public class WARCIndexerCommand {
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
-				SolrRecord doc = windex.extract(inFile.getName(), rec,
-						isTextRequired);
+				SolrRecord doc = null;
+				try {
+					doc = windex.extract(inFile.getName(), rec, isTextRequired);
+				} catch (Exception e) {
+					log.warn("Exception on record "+rec.getHeader().getUrl()+ " from "+inFile.getName(), e);
+					doc.addParseException(e);
+					continue;
+				} catch (OutOfMemoryError e) {
+					log.warn(
+							"OutOfMemoryError on record "
+									+ rec.getHeader().getUrl() + " from "
+									+ inFile.getName(), e);
+					doc.addParseException(e);
+					continue;
+				}
 
 				if( doc != null ) {
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");

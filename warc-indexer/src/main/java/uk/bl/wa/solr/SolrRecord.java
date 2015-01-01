@@ -193,4 +193,23 @@ public class SolrRecord implements Serializable {
 		doc = newdoc;
 	}
 
+	/**
+	 * 
+	 * @param e
+	 */
+	public void addParseException(Throwable e) {
+		addField(SolrFields.PARSE_ERROR,
+				e.getClass().getName() + ": " + e.getMessage());
+	}
+
+	/**
+	 * 
+	 * @param hint
+	 * @param e
+	 */
+	public void addParseException(String hint, Throwable e) {
+		addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
+				+ ": " + e.getMessage());
+	}
+
 }

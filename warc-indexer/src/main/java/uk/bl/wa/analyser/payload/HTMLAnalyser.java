@@ -87,7 +87,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 			thread.interrupt();
 		} catch( Exception e ) {
 			log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-			solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing as HTML: " + e.getMessage() );
+			solr.addParseException("when parsing as HTML", e);
 		}
 
 		// Process links:

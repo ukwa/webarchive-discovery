@@ -120,7 +120,7 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";tika; " + header.getUrl() + "@" + header.getOffset() );
 		}
-		
+
 		// Pull out the first few bytes, to hunt for new format by magic:
 		try {
 			tikainput.reset();

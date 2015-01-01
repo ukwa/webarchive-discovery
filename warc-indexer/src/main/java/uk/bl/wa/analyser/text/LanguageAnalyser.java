@@ -25,17 +25,21 @@ package uk.bl.wa.analyser.text;
  * #L%
  */
 
-import com.typesafe.config.Config;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 
 import uk.bl.wa.extract.LanguageDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+
+import com.typesafe.config.Config;
 
 /**
  * @author anj
  *
  */
 public class LanguageAnalyser extends AbstractTextAnalyser {
+	private Log log = LogFactory.getLog(LanguageAnalyser.class);
 	
 	/** */
 	private LanguageDetector ld = new LanguageDetector();
@@ -44,6 +48,7 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
 	 * @param conf
 	 */
 	public LanguageAnalyser(Config conf) {
+		log.info("Constructing...");
 	}
 
 	/* (non-Javadoc)

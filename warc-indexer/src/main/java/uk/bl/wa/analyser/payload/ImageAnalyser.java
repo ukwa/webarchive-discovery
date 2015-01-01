@@ -107,11 +107,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 					thread.interrupt();
 				} catch (Exception e) {
 					log.error("WritableSolrRecord.extract(): " + e.getMessage());
-					solr.addField(
-							SolrFields.PARSE_ERROR,
-							e.getClass().getName()
-									+ " when parsing for faces: "
-									+ e.getMessage());
+					solr.addParseException("when scanning for faces", e);
 				}
 				// Store basic image data:
 				solr.addField(SolrFields.IMAGE_HEIGHT,

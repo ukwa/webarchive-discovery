@@ -69,8 +69,7 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 			thread.interrupt();
 		} catch (Exception e) {
 			log.error("WritableSolrRecord.extract(): " + e.getMessage());
-			solr.addField(SolrFields.PARSE_ERROR, e.getClass().getName()
-					+ " when parsing with Apache Preflight: " + e.getMessage());
+			solr.addParseException("when parsing with Apache Preflight", e);
 		}
 
 		String isValid = metadata

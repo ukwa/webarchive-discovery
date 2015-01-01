@@ -242,6 +242,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				parseThread.start();
 				parseThread.join( this.parseTimeout );
 				parseThread.interrupt();
+				parseThread.join(this.parseTimeout);
 			} catch( OutOfMemoryError o ) {
 				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() );
 				addExceptionMetadata(metadata, new Exception("OutOfMemoryError"));
@@ -391,6 +392,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
 		@Override
 		public void run() {
+			this.complete = false;
 			try {
 				this.parser.parse( this.tikainput, this.handler, this.metadata, this.context );
 				this.complete = true;
@@ -399,8 +401,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				log.error( "ParseRunner.run() Interrupted: " + i.getMessage() );
 				addExceptionMetadata(metadata, i);
 			} catch( Exception e ) {
+				this.complete = false;
 				log.error( "ParseRunner.run() Exception: " + ExceptionUtils.getRootCauseMessage(e));
 				addExceptionMetadata(metadata, e);
+			} finally {
 			}
 		}
 		
@@ -456,7 +460,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			bpch.setIncludeMarkup(true);
 			ch = bpch;
 		}
-		// Finally, wrap in a limiteed write-out to avoid hanging processing
+		// return ch;
+		// Finally, wrap in a limited write-out to avoid hanging processing
 		// very large or malformed streams.
 		return new WriteOutContentHandler(ch, max_text_length);
 	}

@@ -48,6 +48,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -263,6 +264,10 @@ public class WARCIndexer {
 			if( header.getUrl() == null )
 				return null;
 			String fullUrl = header.getUrl();
+			log.debug("Current heap usage: "
+					+ FileUtils.byteCountToDisplaySize(Runtime.getRuntime()
+							.totalMemory()));
+			log.debug("Processing " + fullUrl + " from " + archiveName);
 
 			// Check the filters:
 			if( this.checkProtocol( fullUrl ) == false )
@@ -548,10 +553,10 @@ public class WARCIndexer {
 			}
 		} catch( NumberFormatException e ) {
 			log.error( "Exception when parsing status code: " + statusCode + ": " + e );
-			solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing statusCode: " + e.getMessage() );
+			solr.addParseException("when parsing statusCode", e);
 		} catch( Exception e ) {
 			log.error( "Exception when parsing headers: " + e );
-			solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + ": " + e.getMessage() );
+			solr.addParseException("when parsing headers", e);
 		}
 	}
 

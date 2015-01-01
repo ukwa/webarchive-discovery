@@ -33,7 +33,6 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AbstractParser;
 import org.archive.io.ArchiveRecordHeader;
 
-import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 /**
@@ -66,7 +65,8 @@ public abstract class AbstractPayloadAnalyser {
 			} catch( Exception e ) {
 				log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
 				// Also record as a Solr PARSE_ERROR
-				solr.addField( SolrFields.PARSE_ERROR, e.getClass().getName() + " when parsing with "+parser.getClass().getName()+": " + e.getMessage() );
+				solr.addParseException("when parsing with "
+						+ parser.getClass().getName(), e);
 			}
 		}
 	}
