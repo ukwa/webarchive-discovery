@@ -21,6 +21,7 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
@@ -74,7 +75,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 			throws IOException, ParseException, KeeperException,
 			InterruptedException {
 		// Parse the command-line parameters.
-		this.setup(args);
+		this.setup(args, conf);
 
 		// Store application properties where the mappers/reducers can access
 		// them
@@ -200,7 +201,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		return 0;
 	}
 
-	private void setup(String[] args) throws ParseException {
+	private void setup(String[] args, JobConf conf) throws ParseException {
+		// Process Hadoop args first:
+		String[] otherArgs = new GenericOptionsParser(conf, args)
+				.getRemainingArgs();
+
+		// Process remaining args list this:
 		Options options = new Options();
 		options.addOption("i", true, "input file list");
 		options.addOption("o", true, "output directory");
@@ -211,12 +217,14 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		options.addOption("a", false,
 				"apply annotations found via '-files annotations.json'");
 		// TODO: Problematic with "hadoop jar"?
+		// I think starting with the GenericOptionsParser (above) should resolve
+		// this?
 		// options.addOption( OptionBuilder.withArgName( "property=value"
 		// ).hasArgs( 2 ).withValueSeparator().withDescription(
 		// "use value for given property" ).create( "D" ) );
 
 		CommandLineParser parser = new PosixParser();
-		CommandLine cmd = parser.parse(options, args);
+		CommandLine cmd = parser.parse(options, otherArgs);
 		if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
 			HelpFormatter helpFormatter = new HelpFormatter();
 			helpFormatter.setWidth(80);
