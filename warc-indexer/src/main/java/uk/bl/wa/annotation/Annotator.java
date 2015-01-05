@@ -33,8 +33,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
@@ -101,6 +103,21 @@ public class Annotator {
 	 */
 	public void applyAnnotations(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
+		LOG.debug("Updating collections for "
+				+ solr.getField(SolrFields.SOLR_URL));
+
+		// Trac #2243; This should only happen if the record's timestamp is
+		// within the range set by the Collection.
+		// So get all the dates:
+		// Get all the dates:
+		Set<Date> crawl_dates = new HashSet<Date>();
+		crawl_dates.add((Date) solr.getField(SolrFields.CRAWL_DATE).getValue());
+		if (solr.getField(SolrFields.CRAWL_DATES) != null) {
+			for (Object d : solr.getField(SolrFields.CRAWL_DATES).getValues()) {
+				crawl_dates.add((Date) d);
+			}
+		}
+
 		// "Just this URL"
 		// String normd = canon.urlStringToKey(uri.toString());
 		String normd = uri.toString();
@@ -109,7 +126,7 @@ public class Annotator {
 				.contains(normd)) {
 			LOG.debug("Applying resource-level annotations...");
 			updateCollections(this.annotations.getCollections().get("resource")
-					.get(normd), solr);
+					.get(normd), solr, crawl_dates);
 		}
 		// "All URLs that start like this".
 		String prefix = uri.getScheme() + "://" + uri.getHost();
@@ -117,7 +134,7 @@ public class Annotator {
 				.contains(prefix)) {
 			LOG.debug("Applying root-level annotations...");
 			updateCollections(this.annotations.getCollections().get("root")
-					.get(prefix), solr);
+					.get(prefix), solr, crawl_dates);
 		}
 		// "All URLs that match match this host or any subdomains".
 		String host;
@@ -128,7 +145,7 @@ public class Annotator {
 			LOG.debug("Applying subdomain annotations for: " + key);
 			host = key;
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
-				updateCollections( subdomains.get( key ), solr );
+				updateCollections(subdomains.get(key), solr, crawl_dates);
 			}
 		}
 	}
@@ -140,52 +157,54 @@ public class Annotator {
 	 * @param solr
 	 */
 	private void updateCollections(UriCollection collection,
-			SolrInputDocument solr) {
-		// Trac #2243; This should only happen if the record's timestamp is
-		// within the range set by the Collection.
-		Date date = (Date) solr.getField(SolrFields.CRAWL_DATE).getValue();
+			SolrInputDocument solr, Set<Date> dates) {
 
-		LOG.debug("Updating collections for "
-				+ solr.getField(SolrFields.SOLR_URL));
-		LOG.debug("Using collection: " + collection);
-		// Update the single, main collection
-		if (collection.collection != null && collection.collection.length() > 0) {
-			if (this.annotations.getCollectionDateRanges().containsKey(
-					collection.collection)
-					&& this.annotations.getCollectionDateRanges()
-							.get(collection.collection)
-							.isInDateRange(date)) {
-				setUpdateField(solr, SolrFields.SOLR_COLLECTION,
-						collection.collection);
-				LOG.debug("Added collection " + collection.collection + " to "
-						+ solr.getField(SolrFields.SOLR_URL));
-			}
-		}
-		// Iterate over the hierarchical collections
-		if (collection.collections != null
-				&& collection.collections.length > 0) {
-			for (String col : collection.collections) {
-				LOG.debug("Considering adding collection '" + col + "' to "
-						+ solr.getField(SolrFields.SOLR_URL));
-				if (this.annotations.getCollectionDateRanges().containsKey(col)
-						&& this.annotations.getCollectionDateRanges().get(col)
+		// Loop over all the dates:
+		for (Date date : dates) {
+
+			LOG.debug("Using collection: " + collection);
+			// Update the single, main collection
+			if (collection.collection != null
+					&& collection.collection.length() > 0) {
+				if (this.annotations.getCollectionDateRanges().containsKey(
+						collection.collection)
+						&& this.annotations.getCollectionDateRanges()
+								.get(collection.collection)
 								.isInDateRange(date)) {
-					setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
-					LOG.debug("Added collection '" + col + "' to "
+					setUpdateField(solr, SolrFields.SOLR_COLLECTION,
+							collection.collection);
+					LOG.debug("Added collection " + collection.collection
+							+ " to "
 							+ solr.getField(SolrFields.SOLR_URL));
 				}
 			}
-		}
-		// Iterate over the subjects
-		if( collection.subject != null && collection.subject.length > 0 ) {
-			for( String subject : collection.subject ) {
-				if (this.annotations.getCollectionDateRanges().containsKey(
-						subject)
-						&& this.annotations.getCollectionDateRanges()
-								.get(subject).isInDateRange(date)) {
-					setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
-					LOG.debug("Added collection '" + subject + "' to "
+			// Iterate over the hierarchical collections
+			if (collection.collections != null
+					&& collection.collections.length > 0) {
+				for (String col : collection.collections) {
+					LOG.debug("Considering adding collection '" + col + "' to "
 							+ solr.getField(SolrFields.SOLR_URL));
+					if (this.annotations.getCollectionDateRanges().containsKey(
+							col)
+							&& this.annotations.getCollectionDateRanges()
+									.get(col).isInDateRange(date)) {
+						setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
+						LOG.debug("Added collection '" + col + "' to "
+								+ solr.getField(SolrFields.SOLR_URL));
+					}
+				}
+			}
+			// Iterate over the subjects
+			if (collection.subject != null && collection.subject.length > 0) {
+				for (String subject : collection.subject) {
+					if (this.annotations.getCollectionDateRanges().containsKey(
+							subject)
+							&& this.annotations.getCollectionDateRanges()
+									.get(subject).isInDateRange(date)) {
+						setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
+						LOG.debug("Added collection '" + subject + "' to "
+								+ solr.getField(SolrFields.SOLR_URL));
+					}
 				}
 			}
 		}
