@@ -34,6 +34,8 @@ import java.io.PrintStream;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -56,6 +58,7 @@ import org.codehaus.jackson.map.SerializationConfig;
  * 
  */
 public class Annotations {
+	private static final Log LOG = LogFactory.getLog(Annotations.class);
 
 	@JsonProperty
 	private HashMap<String, HashMap<String, UriCollection>> collections;
@@ -129,7 +132,13 @@ public class Annotations {
 	public static Annotations fromJson(String json) throws JsonParseException,
 			JsonMappingException, IOException {
 		ObjectMapper mapper = getObjectMapper();
-		return mapper.readValue(json, Annotations.class);
+		try {
+			return mapper.readValue(json, Annotations.class);
+		} catch (JsonParseException e) {
+			LOG.error("JsonParseException: " + e, e);
+			LOG.error("When parsing: " + json);
+			throw e;
+		}
 	}
 
 	/**
