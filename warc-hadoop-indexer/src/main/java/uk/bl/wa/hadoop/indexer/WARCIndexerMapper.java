@@ -15,7 +15,10 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.archive.io.ArchiveRecordHeader;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 
+import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
@@ -62,6 +65,14 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
+			boolean applyAnnotations = job.getBoolean(
+					WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS, false);
+			if (applyAnnotations) {
+				LOG.info("Attempting to load annotations from 'annotations.json'...");
+				Annotations ann = Annotations.fromJsonFile("annotations.json");
+				windex.setAnnotations(ann);
+			}
+
 			// Set up sharding:
 			numShards = config.getInt(SolrWebServer.NUM_SHARDS);
 			if (config.hasPath(SolrWebServer.CONF_ZOOKEEPERS)) {
@@ -72,8 +83,16 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			// Other properties:
 			mapTaskId = job.get("mapred.task.id");
 			inputFile = job.get("map.input.file");
+			LOG.info("Got task.id " + mapTaskId + " and input.file "
+					+ inputFile);
 
 		} catch( NoSuchAlgorithmException e ) {
+			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+		} catch (JsonParseException e) {
+			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+		} catch (JsonMappingException e) {
+			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+		} catch (IOException e) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
 		}
 	}
