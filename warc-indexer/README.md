@@ -33,6 +33,16 @@ Note that this project also contains short ARC and WARC test files, taken from t
 Annotations
 -----------
 
+Things to document:
+
+* Annotations format.
+* ACT client: uk.bl.wa.annotation.AnnotationsFromAct.main(String[]) > annotations.json
+* WARCIndexer, CLI and Hadoop versions.
+* Updater version: uk.bl.wa.annotation.Annotator.main(String[])
+
+
+### Hadoop version ###
+
 > Applications can specify a comma separated list of paths which would be present in the current working directory of the task using the option -files. The -libjars option allows applications to add jars to the classpaths of the maps and reduces. The option -archives allows them to pass comma separated list of archives as arguments. These archives are unarchived and a link with name of the archive is created in the current working directory of tasks. More details about the command line options are available at Commands Guide.
 
 See end of http://hadoop.apache.org/docs/current/hadoop-mapreduce-client/hadoop-mapreduce-client-core/MapReduceTutorial.html#Usage

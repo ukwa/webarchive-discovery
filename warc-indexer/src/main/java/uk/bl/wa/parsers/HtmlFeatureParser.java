@@ -26,11 +26,10 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.URISyntaxException;
-import java.net.URL;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.commons.lang.StringUtils;
@@ -45,6 +44,8 @@ import org.apache.tika.parser.ParseContext;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.ParseError;
+import org.jsoup.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -61,19 +62,64 @@ public class HtmlFeatureParser extends AbstractParser {
                   MediaType.application("xhtml")
             )));
 
-	
+	// The parser to use, preferring the XML variation as it does not 'fix' the
+	// mark-up.
+	private Parser parser = Parser.xmlParser();
+	// Max errors to returm:
+	private int max_errors;
+
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
 	public static final String LINK_LIST = "LinkList";
 	public static final Property LINKS = Property.internalTextBag("LINK-LIST");
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
-	//public static final String DISTINCT_ELEMENTS = "DistinctElements";
 	public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
+	public static final Property NUM_PARSE_ERRORS = Property
+			.internalInteger("Html-Parse-Error-Count");
+	public static final int DEFAULT_MAX_PARSE_ERRORS = 1000;
+
+	/**
+	 * 
+	 */
+	public HtmlFeatureParser() {
+		this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
+	}
+
+	/**
+	 * 
+	 * @param max_errors
+	 */
+	public void setMaxParseErrors(int max_errors) {
+		this.max_errors = max_errors;
+		parser.setTrackErrors(max_errors);
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public int getMaxParseErrors() {
+		return this.max_errors;
+	}
 	
+	/**
+	 * 
+	 * @return
+	 */
+	public List<ParseError> getParseErrors() {
+		return this.parser.getErrors();
+	}
+
+	/**
+	 * 
+	 */
 	@Override
 	public Set<MediaType> getSupportedTypes(ParseContext context) {
 		return SUPPORTED_TYPES;
 	}
 
+	/**
+	 * 
+	 */
 	@Override
 	public void parse(InputStream stream, ContentHandler handler,
 			Metadata metadata, ParseContext context) throws IOException,
@@ -84,7 +130,7 @@ public class HtmlFeatureParser extends AbstractParser {
 		// Parse it using JSoup
 		Document doc = null;
 		try {
-			doc = Jsoup.parse(stream, null, url );
+			doc = Jsoup.parse(stream, null, url, parser);
 		} catch (java.nio.charset.IllegalCharsetNameException e ) {
 			log.warn("Jsoup parse had to assume UTF-8: "+e);
 			doc = Jsoup.parse(stream, "UTF-8", url );
@@ -94,6 +140,9 @@ public class HtmlFeatureParser extends AbstractParser {
 			if( doc == null ) return;
 		}
 		
+		// Record the number of errors found:
+		metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
+
 		// Get the links (no image links):
 		Set<String> links = this.extractLinks(doc, false);
 		if( links != null && links.size() > 0 )
@@ -171,25 +220,7 @@ public class HtmlFeatureParser extends AbstractParser {
 		//Element masthead = doc.select("div.masthead").first();
 		return linkset;
 	}
-	
-	/**
-	 * Quick test.
-	 * @throws TikaException 
-	 * @throws SAXException 
-	 * @throws IOException 
-	 * @throws URISyntaxException 
-	 */
-	public static void main( String[] argv ) throws IOException, SAXException, TikaException, URISyntaxException  {
-		URL url = new URL("http://www.bbc.co.uk/news/magazine-21351017");
-		url = new URL("http://labs.creativecommons.org/2011/ccrel-guide/examples/moremetadata.html");
-		HtmlFeatureParser hfp = new HtmlFeatureParser();
-		Metadata metadata = new Metadata();
-		metadata.set( Metadata.RESOURCE_NAME_KEY, url.toString());
-		hfp.parse(url.openStream(), null, metadata, null);
-		System.out.println("RESULT: " + metadata );
-	}
-	
-	
+
 	public static Metadata extractMetadata( InputStream in, String url ) {
 		HtmlFeatureParser hfp = new HtmlFeatureParser();
 		Metadata metadata = new Metadata();
