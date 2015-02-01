@@ -14,6 +14,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
@@ -105,10 +106,12 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		noRecords++;
 
+		ArchiveRecord rec = value.getRecord();
+		SolrRecord solr = new SolrRecord(key.toString(), rec.getHeader());
 		try {
 			if (!header.getHeaderFields().isEmpty()) {
 				// Do the indexing:
-				SolrRecord solr = windex.extract(key.toString(),
+				solr = windex.extract(key.toString(),
 						value.getRecord());
 
 				// If there is no result, report it
@@ -125,32 +128,8 @@ public class WARCIndexerMapper extends MapReduceBase implements
 				// host = "unknown.host";
 				// }
 
-				// Get the right key for the right partition:
-				IntWritable oKey = null;
-				if (sp != null) {
-					oKey = new IntWritable(sp.getPartition(null,
-							solr.getSolrDocument()));
-				} else {
-					// Otherwise use a random assignment:
-					int iKey = (int) (Math.round(Math.random() * numShards));
-					oKey = new IntWritable(iKey);
-				}
-
-				// Wrap up and collect the result:
-				WritableSolrRecord wsolr = new WritableSolrRecord( solr );
-				output.collect( oKey, wsolr );
-
 				// Increment record counter:
 				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
-
-				// Occasionally update application-level status
-				if ((noRecords % 1000) == 0) {
-					reporter.setStatus(noRecords + " processed from "
-							+ inputFile);
-					// Also assure framework that we are making progress:
-					reporter.progress();
-				}
-
 
 			} else {
 				// Report headerless records:
@@ -163,6 +142,8 @@ public class WARCIndexerMapper extends MapReduceBase implements
 					+ header.getUrl() + "; " + header.getOffset());
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+			// Store it:
+			solr.addParseException(e);
 
 		} catch (OutOfMemoryError e) {
 			// Allow processing to continue if a record causes OOME:
@@ -170,7 +151,32 @@ public class WARCIndexerMapper extends MapReduceBase implements
 					+ "; " + header.getUrl() + "; " + header.getOffset());
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+			// Store it:
+			solr.addParseException(e);
 		}
+
+		// Get the right key for the right partition:
+		IntWritable oKey = null;
+		if (sp != null) {
+			oKey = new IntWritable(
+					sp.getPartition(null, solr.getSolrDocument()));
+		} else {
+			// Otherwise use a random assignment:
+			int iKey = (int) (Math.round(Math.random() * numShards));
+			oKey = new IntWritable(iKey);
+		}
+
+		// Wrap up and collect the result:
+		WritableSolrRecord wsolr = new WritableSolrRecord(solr);
+		output.collect(oKey, wsolr);
+
+		// Occasionally update application-level status
+		if ((noRecords % 1000) == 0) {
+			reporter.setStatus(noRecords + " processed from " + inputFile);
+			// Also assure framework that we are making progress:
+			reporter.progress();
+		}
+
 	}
 
 

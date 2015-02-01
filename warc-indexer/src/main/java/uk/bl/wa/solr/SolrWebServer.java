@@ -113,6 +113,10 @@ public class SolrWebServer {
 	 */
 	public  UpdateResponse add(List<SolrInputDocument> docs)
 			throws SolrServerException, IOException {
+		/*
+		 * for (SolrInputDocument doc : docs) { log.info("DOC:" +
+		 * doc.toString()); solrServer.add(doc); } return null;
+		 */
 		return solrServer.add(docs);
 	}
 

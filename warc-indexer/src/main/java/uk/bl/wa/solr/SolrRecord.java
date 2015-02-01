@@ -41,6 +41,7 @@ import java.util.Map;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
+import org.archive.io.ArchiveRecordHeader;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -58,6 +59,17 @@ public class SolrRecord implements Serializable {
 	
 	private static int MAX_FIELD_LEN = 200;
 	
+	public SolrRecord() {
+	}
+
+	public SolrRecord(String filename, ArchiveRecordHeader header) {
+		setField(SolrFields.ID,
+				"exception-at-" + filename + "@" + header.getOffset());
+		setField(SolrFields.SOURCE_FILE, filename + "@" + header.getOffset());
+		setField(SolrFields.SOLR_URL, header.getUrl());
+		setField(SolrFields.SOLR_URL_TYPE, "UNKNOWN");
+	}
+
 	/**
 	 * Remove control characters, nulls etc,
 	 * 

@@ -171,8 +171,13 @@ public class HtmlFeatureParser extends AbstractParser {
 		Set<String> de = new HashSet<String>();
 		for( Element e : doc.select("*") ) {
 			if( !"#root".equals(e.tag().getName()) )
-					de.add(e.tag().getName());
+				de.add(StringUtils.left(e.tag().getName(), 100));
 		}
+		// For some elements, dig deeper and record attributes too:
+		for (Element e : doc.select("link")) {
+			de.add("link/@rel=" + e.attr("rel"));
+		}
+		// Store them:
 		metadata.set(DISTINCT_ELEMENTS, de.toArray(new String[] {}));
 		
 		// Licence field, following:

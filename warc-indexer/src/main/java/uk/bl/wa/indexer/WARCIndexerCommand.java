@@ -265,7 +265,8 @@ public class WARCIndexerCommand {
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
 				ArchiveRecord rec = ir.next();
-				SolrRecord doc = null;
+				SolrRecord doc = new SolrRecord(inFile.getName(),
+						rec.getHeader());
 				try {
 					doc = windex.extract(inFile.getName(), rec, isTextRequired);
 				} catch (Exception e) {
@@ -278,7 +279,6 @@ public class WARCIndexerCommand {
 									+ rec.getHeader().getUrl() + " from "
 									+ inFile.getName(), e);
 					doc.addParseException(e);
-					continue;
 				}
 
 				if( doc != null ) {

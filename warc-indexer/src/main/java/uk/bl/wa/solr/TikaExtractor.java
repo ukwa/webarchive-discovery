@@ -335,7 +335,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				if( edate != null ) {
 					solr.addField( SolrFields.LAST_MODIFIED_YEAR, ""+edate.getYear() );
 					DateTimeFormatter iso_df = ISODateTimeFormat.dateTimeNoMillis().withZone(DateTimeZone.UTC);
-					solr.addField( SolrFields.LAST_MODIFIED, iso_df.print( edate ) );
+					// solr.getSolrDocument().setField(SolrFields.LAST_MODIFIED,
+					// edate);
+					solr.setField(SolrFields.LAST_MODIFIED, iso_df.print(edate));
 				}
 			}
 			
