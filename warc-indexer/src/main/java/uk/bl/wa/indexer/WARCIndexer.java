@@ -252,7 +252,7 @@ public class WARCIndexer {
 	 */
 	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
 		ArchiveRecordHeader header = record.getHeader();
-		SolrRecord solr = new SolrRecord();
+		SolrRecord solr = new SolrRecord(archiveName, header);
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
@@ -310,11 +310,16 @@ public class WARCIndexer {
 				}
 			}
 			// Spot 'slash pages':
-			if( url.getPath().equals( "/" ) || url.getPath().equals( "" ) || url.getPath().matches( "/index\\.[a-z]+$" ) )
+			if (url.getPath().equals("/") || url.getPath().equals("")
+					|| url.getPath().matches("/index\\.[a-z]+$")) {
 				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
-			if( url.getPath().equals( "/robots.txt" ) )
+			} else if (url.getPath().equals("/robots.txt")) {
 				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
+			} else {
+				solr.setField(SolrFields.SOLR_URL_TYPE,
+						SolrFields.SOLR_URL_TYPE_NORMAL);
+			}
 			// Record the domain (strictly, the host):
 			String host = url.getHost();
 			solr.setField( SolrFields.SOLR_HOST, host );

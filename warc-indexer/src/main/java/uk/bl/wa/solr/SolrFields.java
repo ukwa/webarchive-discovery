@@ -40,6 +40,8 @@ public interface SolrFields {
 	public static final String SOLR_URL_TYPE_SLASHPAGE = "slashpage";
 	public static final String SOLR_URL_TYPE_EMBED = "embed";
 	public static final String SOLR_URL_TYPE_ROBOTS_TXT = "robots.txt";
+	public static final String SOLR_URL_TYPE_NORMAL = "normal";
+	public static final String SOLR_URL_TYPE_UNKNOWN = "unknown";
 	
 	public static final String SOLR_HOST = "host";
 	public static final String DOMAIN = "domain";

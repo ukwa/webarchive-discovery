@@ -67,7 +67,7 @@ public class SolrRecord implements Serializable {
 				"exception-at-" + filename + "@" + header.getOffset());
 		setField(SolrFields.SOURCE_FILE, filename + "@" + header.getOffset());
 		setField(SolrFields.SOLR_URL, header.getUrl());
-		setField(SolrFields.SOLR_URL_TYPE, "UNKNOWN");
+		setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
 	}
 
 	/**
