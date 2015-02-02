@@ -5,7 +5,6 @@ package uk.bl.wa.solr;
 
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.net.URL;
@@ -43,7 +42,6 @@ public class TikaExtractorTest {
 				text.contains("Mona Lisa"));
 		assertFalse("Text should NOT contain this string!",
 				text.contains("encyclopediaMona"));
-		fail("Not yet implemented");
 	}
 
 }
