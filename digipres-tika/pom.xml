@@ -16,7 +16,7 @@
       </license>
    </licenses>
    <properties>
-      <tika.version>1.6</tika.version>
+      <tika.version>1.7</tika.version>
       <jdk.version>1.6</jdk.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
