@@ -116,7 +116,7 @@ public class HtmlFeatureParserTest {
 		File ml = new File(
 				"src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
 		URL url = ml.toURI().toURL();
-		innerBasicParseTest(url.openStream(), url.toString(), 34);
+		innerBasicParseTest(url.openStream(), url.toString(), 43);
 	}
 
 }
