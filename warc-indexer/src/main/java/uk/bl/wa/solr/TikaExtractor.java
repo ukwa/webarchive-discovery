@@ -34,6 +34,7 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.io.input.BoundedInputStream;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,8 +48,7 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
-import org.apache.tika.sax.ToTextContentHandler;
-import org.apache.tika.sax.WriteOutContentHandler;
+import org.apache.tika.sax.BodyContentHandler;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
@@ -260,7 +260,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				if( output.length() > this.max_text_length ) {
 					output = output.substring(0, this.max_text_length);
 				}
-				//log.debug("Extracted text from: "+url);				
+				log.debug("Extracted text from: " + url);
+				log.debug("Extracted text: " + StringUtils.left(output, 300));
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
 			} else {
@@ -455,62 +456,59 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
 	public ContentHandler getHandler( Writer out ) {
 		// Set up the to-text handler
-		ContentHandler ch = new ToTextContentHandler(new SpaceTrimWriter(out));
+		ContentHandler ch = new BodyContentHandler(new SpaceTrimWriter(out));
 		// Optionally wrap in the 'boilerpipe' boilerplate-remover:
-		if (this.useBoilerpipe) {
+		if (this.useBoilerpipe || true) {
 			BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch);
-			bpch.setIncludeMarkup(true);
+			bpch.setIncludeMarkup(false);
 			ch = bpch;
 		}
 		// return ch;
 		// Finally, wrap in a limited write-out to avoid hanging processing
 		// very large or malformed streams.
-		return new WriteOutContentHandler(ch, max_text_length);
+		return ch;// new WriteOutContentHandler(ch, max_text_length);
 	}
 	
-	public class SpaceTrimWriter extends FilterWriter
-	{
-	  private boolean isStartSpace = true;
-	  private boolean lastCharWasSpace;
-	  private boolean includedNewline = false;
-	  
-	  public SpaceTrimWriter(Writer out) { super(out); }
-	  public void write(char[] cbuf, int off, int len) throws IOException
-	  {
-	    for (int i = off; i < len; i++)
-	      write(cbuf[ i ]);
-	  }
-	  public void write(String str, int off, int len) throws IOException
-	  {
-	    for (int i = off; i < len; i++)
-	      write(str.charAt(i));
-	  }
-	  public void write(int c) throws IOException
-	  {
-	    if (c == ' ' || c == '\n' || c == '\t') 
-	    {
-	      lastCharWasSpace = true;
-	      if( c == '\n' )
-	    	  includedNewline = true;
-	    }
-	    else
-	    {
-	      if (lastCharWasSpace)
-	      {
-	        if (!isStartSpace) {
-	        	if( includedNewline ) {
-		            out.write('\n');
-	        	} else {
-	        		out.write(' ');
-	        	}
-	        }
-	        lastCharWasSpace = false;
-	        includedNewline = false;
-	      }
-	      isStartSpace = false;
-	      out.write(c);
-	    }
-	  }
+	public class SpaceTrimWriter extends FilterWriter {
+		private boolean isStartSpace = true;
+		private boolean lastCharWasSpace;
+		private boolean includedNewline = false;
+
+		public SpaceTrimWriter(Writer out) {
+			super(out);
+		}
+
+		public void write(char[] cbuf, int off, int len) throws IOException {
+			for (int i = off; i < len; i++)
+				write(cbuf[i]);
+		}
+
+		public void write(String str, int off, int len) throws IOException {
+			for (int i = off; i < len; i++)
+				write(str.charAt(i));
+		}
+
+		public void write(int c) throws IOException {
+			if (c == ' ' || c == '\n' || c == '\t') {
+				lastCharWasSpace = true;
+				if (c == '\n')
+					includedNewline = true;
+			} else {
+				if (lastCharWasSpace) {
+					if (!isStartSpace) {
+						if (includedNewline) {
+							out.write('\n');
+						} else {
+							out.write(' ');
+						}
+					}
+					lastCharWasSpace = false;
+					includedNewline = false;
+				}
+				isStartSpace = false;
+				out.write(c);
+			}
+		}
 	}
 	
 	private boolean checkMime( String mime ) {

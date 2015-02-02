@@ -78,7 +78,8 @@ public class SolrRecord implements Serializable {
 	 */
 	private String removeControlCharacters( String value ) {
 		try {
-			return sanitiseUTF8(value.trim().replaceAll("\\p{Cntrl}", ""));
+			return sanitiseUTF8(value.trim().replaceAll("\\p{Space}", " ")
+					.replaceAll("\\p{Cntrl}", ""));
 		} catch (CharacterCodingException e) {
 			return "";
 		}
