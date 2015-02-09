@@ -526,11 +526,11 @@ public class WARCIndexer {
 	 * @param firstDate
 	 * @return
 	 */
-	private String getYearFromDate(Date date) {
-		Calendar c = Calendar.getInstance();
-		c.setTime(date);
-		return ""+c.get(Calendar.YEAR);
+	private synchronized String getYearFromDate(Date date) {
+		calendar.setTime(date);
+		return Integer.toString(calendar.get(Calendar.YEAR));
 	}
+    private final Calendar calendar = Calendar.getInstance();
 
 	/* ----------------------------------- */
 
