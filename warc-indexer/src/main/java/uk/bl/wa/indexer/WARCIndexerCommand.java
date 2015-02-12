@@ -101,6 +101,7 @@ public class WARCIndexerCommand {
 		boolean slashPages = false;
 		int batchSize = 1;
 		String annotationsFile = null;
+        boolean disableCommit;
 		
 		Options options = new Options();
 		options.addOption("o", "output", true,
@@ -115,7 +116,9 @@ public class WARCIndexerCommand {
 				"A JSON file containing the annotations to apply during indexing.");
 		options.addOption("b", "batch", true, "Batch size for submissions.");
 		options.addOption("c", "config", true, "Configuration to use.");
-		
+		options.addOption("d", "disable_commit", false,
+                          "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
+
 		try {
 		    // parse the command line arguments
 		    CommandLine line = parser.parse( options, args );
@@ -187,8 +190,11 @@ public class WARCIndexerCommand {
 				annotationsFile = line.getOptionValue("a");
 			}
 
+            // Check for commit disabling
+            disableCommit = line.hasOption("d");
+
 			parseWarcFiles(configFile, outputDir, solrUrl, cli_args,
-					isTextRequired, slashPages, batchSize, annotationsFile);
+                           isTextRequired, slashPages, batchSize, annotationsFile, disableCommit);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -206,7 +212,8 @@ public class WARCIndexerCommand {
 	 */
 	public static void parseWarcFiles(String configFile, String outputDir,
 			String solrUrl, String[] args, boolean isTextRequired,
-			boolean slashPages, int batchSize, String annotationsFile)
+			boolean slashPages, int batchSize, String annotationsFile,
+            boolean disableCommit)
 			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
@@ -246,9 +253,11 @@ public class WARCIndexerCommand {
 					
 		// Loop through each Warc files
 		for( String inputFile : args ) {
-			// Commit to make sure index is up to date:
-			commit(solrWeb);
-								
+            if (!disableCommit) {
+                // Commit to make sure index is up to date:
+                commit(solrWeb);
+            }
+
 			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
 			File inFile = new File(inputFile);
 			String fileName = inFile.getName();
@@ -308,8 +317,10 @@ public class WARCIndexerCommand {
 			curInputFile++;
 		}
 
-		// Commit the updates:
-		commit(solrWeb);
+        if (!disableCommit) {
+            // Commit the updates:
+            commit(solrWeb);
+        }
 
 		long endTime = System.currentTimeMillis();
 

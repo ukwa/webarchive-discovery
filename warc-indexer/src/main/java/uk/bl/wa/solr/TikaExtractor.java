@@ -49,6 +49,7 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.sax.BodyContentHandler;
+import org.apache.tika.sax.WriteOutContentHandler;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
@@ -458,7 +459,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		// Set up the to-text handler
 		ContentHandler ch = new BodyContentHandler(new SpaceTrimWriter(out));
 		// Optionally wrap in the 'boilerpipe' boilerplate-remover:
-		if (this.useBoilerpipe || true) {
+		if (this.useBoilerpipe) {
 			BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch);
 			bpch.setIncludeMarkup(false);
 			ch = bpch;
@@ -466,7 +467,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		// return ch;
 		// Finally, wrap in a limited write-out to avoid hanging processing
 		// very large or malformed streams.
-		return ch;// new WriteOutContentHandler(ch, max_text_length);
+		return new WriteOutContentHandler(ch, max_text_length);
 	}
 	
 	public class SpaceTrimWriter extends FilterWriter {
