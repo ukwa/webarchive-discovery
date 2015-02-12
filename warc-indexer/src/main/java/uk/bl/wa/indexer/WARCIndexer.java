@@ -82,6 +82,7 @@ import uk.bl.wa.util.HashedCachedInputStream;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
+import uk.bl.wa.util.Instrument;
 
 /**
  * 
@@ -251,6 +252,7 @@ public class WARCIndexer {
 	 * @throws IOException
 	 */
 	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
+        final long start = System.nanoTime();
 		ArchiveRecordHeader header = record.getHeader();
 		SolrRecord solr = new SolrRecord(archiveName, header);
 		
@@ -519,7 +521,8 @@ public class WARCIndexer {
 				}
 			}
 		}
-		return solr;
+        Instrument.timeRel("WARCIndexer.extract#full", start);
+        return solr;
 	}
 
 	/**

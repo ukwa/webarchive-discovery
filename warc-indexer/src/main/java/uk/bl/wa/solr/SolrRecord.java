@@ -42,6 +42,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.archive.io.ArchiveRecordHeader;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -77,12 +78,15 @@ public class SolrRecord implements Serializable {
 	 * @return
 	 */
 	private String removeControlCharacters( String value ) {
+        final long start = System.nanoTime();
 		try {
 			return sanitiseUTF8(value.trim().replaceAll("\\p{Space}", " ")
 					.replaceAll("\\p{Cntrl}", ""));
 		} catch (CharacterCodingException e) {
 			return "";
-		}
+		} finally {
+            Instrument.timeRel("SolrRecord.removeControlCharacters", start);
+        }
 	}
 	
 	/**
@@ -97,18 +101,23 @@ public class SolrRecord implements Serializable {
 	 * @throws CharacterCodingException
 	 */
 	private String sanitiseUTF8(String value) throws CharacterCodingException {
-		// Take a string, map it to bytes as UTF-8:
-		CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
-		encoder.onMalformedInput(CodingErrorAction.REPLACE);
-		encoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-		ByteBuffer bytes = encoder.encode(CharBuffer.wrap(value));
-		// Now decode back again:
-		CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
-		decoder.onMalformedInput(CodingErrorAction.REPLACE);
-		decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-		CharBuffer parsed = decoder.decode(bytes);
-		// And return the string:
+        final long start = System.nanoTime();
+        try  {
+            // Take a string, map it to bytes as UTF-8:
+            CharsetEncoder encoder = Charset.forName("UTF-8").newEncoder();
+            encoder.onMalformedInput(CodingErrorAction.REPLACE);
+            encoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+            ByteBuffer bytes = encoder.encode(CharBuffer.wrap(value));
+            // Now decode back again:
+            CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
+            decoder.onMalformedInput(CodingErrorAction.REPLACE);
+            decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
+            CharBuffer parsed = decoder.decode(bytes);
+            // And return the string:
 		return parsed.toString();
+        } finally {
+            Instrument.timeRel("SolrRecord.sanitiseUTF8", start);
+        }
 	}
 
 
