@@ -278,6 +278,7 @@ public class WARCIndexerCommand {
 			
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
+                final long recordStart = System.nanoTime();
 				ArchiveRecord rec = ir.next();
 				SolrRecord doc = new SolrRecord(inFile.getName(),
 						rec.getHeader());
@@ -296,6 +297,7 @@ public class WARCIndexerCommand {
 				}
 
 				if( doc != null ) {
+                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
 					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
@@ -320,6 +322,7 @@ public class WARCIndexerCommand {
 				}			
 			}
 			curInputFile++;
+            Instrument.log(false);
 		}
 
         if (!disableCommit) {
@@ -330,6 +333,7 @@ public class WARCIndexerCommand {
 		long endTime = System.currentTimeMillis();
 
 		System.out.println("WARC Indexer Finished in "+((endTime-startTime)/1000.0)+" seconds.");
+        Instrument.log(true);
 	}
 	
 	private static void commit( SolrWebServer solrWeb) {
