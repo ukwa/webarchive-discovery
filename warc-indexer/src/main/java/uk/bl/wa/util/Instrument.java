@@ -95,10 +95,10 @@ public class Instrument {
         }
 
         public String toString() {
-            return String.format("%s(num=%d, time=%.2fms, avg=%.2fnum/ms %.2fms/num",
+            return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#)",
                                  id, count.get(), time.get()/MD,
                                  time.get() == 0 ? 0 : count.get() / (time.get() / MD),
-                                 count.get() == 0 ? 0 : time.get() / MD / time.get());
+                                 count.get() == 0 ? 0 : time.get() / MD / count.get());
         }
     }
 
