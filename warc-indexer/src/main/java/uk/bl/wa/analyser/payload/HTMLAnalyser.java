@@ -40,6 +40,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -72,6 +73,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	 * @param solr
 	 */
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+        final long start = System.nanoTime();
 		Metadata metadata = new Metadata();
 		HashMap<String, String> hosts = new HashMap<String, String>();
 		HashMap<String, String> suffixes = new HashMap<String, String>();
@@ -142,6 +144,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
 			solr.addField( SolrFields.LICENSE_URL, lurl );
 		}
-	}
+        Instrument.timeRel("HTMLAnalyzer.analyze", start);
+    }
 	
 }

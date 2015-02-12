@@ -328,6 +328,8 @@ public class WARCIndexer {
 			solr.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
 			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
 
+            Instrument.timeRel("WARCIndexer.extract#archeaders", start);
+
 			InputStream tikainput = null;
 
 			// Only parse HTTP headers for HTTP URIs
@@ -383,9 +385,11 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			
 			// Create an appropriately cached version of the payload, to allow analysis.
+            final long hashStreamStart = System.nanoTime();
 			HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
 			tikainput = hcis.getInputStream();
 			String hash = hcis.getHash();
+            Instrument.timeRel("WARCIndexer.extract#hashstreamwrap", start);
 
 			// Prepare crawl date information:
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
@@ -484,13 +488,16 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			// Payload duplication has been checked, ready to parse:
 			// -----------------------------------------------------
-			
+
+            final long analyzeStart = System.nanoTime();
 			// Mark the start of the payload.
 			tikainput.mark( ( int ) content_length );
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			this.wpa.analyse(header, tikainput, solr);
-			
+            Instrument.timeRel("WARCIndexer.extract#analyzetikainput", start);
+
+
 			// Clear up the caching of the payload:
 			hcis.cleanup();
 
@@ -501,8 +508,10 @@ public class WARCIndexer {
 			// Payload analysis complete, now performing text analysis:
 			// -----------------------------------------------------
 			
+            final long textStart = System.nanoTime();
 			this.txa.analyse(solr);
-			
+            Instrument.timeRel("WARCIndexer.extract#analyzetext", start);
+
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {
 				solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );

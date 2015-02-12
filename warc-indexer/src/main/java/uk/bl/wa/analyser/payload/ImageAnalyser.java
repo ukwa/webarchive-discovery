@@ -37,6 +37,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -82,6 +83,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	@Override
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
 			SolrRecord solr) {
+        final long start = System.nanoTime();
 		// Set up metadata object to pass to parsers:
 		Metadata metadata = new Metadata();
 		// Skip large images:
@@ -136,6 +138,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			}
 
 		}
+        Instrument.timeRel("ImageAnalyzer.analyze", start);
 	}
 
 	public long getSampleCount() {
