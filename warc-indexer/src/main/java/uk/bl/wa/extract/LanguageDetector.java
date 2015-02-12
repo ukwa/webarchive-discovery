@@ -116,7 +116,7 @@ public class LanguageDetector {
                 return this.getLangdetectLanguage(text);
             return null;
         } finally {
-            Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector.detectLanguage#ld", start);
+            Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector.detectLanguage#ld", startLD);
         }
 	}
 	/**
