@@ -83,7 +83,6 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 	@Override
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
 			SolrRecord solr) {
-        final long start = System.nanoTime();
 		// Set up metadata object to pass to parsers:
 		Metadata metadata = new Metadata();
 		// Skip large images:
@@ -99,6 +98,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 
 			// Attempt to extract faces etc.:
 			if (this.extractFaces || this.extractDominantColours) {
+                final long deepStart = System.nanoTime();
 				ParseRunner parser = new ParseRunner(fdp, tikainput, metadata,
 						solr);
 				Thread thread = new Thread(parser, Long.toString(System
@@ -135,10 +135,11 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 					solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
 							metadata.get(FaceDetectionParser.DOM_COL));
 				}
+                Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                                   "ImageAnalyzer.analyze#facesanddominant", deepStart);
 			}
 
 		}
-        Instrument.timeRel("ImageAnalyzer.analyze", start);
 	}
 
 	public long getSampleCount() {

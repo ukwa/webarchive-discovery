@@ -328,7 +328,8 @@ public class WARCIndexer {
 			solr.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
 			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
 
-            Instrument.timeRel("WARCIndexer.extract#archeaders", start);
+            Instrument.timeRel("WARCIndexer.extract#total",
+                               "WARCIndexer.extract#archeaders", start);
 
 			InputStream tikainput = null;
 
@@ -389,7 +390,8 @@ public class WARCIndexer {
 			HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
 			tikainput = hcis.getInputStream();
 			String hash = hcis.getHash();
-            Instrument.timeRel("WARCIndexer.extract#hashstreamwrap", start);
+            Instrument.timeRel("WARCIndexer.extract#total",
+                               "WARCIndexer.extract#hashstreamwrap", start);
 
 			// Prepare crawl date information:
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
@@ -495,7 +497,7 @@ public class WARCIndexer {
 			
 			// Pass on to other extractors as required, resetting the stream before each:
 			this.wpa.analyse(header, tikainput, solr);
-            Instrument.timeRel("WARCIndexer.extract#analyzetikainput", start);
+            Instrument.timeRel("WARCIndexer.extract#total", "WARCIndexer.extract#analyzetikainput", analyzeStart);
 
 
 			// Clear up the caching of the payload:
@@ -508,9 +510,7 @@ public class WARCIndexer {
 			// Payload analysis complete, now performing text analysis:
 			// -----------------------------------------------------
 			
-            final long textStart = System.nanoTime();
 			this.txa.analyse(solr);
-            Instrument.timeRel("WARCIndexer.extract#analyzetext", start);
 
 			// Remove the Text Field if required
 			if( !isTextIncluded ) {
@@ -530,7 +530,8 @@ public class WARCIndexer {
 				}
 			}
 		}
-        Instrument.timeRel("WARCIndexer.extract#full", start);
+        Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
+                           "WARCIndexer.extract#total", start);
         return solr;
 	}
 

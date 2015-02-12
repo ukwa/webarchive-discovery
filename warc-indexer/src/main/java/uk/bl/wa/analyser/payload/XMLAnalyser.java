@@ -75,7 +75,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 			}
 			solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
 		}
-        Instrument.timeRel("XMLAnalyzer.analyze", start);
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total","XMLAnalyzer.analyze", start);
 	}
 
 }

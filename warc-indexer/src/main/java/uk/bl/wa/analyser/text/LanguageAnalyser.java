@@ -33,6 +33,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -56,9 +57,12 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
 	 */
 	@Override
 	public void analyse(String text, SolrRecord solr) {
+        final long start = System.nanoTime();
 		String li = ld.detectLanguage( text );
-		if( li != null )
+		if( li != null ) {
 			solr.addField( SolrFields.CONTENT_LANGUAGE, li );
+        }
+        Instrument.timeRel("TextAnalyzers#total", "LanguageAnalyzer#total", start);
 	}
 
 }

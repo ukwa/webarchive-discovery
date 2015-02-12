@@ -85,7 +85,7 @@ public class SolrRecord implements Serializable {
 		} catch (CharacterCodingException e) {
 			return "";
 		} finally {
-            Instrument.timeRel("SolrRecord.removeControlCharacters", start);
+            Instrument.timeRel("SolrRecord.removeControlCharacters#total", start);
         }
 	}
 	
@@ -116,7 +116,7 @@ public class SolrRecord implements Serializable {
             // And return the string:
 		return parsed.toString();
         } finally {
-            Instrument.timeRel("SolrRecord.sanitiseUTF8", start);
+            Instrument.timeRel("SolrRecord.removeControlCharacters#total", "SolrRecord.sanitiseUTF8", start);
         }
 	}
 

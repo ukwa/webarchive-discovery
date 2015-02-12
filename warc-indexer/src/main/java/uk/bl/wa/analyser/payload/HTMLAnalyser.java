@@ -92,7 +92,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 			log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 			solr.addParseException("when parsing as HTML", e);
 		}
-        Instrument.timeRel("HTMLAnalyzer.analyze#parser", start);
+        Instrument.timeRel("HTMLAnalyzer.analyze#total", "HTMLAnalyzer.analyze#parser", start);
 
 		// Process links:
 		String links_list = metadata.get( HtmlFeatureParser.LINK_LIST );
@@ -142,7 +142,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
 			solr.addField( SolrFields.LICENSE_URL, lurl );
 		}
-        Instrument.timeRel("HTMLAnalyzer.analyze#total", start);
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total", "HTMLAnalyzer.analyze#total", start);
     }
 	
 }

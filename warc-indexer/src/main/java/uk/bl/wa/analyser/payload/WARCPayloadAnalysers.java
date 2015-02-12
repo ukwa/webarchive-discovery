@@ -111,7 +111,7 @@ public class WARCPayloadAnalysers {
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
 		log.debug("Analysing "+header.getUrl());
 
-        final long tikaStart = System.nanoTime();
+        final long start = System.nanoTime();
 		// Analyse with tika:
 		try {
 			if( passUriToFormatTools ) {
@@ -122,7 +122,8 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";tika; " + header.getUrl() + "@" + header.getOffset() );
 		}
-        Instrument.timeRel("WARCPayloadAnalyzers.analyze#tika", tikaStart);
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                           "WARCPayloadAnalyzers.analyze#tikasolrextract", start);
 
         final long firstBytesStart = System.nanoTime();
 		// Pull out the first few bytes, to hunt for new format by magic:
@@ -145,7 +146,8 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
 		}
-        Instrument.timeRel("WARCPayloadAnalyzers.analyze#firstbytes", firstBytesStart);
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                           "WARCPayloadAnalyzers.analyze#firstbytes", firstBytesStart);
 
 		// Also run DROID (restricted range):
 		if( dd != null && runDroid == true ) {
@@ -167,7 +169,8 @@ public class WARCPayloadAnalysers {
 				// Note that DROID complains about some URLs with an IllegalArgumentException.
 				log.error( i + ": " + i.getMessage() + ";dd; " + header.getUrl() + " @" + header.getOffset() );
 			}
-            Instrument.timeRel("WARCPayloadAnalyzers.analyze#droid", droidStart);
+            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                               "WARCPayloadAnalyzers.analyze#droid", droidStart);
 		}
 		
 		try {
@@ -195,6 +198,8 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
 		}
-		
+        Instrument.timeRel("WARCIndexer.extract#analyzetikainput",
+                           "WARCPayloadAnalyzers.analyze#total", start);
+
 	}
 }

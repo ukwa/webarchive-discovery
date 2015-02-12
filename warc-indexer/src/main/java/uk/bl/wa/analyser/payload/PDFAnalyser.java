@@ -98,7 +98,8 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 				solr.addField(SolrFields.PDFA_ERRORS, error);
 			}
 		}
-        Instrument.timeRel("PDFAnalyzer.analyze", start);
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                           "PDFAnalyzer.analyze", start);
 	}
 
 }
