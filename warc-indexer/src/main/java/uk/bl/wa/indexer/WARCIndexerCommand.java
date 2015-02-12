@@ -364,8 +364,8 @@ public class WARCIndexerCommand {
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			solr.add( docs );
+            docs.clear();
 		}
-		docs.clear();
 	}
 	
 	
