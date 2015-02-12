@@ -68,6 +68,7 @@ import uk.bl.wa.solr.SolrWebServer;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -92,7 +93,7 @@ public class WARCIndexerCommand {
 	 * @throws SolrServerException 
 	 */
 	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException {
-		
+		final long allStart = System.nanoTime();
 		CommandLineParser parser = new PosixParser();
 		String outputDir = null;
 		String solrUrl = null;
@@ -199,7 +200,7 @@ public class WARCIndexerCommand {
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
 		}
-	
+        Instrument.timeRel("WARCIndexerCommand.all", allStart);
 	}
 	
 	/**
@@ -232,6 +233,10 @@ public class WARCIndexerCommand {
 		if(solrUrl != null) {
 			conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
 		}
+        // Use config for default value
+        if (conf.hasPath("warc.solr.disablecommit")) {
+            disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
+        }
 		
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
@@ -331,7 +336,9 @@ public class WARCIndexerCommand {
 		// Commit any Solr Updates
 		if( solrWeb != null ) {
 			try {
+                final long start = System.nanoTime();
 				solrWeb.commit();
+                Instrument.timeRel("WARCIndexerCommand.commit#success", start);
 			} catch( SolrServerException s ) {
 				log.warn( "SolrServerException when committing.", s );
 			} catch( IOException i ) {
