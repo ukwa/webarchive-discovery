@@ -40,7 +40,8 @@ public class TikaExtractorTest {
 				.getValue();
 		assertTrue("Text should contain this string!",
 				text.contains("Mona Lisa"));
-		assertFalse("Text should NOT contain this string!",
+		assertFalse(
+				"Text should NOT contain this string! (implies bad newline handling)",
 				text.contains("encyclopediaMona"));
 	}
 
