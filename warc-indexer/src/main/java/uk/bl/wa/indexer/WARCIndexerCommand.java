@@ -199,8 +199,10 @@ public class WARCIndexerCommand {
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
-		}
-        Instrument.timeRel("WARCIndexerCommand.all", allStart);
+		} finally {
+            Instrument.timeRel("WARCIndexerCommand.main#total", allStart);
+            Instrument.log(true);
+        }
 	}
 	
 	/**
@@ -219,6 +221,7 @@ public class WARCIndexerCommand {
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
 		long startTime = System.currentTimeMillis();
+        final long start = System.nanoTime();
 
 		// If the Solr URL is set initiate a connections
 		Config conf = ConfigFactory.load();
@@ -256,6 +259,8 @@ public class WARCIndexerCommand {
 		int totInputFile = args.length;
 		int curInputFile = 1;
 					
+        Instrument.timeRel("WARCIndexerCommand.main#total",
+                           "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
 		for( String inputFile : args ) {
             if (!disableCommit) {
@@ -297,7 +302,8 @@ public class WARCIndexerCommand {
 				}
 
 				if( doc != null ) {
-                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
+                    Instrument.timeRel("WARCIndexerCommand.main#total",
+                                       "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
 					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
@@ -332,8 +338,7 @@ public class WARCIndexerCommand {
 
 		long endTime = System.currentTimeMillis();
 
-		System.out.println("WARC Indexer Finished in "+((endTime-startTime)/1000.0)+" seconds.");
-        Instrument.log(true);
+		System.out.println("WARC Indexer Finished in " + ((endTime - startTime) / 1000.0) + " seconds.");
 	}
 	
 	private static void commit( SolrWebServer solrWeb) {
@@ -342,7 +347,7 @@ public class WARCIndexerCommand {
 			try {
                 final long start = System.nanoTime();
 				solrWeb.commit();
-                Instrument.timeRel("WARCIndexerCommand.commit#success", start);
+                Instrument.timeRel("WARCIndexerCommand.main#total", "WARCIndexerCommand.commit#success", start);
 			} catch( SolrServerException s ) {
 				log.warn( "SolrServerException when committing.", s );
 			} catch( IOException i ) {

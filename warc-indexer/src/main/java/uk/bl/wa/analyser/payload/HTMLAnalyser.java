@@ -26,8 +26,8 @@ package uk.bl.wa.analyser.payload;
  */
 
 import java.io.InputStream;
-import java.util.HashMap;
-import java.util.Iterator;
+import java.util.HashSet;
+import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -40,6 +40,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -71,11 +72,13 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	 * @param tikainput
 	 * @param solr
 	 */
-	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+	@Override
+    public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+        final long start = System.nanoTime();
 		Metadata metadata = new Metadata();
-		HashMap<String, String> hosts = new HashMap<String, String>();
-		HashMap<String, String> suffixes = new HashMap<String, String>();
-		HashMap<String, String> domains = new HashMap<String, String>();
+		Set<String> hosts = new HashSet<String>();
+		Set<String> suffixes = new HashSet<String>();
+		Set<String> domains = new HashSet<String>();
 		
 		// JSoup NEEDS the URL to function:
 		metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
@@ -89,6 +92,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 			log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 			solr.addParseException("when parsing as HTML", e);
 		}
+        Instrument.timeRel("HTMLAnalyzer.analyze#total", "HTMLAnalyzer.analyze#parser", start);
 
 		// Process links:
 		String links_list = metadata.get( HtmlFeatureParser.LINK_LIST );
@@ -97,37 +101,33 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 			for( String link : links_list.split( " " ) ) {
 				lhost = LinkExtractor.extractHost( link );
 				if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
-					hosts.put( lhost, "" );
+					hosts.add(lhost);
 				}
 				lsuffix = LinkExtractor.extractPublicSuffix( link );
 				if( lsuffix != null ) {
-					suffixes.put( lsuffix, "" );
+					suffixes.add(lsuffix);
 				}
 				ldomain = LinkExtractor.extractPrivateSuffix( link );
 				if( ldomain != null ) {
-					domains.put( ldomain, "" );
+					domains.add(ldomain);
 				}
 				// Also store actual resource-level links:
 				if( this.extractLinks )
 					solr.addField( SolrFields.SOLR_LINKS, link );
 			}
 			// Store the data from the links:
-			Iterator<String> iterator = null;
 			if( this.extractLinkHosts ) {
-				iterator = hosts.keySet().iterator();
-				while( iterator.hasNext() ) {
-					solr.addField( SolrFields.SOLR_LINKS_HOSTS, iterator.next() );
+                for (String host: hosts) {
+					solr.addField( SolrFields.SOLR_LINKS_HOSTS, host );
 				}
 			}
 			if( this.extractLinkDomains ) {
-				iterator = domains.keySet().iterator();
-				while( iterator.hasNext() ) {
-					solr.addField( SolrFields.SOLR_LINKS_DOMAINS, iterator.next() );
+                for (String domain: domains) {
+					solr.addField( SolrFields.SOLR_LINKS_DOMAINS, domain );
 				}
 			}
-			iterator = suffixes.keySet().iterator();
-			while( iterator.hasNext() ) {
-				solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, iterator.next() );
+            for (String suffix: suffixes) {
+				solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, suffix );
 			}
 		}
 		// Process element usage:
@@ -142,6 +142,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
 			solr.addField( SolrFields.LICENSE_URL, lurl );
 		}
-	}
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total", "HTMLAnalyzer.analyze#total", start);
+    }
 	
 }

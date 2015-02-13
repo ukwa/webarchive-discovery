@@ -32,6 +32,7 @@ import com.typesafe.config.Config;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -65,6 +66,7 @@ public class TextAnalysers {
 	 * @param solr
 	 */
 	public void analyse( SolrRecord solr ) {
+        final long start = System.nanoTime();
 		// Pull out the text:
 		if( solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ) != null ) {
 			String text = ( String ) solr.getField( SolrFields.SOLR_EXTRACTED_TEXT ).getFirstValue();
@@ -75,6 +77,7 @@ public class TextAnalysers {
 				}
 			}
 		}
+        Instrument.timeRel("WARCIndexer.extract#total", "TextAnalyzers#total", start);
 	}
 	
 }

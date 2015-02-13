@@ -37,6 +37,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -58,6 +59,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 	@Override
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
 			SolrRecord solr) {
+        final long start = System.nanoTime();
 		Metadata metadata = new Metadata();
 		// Also attempt to grab the XML Root NS:
 		if( this.extractXMLRootNamespace ) {
@@ -73,6 +75,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 			}
 			solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
 		}
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total","XMLAnalyzer.analyze", start);
 	}
 
 }

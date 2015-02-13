@@ -35,6 +35,7 @@ import com.typesafe.config.Config;
 import uk.bl.wa.extract.PostcodeGeomapper;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -58,6 +59,7 @@ public class PostcodeAnalyser extends AbstractTextAnalyser {
 	 */
 	@Override
 	public void analyse(String text, SolrRecord solr) {
+        final long start = System.nanoTime();
 		// Postcode Extractor (based on text extracted by Tika)
 		Matcher pcm = postcodePattern.matcher( text );
 		Set<String> pcs = new HashSet<String>();
@@ -71,6 +73,7 @@ public class PostcodeAnalyser extends AbstractTextAnalyser {
 			if( location != null )
 				solr.addField( SolrFields.LOCATIONS, location );
 		}
+        Instrument.timeRel("TextAnalyzers#total", "PostcodeAnalyzer", start);
 	}
 
 }
