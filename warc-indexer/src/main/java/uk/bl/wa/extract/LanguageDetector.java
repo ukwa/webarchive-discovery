@@ -35,11 +35,11 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.tika.language.LanguageIdentifier;
 
 import com.cybozu.labs.langdetect.Detector;
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
+import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
 import uk.bl.wa.util.Instrument;
 
 /**
@@ -95,7 +95,7 @@ public class LanguageDetector {
 		} catch (LangDetectException e) {
 			log.info("Could not detect language: "+e);
 			return null;
-		}		
+        }
 	}
 	
 	public String detectLanguage( String text ) {
@@ -124,9 +124,8 @@ public class LanguageDetector {
 	 * @throws LangDetectException 
 	 */
 	public static void main(String[] args) throws LangDetectException {
-		LanguageDetector ld = new LanguageDetector();
-		System.out.println("Lang: " + ld.detectLanguage("I just wanted to double check that the IP address we need to redirect these to is the IP address of www.webarchive.org.uk.  which is"));
-
+        LanguageDetector ld = new LanguageDetector();
+        System.out.println("Lang: " + ld.detectLanguage("I just wanted to double check that the IP address we need to redirect these to is the IP address of www.webarchive.org.uk.  which is"));
 	}
 
 }
