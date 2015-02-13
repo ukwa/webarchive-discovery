@@ -187,7 +187,7 @@ public class LanguageProfile {
 
             if (compare == 0) { // Term exists both in this and that
                 double difference = (thisList.get(thisPos++).getValue().count / thisCount) -
-                                    (thatList.get(thatPos++).getValue().count / thisCount);
+                                    (thatList.get(thatPos++).getValue().count / thatCount);
                 sumOfSquares += square(difference);
             } else if (compare < 0) { // Term exists only in this
                 sumOfSquares += square(thisList.get(thisPos++).getValue().count / thisCount);
