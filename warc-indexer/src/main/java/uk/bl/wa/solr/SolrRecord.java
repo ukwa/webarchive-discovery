@@ -59,7 +59,7 @@ public class SolrRecord implements Serializable {
 		return ClientUtils.toXML( doc );
 	}
 	
-	private static int MAX_FIELD_LEN = 200;
+	private static final int MAX_FIELD_LEN = 200;
 	
 	public SolrRecord() {
 	}
@@ -81,7 +81,7 @@ public class SolrRecord implements Serializable {
 	private String removeControlCharacters( String value ) {
         final long start = System.nanoTime();
 		try {
-            // Avoid re-compiling the regexps in each call (general advice: String.replaceAll is often a performance hog)
+            // Avoid re-compiling the regexps in each call (just a small speed-up, but a simple one)
             return CNTRL_PATTERN.matcher(
                     SPACE_PATTERN.matcher(sanitiseUTF8(value.trim())).replaceAll(" ")
             ).replaceAll("");
@@ -107,7 +107,8 @@ public class SolrRecord implements Serializable {
 	 * @return
 	 * @throws CharacterCodingException
 	 */
-	private String sanitiseUTF8(String value) throws CharacterCodingException {
+    // It would be nice to re-use the encoder & decoder, but they are not Thread-safe
+	private CharSequence sanitiseUTF8(String value) throws CharacterCodingException {
         final long start = System.nanoTime();
         try  {
             // Take a string, map it to bytes as UTF-8:
@@ -119,9 +120,8 @@ public class SolrRecord implements Serializable {
             CharsetDecoder decoder = Charset.forName("UTF-8").newDecoder();
             decoder.onMalformedInput(CodingErrorAction.REPLACE);
             decoder.onUnmappableCharacter(CodingErrorAction.REPLACE);
-            CharBuffer parsed = decoder.decode(bytes);
-            // And return the string:
-		return parsed.toString();
+            // No need to do toString as the CharBuffer can be used directly by the matcher in removeControlCharacters
+            return decoder.decode(bytes);
         } finally {
             Instrument.timeRel("SolrRecord.removeControlCharacters#total", "SolrRecord.sanitiseUTF8", start);
         }
@@ -240,5 +240,4 @@ public class SolrRecord implements Serializable {
 		addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
 				+ ": " + e.getMessage());
 	}
-
 }
