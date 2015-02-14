@@ -157,6 +157,7 @@ public class LanguageProfile {
     }
 
     private double distanceStandard(LanguageProfile that) {
+        final long start = System.nanoTime();
         if (length != that.length) {
             throw new IllegalArgumentException(
                     "Unable to calculage distance of language profiles"
@@ -171,6 +172,10 @@ public class LanguageProfile {
         Set<String> ngrams = new HashSet<String>();
         ngrams.addAll(this.ngrams.keySet());
         ngrams.addAll(that.ngrams.keySet());
+        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+                           "LanguageProfile.distanceStandard#setcreation", start);
+
+        final long istart = System.nanoTime();
         for (String ngram : ngrams) {
             double thisFrequency = this.getCount(ngram) / thisCount;
             double thatFrequency = that.getCount(ngram) / thatCount;
@@ -178,6 +183,10 @@ public class LanguageProfile {
             sumOfSquares += difference * difference;
         }
 
+        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+                           "LanguageProfile.distanceStandard#dist", istart);
+        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+                           "LanguageProfile.distanceStandard#total", start);
         return Math.sqrt(sumOfSquares);
     }
 
