@@ -246,7 +246,7 @@ public class LanguageProfile {
             }
 //            System.out.println(thisEntry + " vs " + thatEntry + " sum: " + sumOfSquares);
         }
-        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+        Instrument.timeRel("LanguageProfile.distanceInterleaved#total",
                            "LanguageProfile.distanceInterleaved#dist", istart);
         Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
                            "LanguageProfile.distanceInterleaved#total", start);
