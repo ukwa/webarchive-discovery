@@ -191,6 +191,7 @@ public class LanguageProfile {
     }
     //             Instrument.timeRel("LanguageProfile.distance#total", "LanguageProfile.getSortedNGrams", start);
     private double distanceInterleaved(LanguageProfile that) {
+        final long start = System.nanoTime();
         if (length != that.length) {
             throw new IllegalArgumentException(
                     "Unable to calculage distance of language profiles"
@@ -205,6 +206,7 @@ public class LanguageProfile {
         Interleaved.Entry thisEntry = updateInterleaved().firstEntry();
         Interleaved.Entry thatEntry = that.updateInterleaved().firstEntry();
 
+        final long istart = System.nanoTime();
         // Iterate the lists in parallel, until both lists has been depleted
         while (thisEntry.hasNgram() || thatEntry.hasNgram()) {
             if (!thisEntry.hasNgram()) { // Depleted this
@@ -235,6 +237,10 @@ public class LanguageProfile {
             }
 //            System.out.println(thisEntry + " vs " + thatEntry + " sum: " + sumOfSquares);
         }
+        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+                           "LanguageProfile.distanceInterleaved#dist", istart);
+        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+                           "LanguageProfile.distanceInterleaved#total", start);
         return Math.sqrt(sumOfSquares);
     }
     private double square(double count) {
@@ -254,6 +260,7 @@ public class LanguageProfile {
             if (count == entriesGeneratedAtCount) { // Already up to date
                 return;
             }
+            final long start = System.nanoTime();
             size = ngrams.size();
             final int numChars = (length+2)*size;
             if (entries == null || entries.length < numChars) {
@@ -269,6 +276,7 @@ public class LanguageProfile {
                 pos += length + 2;
             }
             entriesGeneratedAtCount = count;
+            Instrument.timeRel("LanguageProfile.distanceInterleaved#total", "LanguageProfile.Interleaved.update", start);
         }
 
         public Entry firstEntry() {
