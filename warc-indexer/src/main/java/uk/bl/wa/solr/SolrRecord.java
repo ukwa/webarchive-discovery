@@ -37,6 +37,7 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
@@ -80,15 +81,21 @@ public class SolrRecord implements Serializable {
 	private String removeControlCharacters( String value ) {
         final long start = System.nanoTime();
 		try {
-			return sanitiseUTF8(value.trim().replaceAll("\\p{Space}", " ")
-					.replaceAll("\\p{Cntrl}", ""));
+            // Avoid re-compiling the regexps in each call (general advice: String.replaceAll is often a performance hog)
+            return CNTRL_PATTERN.matcher(
+                    SPACE_PATTERN.matcher(sanitiseUTF8(value.trim())).replaceAll(" ")
+            ).replaceAll("");
+//            return sanitiseUTF8(value.trim().replaceAll("\\p{Space}", " ")
+//         					.replaceAll("\\p{Cntrl}", ""));
 		} catch (CharacterCodingException e) {
 			return "";
 		} finally {
             Instrument.timeRel("SolrRecord.removeControlCharacters#total", start);
         }
 	}
-	
+    private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");
+    private static final Pattern CNTRL_PATTERN = Pattern.compile("\\p{Cntrl}");
+
 	/**
 	 * Aim to prevent "Invalid UTF-8 character 0xfffe" slipping into the text
 	 * payload.
