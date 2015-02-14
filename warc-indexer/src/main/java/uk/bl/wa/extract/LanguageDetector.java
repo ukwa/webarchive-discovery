@@ -54,6 +54,7 @@ public class LanguageDetector {
 	};
 
 	public LanguageDetector() {
+        final long start = System.nanoTime();
 		// Set up the langdetect:
 		if( DetectorFactory.getLangList().size() == 0 ) {
 		List<String> json_profiles = new ArrayList<String>();
@@ -79,6 +80,7 @@ public class LanguageDetector {
 			log.error("Error occurred when loading language profiles:"+e+" Language detection will likely fail. ");
 		}
 		}
+        Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector#startup", start);
 	}
 	
 	/**
