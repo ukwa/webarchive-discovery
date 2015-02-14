@@ -60,8 +60,12 @@ public class LanguageProfile {
      * The ngrams that make up this profile.
      */
     private final Map<String, Counter> ngrams = new HashMap<String, Counter>();
-    private final List<Map.Entry<String, Counter>> ngrams_sorted = new ArrayList<Map.Entry<String, Counter>>();
-    private long sortedLastUpdatedCount = 0;
+
+    /**
+     * Sorted ngram cache for faster distance calculation.
+     */
+    private Interleaved interleaved = new Interleaved();
+    public static boolean useInterleaved = true; // For testing purposes
 
     /**
      * The sum of all ngram counts in this profile.
@@ -144,73 +148,15 @@ public class LanguageProfile {
     /**
      * Calculates the geometric distance between this and the given
      * other language profile.
-     * </p><p>
-     * This implementations makes parallel runs through the dataset for this and that.
-     * This is faster and with less memory and GC-overhead than the old implementation {@link #distanceOld}.
-     * @param that the other language profile
-     * @return distance between the profiles
-     */
-    public double distance(LanguageProfile that) {
-        final long start = System.nanoTime();
-        if (length != that.length) {
-            throw new IllegalArgumentException(
-                    "Unable to calculage distance of language profiles"
-                    + " with different ngram lengths: "
-                    + that.length + " != " + length);
-        }
-
-        double sumOfSquares = 0.0;
-        double thisCount = Math.max(this.count, 1.0);
-        double thatCount = Math.max(that.count, 1.0);
-
-        int thisPos = 0;
-        int thatPos = 0;
-        List<Map.Entry<String, Counter>> thisList = getSortedNgrams();
-        List<Map.Entry<String, Counter>> thatList = that.getSortedNgrams();
-
-        // Iterate the lists in parallel, until both lists has been depleted
-        while (thisPos < thisList.size() || thatPos < thatList.size()) {
-
-            if (thisPos == thisList.size()) { // Depleted this
-                sumOfSquares += square(thatList.get(thatPos++).getValue().count / thatCount);
-                continue;
-            }
-
-            if (thatPos == thatList.size()) { // Depleted that
-                sumOfSquares += square(thisList.get(thisPos++).getValue().count / thisCount);
-                continue;
-            }
-
-            final String thisVal = thisList.get(thisPos).getKey();
-            final String thatVal = thatList.get(thatPos).getKey();
-            final int compare = thisVal.compareTo(thatVal);
-
-            if (compare == 0) { // Term exists both in this and that
-                double difference = (thisList.get(thisPos++).getValue().count / thisCount) -
-                                    (thatList.get(thatPos++).getValue().count / thatCount);
-                sumOfSquares += square(difference);
-            } else if (compare < 0) { // Term exists only in this
-                sumOfSquares += square(thisList.get(thisPos++).getValue().count / thisCount);
-            } else { // Term exists only in that
-                sumOfSquares += square(thatList.get(thatPos++).getValue().count / thatCount);
-            }
-        }
-        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile", "LanguageProfile.distance#total", start);
-        return Math.sqrt(sumOfSquares);
-    }
-
-    private double square(double count) {
-        return count * count;
-    }
-
-    /**
-     * Calculates the geometric distance between this and the given
-     * other language profile.
      *
      * @param that the other language profile
      * @return distance between the profiles
      */
-    public double distanceOld(LanguageProfile that) {
+    public double distance(LanguageProfile that) {
+        return useInterleaved ? distanceInterleaved(that) : distanceStandard(that);
+    }
+
+    private double distanceStandard(LanguageProfile that) {
         if (length != that.length) {
             throw new IllegalArgumentException(
                     "Unable to calculage distance of language profiles"
@@ -243,21 +189,149 @@ public class LanguageProfile {
     public int getNgramLength() {
         return length;
     }
+    //             Instrument.timeRel("LanguageProfile.distance#total", "LanguageProfile.getSortedNGrams", start);
+    private double distanceInterleaved(LanguageProfile that) {
+        if (length != that.length) {
+            throw new IllegalArgumentException(
+                    "Unable to calculage distance of language profiles"
+                    + " with different ngram lengths: "
+                    + that.length + " != " + length);
+        }
 
-    public List<Map.Entry<String, Counter>> getSortedNgrams() {
-        if (sortedLastUpdatedCount != count) {
-            final long start = System.nanoTime();
-            ngrams_sorted.clear();
-            ngrams_sorted.addAll(ngrams.entrySet());
-            Collections.sort(ngrams_sorted, new Comparator<Map.Entry<String, Counter>>() {
+        double sumOfSquares = 0.0;
+        double thisCount = Math.max(this.count, 1.0);
+        double thatCount = Math.max(that.count, 1.0);
+
+        Interleaved.Entry thisEntry = updateInterleaved().firstEntry();
+        Interleaved.Entry thatEntry = that.updateInterleaved().firstEntry();
+
+        // Iterate the lists in parallel, until both lists has been depleted
+        while (thisEntry.hasNgram() || thatEntry.hasNgram()) {
+            if (!thisEntry.hasNgram()) { // Depleted this
+                sumOfSquares += square(thatEntry.count / thatCount);
+                thatEntry.next();
+                continue;
+            }
+
+            if (!thatEntry.hasNgram()) { // Depleted that
+                sumOfSquares += square(thisEntry.count / thisCount);
+                thisEntry.next();
+                continue;
+            }
+
+            final int compare = thisEntry.compareTo(thatEntry);
+
+            if (compare == 0) { // Term exists both in this and that
+                double difference = thisEntry.count/thisCount - thatEntry.count/thatCount;
+                sumOfSquares += square(difference);
+                thisEntry.next();
+                thatEntry.next();
+            } else if (compare < 0) { // Term exists only in this
+                sumOfSquares += square(thisEntry.count/thisCount);
+                thisEntry.next();
+            } else { // Term exists only in that
+                sumOfSquares += square(thatEntry.count/thatCount);
+                thatEntry.next();
+            }
+//            System.out.println(thisEntry + " vs " + thatEntry + " sum: " + sumOfSquares);
+        }
+        return Math.sqrt(sumOfSquares);
+    }
+    private double square(double count) {
+        return count * count;
+    }
+
+    private class Interleaved {
+
+        private char[] entries = null; // <ngram(length chars)><count(2 chars)>*
+        private int size = 0; // Number of entries (one entry = length+2 chars)
+        private long entriesGeneratedAtCount = -1; // Keeps track of when the sequential structure was current
+
+        /**
+         * Ensure that the entries array is in sync with the ngrams.
+         */
+        public void update() {
+            if (count == entriesGeneratedAtCount) { // Already up to date
+                return;
+            }
+            size = ngrams.size();
+            final int numChars = (length+2)*size;
+            if (entries == null || entries.length < numChars) {
+                entries = new char[numChars];
+            }
+            int pos = 0;
+            for (Map.Entry<String, Counter> entry: getSortedNgrams()) {
+                for (int l = 0 ; l < length ; l++) {
+                    entries[pos + l] = entry.getKey().charAt(l);
+                }
+                entries[pos + length] = (char)(entry.getValue().count / 65536); // Upper 16 bit
+                entries[pos + length + 1] = (char)(entry.getValue().count % 65536); // lower 16 bit
+                pos += length + 2;
+            }
+            entriesGeneratedAtCount = count;
+        }
+
+        public Entry firstEntry() {
+            Entry entry = new Entry();
+            if (size > 0) {
+                entry.update(0);
+            }
+            return entry;
+        }
+
+        private List<Map.Entry<String, Counter>> getSortedNgrams() {
+            List<Map.Entry<String, Counter>> entries = new ArrayList<Map.Entry<String, Counter>>(ngrams.size());
+            entries.addAll(ngrams.entrySet());
+            Collections.sort(entries, new Comparator<Map.Entry<String, Counter>>() {
                 @Override
                 public int compare(Map.Entry<String, Counter> o1, Map.Entry<String, Counter> o2) {
                     return o1.getKey().compareTo(o2.getKey());
                 }
             });
-            sortedLastUpdatedCount = count;
-            Instrument.timeRel("LanguageProfile.distance#total", "LanguageProfile.getSortedNGrams", start);
+            return entries;
         }
-        return ngrams_sorted;
+
+        private class Entry implements Comparable<Entry> {
+            char[] ngram = new char[length];
+            int count = 0;
+            int pos = 0;
+
+            private void update(int pos) {
+                this.pos = pos;
+                if (pos >= size) { // Reached the end
+                    return;
+                }
+                final int origo = pos*(length+2);
+                System.arraycopy(entries, origo, ngram, 0, length);
+                count = entries[origo+length] * 65536 + entries[origo+length+1];
+            }
+
+            @Override
+            public int compareTo(Entry other) {
+                for (int i = 0 ; i < ngram.length ; i++) {
+                    if (ngram[i] != other.ngram[i]) {
+                        return ngram[i] - other.ngram[i];
+                    }
+                }
+                return 0;
+            }
+            public boolean hasNext() {
+                return pos < size-1;
+            }
+            public boolean hasNgram() {
+                return pos < size;
+            }
+            public void next() {
+                update(pos+1);
+            }
+            public String toString() {
+                return new String(ngram) + "(" + count + ")";
+            }
+        }
     }
+    private Interleaved updateInterleaved() {
+        interleaved.update();
+        return interleaved;
+    }
+
 }
