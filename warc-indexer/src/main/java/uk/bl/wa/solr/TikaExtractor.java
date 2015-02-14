@@ -257,7 +257,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				addExceptionMetadata(metadata, r);
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract",
-                               "TikaExtractor.extract#parse", detectStart);
+                               "TikaExtractor.extract#parse", parseStart);
 
 			// If there was a parse error, report it:
 			solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
@@ -379,7 +379,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				solr.addField(SolrFields.GENERATOR, software);
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract",
-                               "TikaExtractor.extract#extract", detectStart);
+                               "TikaExtractor.extract#extract", extractStart);
 
 		} catch( Exception e ) {
 			log.error( "TikaExtractor.extract(): " + e.getMessage() );
