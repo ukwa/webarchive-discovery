@@ -143,7 +143,7 @@ public class HtmlFeatureParser extends AbstractParser {
 		}
         Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#jsoupparse", start);
 
-        final long nonJsoupStart = System.currentTimeMillis();
+        final long nonJsoupStart = System.nanoTime();
 		// Record the number of errors found:
 		metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
 
