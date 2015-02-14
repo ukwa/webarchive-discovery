@@ -48,6 +48,7 @@ import org.jsoup.parser.ParseError;
 import org.jsoup.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+import uk.bl.wa.util.Instrument;
 
 public class HtmlFeatureParser extends AbstractParser {
 
@@ -124,6 +125,7 @@ public class HtmlFeatureParser extends AbstractParser {
 	public void parse(InputStream stream, ContentHandler handler,
 			Metadata metadata, ParseContext context) throws IOException,
 			SAXException, TikaException {
+        final long start = System.nanoTime();
 		// Pick up the URL:
 		String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
 		
@@ -139,7 +141,9 @@ public class HtmlFeatureParser extends AbstractParser {
 		} finally {
 			if( doc == null ) return;
 		}
-		
+        Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#jsoupparse", start);
+
+        final long nonJsoupStart = System.currentTimeMillis();
 		// Record the number of errors found:
 		metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
 
@@ -191,7 +195,7 @@ public class HtmlFeatureParser extends AbstractParser {
 		for( Element a : doc.select("area[rel=license]") )  {
 			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
 		}
-		
+        Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#featureextract", nonJsoupStart);
 	}
 	
 
