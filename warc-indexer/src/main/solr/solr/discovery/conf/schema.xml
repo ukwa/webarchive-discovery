@@ -299,6 +299,9 @@
 
    <field name="source_file_s" type="string" indexed="true" stored="true" />
    
+    <!-- Type used to index the lat and lon components for the "location" FieldType -->
+    <!-- This dynamic field is used, but we can not find where in the code it is defined-->
+   <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" />
    <!-- wa.bl.uk fields end --> 
    
  </fields>
