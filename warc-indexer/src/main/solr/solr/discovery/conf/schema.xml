@@ -296,9 +296,12 @@
    
    <!-- Details of any embedded licenses: -->
    <field name="license_url" type="string" indexed="true" stored="true" multiValued="true"/>
-
-   <!-- wa.bl.uk fields end -->
-
+   <field name="source_file_s" type="string" indexed="true" stored="true" />
+   
+    <!-- Type used to index the lat and lon components for the "location" FieldType -->
+    <!-- This dynamic field is used, but we can not find where in the code it is defined-->
+   <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" />
+   <!-- wa.bl.uk fields end --> 
    
  </fields>
 
@@ -389,7 +392,9 @@
          then default lucene sorting will be used which places docs without the
          field first in an ascending sort and last in a descending sort.
     -->    
-
+   <!-- A specialized field for geospatial search. If indexed, this fieldType must not be multivalued. -->
+   
+   <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
     <!--
       Default numeric field types. For faster range queries, consider the tint/tfloat/tlong/tdouble types.
     -->
@@ -397,6 +402,7 @@
     <fieldType name="float" class="solr.TrieFloatField" precisionStep="0" positionIncrementGap="0"/>
     <fieldType name="long" class="solr.TrieLongField" precisionStep="0" positionIncrementGap="0"/>
     <fieldType name="double" class="solr.TrieDoubleField" precisionStep="0" positionIncrementGap="0"/>
+
 
     <!--
      Numeric field types that index each value at various levels of precision
