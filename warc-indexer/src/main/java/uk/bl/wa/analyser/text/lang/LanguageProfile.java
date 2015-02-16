@@ -172,7 +172,7 @@ public class LanguageProfile {
         Set<String> ngrams = new HashSet<String>();
         ngrams.addAll(this.ngrams.keySet());
         ngrams.addAll(that.ngrams.keySet());
-        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+        Instrument.timeRel("LanguageProfile.distanceStandard#total",
                            "LanguageProfile.distanceStandard#setcreation", start);
 
         final long istart = System.nanoTime();
@@ -183,7 +183,7 @@ public class LanguageProfile {
             sumOfSquares += difference * difference;
         }
 
-        Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
+        Instrument.timeRel("LanguageProfile.distanceStandard#total",
                            "LanguageProfile.distanceStandard#dist", istart);
         Instrument.timeRel("LanguageIdentifier#matchlanguageprofile",
                            "LanguageProfile.distanceStandard#total", start);
