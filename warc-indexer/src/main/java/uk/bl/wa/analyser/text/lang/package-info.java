@@ -5,14 +5,33 @@
  * sorted lists of map entries. In O-notation, the runtimes are the same. Empirically, local tests
  * shows that the speed of text detection is a bit more than doubled.
  * </p><p>
- * The changes should be upstreamed to Tika and are only in warc-indexer until that happens.
+ * The changes have been upstreamed Tika in the yet-to-be-released 1.8.
+ * The warc-indexer classes in this package should be removed when switching to Tika 1.8.
  * </p><p>
- * Caveat: The code is experimental has not been properly tested!
- * </p><p>
- * Future improvements: LanguageProfile#distance is still the hotspot in the code.
- * As all operations are on Strings, the sequential iterations of the lists are really
- * random access throughout the Java heap. Switching to 2 large char-arrays with c-style
- * 0-delimited entities would raise the probability of the relevant data being in Level 2
- * cache and likely improve speed significantly.
+ * Future improvements: The creation of LanguageProfiles could match the packed representation
+ * used by the Interleaver, which should reduce the number of Object-allocations and speed up
+ * creation of the cached char[].
  */
 package uk.bl.wa.analyser.text.lang;
+
+/*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2015 The UK Web Archive
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
