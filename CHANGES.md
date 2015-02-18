@@ -1,3 +1,13 @@
+2.1.0
+-----
+
+* Explicit client commits should be optional (in command-line version) [#43](https://github.com/ukwa/webarchive-discovery/pull/43)
+
+2.0.0
+-----
+
+* TBA
+
 1.1.1
 -----
 Up to this release, there were two development strands, held on distinct branches:
