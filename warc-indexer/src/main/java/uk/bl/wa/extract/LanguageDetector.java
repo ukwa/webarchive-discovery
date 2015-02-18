@@ -40,6 +40,7 @@ import org.apache.tika.language.LanguageIdentifier;
 import com.cybozu.labs.langdetect.Detector;
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -75,7 +76,7 @@ public class LanguageDetector {
 		try {
 			DetectorFactory.loadProfile(json_profiles);
 		} catch( LangDetectException e) {
-			log.error("Error occured when loading language profiles:"+e+" Language detection will likely fail. ");
+			log.error("Error occurred when loading language profiles:"+e+" Language detection will likely fail. ");
 		}
 		}
 	}
@@ -98,15 +99,25 @@ public class LanguageDetector {
 	}
 	
 	public String detectLanguage( String text ) {
-		// Attept to use Tika module first (should be good for long texts)
-		LanguageIdentifier li = new LanguageIdentifier(text);
-		// Only return that result if it's credible:
-		if( li.isReasonablyCertain() ) return li.getLanguage();
-		// Otherwise, fall back to the langdetect approach (should be better for short texts)
-		// (Having found that (very) short texts are not likely to be classified sensibly.)
-		if( text.length() > 200 )
-			return this.getLangdetectLanguage(text);
-		return null;
+        final long start = System.nanoTime();
+        try {
+            // Attept to use Tika module first (should be good for long texts)
+            LanguageIdentifier li = new LanguageIdentifier(text);
+            // Only return that result if it's credible:
+            if( li.isReasonablyCertain() ) return li.getLanguage();
+        } finally {
+            Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector.detectLanguage#li", start);
+        }
+        final long startLD = System.nanoTime();
+        try {
+            // Otherwise, fall back to the langdetect approach (should be better for short texts)
+            // (Having found that (very) short texts are not likely to be classified sensibly.)
+            if( text.length() > 200 )
+                return this.getLangdetectLanguage(text);
+            return null;
+        } finally {
+            Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector.detectLanguage#ld", startLD);
+        }
 	}
 	/**
 	 * @param args

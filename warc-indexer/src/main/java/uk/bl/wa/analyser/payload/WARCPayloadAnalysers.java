@@ -40,6 +40,7 @@ import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.TikaExtractor;
+import uk.bl.wa.util.Instrument;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 
 import com.google.common.base.Splitter;
@@ -109,7 +110,8 @@ public class WARCPayloadAnalysers {
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
 		log.debug("Analysing "+header.getUrl());
-		
+
+        final long start = System.nanoTime();
 		// Analyse with tika:
 		try {
 			if( passUriToFormatTools ) {
@@ -120,7 +122,10 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";tika; " + header.getUrl() + "@" + header.getOffset() );
 		}
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                           "WARCPayloadAnalyzers.analyze#tikasolrextract", start);
 
+        final long firstBytesStart = System.nanoTime();
 		// Pull out the first few bytes, to hunt for new format by magic:
 		try {
 			tikainput.reset();
@@ -141,9 +146,12 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
 		}
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                           "WARCPayloadAnalyzers.analyze#firstbytes", firstBytesStart);
 
 		// Also run DROID (restricted range):
 		if( dd != null && runDroid == true ) {
+            final long droidStart = System.nanoTime();
 			try {
 				tikainput.reset();
 				// Pass the URL in so DROID can fall back on that:
@@ -161,6 +169,8 @@ public class WARCPayloadAnalysers {
 				// Note that DROID complains about some URLs with an IllegalArgumentException.
 				log.error( i + ": " + i.getMessage() + ";dd; " + header.getUrl() + " @" + header.getOffset() );
 			}
+            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                               "WARCPayloadAnalyzers.analyze#droid", droidStart);
 		}
 		
 		try {
@@ -188,6 +198,8 @@ public class WARCPayloadAnalysers {
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
 		}
-		
+        Instrument.timeRel("WARCIndexer.extract#analyzetikainput",
+                           "WARCPayloadAnalyzers.analyze#total", start);
+
 	}
 }

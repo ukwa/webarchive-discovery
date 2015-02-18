@@ -37,6 +37,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -97,6 +98,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 
 			// Attempt to extract faces etc.:
 			if (this.extractFaces || this.extractDominantColours) {
+                final long deepStart = System.nanoTime();
 				ParseRunner parser = new ParseRunner(fdp, tikainput, metadata,
 						solr);
 				Thread thread = new Thread(parser, Long.toString(System
@@ -133,6 +135,8 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 					solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
 							metadata.get(FaceDetectionParser.DOM_COL));
 				}
+                Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                                   "ImageAnalyzer.analyze#facesanddominant", deepStart);
 			}
 
 		}

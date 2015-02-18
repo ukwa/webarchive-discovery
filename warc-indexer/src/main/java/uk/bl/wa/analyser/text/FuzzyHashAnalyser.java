@@ -35,6 +35,7 @@ import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -53,6 +54,7 @@ public class FuzzyHashAnalyser extends AbstractTextAnalyser {
 	 */
 	@Override
 	public void analyse(String text, SolrRecord solr) {
+        final long start = System.nanoTime();
 		// Canonicalize the text - strip newlines etc.
 		Pattern whitespace = Pattern.compile( "\\s+" );
 		Matcher matcher = whitespace.matcher( text );
@@ -73,7 +75,7 @@ public class FuzzyHashAnalyser extends AbstractTextAnalyser {
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
-		
+        Instrument.timeRel("TextAnalyzers#total", "FuzzyHashAnalyzer", start);
 	}
 
 }

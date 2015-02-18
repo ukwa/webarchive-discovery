@@ -68,6 +68,7 @@ import uk.bl.wa.solr.SolrWebServer;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -92,7 +93,7 @@ public class WARCIndexerCommand {
 	 * @throws SolrServerException 
 	 */
 	public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException {
-		
+		final long allStart = System.nanoTime();
 		CommandLineParser parser = new PosixParser();
 		String outputDir = null;
 		String solrUrl = null;
@@ -198,8 +199,10 @@ public class WARCIndexerCommand {
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
-		}
-	
+		} finally {
+            Instrument.timeRel("WARCIndexerCommand.main#total", allStart);
+            Instrument.log(true);
+        }
 	}
 	
 	/**
@@ -218,6 +221,7 @@ public class WARCIndexerCommand {
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
 		long startTime = System.currentTimeMillis();
+        final long start = System.nanoTime();
 
 		// If the Solr URL is set initiate a connections
 		Config conf = ConfigFactory.load();
@@ -232,6 +236,10 @@ public class WARCIndexerCommand {
 		if(solrUrl != null) {
 			conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
 		}
+        // Use config for default value
+        if (conf.hasPath("warc.solr.disablecommit")) {
+            disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
+        }
 		
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
@@ -251,6 +259,8 @@ public class WARCIndexerCommand {
 		int totInputFile = args.length;
 		int curInputFile = 1;
 					
+        Instrument.timeRel("WARCIndexerCommand.main#total",
+                           "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
 		for( String inputFile : args ) {
             if (!disableCommit) {
@@ -273,6 +283,7 @@ public class WARCIndexerCommand {
 			
 			// Iterate though each record in the WARC file
 			while( ir.hasNext() ) {
+                final long recordStart = System.nanoTime();
 				ArchiveRecord rec = ir.next();
 				SolrRecord doc = new SolrRecord(inFile.getName(),
 						rec.getHeader());
@@ -291,6 +302,8 @@ public class WARCIndexerCommand {
 				}
 
 				if( doc != null ) {
+                    Instrument.timeRel("WARCIndexerCommand.main#total",
+                                       "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
 					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
@@ -315,6 +328,7 @@ public class WARCIndexerCommand {
 				}			
 			}
 			curInputFile++;
+            Instrument.log(false);
 		}
 
         if (!disableCommit) {
@@ -324,14 +338,16 @@ public class WARCIndexerCommand {
 
 		long endTime = System.currentTimeMillis();
 
-		System.out.println("WARC Indexer Finished in "+((endTime-startTime)/1000.0)+" seconds.");
+		System.out.println("WARC Indexer Finished in " + ((endTime - startTime) / 1000.0) + " seconds.");
 	}
 	
 	private static void commit( SolrWebServer solrWeb) {
 		// Commit any Solr Updates
 		if( solrWeb != null ) {
 			try {
+                final long start = System.nanoTime();
 				solrWeb.commit();
+                Instrument.timeRel("WARCIndexerCommand.main#total", "WARCIndexerCommand.commit#success", start);
 			} catch( SolrServerException s ) {
 				log.warn( "SolrServerException when committing.", s );
 			} catch( IOException i ) {
@@ -353,8 +369,8 @@ public class WARCIndexerCommand {
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
 			solr.add( docs );
+            docs.clear();
 		}
-		docs.clear();
 	}
 	
 	
