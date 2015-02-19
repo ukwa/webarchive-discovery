@@ -374,6 +374,16 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		} catch( Exception e ) {
 			log.error( "TikaExtractor.extract(): " + e.getMessage() );
 		}
+
+        // TODO: This should probably be wrapped in a method-spanning try-finally to guarantee close
+        if (tikainput != null) {
+            try {
+                tikainput.close();
+            } catch (IOException e) {
+                log.warn("Exception closing TikaInputStream. This leaves tmp-files: " +  e.getMessage());
+            }
+        }
+
 		return solr;
 	}
 
