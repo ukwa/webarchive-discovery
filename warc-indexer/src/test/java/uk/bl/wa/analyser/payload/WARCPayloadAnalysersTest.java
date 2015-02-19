@@ -59,25 +59,39 @@ public class WARCPayloadAnalysersTest extends TestCase {
         ARCNameAnalyser ana = getAnalyser();
         for (String test[]: new String[][]{
                 {
-                        "arc_type:sb, arc_harvesttime:2008-02-21T00:35:33.000Z, arc_job:25666, arc_harvest:33",
+                        "arc_orig:sb, arc_harvesttime:2008-02-21T00:35:33.000Z, arc_job:25666, arc_harvest:33, "
+                        + "arc_name:25666-33-20080221003533-00046-sb-prod-har-004.arc, "
+                        + "arc_full:25666-33-20080221003533-00046-sb-prod-har-004.arc",
                         "25666-33-20080221003533-00046-sb-prod-har-004.arc"},
                 {
-                        "arc_type:kb, arc_harvesttime:2007-04-18T16:37:59.000Z, arc_job:15638, arc_harvest:38",
-                        "15638-38-20070418163759-00235-kb-prod-har-002.kb.dk.arc"
+                        "arc_orig:kb, arc_harvesttime:2007-04-18T16:37:59.000Z, arc_job:15638, arc_harvest:38, "
+                        + "arc_name:15638-38-20070418163759-00235-kb-prod-har-002.kb.dk.arc, "
+                        + "arc_full:somepath/15638-38-20070418163759-00235-kb-prod-har-002.kb.dk.arc",
+                        "somepath/15638-38-20070418163759-00235-kb-prod-har-002.kb.dk.arc"
                 },
                 {
-                        "arc_type:kb, arc_harvesttime:2013-11-11T17:55:47.000Z, arc_job:193305, arc_harvest:197",
+                        "arc_orig:kb, arc_harvesttime:2013-11-11T17:55:47.000Z, arc_job:193305, arc_harvest:197, "
+                        + "arc_name:193305-197-20131111175547-00001-kb228081.kb.dk.warc, "
+                        + "arc_full:193305-197-20131111175547-00001-kb228081.kb.dk.warc",
                         "193305-197-20131111175547-00001-kb228081.kb.dk.warc"
                 },
                 {
-                        "arc_type:kb, arc_harvesttime:2012-10-18T21:02:45.000Z, arc_job:36861",
+                        "arc_orig:kb, arc_harvesttime:2012-10-18T21:02:45.000Z, arc_job:36861, "
+                        + "arc_name:kb-pligtsystem-36861-20121018210245-00000.warc, "
+                        + "arc_full:kb-pligtsystem-36861-20121018210245-00000.warc",
                         "kb-pligtsystem-36861-20121018210245-00000.warc"
                 },
                 {
-                        "arc_type:metadata", "1298-metadata-2.arc"
+                        "arc_orig:metadata, "
+                        + "arc_name:1298-metadata-2.arc, "
+                        + "arc_full:anotherpath/1298-metadata-2.arc",
+                        "anotherpath/1298-metadata-2.arc"
                 },
                 {
-                        "arc_type:unknown", "ksjvksjfvsk"
+                        "arc_orig:unknown, "
+                        + "arc_name:ksjvksjfvsk, "
+                        + "arc_full:ksjvksjfvsk",
+                        "ksjvksjfvsk"
                 }
         }) {
             SolrRecord solr = new SolrRecord();
@@ -85,8 +99,10 @@ public class WARCPayloadAnalysersTest extends TestCase {
 
             for (String expectedPair:test[0].split(" *, *")) {
                 String[] tokens = expectedPair.split(":", 2);
+                Object valO = solr.getFieldValue(tokens[0]);
+                String value = valO == null ? "N/A" : valO.toString();
                 assertEquals("The parsing of " + test[1] + " should have the right content for field " + tokens[0],
-                             tokens[1], (solr.getFieldValue(tokens[0]).toString()));
+                             tokens[1], value);
             }
         }
     }
