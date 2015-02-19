@@ -305,9 +305,10 @@ public class WARCIndexerCommand {
 					doc.addParseException(e);
 				}
 
+                Instrument.timeRel("WARCIndexerCommand.main#total",
+                                   "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
 				if( doc != null ) {
-                    Instrument.timeRel("WARCIndexerCommand.main#total",
-                                       "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
+                    final long updateStart = System.nanoTime();
 					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 					
 					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
@@ -328,8 +329,9 @@ public class WARCIndexerCommand {
 						}
 						recordCount++;
 					}
-
-				}			
+                    Instrument.timeRel("WARCIndexerCommand.main#total",
+                                       "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
+				}
 			}
 			curInputFile++;
             Instrument.log(false);
@@ -372,7 +374,10 @@ public class WARCIndexerCommand {
 	 */
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
+            final long start = System.nanoTime();
 			solr.add( docs );
+            Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#docdelivery",
+                               "WARCIndexerCommanc.checkSubmission#solradd", start);
             docs.clear();
 		}
 	}
