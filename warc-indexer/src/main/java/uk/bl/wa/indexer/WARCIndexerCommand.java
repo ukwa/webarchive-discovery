@@ -100,7 +100,7 @@ public class WARCIndexerCommand {
 		String configFile = null;
 		boolean isTextRequired = false;
 		boolean slashPages = false;
-		int batchSize = 1;
+		int batchSize = -1; // No explicit batch size (defaults to 1 if not stated in the conf-file)
 		String annotationsFile = null;
         boolean disableCommit;
 		
@@ -240,7 +240,11 @@ public class WARCIndexerCommand {
         if (conf.hasPath("warc.solr.disablecommit")) {
             disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
         }
-		
+
+        if (batchSize == -1) { // Batch size not set as command line, so resolve it from conf with default 1
+            batchSize = conf.hasPath("warc.solr.batch_size") ? conf.getInt("warc.solr.batch_size") : 1;
+        }
+
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
 		
