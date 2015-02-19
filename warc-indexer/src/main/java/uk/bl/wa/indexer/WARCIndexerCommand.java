@@ -266,76 +266,77 @@ public class WARCIndexerCommand {
         Instrument.timeRel("WARCIndexerCommand.main#total",
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
-		for( String inputFile : args ) {
+        for (int arcsIndex = 0; arcsIndex < args.length; arcsIndex++) {
+            String inputFile = args[arcsIndex];
             if (!disableCommit) {
                 // Commit to make sure index is up to date:
                 commit(solrWeb);
             }
 
-			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
-			File inFile = new File(inputFile);
-			String fileName = inFile.getName();
-			String outputWarcDir = outputDir + fileName + "//";
-			File dir = new File(outputWarcDir);
-	   		if(!dir.exists() && solrUrl == null){
-	   			FileUtils.forceMkdir(dir);
-	   		}
-			
-			ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
-			Iterator<ArchiveRecord> ir = reader.iterator();
-			int recordCount = 1;
-			
-			// Iterate though each record in the WARC file
-			while( ir.hasNext() ) {
+            System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
+            File inFile = new File(inputFile);
+            String fileName = inFile.getName();
+            String outputWarcDir = outputDir + fileName + "//";
+            File dir = new File(outputWarcDir);
+            if (!dir.exists() && solrUrl == null) {
+                FileUtils.forceMkdir(dir);
+            }
+
+            ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
+            Iterator<ArchiveRecord> ir = reader.iterator();
+            int recordCount = 1;
+
+            // Iterate though each record in the WARC file
+            while (ir.hasNext()) {
                 final long recordStart = System.nanoTime();
-				ArchiveRecord rec = ir.next();
-				SolrRecord doc = new SolrRecord(inFile.getName(),
-						rec.getHeader());
-				try {
-					doc = windex.extract(inFile.getName(), rec, isTextRequired);
-				} catch (Exception e) {
-					log.warn("Exception on record "+rec.getHeader().getUrl()+ " from "+inFile.getName(), e);
-					doc.addParseException(e);
-					continue;
-				} catch (OutOfMemoryError e) {
-					log.warn(
-							"OutOfMemoryError on record "
-									+ rec.getHeader().getUrl() + " from "
-									+ inFile.getName(), e);
-					doc.addParseException(e);
-				}
+                ArchiveRecord rec = ir.next();
+                SolrRecord doc = new SolrRecord(inFile.getName(),
+                                                rec.getHeader());
+                try {
+                    doc = windex.extract(inFile.getName(), rec, isTextRequired);
+                } catch (Exception e) {
+                    log.warn("Exception on record " + rec.getHeader().getUrl() + " from " + inFile.getName(), e);
+                    doc.addParseException(e);
+                    continue;
+                } catch (OutOfMemoryError e) {
+                    log.warn(
+                            "OutOfMemoryError on record "
+                            + rec.getHeader().getUrl() + " from "
+                            + inFile.getName(), e);
+                    doc.addParseException(e);
+                }
 
                 Instrument.timeRel("WARCIndexerCommand.main#total",
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
-				if( doc != null ) {
+                if (doc != null) {
                     final long updateStart = System.nanoTime();
-					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
-					
-					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
-									     doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
-						// Write XML to file if not posting straight to the server.
-						if(solrUrl == null) {
-							writeXMLToFile(doc.toXml(), fileOutput);
-						}else{
-							// Post to Solr
-							try {
-								docs.add( doc.getSolrDocument() );
-								checkSubmission( solrWeb, docs, batchSize );
-							} catch( SolrServerException s ) {
-								log.warn( "SolrServerException: " + inputFile, s );
-							} catch( IOException i ) {
-								log.warn( "IOException: " + inputFile, i );
-							}
-						}
-						recordCount++;
-					}
+                    File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
+
+                    if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
+                                        doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
+                        // Write XML to file if not posting straight to the server.
+                        if (solrUrl == null) {
+                            writeXMLToFile(doc.toXml(), fileOutput);
+                        } else {
+                            // Post to Solr
+                            try {
+                                docs.add(doc.getSolrDocument());
+                                checkSubmission(solrWeb, docs, batchSize);
+                            } catch (SolrServerException s) {
+                                log.warn("SolrServerException: " + inputFile, s);
+                            } catch (IOException i) {
+                                log.warn("IOException: " + inputFile, i);
+                            }
+                        }
+                        recordCount++;
+                    }
                     Instrument.timeRel("WARCIndexerCommand.main#total",
                                        "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
-				}
-			}
-			curInputFile++;
-            Instrument.log(false);
-		}
+                }
+            }
+            curInputFile++;
+            Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
+        }
 
         if (!disableCommit) {
             // Commit the updates:
