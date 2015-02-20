@@ -31,8 +31,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
+import com.typesafe.config.Config;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
@@ -49,16 +51,31 @@ import uk.bl.wa.util.Instrument;
 public class LanguageDetector {
 	private static Log log = LogFactory.getLog(LanguageDetector.class);
 	
-	private static String[] langdetect_profiles = new String[] {
-		"af", "ar", "bg", "bn", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "gu", "he", "hi", "hr", "hu", "id", "it", "ja", "kn", "ko", "lt", "lv", "mk", "ml", "mr", "ne", "nl", "no", "pa", "pl", "pt", "ro", "ru", "sk", "sl", "so", "sq", "sv", "sw", "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw"
+	private static final String[] DEFAULT_LANGDETECT_PROFILES = new String[] {
+            "af", "ar", "bg", "bn", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "gu",
+            "he", "hi", "hr", "hu", "id", "it", "ja", "kn", "ko", "lt", "lv", "mk", "ml", "mr",
+            "ne", "nl", "no", "pa", "pl", "pt", "ro", "ru", "sk", "sl", "so", "sq", "sv", "sw",
+            "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw"
 	};
 
-	public LanguageDetector() {
+    public LanguageDetector(Config conf) {
         final long start = System.nanoTime();
+        if (conf != null && conf.hasPath("warc.index.extract.content.language.langdetectprofiles")) {
+            init(conf.getStringList("warc.index.extract.content.language.langdetectprofiles"));
+        } else {
+            init(Arrays.asList(DEFAULT_LANGDETECT_PROFILES));
+        }
+        Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector#startup", start);
+    }
+
+	public void init(List<String> langdetectProfiles) {
 		// Set up the langdetect:
-		if( DetectorFactory.getLangList().size() == 0 ) {
+		if( DetectorFactory.getLangList().size() != 0 ) {
+            log.info("langdetect already initialized with " + DetectorFactory.getLangList().size() + " profiles");
+            return;
+        }
 		List<String> json_profiles = new ArrayList<String>();
-		for( String lc : langdetect_profiles ) {
+		for( String lc : langdetectProfiles ) {
 			BufferedReader is = new BufferedReader( new InputStreamReader(
 					this.getClass().getResourceAsStream("/lang-detect-profiles/"+lc)
 					) );
@@ -76,14 +93,14 @@ public class LanguageDetector {
 		}
 		try {
 			DetectorFactory.loadProfile(json_profiles);
+            log.info("Initialized with " + langdetectProfiles.size() + " langdetect profiles and "
+                     + LanguageIdentifier.getSupportedLanguages().size() + " Tika LanguageIdentifier profiles");
 		} catch( LangDetectException e) {
 			log.error("Error occurred when loading language profiles:"+e+" Language detection will likely fail. ");
 		}
-		}
-        Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector#startup", start);
 	}
-	
-	/**
+
+    /**
 	 * Detect using the langdetect method.
 	 * 
 	 * @param text
@@ -126,7 +143,7 @@ public class LanguageDetector {
 	 * @throws LangDetectException 
 	 */
 	public static void main(String[] args) throws LangDetectException {
-        LanguageDetector ld = new LanguageDetector();
+        LanguageDetector ld = new LanguageDetector(null);
         System.out.println("Lang: " + ld.detectLanguage("I just wanted to double check that the IP address we need to redirect these to is the IP address of www.webarchive.org.uk.  which is"));
 	}
 
