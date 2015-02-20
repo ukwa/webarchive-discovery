@@ -10,12 +10,12 @@ package uk.bl.wa.analyser.payload;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -62,7 +62,14 @@ public class WARCPayloadAnalysersTest extends TestCase {
                         "arc_orig:sb, arc_harvesttime:2008-02-21T00:35:33.000Z, arc_job:25666, arc_harvest:33, "
                         + "arc_name:25666-33-20080221003533-00046-sb-prod-har-004.arc, "
                         + "arc_full:25666-33-20080221003533-00046-sb-prod-har-004.arc",
-                        "25666-33-20080221003533-00046-sb-prod-har-004.arc"},
+                        "25666-33-20080221003533-00046-sb-prod-har-004.arc"
+                },
+                {
+                        "arc_orig:sb, arc_harvesttime:2007-04-18T02:46:37.000Z, arc_job:15626, arc_harvest:38, "
+                        + "arc_name:15626-38-20070418024637-00385-sb-prod-har-001.statsbiblioteket.dk.arc, "
+                        + "arc_full:/netarkiv/0101/filedir/15626-38-20070418024637-00385-sb-prod-har-001.statsbiblioteket.dk.arc",
+                        "/netarkiv/0101/filedir/15626-38-20070418024637-00385-sb-prod-har-001.statsbiblioteket.dk.arc"
+                },
                 {
                         "arc_orig:kb, arc_harvesttime:2007-04-18T16:37:59.000Z, arc_job:15638, arc_harvest:38, "
                         + "arc_name:15638-38-20070418163759-00235-kb-prod-har-002.kb.dk.arc, "
