@@ -335,6 +335,8 @@ public class WARCIndexerCommand {
                 }
             }
             curInputFile++;
+            Instrument.timeRel("WARCIndexerCommand.main#total",
+                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", start);
             Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
