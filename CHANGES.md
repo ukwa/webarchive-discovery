@@ -5,6 +5,7 @@
 * Performance instrumentation [#46](https://github.com/ukwa/webarchive-discovery/pull/46)
 * Reduced schema to required fields only [#49](https://github.com/ukwa/webarchive-discovery/pull/49)
 * The TikaInputStream must be closed to closed to clean up temp files [#50](https://github.com/ukwa/webarchive-discovery/pull/50)
+* Empty terms should not be added [#55](https://github.com/ukwa/webarchive-discovery/pull/55)
 
 2.0.0
 -----
