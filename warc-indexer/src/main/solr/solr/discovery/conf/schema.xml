@@ -110,13 +110,13 @@
    <field name="subject" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
-   <field name="author" type="string" indexed="true" stored="true"/>
+   <field name="author" type="string" indexed="true" stored="true" docValues="true"/>
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
    <field name="url" type="string" indexed="true" stored="true"/>
-   <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="last_modified" type="date" indexed="true" stored="true"/>
+   <field name="content_type" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
    <field name="last_modified_year" type="string" indexed="true" stored="true"/>
-   <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="links" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- Main body of document extracted by SolrCell.
         NOTE: This field is not indexed by default, since it is also copied to "text"
@@ -124,7 +124,7 @@
         highlighting document content. Use the "text" field to search the content. -->
    <!-- BL: -->
    <field name="content" type="text_general" indexed="false" stored="true" multiValued="true" />
-   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
    <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
@@ -158,33 +158,33 @@
         Values are 'slashpage' (for a hosts homepage), or 'embed' ? -->
    <field name="url_type" type="text_general" indexed="true" stored="true"/>
    <!-- Length of the content, in bytes: -->
-   <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content encoding: -->
-   <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content language - ISO 639 Language Codes: -->
-   <field name="content_language" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_language" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The 'normalised' (simplified) content type: -->
    <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
    
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->   
    <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The ealiest harvest/crawl date, as a date, and also as multi-valued for hash-based ID. -->
-   <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
-   <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
+   <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <!-- The harvest/crawl year (for faceting), and also as multi-valued for hash-based ID. -->
    <field name="crawl_year" type="string" indexed="true" stored="true" multiValued="false"/>
    <field name="crawl_years" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The harvest/crawl year and month, for faceting -->
-   <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The harvest/crawl year, month and day, for faceting -->
-   <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    
    <!-- The domain for this URL: -->
    <field name="host" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The private suffix a.k.a domain for this host: -->
    <field name="domain" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
-   <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    
    <!-- The hostnames of discovered outlinks -->
    <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
@@ -205,10 +205,10 @@
    <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
    
    <!-- Collections this item belongs to (top-level, not sub-collections) -->
-   <field name="collection" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="collection" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    
    <!-- All collections and sub-collections this item belongs to -->
-   <field name="collections" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="collections" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
@@ -229,65 +229,65 @@
    <!-- Format fields -->
 
    <!-- The version of the content type, e.g. '1.4' for PDF-1.4: -->
-   <field name="content_type_version" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_version" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The 'full' content type, e.g. including charset parameters: -->
-   <field name="content_type_full" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_full" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content type, as determined via Apache Tika: -->
-   <field name="content_type_tika" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_tika" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content type, as determined by Droid: -->
-   <field name="content_type_droid" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_droid" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content type, as supplied by the original server: -->
-   <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_served" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content type, as supplied by the URI extension: -->
-   <field name="content_type_ext" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_type_ext" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The first four bytes of the bitstream, suitably hex-encoded as a string ('xxxxxxxx'): -->
-   <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The binary n-grams first few bytes of the bitstream, hex-encoded and space separated ('xx xx xx xx'): -->
    <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The identification of the server that produced the response: -->
-   <field name="server" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="server" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- The software generators or creator tools, that can be determined from the item: -->
-   <field name="generator" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="generator" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- Any Parse Error encountered while attempting to extract metadata and text: -->
-   <field name="parse_error" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="parse_error" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    
    <!-- Results of checking if PDFs are valid PDF/A: -->
    <field name="pdf_pdfa_is_valid" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="pdf_pdfa_errors" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="pdf_pdfa_errors" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    
    <!-- Root namespace of XML documents: -->
-   <field name="xml_root_ns" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="xml_root_ns" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
 
    <!-- Content-based fields -->
    
    <!-- Postcode fields: -->
    <!-- The full postcode, e.g. LS11 5RR. -->
-   <field name="postcode" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="postcode" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <!-- The postcode district, e.g. LS11. -->
-   <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <!-- The locations mentioned in each page. -->
    <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
    
    <!-- Sentiment analysis, as facets and as score: -->
    <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
+   <field name="sentiment_score" type="tfloat" indexed="true" stored="true" multiValued="false"/>
    
    <!-- The size of images, in pixels? or tags/ranges? -->
-   <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false"/>
-   <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false"/>
-   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false"/>
+   <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- Locations of faces detected in the images -->
    <field name='image_faces_count' type='tint' indexed='true' stored='true' multiValued='false'/>
    <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
    <!-- The dominant colours extracted from the images -->
-   <field name='image_colours' type='string' indexed='true' stored='true' multiValued='true'/>
-   <field name='image_dominant_colour' type='string' indexed='true' stored='true' multiValued='false'/>
+   <field name='image_colours' type='string' indexed='true' stored='true' multiValued='true' docValues="true"/>
+   <field name='image_dominant_colour' type='string' indexed='true' stored='true' multiValued='false' docValues="true"/>
 
    <!-- The different HTML elements used by the document -->
-   <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="elements_used" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- Fuzzy hashing for detecting similar content.
         Uses a dynamic field definition to allow for variations in block sizes. -->
@@ -295,7 +295,7 @@
    <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
    
    <!-- Details of any embedded licenses: -->
-   <field name="license_url" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="license_url" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- Store identity of the source file and offset this record came from. -->
    <field name="source_file" type="string" indexed="true" stored="true" />
