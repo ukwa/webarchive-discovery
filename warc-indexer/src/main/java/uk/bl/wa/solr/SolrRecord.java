@@ -152,8 +152,8 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void addField( String solr_property, String value ) {
-		if( value != null )
-			doc.addField( solr_property, sanitizeString(solr_property, value) );
+		if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
+			doc.addField( solr_property, value );
 	}
 
 	/**
@@ -163,8 +163,8 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void setField( String solr_property, String value ) {
-		if( value != null )
-			doc.setField( solr_property, sanitizeString(solr_property, value) );
+        if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
+			doc.setField( solr_property, value );
 	}
 	
 	/**
@@ -174,6 +174,9 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void mergeField( String solr_property, String value ) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("add", value );
 		doc.addField( solr_property, operation);
