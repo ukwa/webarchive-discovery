@@ -25,7 +25,11 @@ package uk.bl.wa.analyser.payload;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
-import java.io.*;
+import java.io.BufferedInputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
@@ -37,13 +41,11 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecordMetaData;
 import org.junit.Test;
 import org.junit.Before;
-import org.junit.Test;
-import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 /**
- * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ * @author Toke Eskildsen <te@statsbiblioteket.dk>
  *
  */
 public class HTMLAnalyserTest {
