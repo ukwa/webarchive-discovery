@@ -67,8 +67,8 @@ public class SolrRecord implements Serializable {
 	public SolrRecord(String filename, ArchiveRecordHeader header) {
 		setField(SolrFields.ID,
 				"exception-at-" + filename + "@" + header.getOffset());
-		setField(SolrFields.SOURCE_FILE, filename);
-		setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
+		setField(SolrFields.SOURCE_FILE, filename + "@" + header.getOffset());
+		// setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
 		setField(SolrFields.SOLR_URL, header.getUrl());
 		setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
 	}
@@ -145,8 +145,8 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void addField( String solr_property, String value ) {
-		if( value != null )
-			doc.addField( solr_property, sanitizeString(solr_property, value) );
+		if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
+			doc.addField( solr_property, value );
 	}
 
 	/**
@@ -156,8 +156,8 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void setField( String solr_property, String value ) {
-		if( value != null )
-			doc.setField( solr_property, sanitizeString(solr_property, value) );
+        if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
+			doc.setField( solr_property, value );
 	}
 	
 	/**
@@ -167,6 +167,9 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
 	public void mergeField( String solr_property, String value ) {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("add", value );
 		doc.addField( solr_property, operation);
