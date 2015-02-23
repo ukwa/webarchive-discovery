@@ -69,7 +69,8 @@ public class HtmlFeatureParser extends AbstractParser {
 	private int max_errors;
 
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
-	public static final String LINK_LIST = "LinkList";
+    // Explicit property to get faster link handling as it allows for set with multiple values (same as LINKS?)
+    public static final Property LINK_LIST = Property.internalTextBag("LinkList");
 	public static final Property LINKS = Property.internalTextBag("LINK-LIST");
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
 	public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
@@ -145,9 +146,10 @@ public class HtmlFeatureParser extends AbstractParser {
 
 		// Get the links (no image links):
 		Set<String> links = this.extractLinks(doc, false);
-		if( links != null && links.size() > 0 )
-			metadata.set(LINK_LIST, StringUtils.join(links, " "));
-		
+		if( links != null && links.size() > 0 ) {
+			metadata.set(LINK_LIST, links.toArray(new String[links.size()]));
+        }
+
 		// Get the publication date, from BBC pages:
 		for( Element meta : doc.select("meta[name=OriginalPublicationDate]") ) {
 			metadata.set(ORIGINAL_PUB_DATE, meta.attr("content"));

@@ -32,6 +32,7 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Property;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.extract.LinkExtractor;
@@ -95,10 +96,10 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
         Instrument.timeRel("HTMLAnalyzer.analyze#total", "HTMLAnalyzer.analyze#parser", start);
 
 		// Process links:
-		String links_list = metadata.get( HtmlFeatureParser.LINK_LIST );
+		String[] links_list = metadata.getValues( HtmlFeatureParser.LINK_LIST );
 		if( links_list != null ) {
 			String lhost, ldomain, lsuffix;
-			for( String link : links_list.split( " " ) ) {
+			for( String link : links_list ) {
 				lhost = LinkExtractor.extractHost( link );
 				if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
 					hosts.add(lhost);
