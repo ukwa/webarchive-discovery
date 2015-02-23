@@ -34,8 +34,8 @@ public interface SolrFields {
 	public static final String ID = "id";
 	public static final String ID_LONG = "id_long";
 	public static final String SOLR_URL = "url";
-	public static final String SOURCE_FILE = "source_file";
-	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
+	public static final String SOURCE_FILE = "source_file_s";
+	// public static final String SOURCE_FILE_OFFSET = "source_file_offset";
 	
 	public static final String SOLR_URL_TYPE = "url_type";
 	public static final String SOLR_URL_TYPE_SLASHPAGE = "slashpage";
