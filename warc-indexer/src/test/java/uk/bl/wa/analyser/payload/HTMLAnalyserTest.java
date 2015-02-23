@@ -40,7 +40,6 @@ import com.typesafe.config.ConfigFactory;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecordMetaData;
 import org.junit.Test;
-import org.junit.Before;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
@@ -49,13 +48,6 @@ import uk.bl.wa.solr.SolrRecord;
  *
  */
 public class HTMLAnalyserTest {
-
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-	}
 
     // NOTE: The number of extract links is 4. This is technically correct, but one of the links are the empty String.
     //       It is not obvious what the value of keeping track of empty links is, so it should be considered to
