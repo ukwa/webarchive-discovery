@@ -43,6 +43,7 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.archive.io.ArchiveRecordHeader;
+
 import uk.bl.wa.util.Instrument;
 
 /**
@@ -67,7 +68,8 @@ public class SolrRecord implements Serializable {
 	public SolrRecord(String filename, ArchiveRecordHeader header) {
 		setField(SolrFields.ID,
 				"exception-at-" + filename + "@" + header.getOffset());
-		setField(SolrFields.SOURCE_FILE, filename + "@" + header.getOffset());
+		setField(SolrFields.SOURCE_FILE, filename);
+		setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
 		setField(SolrFields.SOLR_URL, header.getUrl());
 		setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
 	}

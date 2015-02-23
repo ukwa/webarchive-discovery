@@ -51,8 +51,7 @@ public class OutlinkExtractorMapper extends MapReduceBase implements Mapper<Text
 				outputKey = new Text( year + "\t" + resourceHost );
 
 				Metadata metadata = HtmlFeatureParser.extractMetadata( value.getRecord(), resourceUrl );
-				String[] links = metadata.get( HtmlFeatureParser.LINK_LIST ).split( "\\s+" );
-				for( String link : links ) {
+				for( String link : metadata.getValues( HtmlFeatureParser.LINK_LIST ) ) {
 					matcher = pattern.matcher( link );
 					if( matcher.matches() ) {
 						output.collect( outputKey, new Text( matcher.group( 2 ) ) );

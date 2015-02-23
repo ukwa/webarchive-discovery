@@ -78,11 +78,11 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
+import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
-import uk.bl.wa.util.Instrument;
 
 /**
  * 
@@ -282,8 +282,9 @@ public class WARCIndexer {
 			// --- Basic headers ---
 
 			// Basic metadata:
-			solr.setField(SolrFields.SOURCE_FILE,
-					archiveName + "@" + header.getOffset());
+			solr.setField(SolrFields.SOURCE_FILE, archiveName);
+			solr.setField(SolrFields.SOURCE_FILE_OFFSET,
+					"" + header.getOffset());
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
@@ -504,7 +505,7 @@ public class WARCIndexer {
 			hcis.cleanup();
 
 			// Derive normalised/simplified content type:
-			processContentType(solr, header);
+			processContentType(solr, header, content_length);
 
 			// -----------------------------------------------------
 			// Payload analysis complete, now performing text analysis:
@@ -671,8 +672,10 @@ public class WARCIndexer {
 	 * 
 	 * @param solr
 	 * @param header
+	 * @param content_length
 	 */
-	private void processContentType( SolrRecord solr, ArchiveRecordHeader header ) {
+	private void processContentType(SolrRecord solr,
+			ArchiveRecordHeader header, long content_length) {
 		// Get the current content-type:
 		String contentType = ( String ) solr.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
 
@@ -707,6 +710,10 @@ public class WARCIndexer {
 		// Determine content type:
 		if( contentType != null )
 			solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
+		
+		// If zero-length, then change to application/x-empty for the 'content_type' field.
+		if (content_length == 0)
+			contentType = "application/x-empty";
 
 		// Content-Type can still be null
 		if( contentType != null ) {

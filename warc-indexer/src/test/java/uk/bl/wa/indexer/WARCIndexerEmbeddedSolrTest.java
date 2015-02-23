@@ -112,7 +112,7 @@ public class WARCIndexerEmbeddedSolrTest {
 		String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
 		SolrInputDocument document = new SolrInputDocument();
         document.addField("id", "1");
-        document.addField("name", "my name");
+		document.addField("title", "my title");
         document.addField( "url", url );
 
         System.out.println("Adding document: "+document);
@@ -120,7 +120,7 @@ public class WARCIndexerEmbeddedSolrTest {
         server.commit();
         
         System.out.println("Querying for document...");
-        SolrParams params = new SolrQuery("name:name");
+		SolrParams params = new SolrQuery("title:title");
         QueryResponse response = server.query(params);
         assertEquals(1L, response.getResults().getNumFound());
         assertEquals("1", response.getResults().get(0).get("id"));

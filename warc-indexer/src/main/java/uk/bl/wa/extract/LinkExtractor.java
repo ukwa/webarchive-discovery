@@ -80,7 +80,7 @@ public class LinkExtractor {
 	 * @throws IOException
 	 */
 	public static Set<String> extractPublicSuffixes( Metadata metadata ) throws IOException {
-		String[] links = metadata.get(HtmlFeatureParser.LINK_LIST).split(" ");
+		String[] links = metadata.getValues(HtmlFeatureParser.LINK_LIST);
 		Set<String> suffixes = new HashSet<String>();
 		for( String link : links ) {
 			String suffix = extractPublicSuffix(link);
