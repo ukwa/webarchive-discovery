@@ -1,9 +1,3 @@
-2.2.0
------
-
-* Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
-* Switched to separate fields for the source file and offset references, and dropped the _s suffix.
-
 2.1.0
 -----
 
