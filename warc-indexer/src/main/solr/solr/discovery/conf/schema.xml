@@ -300,7 +300,6 @@
 
    <!-- Store identity of the source file and offset this record came from. -->
    <field name="source_file_s" type="string" indexed="true" stored="true" />
-   <!-- 
    <field name="source_file_offset" type="tint" indexed="true" stored="true" />
    
     <!-- Type used to index the lat and lon components for the "location" FieldType -->
