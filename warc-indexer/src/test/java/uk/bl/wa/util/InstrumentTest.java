@@ -35,7 +35,8 @@ public class InstrumentTest extends TestCase {
         Instrument.time("top", "mid1", 123457);
         Instrument.time("top", "mid2", 123459);
         Instrument.time("mid1", "bottom", 123460);
-        assertTrue("There should be a double indent in\n" + Instrument.getStats(),                   Instrument.getStats().contains("    "));
+        assertTrue("There should be a double indent in\n" + Instrument.getStats(),
+                   Instrument.getStats().contains("    "));
     }
 
 }

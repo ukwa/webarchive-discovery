@@ -46,6 +46,7 @@ public class Instrument {
     private static Log log = LogFactory.getLog(Instrument.class);
 
     private static final Map<String, Stats> trackers = new HashMap<String, Stats>();
+    private static final long classStart = System.nanoTime();
 
     /**
      * Increment the total time for the tracker with the given ID.
@@ -123,10 +124,12 @@ public class Instrument {
         }
 
         public String toString() {
-            return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#)",
+            // % is only correct for single-threaded processing
+            return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#, %.2f%%)",
                                  id, count.get(), time.get()/MD,
                                  time.get() == 0 ? 0 : count.get() / (time.get() / MD),
-                                 count.get() == 0 ? 0 : time.get() / MD / count.get());
+                                 count.get() == 0 ? 0 : time.get() / MD / count.get(),
+                                 time.get() * 100.0 / (System.nanoTime()-classStart));
         }
 
         public void addChild(Stats child) {

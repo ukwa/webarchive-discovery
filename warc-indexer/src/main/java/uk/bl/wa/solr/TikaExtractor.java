@@ -61,6 +61,7 @@ import uk.bl.wa.extract.Times;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import uk.bl.wa.util.Instrument;
 
 
 /**
@@ -186,7 +187,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	 */
 	@SuppressWarnings( "deprecation" )
 	public SolrRecord extract( SolrRecord solr, InputStream is, String url ) throws IOException {
-		
+
 		// Set up the TikaInputStream:
 		TikaInputStream tikainput = null;
 		if( this.maxBytesToParser  > 0 ) {
@@ -200,6 +201,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		if( url != null )
 			metadata.set( Metadata.RESOURCE_NAME_KEY, url);
 
+        final long detectStart = System.nanoTime();
 		StringBuilder detected = new StringBuilder();
 		try {
 			DetectRunner detect = new DetectRunner(tika, tikainput, detected,
@@ -216,6 +218,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			log.error( "Tika.detect(): " + e.getMessage() );
 			addExceptionMetadata(metadata, e);
 		}
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract", "TikaExtractor.extract#detect", detectStart);
+
 		
 		// Only proceed if we have a suitable type:
 		if( !this.checkMime( detected.toString() ) ) {
@@ -237,6 +241,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		context.set( EmbeddedDocumentExtractor.class, embedded );
 		
 		try {
+            final long parseStart = System.nanoTime();
 			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
 			try {
@@ -251,10 +256,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				log.error( "TikaExtractor.parse() - RuntimeException: " + r.getMessage() );
 				addExceptionMetadata(metadata, r);
 			}
-			
+            Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract",
+                               "TikaExtractor.extract#parse", parseStart);
+
 			// If there was a parse error, report it:
 			solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
 
+            final long extractStart = System.nanoTime();
 			// Copy the body text, forcing a UTF-8 encoding:
 			String output = new String( content.toString().getBytes( "UTF-8" ) );
 			if( runner.complete || !output.equals( "" ) ) {
@@ -370,7 +378,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			if( software != null ) {
 				solr.addField(SolrFields.GENERATOR, software);
 			}
-			
+            Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract",
+                               "TikaExtractor.extract#extract", extractStart);
+
 		} catch( Exception e ) {
 			log.error( "TikaExtractor.extract(): " + e.getMessage() );
 		}
