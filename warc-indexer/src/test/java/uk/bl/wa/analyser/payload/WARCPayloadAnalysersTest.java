@@ -38,7 +38,7 @@ public class WARCPayloadAnalysersTest extends TestCase {
     public void testConfig() {
         ARCNameAnalyser ana = getAnalyser();
         assertEquals("The expected number of rules should be created",
-                     1, ana.getRules().size());
+                     7, ana.getRules().size());
         assertEquals("The number of templates for the first rule should be correct",
                      2, ana.getRules().get(0).templates.size());
     }
