@@ -5,4 +5,4 @@ build
 target
 credentials.conf
 *.iml
-warc-solr-test-server
+
