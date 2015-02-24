@@ -48,6 +48,7 @@ import org.jsoup.parser.ParseError;
 import org.jsoup.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
 import uk.bl.wa.util.Instrument;
 
 public class HtmlFeatureParser extends AbstractParser {
@@ -146,7 +147,8 @@ public class HtmlFeatureParser extends AbstractParser {
 
         final long nonJsoupStart = System.nanoTime();
 		// Record the number of errors found:
-		metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
+		if (parser.getErrors() != null)
+			metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
 
 		// Get the links (no image links):
 		Set<String> links = this.extractLinks(doc, false);
@@ -217,7 +219,7 @@ public class HtmlFeatureParser extends AbstractParser {
 		
 		// All a with href
 		for( Element link : doc.select("a[href]") ) {
-			linkset.add( link.attr("abs:href") );
+			linkset.add(link.attr("abs:href"));
 		}
 		// All images:
 		if( includeImgLinks ) {

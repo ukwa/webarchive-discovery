@@ -113,10 +113,11 @@ public class HtmlFeatureParserTest {
 	@Test
 	public void testParseInputStreamContentHandlerMetadataParseContext()
 			throws Exception {
+		String baseUri = "http://en.wikipedia.org/wiki/Mona_Lisa";
 		File ml = new File(
 				"src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
 		URL url = ml.toURI().toURL();
-		innerBasicParseTest(url.openStream(), url.toString(), 43);
+		innerBasicParseTest(url.openStream(), baseUri, 43);
 	}
 
 }
