@@ -296,7 +296,6 @@
    
    <!-- Details of any embedded licenses: -->
    <field name="license_url" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="source_file_s" type="string" indexed="true" stored="true" />
 
    <!-- Store identity of the source file and offset this record came from. -->
    <field name="source_file_s" type="string" indexed="true" stored="true" />
