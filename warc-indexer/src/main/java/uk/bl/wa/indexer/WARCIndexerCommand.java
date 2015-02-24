@@ -100,7 +100,7 @@ public class WARCIndexerCommand {
 		String configFile = null;
 		boolean isTextRequired = false;
 		boolean slashPages = false;
-		int batchSize = 1;
+		int batchSize = -1; // No explicit batch size (defaults to 1 if not stated in the conf-file)
 		String annotationsFile = null;
         boolean disableCommit;
 		
@@ -240,7 +240,11 @@ public class WARCIndexerCommand {
         if (conf.hasPath("warc.solr.disablecommit")) {
             disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
         }
-		
+
+        if (batchSize == -1) { // Batch size not set as command line, so resolve it from conf with default 1
+            batchSize = conf.hasPath("warc.solr.batch_size") ? conf.getInt("warc.solr.batch_size") : 1;
+        }
+
 		// Set up the server config:
 		SolrWebServer solrWeb = new SolrWebServer(conf);
 		
@@ -262,74 +266,79 @@ public class WARCIndexerCommand {
         Instrument.timeRel("WARCIndexerCommand.main#total",
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
-		for( String inputFile : args ) {
+        for (int arcsIndex = 0; arcsIndex < args.length; arcsIndex++) {
+            String inputFile = args[arcsIndex];
             if (!disableCommit) {
                 // Commit to make sure index is up to date:
                 commit(solrWeb);
             }
 
-			System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
-			File inFile = new File(inputFile);
-			String fileName = inFile.getName();
-			String outputWarcDir = outputDir + fileName + "//";
-			File dir = new File(outputWarcDir);
-	   		if(!dir.exists() && solrUrl == null){
-	   			FileUtils.forceMkdir(dir);
-	   		}
-			
-			ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
-			Iterator<ArchiveRecord> ir = reader.iterator();
-			int recordCount = 1;
-			
-			// Iterate though each record in the WARC file
-			while( ir.hasNext() ) {
+            System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
+            File inFile = new File(inputFile);
+            String fileName = inFile.getName();
+            String outputWarcDir = outputDir + fileName + "//";
+            File dir = new File(outputWarcDir);
+            if (!dir.exists() && solrUrl == null) {
+                FileUtils.forceMkdir(dir);
+            }
+
+            ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
+            Iterator<ArchiveRecord> ir = reader.iterator();
+            int recordCount = 1;
+
+            // Iterate though each record in the WARC file
+            while (ir.hasNext()) {
                 final long recordStart = System.nanoTime();
-				ArchiveRecord rec = ir.next();
-				SolrRecord doc = new SolrRecord(inFile.getName(),
-						rec.getHeader());
-				try {
-					doc = windex.extract(inFile.getName(), rec, isTextRequired);
-				} catch (Exception e) {
-					log.warn("Exception on record "+rec.getHeader().getUrl()+ " from "+inFile.getName(), e);
-					doc.addParseException(e);
-					continue;
-				} catch (OutOfMemoryError e) {
-					log.warn(
-							"OutOfMemoryError on record "
-									+ rec.getHeader().getUrl() + " from "
-									+ inFile.getName(), e);
-					doc.addParseException(e);
-				}
+                ArchiveRecord rec = ir.next();
+                SolrRecord doc = new SolrRecord(inFile.getName(),
+                                                rec.getHeader());
+                try {
+                    doc = windex.extract(inFile.getName(), rec, isTextRequired);
+                } catch (Exception e) {
+                    log.warn("Exception on record " + rec.getHeader().getUrl() + " from " + inFile.getName(), e);
+                    doc.addParseException(e);
+                    continue;
+                } catch (OutOfMemoryError e) {
+                    log.warn(
+                            "OutOfMemoryError on record "
+                            + rec.getHeader().getUrl() + " from "
+                            + inFile.getName(), e);
+                    doc.addParseException(e);
+                }
 
-				if( doc != null ) {
+                Instrument.timeRel("WARCIndexerCommand.main#total",
+                                   "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
+                if (doc != null) {
+                    final long updateStart = System.nanoTime();
+                    File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
+
+                    if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
+                                        doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
+                        // Write XML to file if not posting straight to the server.
+                        if (solrUrl == null) {
+                            writeXMLToFile(doc.toXml(), fileOutput);
+                        } else {
+                            // Post to Solr
+                            try {
+                                docs.add(doc.getSolrDocument());
+                                checkSubmission(solrWeb, docs, batchSize);
+                            } catch (SolrServerException s) {
+                                log.warn("SolrServerException: " + inputFile, s);
+                            } catch (IOException i) {
+                                log.warn("IOException: " + inputFile, i);
+                            }
+                        }
+                        recordCount++;
+                    }
                     Instrument.timeRel("WARCIndexerCommand.main#total",
-                                       "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
-					File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
-					
-					if( !slashPages || ( doc.getFieldValue( SolrFields.SOLR_URL_TYPE ) != null &&
-									     doc.getFieldValue( SolrFields.SOLR_URL_TYPE ).equals( SolrFields.SOLR_URL_TYPE_SLASHPAGE ) ) ) {
-						// Write XML to file if not posting straight to the server.
-						if(solrUrl == null) {
-							writeXMLToFile(doc.toXml(), fileOutput);
-						}else{
-							// Post to Solr
-							try {
-								docs.add( doc.getSolrDocument() );
-								checkSubmission( solrWeb, docs, batchSize );
-							} catch( SolrServerException s ) {
-								log.warn( "SolrServerException: " + inputFile, s );
-							} catch( IOException i ) {
-								log.warn( "IOException: " + inputFile, i );
-							}
-						}
-						recordCount++;
-					}
-
-				}			
-			}
-			curInputFile++;
-            Instrument.log(false);
-		}
+                                       "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
+                }
+            }
+            curInputFile++;
+            Instrument.timeRel("WARCIndexerCommand.main#total",
+                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", start);
+            Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
+        }
 
         if (!disableCommit) {
             // Commit the updates:
@@ -368,7 +377,10 @@ public class WARCIndexerCommand {
 	 */
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
+            final long start = System.nanoTime();
 			solr.add( docs );
+            Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#docdelivery",
+                               "WARCIndexerCommanc.checkSubmission#solradd", start);
             docs.clear();
 		}
 	}

@@ -393,7 +393,7 @@ public class WARCIndexer {
 			tikainput = hcis.getInputStream();
 			String hash = hcis.getHash();
             Instrument.timeRel("WARCIndexer.extract#total",
-                               "WARCIndexer.extract#hashstreamwrap", start);
+                               "WARCIndexer.extract#hashstreamwrap", hashStreamStart);
 
 			// Prepare crawl date information:
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
@@ -674,7 +674,6 @@ public class WARCIndexer {
 	 * @param solr
 	 * @param header
 	 * @param content_length
-	 * @param serverType
 	 */
 	private void processContentType(SolrRecord solr,
 			ArchiveRecordHeader header, long content_length) {

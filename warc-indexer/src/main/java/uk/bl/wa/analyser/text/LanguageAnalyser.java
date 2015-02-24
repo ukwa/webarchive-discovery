@@ -43,13 +43,17 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
 	private Log log = LogFactory.getLog(LanguageAnalyser.class);
 	
 	/** */
-	private LanguageDetector ld = new LanguageDetector();
+	private final LanguageDetector ld;
 
+    private final boolean enabled;
 	/**
 	 * @param conf
 	 */
 	public LanguageAnalyser(Config conf) {
-		log.info("Constructing...");
+        enabled = !conf.hasPath("warc.index.extract.content.language.enabled") ||
+                  conf.getBoolean("warc.index.extract.content.language.enabled");
+        ld = new LanguageDetector(conf);
+		log.info("Constructed language analyzer with enabled = " + enabled);
 	}
 
 	/* (non-Javadoc)
@@ -57,6 +61,9 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
 	 */
 	@Override
 	public void analyse(String text, SolrRecord solr) {
+        if (!enabled) {
+            return;
+        }
         final long start = System.nanoTime();
 		String li = ld.detectLanguage( text );
 		if( li != null ) {
