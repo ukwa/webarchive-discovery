@@ -49,10 +49,7 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public class HTMLAnalyserTest {
 
-    // NOTE: The number of extract links is 4. This is technically correct, but one of the links are the empty String.
-    //       It is not obvious what the value of keeping track of empty links is, so it should be considered to
-    //       remove those links. From a larger perspective, this could be argues for all fields, so maybe the check
-    //       for the empty String should be done at the SolrRecord level.
+     // NOTE: The number of extract links is 3. This is correct as the empty String shuld be discarded.
 	@Test
     public void testLinksExtraction() throws IOException {
         final URL SAMPLE_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.html");
@@ -78,6 +75,6 @@ public class HTMLAnalyserTest {
         in.mark((int) SAMPLE.length());
         ha.analyse(header, in, solr);
         assertEquals("The number of links should be correct",
-                     4, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+                     3, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
     }
 }
