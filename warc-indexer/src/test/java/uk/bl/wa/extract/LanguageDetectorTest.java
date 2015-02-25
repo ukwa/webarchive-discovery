@@ -21,18 +21,16 @@ package uk.bl.wa.extract;
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
+import junit.framework.TestCase;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+
+import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
+
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.archive.io.ArchiveRecordHeader;
-import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
-import uk.bl.wa.solr.SolrRecord;
-
-import java.util.Map;
-import java.util.Set;
 
 public class LanguageDetectorTest extends TestCase {
     private static Log log = LogFactory.getLog(LanguageDetectorTest.class);
@@ -40,6 +38,7 @@ public class LanguageDetectorTest extends TestCase {
     public void testLangdetectConfig() {
         Config conf = ConfigFactory.parseURL(
                 Thread.currentThread().getContextClassLoader().getResource("arcnameanalyser.conf"));
+		log.info("Initialising LanguageDetector using " + conf);
         new LanguageDetector(conf);
         assertEquals("The number of langdetect language profiles after initialization should match config",
                      conf.getStringList("warc.index.extract.content.language.langdetectprofiles").size(),
