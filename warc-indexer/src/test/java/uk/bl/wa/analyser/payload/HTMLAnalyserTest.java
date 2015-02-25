@@ -49,7 +49,7 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public class HTMLAnalyserTest {
 
-     // NOTE: The number of extract links is 3. This is correct as the empty String shuld be discarded.
+    // NOTE: The number of extract links is 3. This is correct as the empty String shuld be discarded.
 	@Test
     public void testLinksExtraction() throws IOException {
         final URL SAMPLE_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.html");
