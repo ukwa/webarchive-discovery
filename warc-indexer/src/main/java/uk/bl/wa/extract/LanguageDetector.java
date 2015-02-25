@@ -51,7 +51,7 @@ import uk.bl.wa.util.Instrument;
 public class LanguageDetector {
 	private static Log log = LogFactory.getLog(LanguageDetector.class);
 	
-	private static final String[] DEFAULT_LANGDETECT_PROFILES = new String[] {
+	public static final String[] DEFAULT_LANGDETECT_PROFILES = new String[] {
             "af", "ar", "bg", "bn", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "gu",
             "he", "hi", "hr", "hu", "id", "it", "ja", "kn", "ko", "lt", "lv", "mk", "ml", "mr",
             "ne", "nl", "no", "pa", "pl", "pt", "ro", "ru", "sk", "sl", "so", "sq", "sv", "sw",

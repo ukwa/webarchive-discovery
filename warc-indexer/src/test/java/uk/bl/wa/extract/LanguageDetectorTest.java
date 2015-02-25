@@ -25,27 +25,29 @@ import com.cybozu.labs.langdetect.DetectorFactory;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
-import uk.bl.wa.solr.SolrRecord;
 
 import java.util.Map;
 import java.util.Set;
 
 public class LanguageDetectorTest extends TestCase {
-    private static Log log = LogFactory.getLog(LanguageDetectorTest.class);
 
     public void testLangdetectConfig() {
-        Config conf = ConfigFactory.parseURL(
-                Thread.currentThread().getContextClassLoader().getResource("arcnameanalyser.conf"));
+        DetectorFactory.clear();
+        testLangdetectConfig("arcnameanalyser.conf", 8, 2);
+        DetectorFactory.clear();
+        testLangdetectConfig("reference.conf", LanguageDetector.DEFAULT_LANGDETECT_PROFILES.length, 2);
+    }
+
+    private void testLangdetectConfig(String config, int expectedLangdetect, int expectedTika) {
+        Config conf = ConfigFactory.parseURL(Thread.currentThread().getContextClassLoader().getResource(config));
         new LanguageDetector(conf);
-        assertEquals("The number of langdetect language profiles after initialization should match config",
-                     conf.getStringList("warc.index.extract.content.language.langdetectprofiles").size(),
-                     DetectorFactory.getLangList().size());
+
+        assertEquals("The number of langdetect language profiles after initialization should match config " + config,
+                     expectedLangdetect, DetectorFactory.getLangList().size());
         // Defined in tika.language.override.properties
-        assertEquals("The number of Tika LanguageIdentifier profiles after initialization should be as expected",
-                     2, LanguageIdentifier.getSupportedLanguages().size());
+        assertEquals("The number of Tika LanguageIdentifier profiles after initialization should be as expected when "
+                     + "using config " + config,
+                     expectedTika, LanguageIdentifier.getSupportedLanguages().size());
     }
 }
