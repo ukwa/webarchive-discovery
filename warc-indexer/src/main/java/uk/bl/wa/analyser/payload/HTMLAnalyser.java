@@ -50,7 +50,7 @@ import uk.bl.wa.util.Instrument;
 public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private static Log log = LogFactory.getLog( HTMLAnalyser.class );
 
-	private HtmlFeatureParser hfp = new HtmlFeatureParser();
+	private HtmlFeatureParser hfp;
 	private boolean extractLinkDomains;
 	private boolean extractLinkHosts;
 	private boolean extractLinks;
@@ -65,6 +65,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		log.info("HTML - Extract domain links " + this.extractLinkDomains);
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
 		log.info("HTML - Extract elements used " + this.extractElementsUsed);
+        hfp = new HtmlFeatureParser(conf);
 	}
 	/**
 	 *  JSoup link extractor for (x)html, deposit in 'links' field.

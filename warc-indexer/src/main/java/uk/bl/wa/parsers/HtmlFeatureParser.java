@@ -32,6 +32,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -41,6 +43,7 @@ import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -54,7 +57,7 @@ import uk.bl.wa.util.Instrument;
 public class HtmlFeatureParser extends AbstractParser {
 
 	/** */
-	private static final long serialVersionUID = 1631417895901342813L;
+	private static final long serialVersionUID = 1631417895901342814L;
 
 	private static Log log = LogFactory.getLog(HtmlFeatureParser.class);
 	
@@ -69,6 +72,7 @@ public class HtmlFeatureParser extends AbstractParser {
 	private Parser parser = Parser.xmlParser();
 	// Max errors to returm:
 	private int max_errors;
+    private final boolean normaliseLinks;
 
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
     // Explicit property to get faster link handling as it allows for set with multiple values (same as LINKS?)
@@ -80,12 +84,22 @@ public class HtmlFeatureParser extends AbstractParser {
 			.internalInteger("Html-Parse-Error-Count");
 	public static final int DEFAULT_MAX_PARSE_ERRORS = 1000;
 
+    // Setting this to true also adds the field url_norm to the Solr document in WARCIndexer
+    public static final String CONF_LINKS_NORMALISE = "warc.index.extract.linked.normalise";
+    public static final boolean DEFAULT_LINKS_NORMALISE = false;
+
 	/**
 	 * 
 	 */
-	public HtmlFeatureParser() {
-		this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
-	}
+    public HtmlFeatureParser() {
+        this(ConfigFactory.empty());
+   	}
+    public HtmlFeatureParser(Config conf) {
+           normaliseLinks = conf.hasPath(CONF_LINKS_NORMALISE) ?
+                   conf.getBoolean(CONF_LINKS_NORMALISE) :
+                   DEFAULT_LINKS_NORMALISE;
+   		this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
+    }
 
 	/**
 	 * 
@@ -212,19 +226,19 @@ public class HtmlFeatureParser extends AbstractParser {
 	 * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
 	 * @param baseUri base URI for the page, for resolving relative links. e.g. "http://www.example.com/"
 	 * @return
-	 * @throws IOException
+	 * @throws java.io.IOException
 	 */
 	private Set<String> extractLinks( Document doc, boolean includeImgLinks ) throws IOException {
 		Set<String> linkset = new HashSet<String>();
 		
 		// All a with href
 		for( Element link : doc.select("a[href]") ) {
-			linkset.add(link.attr("abs:href"));
+			linkset.add( normaliseLink(link.attr("abs:href")));
 		}
 		// All images:
 		if( includeImgLinks ) {
 			for( Element link : doc.select("img[src]") ) {
-				linkset.add( link.attr("abs:src") );
+				linkset.add( normaliseLink(link.attr("abs:src")));
 			}
 		}
 		// Example of use: all PNG references...
@@ -234,7 +248,17 @@ public class HtmlFeatureParser extends AbstractParser {
 		return linkset;
 	}
 
-	public static Metadata extractMetadata( InputStream in, String url ) {
+    /**
+     * Normalises links if the parser has been configured to do so.
+     * @param link a link from a HTML document.
+     * @return the link in normalised form or the unchanged link if normalisation has not been enabled.
+     */
+    public String normaliseLink(String link) {
+        return normaliseLinks ? linkNormaliser.canonicalize(link) : link;
+    }
+    private final AggressiveUrlCanonicalizer linkNormaliser = new AggressiveUrlCanonicalizer();
+
+    public static Metadata extractMetadata( InputStream in, String url ) {
 		HtmlFeatureParser hfp = new HtmlFeatureParser();
 		Metadata metadata = new Metadata();
 		metadata.set(Metadata.RESOURCE_NAME_KEY, url);
