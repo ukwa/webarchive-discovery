@@ -34,6 +34,8 @@ public interface SolrFields {
 	public static final String ID = "id";
 	public static final String ID_LONG = "id_long";
 	public static final String SOLR_URL = "url";
+    // Intended for building links-graphs. Normalised the same way as SOLR_LINKS
+    public static final String SOLR_URL_NORMALISED = "url_norm";
 	public static final String SOURCE_FILE = "source_file_s";
 	// public static final String SOURCE_FILE_OFFSET = "source_file_offset";
 	
@@ -126,5 +128,5 @@ public interface SolrFields {
 	public static final String IMAGE_FACES_COUNT = "image_faces_count";
 	public static final String IMAGE_COLOURS = "image_colours";
 	public static final String IMAGE_DOMINANT_COLOUR = "image_dominant_colour";
-	
+
 }
