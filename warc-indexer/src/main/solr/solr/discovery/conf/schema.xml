@@ -155,6 +155,8 @@
    <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
         that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
    <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
+   <!-- The underyling WARC record type -->
+   <field name="record_type" type="string" indexed="false" stored="true" multiValued="false"/>
    <!-- The url_type is used to distinguish certain URLs, e.g. so they can be 'title level records'.
         Values are 'slashpage' (for a hosts homepage), or 'embed' ? -->
    <field name="url_type" type="text_general" indexed="true" stored="true"/>
@@ -245,6 +247,8 @@
    <field name="content_ffb" type="string" indexed="true" stored="true" multiValued="false"/>
    <!-- The binary n-grams first few bytes of the bitstream, hex-encoded and space separated ('xx xx xx xx'): -->
    <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
+   <!-- The raw metadata discovered by characterisation -->
+   <field name="content_metadata_ss" type="string" indexed="true" stored="true" multiValued="true"/>
    
    <!-- The identification of the server that produced the response: -->
    <field name="server" type="string" indexed="true" stored="true" multiValued="true"/>
@@ -271,6 +275,8 @@
    <field name="postcode_district" type="string" indexed="true" stored="true" multiValued="true"/>
    <!-- The locations mentioned in each page. -->
    <field name="locations" type="location" indexed="true" stored="true" multiValued="true"/>
+   <!-- Type used to index the lat and lon components for the "location" FieldType -->
+   <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" />
    
    <!-- Sentiment analysis, as facets and as score: -->
    <field name="sentiment" type="string" indexed="true" stored="true" multiValued="false"/>
@@ -302,9 +308,6 @@
    <field name="source_file_s" type="string" indexed="true" stored="true" />
    <field name="source_file_offset" type="tint" indexed="true" stored="true" />
    
-    <!-- Type used to index the lat and lon components for the "location" FieldType -->
-    <!-- This dynamic field is used, but we can not find where in the code it is defined-->
-   <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" />
    <!-- wa.bl.uk fields end --> 
    
  </fields>
