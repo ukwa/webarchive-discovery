@@ -269,7 +269,9 @@ public class WARCIndexer {
 				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
-			} // else we're processing ARCs
+				solr.setField(SolrFields.SOLR_RECORD_TYPE,
+						(String) header.getHeaderValue(HEADER_KEY_TYPE));
+			} // else we're processing ARCs so nothing to filter and no revists
 
 			if( header.getUrl() == null )
 				return null;
@@ -485,6 +487,13 @@ public class WARCIndexer {
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
 				revisited.mergeField(SolrFields.CRAWL_YEARS,
 						extractYear(header.getDate()));
+				revisited.setField(SolrFields.SOLR_URL, fullUrl);
+				revisited.setField(SolrFields.WAYBACK_DATE, waybackDate);
+				String payloadDigest = (String) header
+						.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST);
+				revisited.setField(SolrFields.HASH, payloadDigest);
+				revisited.setField(SolrFields.SOLR_RECORD_TYPE,
+						(String) header.getHeaderValue(HEADER_KEY_TYPE));
 				return revisited;
 			}
 			
