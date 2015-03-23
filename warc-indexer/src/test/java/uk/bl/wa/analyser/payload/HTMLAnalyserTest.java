@@ -34,14 +34,15 @@ import java.net.URL;
 import java.util.HashMap;
 import java.util.Map;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecordMetaData;
 import org.junit.Test;
+
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 /**
  * @author Toke Eskildsen <te@statsbiblioteket.dk>
@@ -49,7 +50,8 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public class HTMLAnalyserTest {
 
-    // NOTE: The number of extract links is 3. This is correct as the empty String shuld be discarded.
+	// NOTE: The number of extract links is 4. This is correct as the empty
+	// String should be discarded.
 	@Test
     public void testLinksExtraction() throws IOException {
         final URL SAMPLE_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.html");
@@ -74,7 +76,17 @@ public class HTMLAnalyserTest {
         InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());
         in.mark((int) SAMPLE.length());
         ha.analyse(header, in, solr);
-        assertEquals("The number of links should be correct",
-                     3, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+
+		// Check number of links:
+		assertEquals("The number of links should be correct", 4,
+				solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+
+        // Check hosts are canonicalized:
+		assertEquals("The number of hosts should be correct", 1,
+				solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
+		String host = (String) solr.getField(SolrFields.SOLR_LINKS_HOSTS)
+				.getFirstValue();
+		assertEquals("The host should be formatted correct", "example.org",
+				host);
     }
 }
