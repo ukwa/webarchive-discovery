@@ -1,9 +1,10 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-     <parent>
-             <groupId>uk.bl.wa.discovery</groupId>
-                   <artifactId>warc-discovery</artifactId>
-                         <version>2.0.1-SNAPSHOT</version>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+   <modelVersion>4.0.0</modelVersion>
+   <parent>
+      <groupId>uk.bl.wa.discovery</groupId>
+      <artifactId>warc-discovery</artifactId>
+      <version>2.0.1-SNAPSHOT</version>
       <relativePath>..</relativePath>
    </parent>
    <artifactId>digipres-tika</artifactId>
@@ -43,6 +44,27 @@
                <strictCheck>true</strictCheck>
             </configuration>
          </plugin>
+         <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+            <configuration>
+               <descriptorRefs>
+                  <descriptorRef>jar-with-dependencies</descriptorRef>
+               </descriptorRefs>
+               <archive>
+                  <manifest>
+                     <mainClass>uk.bl.wa.dpt.DigiPresTika</mainClass>
+                  </manifest>
+               </archive>
+            </configuration>
+            <executions>
+               <execution>
+                  <phase>package</phase>
+                  <goals>
+                     <goal>single</goal>
+                  </goals>
+               </execution>
+            </executions>
+         </plugin>
       </plugins>
    </build>
    <dependencies>
@@ -61,10 +83,10 @@
          <artifactId>tika-parsers</artifactId>
          <version>${tika.version}</version>
          <exclusions>
-         	<exclusion>
-         		<artifactId>slf4j-api</artifactId>
-         		<groupId>org.slf4j</groupId>
-         	</exclusion>
+            <exclusion>
+               <artifactId>slf4j-api</artifactId>
+               <groupId>org.slf4j</groupId>
+            </exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -124,10 +146,10 @@
          <artifactId>nanite-core</artifactId>
          <version>1.1.6-81</version>
          <exclusions>
-         	<exclusion>
-         		<artifactId>slf4j-api</artifactId>
-         		<groupId>org.slf4j</groupId>
-         	</exclusion>
+            <exclusion>
+               <artifactId>slf4j-api</artifactId>
+               <groupId>org.slf4j</groupId>
+            </exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -141,8 +163,8 @@
                <groupId>commons-io</groupId>
             </exclusion>
             <exclusion>
-            	<artifactId>slf4j-api</artifactId>
-            	<groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+               <groupId>org.slf4j</groupId>
             </exclusion>
             <exclusion>
                <artifactId>guava</artifactId>
