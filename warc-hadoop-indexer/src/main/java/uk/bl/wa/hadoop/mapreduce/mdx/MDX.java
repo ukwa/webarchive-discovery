@@ -38,6 +38,9 @@ public class MDX {
 	private String ts;
 
 	@JsonProperty
+	private String recordType;
+
+	@JsonProperty
 	private Map<String, List<String>> properties = new HashMap<String, List<String>>();
 
 	/**
@@ -93,6 +96,21 @@ public class MDX {
 	}
 
 
+
+	/**
+	 * @return the record_type
+	 */
+	public String getRecordType() {
+		return recordType;
+	}
+
+	/**
+	 * @param record_type
+	 *            the record_type to set
+	 */
+	public void setRecordType(String recordType) {
+		this.recordType = recordType;
+	}
 
 	/**
 	 * @return the properties
@@ -156,6 +174,8 @@ public class MDX {
 		m.setHash(solr.getFieldValue(SolrFields.HASH).toString());
 		m.setUrl(solr.getFieldValue(SolrFields.SOLR_URL).toString());
 		m.setTs(solr.getFieldValue(SolrFields.WAYBACK_DATE).toString());
+		m.setRecordType(solr.getFieldValue(SolrFields.SOLR_RECORD_TYPE)
+				.toString());
 		// Pass though Solr fields:
 		for( String f : solr.getSolrDocument().getFieldNames() ) {
 			SolrInputField v = solr.getSolrDocument().get(f);

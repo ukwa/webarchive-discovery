@@ -31,7 +31,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 	private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
 
 	static enum MyCounters {
-		NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS
+		NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS, NUM_REVISTS
 	}
 
 	private String mapTaskId;
@@ -137,10 +137,10 @@ public class WARCMDXMapper extends MapReduceBase implements
 			// Allow processing to continue if a record causes OOME:
 			LOG.error("OOME " + e.getClass().getName() + ": " + e.getMessage()
 					+ "; " + header.getUrl() + "; " + header.getOffset());
+			// Store the exception:
+			solr.addParseException(e);
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
-			// Store it:
-			solr.addParseException(e);
 		}
 
 		// Strip out text:
@@ -152,12 +152,17 @@ public class WARCMDXMapper extends MapReduceBase implements
 		if (hash != null) {
 			Text oKey = new Text(hash);
 			MDX mdx = MDX.fromWritabelSolrRecord(solr);
+			// Separate out revisit records:
+			if ("revisit".equals(mdx.getRecordType())) {
+				reporter.incrCounter(MyCounters.NUM_REVISTS, 1);
+			}
 			Text result = new Text(mdx.toJSON());
 			output.collect(oKey, result);
 		} else {
 			LOG.warn("Hash is null for " + header.getMimetype() + " - "
 					+ header.getUrl() + " "
 					+ header.getReaderIdentifier());
+			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 		}
 
 		// Occasionally update application-level status

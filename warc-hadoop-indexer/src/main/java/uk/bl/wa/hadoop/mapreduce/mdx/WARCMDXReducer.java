@@ -1,7 +1,9 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -21,7 +23,7 @@ public class WARCMDXReducer extends MapReduceBase implements
 	private static Log log = LogFactory.getLog(WARCMDXReducer.class);
 
 	static enum MyCounters {
-		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS
+		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS
 	}
 
 	public WARCMDXReducer() {
@@ -52,14 +54,40 @@ public class WARCMDXReducer extends MapReduceBase implements
 		// Go through the documents for this shard:
 		long noValues = 0;
 		Text map;
+		MDX mdx;
+		List<MDX> revisits = new ArrayList<MDX>();
+		List<Text> mdxs = new ArrayList<Text>();
 		while (values.hasNext()) {
 			map = values.next();
 			noValues++;
+			mdx = MDX.fromJSONString(map.toString());
+			
+			if( "revist".equals(mdx.getRecordType())) {
+				revisits.add(mdx);
+				log.info("Resolving... " + key + " " + map);
+			} else {
+				mdxs.add(map);
+				log.info("Recording... " + key + " " + map);
+			}
+			
+		}
+		
+		// Merge/resolve:
+		if (mdxs.size() == 0) {
+			log.warn("Could not resolve revists for " + key);
+			reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
+		} else {
+			for (MDX rmdx : revisits) {
+				// FIXME Add a reconstituted MDX to the output:
+				rmdx.getHash();
+			}
+		}
 
-			log.info("Passing " + key + " " + map);
+		// Now collect...
+		for (Text tmdx : mdxs) {
 
 			// Post-process:
-			output.collect(key,map);
+			output.collect(key, tmdx);
 			
 			// Report:
 			reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
