@@ -258,10 +258,6 @@
                <artifactId>antlr-runtime</artifactId>
                <groupId>org.antlr</groupId>
             </exclusion>
-            <exclusion>
-               <artifactId>guava</artifactId>
-               <groupId>com.google.guava</groupId>
-            </exclusion>
          </exclusions>
       </dependency>      
       <dependency>
@@ -298,6 +294,10 @@
             <exclusion>
                <artifactId>logback-classic</artifactId>
                <groupId>ch.qos.logback</groupId>
+            </exclusion>
+            <exclusion>
+               <artifactId>guava</artifactId>
+               <groupId>com.google.guava</groupId>
             </exclusion>
          </exclusions>
       </dependency>
