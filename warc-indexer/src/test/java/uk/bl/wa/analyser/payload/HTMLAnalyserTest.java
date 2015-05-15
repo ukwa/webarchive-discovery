@@ -86,7 +86,17 @@ public class HTMLAnalyserTest {
 				solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
 		String host = (String) solr.getField(SolrFields.SOLR_LINKS_HOSTS)
 				.getFirstValue();
-		assertEquals("The host should be formatted correct", "example.org",
+		assertEquals("The host should be formatted correctly", "example.org",
 				host);
+		// The domains and suffixes too:
+		String domain = (String) solr.getField(SolrFields.SOLR_LINKS_DOMAINS)
+				.getFirstValue();
+		assertEquals("The domain should be formatted correctly", "example.org",
+				domain);
+		String suffix = (String) solr.getField(
+				SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES).getFirstValue();
+		assertEquals("The suffix should be formatted correctly", "org",
+				suffix);
+
     }
 }
