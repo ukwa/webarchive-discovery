@@ -17,7 +17,7 @@
       </license>
    </licenses>
    <properties>
-      <tika.version>1.7</tika.version>
+      <tika.version>1.8</tika.version>
       <jdk.version>1.6</jdk.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
@@ -144,7 +144,7 @@
       <dependency>
          <groupId>eu.scape-project.nanite</groupId>
          <artifactId>nanite-core</artifactId>
-         <version>1.1.6-81</version>
+         <version>1.1.6-82</version>
          <exclusions>
             <exclusion>
                <artifactId>slf4j-api</artifactId>

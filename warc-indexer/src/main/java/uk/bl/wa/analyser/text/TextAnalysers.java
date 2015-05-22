@@ -28,11 +28,11 @@ package uk.bl.wa.analyser.text;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.typesafe.config.Config;
-
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
+
+import com.typesafe.config.Config;
 
 /**
  * @author anj
@@ -45,18 +45,41 @@ public class TextAnalysers {
 	 */
 	private List<AbstractTextAnalyser> analysers = new ArrayList<AbstractTextAnalyser>();
 
-	protected TextAnalysers() {
-	}
+	public TextAnalysers(Config conf) {
 
-	public TextAnalysers( Config conf ) {
-		
+		// Add the language analyser:
 		analysers.add( new LanguageAnalyser(conf) );
+
+		// Add the postcode extractor:
+		if (!conf.hasPath("warc.index.extract.content.text_extract_postcodes")
+				|| conf.getBoolean("warc.index.extract.content.text_extract_postcodes"))
 		analysers.add( new PostcodeAnalyser(conf) );
-		analysers.add( new FuzzyHashAnalyser(conf) );
+
+		// Add the ssdeep hasher:
+		if (!conf.hasPath("warc.index.extract.content.text_fuzzy_hash")
+				|| conf.getBoolean("warc.index.extract.content.text_fuzzy_hash"))
+			analysers.add(new FuzzyHashAnalyser(conf));
+
+		// NLP analysers:
+
 		// This runs ok, but does not give very good results:
-		//analysers.add( new SentimentJTextAnalyser() );
+		if (conf.hasPath("warc.index.extract.content.text_sentimentj")
+				&& conf.getBoolean("warc.index.extract.content.text_sentimentj")) {
+			analysers.add(new SentimentJTextAnalyser(conf));
+		}
+
 		// This runs very slowly, but should give good results:
-		//analysers.add( new StanfordAnalyser() );
+		if (conf.hasPath("warc.index.extract.content.text_stanford_ner")
+				&& conf.getBoolean("warc.index.extract.content.text_stanford_ner")) {
+			analysers.add(new StanfordAnalyser(conf));
+		}
+
+		// TODO Add GATE
+		/*
+		 * if (conf.hasPath("warc.index.extract.content.text_gate") &&
+		 * conf.getBoolean("warc.index.extract.content.text_gate")) {
+		 * analysers.add(new GateTextAnalyser(conf)); }
+		 */
 	}
 	
 	/**

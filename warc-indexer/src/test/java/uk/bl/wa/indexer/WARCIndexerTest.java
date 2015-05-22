@@ -203,6 +203,8 @@ public class WARCIndexerTest {
 			recordCount++;
 			if( doc == null ) {
 				nullCount++;
+			} else {
+				// System.out.println("DOC: " + doc.toXml());
 			}
 		}
 		

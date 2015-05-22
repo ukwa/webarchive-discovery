@@ -16,7 +16,9 @@
  limitations under the License.
 -->
 
+<!-- BL: set schema name -->
 <schema name="webarchive-discovery" version="1.5">
+<!-- :BL -->
 
  <fields>
    <field name="_version_" type="long" indexed="true" stored="true"/>
@@ -32,8 +34,14 @@
        "content_type": From the HTTP headers of incoming stream
        "resourcename": From SolrCell request param resource.name
    -->
+   <!-- BL: changed title multiValued to false -->
    <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
+   <!-- :BL -->
+
+   <!-- BL: added multiValued true to subject -->
    <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
+   <!-- :BL -->
+
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
    <field name="author" type="text_general" indexed="true" stored="true"/>
@@ -41,10 +49,8 @@
    <field name="category" type="text_general" indexed="true" stored="true"/>
    <field name="resourcename" type="text_general" indexed="true" stored="true"/>
    <field name="url" type="text_general" indexed="true" stored="true"/>
-   <field name="url_norm" type="string" indexed="true" stored="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true"/>
    <field name="last_modified" type="date" indexed="true" stored="true"/>
-   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true"/>
 
    <!-- Main body of document extracted by SolrCell.
@@ -58,6 +64,8 @@
    <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
    <!-- BL fields: -->
+   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
+
    <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
    <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
@@ -221,24 +229,23 @@
  </fields>
 
 
-   <uniqueKey>id</uniqueKey>
+ <uniqueKey>id</uniqueKey>
+
+ <solrQueryParser defaultOperator="AND"/>
 
 
-   <solrQueryParser defaultOperator="AND"/>
-
-
-   <!-- BL copyFields: -->
-   <!-- Metadata fields to add to default search: -->
-   <copyField source="title" dest="text"/>
-   <copyField source="author" dest="text"/>
-   <copyField source="keywords" dest="text"/>
-   <copyField source="description" dest="text"/>
-   <copyField source="wct_title" dest="text"/>
-   <copyField source="wct_description" dest="text"/>
-   <copyField source="url" dest="text"/>
-   <!-- Also copy in the actual text payload to ensure it is actually indexed: -->
-   <copyField source="content" dest="text"/> 
-   <!-- :BL -->
+ <!-- BL copyFields: -->
+ <!-- Metadata fields to add to default search: -->
+ <copyField source="title" dest="text"/>
+ <copyField source="author" dest="text"/>
+ <copyField source="keywords" dest="text"/>
+ <copyField source="description" dest="text"/>
+ <copyField source="wct_title" dest="text"/>
+ <copyField source="wct_description" dest="text"/>
+ <copyField source="url" dest="text"/>
+ <!-- Also copy in the actual text payload to ensure it is actually indexed: -->
+ <copyField source="content" dest="text"/> 
+ <!-- :BL -->
 
 
  <types>
