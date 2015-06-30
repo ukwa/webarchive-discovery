@@ -29,19 +29,20 @@ import java.io.InputStream;
 import java.util.HashSet;
 import java.util.Set;
 
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
-import org.apache.tika.metadata.Property;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
-import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -50,11 +51,13 @@ import uk.bl.wa.util.Instrument;
 public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private static Log log = LogFactory.getLog( HTMLAnalyser.class );
 
-	private HtmlFeatureParser hfp = new HtmlFeatureParser();
+	private HtmlFeatureParser hfp;
 	private boolean extractLinkDomains;
 	private boolean extractLinkHosts;
 	private boolean extractLinks;
 	private boolean extractElementsUsed;
+
+	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	public HTMLAnalyser( Config conf ) {
 		this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
@@ -65,6 +68,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		log.info("HTML - Extract domain links " + this.extractLinkDomains);
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
 		log.info("HTML - Extract elements used " + this.extractElementsUsed);
+        hfp = new HtmlFeatureParser(conf);
 	}
 	/**
 	 *  JSoup link extractor for (x)html, deposit in 'links' field.
@@ -118,8 +122,22 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 			}
 			// Store the data from the links:
 			if( this.extractLinkHosts ) {
+				Set<String> cHostSet = new HashSet<String>();
                 for (String host: hosts) {
-					solr.addField( SolrFields.SOLR_LINKS_HOSTS, host );
+					// Canonicalise the host:
+					String cHost;
+					try {
+						cHost = canon.urlStringToKey(host).replace("/", "");
+					} catch (URIException e) {
+						log.error("Failed to canonicalise host: " + host + ": "
+								+ e);
+						cHost = host;
+					}
+					cHostSet.add(cHost);
+				}
+				// Store the unique hosts:
+				for (String host : cHostSet) {
+					solr.addField(SolrFields.SOLR_LINKS_HOSTS, host);
 				}
 			}
 			if( this.extractLinkDomains ) {

@@ -18,7 +18,7 @@
   * The Tika language detection speed improvement [Tika #29](https://github.com/apache/tika/pull/29) has been temporarily copied in order to benefit from the speed without having to use the yet-unreleased Tika 1.8.
   * Some trivial speed-improvements were added by replacing String.replaceAll with precompiled Patterns.
   * Extraction of meta-data from the ARC path has been added: ARCNameAnalyser. The unit test demonstrates how job-names and other data can be extracted.
-
+  * Optional link and URL normalisation [yika #60](https://github.com/ukwa/webarchive-discovery/pull/60) 
 
 2.0.0
 -----

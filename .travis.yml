@@ -1,6 +1,8 @@
 language: java
+
 jdk:
   - oraclejdk7
+
 before_script:
  - "echo $JAVA_OPTS"
  - "export JAVA_OPTS=-Xmx2048m"
@@ -11,3 +13,5 @@ before_script:
  - "umask 022"
  - "mkdir inputs"
 
+notifications:
+  slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk

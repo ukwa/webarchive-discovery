@@ -74,6 +74,7 @@ import uk.bl.wa.analyser.text.TextAnalysers;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.extract.LinkExtractor;
+import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
@@ -127,6 +128,10 @@ public class WARCIndexer {
 	/** Annotations */
 	private Annotator ant = null;
 
+    // Paired with HtmlFeatureParsers links-extractor
+    private final boolean addNormalisedURL;
+    private final AggressiveUrlCanonicalizer urlNormaliser = new AggressiveUrlCanonicalizer();
+
 	/* ------------------------------------------------------------ */
 
 	/**
@@ -157,6 +162,9 @@ public class WARCIndexer {
 		log.info("Store text = " + storeText);
 		this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
 		log.info("hashUrlId = " + hashUrlId);
+        addNormalisedURL = conf.hasPath(HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
+                conf.getBoolean(HtmlFeatureParser.CONF_LINKS_NORMALISE) :
+                HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
 		this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
 		if( this.hashUrlId == false && this.checkSolrForDuplicates == true ) {
 			log.warn("Checking Solr for duplicates may not work as expected when using the timestamp+md5(URL) key.");
@@ -261,7 +269,9 @@ public class WARCIndexer {
 				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
-			} // else we're processing ARCs
+				solr.setField(SolrFields.SOLR_RECORD_TYPE,
+						(String) header.getHeaderValue(HEADER_KEY_TYPE));
+			} // else we're processing ARCs so nothing to filter and no revists
 
 			if( header.getUrl() == null )
 				return null;
@@ -288,11 +298,17 @@ public class WARCIndexer {
 			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
 			String md5hex = new String( Base64.encodeBase64( md5digest ) );
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
+            if (addNormalisedURL) {
+                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(fullUrl) );
+            }
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
 
 			// Also pull out the file extension, if any:
-			solr.addField( SolrFields.CONTENT_TYPE_EXT, parseExtension( fullUrl ) );
+			String resourceName = parseResourceName(fullUrl);
+			solr.addField(SolrFields.RESOURCE_NAME, resourceName);
+			solr.addField(SolrFields.CONTENT_TYPE_EXT,
+					parseExtension(resourceName));
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			// Trac #2271: replace string-splitting with URI-based methods.
 			URL url = null;
@@ -473,6 +489,13 @@ public class WARCIndexer {
 				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
 				revisited.mergeField(SolrFields.CRAWL_YEARS,
 						extractYear(header.getDate()));
+				revisited.setField(SolrFields.SOLR_URL, fullUrl);
+				revisited.setField(SolrFields.WAYBACK_DATE, waybackDate);
+				String payloadDigest = (String) header
+						.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST);
+				revisited.setField(SolrFields.HASH, payloadDigest);
+				revisited.setField(SolrFields.SOLR_RECORD_TYPE,
+						(String) header.getHeaderValue(HEADER_KEY_TYPE));
 				return revisited;
 			}
 			
@@ -579,29 +602,40 @@ public class WARCIndexer {
 		}
 	}
 
+
 	/**
 	 * 
 	 * @param fullUrl
 	 * @return
 	 */
-	protected static String parseExtension( String fullUrl ) {
+	protected static String parseResourceName(String fullUrl) {
 		if( fullUrl.lastIndexOf( "/" ) != -1 ) {
-			String path = fullUrl.substring( fullUrl.lastIndexOf( "/" ) );
+			String path = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);
 			if( path.indexOf( "?" ) != -1 ) {
 				path = path.substring( 0, path.indexOf( "?" ) );
 			}
 			if( path.indexOf( "&" ) != -1 ) {
 				path = path.substring( 0, path.indexOf( "&" ) );
 			}
-			if( path.indexOf( "." ) != -1 ) {
-				String ext = path.substring( path.lastIndexOf( "." ) );
-				ext = ext.toLowerCase();
-				// Avoid odd/malformed extensions:
-				// if( ext.contains("%") )
-				// ext = ext.substring(0, path.indexOf("%"));
-				ext = ext.replaceAll( "[^0-9a-z]", "" );
-				return ext;
-			}
+			return path;
+		}
+		return null;
+	}
+
+	/**
+	 * 
+	 * @param fullUrl
+	 * @return
+	 */
+	protected static String parseExtension(String path) {
+		if (path != null && path.indexOf(".") != -1) {
+			String ext = path.substring(path.lastIndexOf("."));
+			ext = ext.toLowerCase();
+			// Avoid odd/malformed extensions:
+			// if( ext.contains("%") )
+			// ext = ext.substring(0, path.indexOf("%"));
+			ext = ext.replaceAll("[^0-9a-z]", "");
+			return ext;
 		}
 		return null;
 	}

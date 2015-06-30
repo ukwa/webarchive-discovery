@@ -34,15 +34,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import com.typesafe.config.Config;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+
+import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
+import uk.bl.wa.util.Instrument;
 
 import com.cybozu.labs.langdetect.Detector;
 import com.cybozu.labs.langdetect.DetectorFactory;
 import com.cybozu.labs.langdetect.LangDetectException;
-import uk.bl.wa.analyser.text.lang.LanguageIdentifier;
-import uk.bl.wa.util.Instrument;
+import com.typesafe.config.Config;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -51,7 +52,7 @@ import uk.bl.wa.util.Instrument;
 public class LanguageDetector {
 	private static Log log = LogFactory.getLog(LanguageDetector.class);
 	
-	private static final String[] DEFAULT_LANGDETECT_PROFILES = new String[] {
+	public static final String[] DEFAULT_LANGDETECT_PROFILES = new String[] {
             "af", "ar", "bg", "bn", "cs", "da", "de", "el", "en", "es", "et", "fa", "fi", "fr", "gu",
             "he", "hi", "hr", "hu", "id", "it", "ja", "kn", "ko", "lt", "lv", "mk", "ml", "mr",
             "ne", "nl", "no", "pa", "pl", "pt", "ro", "ru", "sk", "sl", "so", "sq", "sv", "sw",
@@ -62,8 +63,10 @@ public class LanguageDetector {
         final long start = System.nanoTime();
         if (conf != null && conf.hasPath("warc.index.extract.content.language.langdetectprofiles")) {
             init(conf.getStringList("warc.index.extract.content.language.langdetectprofiles"));
+			log.info("Initialising LanguageDetector using app configuration.");
         } else {
             init(Arrays.asList(DEFAULT_LANGDETECT_PROFILES));
+			log.info("Initialising LanguageDetector using library defaults.");
         }
         Instrument.timeRel("LanguageAnalyzer#total", "LanguageDetector#startup", start);
     }

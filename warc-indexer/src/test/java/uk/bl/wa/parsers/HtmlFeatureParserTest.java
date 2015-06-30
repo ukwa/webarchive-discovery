@@ -30,7 +30,10 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.HashMap;
+import java.util.Map;
 
+import com.typesafe.config.ConfigFactory;
 import junit.framework.Assert;
 
 import org.apache.tika.exception.TikaException;
@@ -79,6 +82,37 @@ public class HtmlFeatureParserTest {
 		innerBasicParseTest(stream, baseUri, 2);
 	}
 
+    @Test
+    public void testNormalise() {
+        final String[][] TESTS = new String[][] { // Expected, input
+//                {"http://example.org", "http://www.example.org"},
+                {"http://example.org/foo", "http://www.example.org/foo"},
+                {"http://example.org", "http://example.org"},
+                {"http://example.org", "http://example.org?"},
+                //{"http://example.org", "https://example.org?"},
+                {"http://example.org", "http://user@example.org"},
+                {"http://example.org/foo", "http://user@www.example.org/foo"},
+//                {"http://example.org", "http://user@www.example.org"},
+                {"http://example.org", "http://eXample.org"},
+                {"http://example.org", "http://example.ORG"},
+//                {"http://example.org", "http://example.org/"},
+//                {"http://example.org", "http://example.org/index.html"}
+        };
+        Map<String, String> normMap = new HashMap<String, String>();
+        normMap.put(HtmlFeatureParser.CONF_LINKS_NORMALISE, "true");
+        HtmlFeatureParser normParser = new HtmlFeatureParser(ConfigFactory.parseMap(normMap));
+
+        normMap.put(HtmlFeatureParser.CONF_LINKS_NORMALISE, "false");
+        HtmlFeatureParser skipParser = new HtmlFeatureParser(ConfigFactory.parseMap(normMap));
+
+        for (String[] test: TESTS) {
+            Assert.assertEquals("Normalisation of '" + test[1] + "'",
+                                test[0], normParser.normaliseLink(test[1]));
+            Assert.assertEquals("Non-normalisation of '" + test[1] + "'",
+                                test[1], skipParser.normaliseLink(test[1]));
+        }
+    }
+
 	private static void printMetadata(Metadata metadata) {
 		for (String name : metadata.names()) {
 			for (String value : metadata.getValues(name)) {
@@ -113,10 +147,11 @@ public class HtmlFeatureParserTest {
 	@Test
 	public void testParseInputStreamContentHandlerMetadataParseContext()
 			throws Exception {
+		String baseUri = "http://en.wikipedia.org/wiki/Mona_Lisa";
 		File ml = new File(
 				"src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
 		URL url = ml.toURI().toURL();
-		innerBasicParseTest(url.openStream(), url.toString(), 43);
+		innerBasicParseTest(url.openStream(), baseUri, 43);
 	}
 
 }
