@@ -36,8 +36,8 @@ public interface SolrFields {
 	public static final String SOLR_URL = "url";
 	public static final String SOURCE_FILE = "source_file";
 	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
-        // Intended for building links-graphs. Normalised the same way as SOLR_LINKS
-        public static final String SOLR_URL_NORMALISED = "url_norm";
+	// Intended for building links-graphs. Normalised the same way as SOLR_LINKS
+	public static final String SOLR_URL_NORMALISED = "url_norm";
 	public static final String RESOURCE_NAME = "resourcename"; // type=text_general
 	
 	public static final String SOLR_URL_TYPE = "url_type";
@@ -96,7 +96,7 @@ public interface SolrFields {
 	public static final String SOLR_EXTRACTED_TEXT = "content";
 	public static final String SOLR_EXTRACTED_TEXT_NOT_STORED = "text";
 	public static final String SOLR_EXTRACTED_TEXT_LENGTH = "content_text_length";
-	public static final String SOLR_TIKA_METADATA = "content_metadata_ss";
+	public static final String SOLR_TIKA_METADATA = "content_metadata";
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String CRAWL_DATE = "crawl_date";
 	public static final String CRAWL_DATES = "crawl_dates";

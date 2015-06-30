@@ -37,6 +37,9 @@
    <!-- BL: changed title multiValued to false -->
    <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
    <!-- :BL -->
+   <!-- BL: changed to string rather than text_general -->
+   <field name="resourcename" type="string" indexed="true" stored="true"/>
+   <!-- :BL -->
 
    <!-- BL: added multiValued true to subject -->
    <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -46,12 +49,13 @@
    <field name="comments" type="text_general" indexed="true" stored="true"/>
    <field name="author" type="string" indexed="true" stored="true" docValues="true"/>
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
+   <!-- BL: Changed to string and tdate rather than text_general and date... -->
    <field name="url" type="string" indexed="true" stored="true" docValues="true"/>
    <field name="url_norm" type="string" indexed="true" stored="true" docValues="true"/>
    <field name="content_type" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
    <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
-   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
    <field name="links" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <!-- :BL -->
 
    <!-- Main body of document extracted by SolrCell.
         NOTE: This field is not indexed by default, since it is also copied to "text"
@@ -59,10 +63,9 @@
         highlighting document content. Use the "text" field to search the content. -->
    <!-- BL: -->
    <field name="content" type="text_general" indexed="false" stored="true" multiValued="true" />
-   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    
    <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
-   <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
+   <field name="content_metadata_text" type="text_general" indexed="true" stored="false" multiValued="false"/>
 
    <!-- catchall field, containing all other searchable text fields (implemented
         via copyField further on in this schema  -->
@@ -70,11 +73,8 @@
 
    <!-- BL fields: -->
    <field name="last_modified_year" type="string" indexed="true" stored="true"/>
-
-   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
-   <!-- A general field to deposit metadata into so it can be searched even when unstructured. -->
-   <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
-
+   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   
    <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
         that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
    <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
@@ -165,7 +165,7 @@
    <!-- The binary n-grams first few bytes of the bitstream, hex-encoded and space separated ('xx xx xx xx'): -->
    <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
    <!-- The raw metadata discovered by characterisation -->
-   <field name="content_metadata_ss" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="content_metadata" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
 
    <!-- The identification of the server that produced the response: -->
    <field name="server" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
