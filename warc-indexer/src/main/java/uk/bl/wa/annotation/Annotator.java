@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -53,6 +54,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jdom.JDOMException;
 
+import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;
 
 /**
@@ -110,11 +112,12 @@ public class Annotator {
 		// within the range set by the Collection.
 		// So get all the dates:
 		// Get all the dates:
-		Set<Date> crawl_dates = new HashSet<Date>();
-		crawl_dates.add((Date) solr.getField(SolrFields.CRAWL_DATE).getValue());
+		Set<String> crawl_dates = new HashSet<String>();
+		crawl_dates.add((String) solr.getField(SolrFields.CRAWL_DATE)
+				.getValue());
 		if (solr.getField(SolrFields.CRAWL_DATES) != null) {
 			for (Object d : solr.getField(SolrFields.CRAWL_DATES).getValues()) {
-				crawl_dates.add((Date) d);
+				crawl_dates.add((String) d);
 			}
 		}
 
@@ -157,10 +160,17 @@ public class Annotator {
 	 * @param solr
 	 */
 	private void updateCollections(UriCollection collection,
-			SolrInputDocument solr, Set<Date> dates) {
+			SolrInputDocument solr, Set<String> crawl_dates) {
 
 		// Loop over all the dates:
-		for (Date date : dates) {
+		for (String dateString : crawl_dates) {
+			Date date;
+			try {
+				date = WARCIndexer.formatter.parse(dateString);
+			} catch (ParseException e) {
+				LOG.error("Could not parse " + dateString);
+				continue;
+			}
 
 			LOG.debug("Using collection: " + collection);
 			// Update the single, main collection

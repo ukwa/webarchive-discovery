@@ -24,6 +24,7 @@ package uk.bl.wa.annotation;
 
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import org.codehaus.jackson.annotate.JsonProperty;
 
@@ -70,6 +71,13 @@ public class DateRange {
 	private Date getDistantFutureDate() {
 		Calendar calendar = Calendar.getInstance();
 		calendar.set(Calendar.YEAR, 9999);
+		calendar.set(Calendar.MONTH, Calendar.DECEMBER);
+		calendar.set(Calendar.DAY_OF_MONTH, 30);
+		calendar.set(Calendar.HOUR_OF_DAY, 23);
+		calendar.set(Calendar.MINUTE, 59);
+		calendar.set(Calendar.SECOND, 59);
+		calendar.set(Calendar.MILLISECOND, 999);
+		calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
 		return calendar.getTime();
 	}
 }

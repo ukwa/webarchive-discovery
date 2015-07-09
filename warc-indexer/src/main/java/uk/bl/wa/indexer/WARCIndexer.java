@@ -473,7 +473,8 @@ public class WARCIndexer {
 			dateList.add(crawlDate);
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
-			solr.getSolrDocument().setField(SolrFields.CRAWL_DATE, firstDate);
+			solr.getSolrDocument().setField(SolrFields.CRAWL_DATE,
+					formatter.format(firstDate));
 			solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
 			
 			// Use the current value as the waybackDate:

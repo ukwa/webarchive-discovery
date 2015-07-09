@@ -29,12 +29,14 @@ import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.Map;
+import java.util.TimeZone;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.solr.common.SolrInputDocument;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;
 
 public class AnnotatorTest {
@@ -60,9 +62,20 @@ public class AnnotatorTest {
 		//
 		URI uri = URI.create(uriString);
 		//
+		// Get the calendar instance.
+		Calendar calendar = Calendar.getInstance();
+		// Set the time for the notification to occur.
+		calendar.set(Calendar.YEAR, 2013);
+		calendar.set(Calendar.MONTH, 6);
+		calendar.set(Calendar.DAY_OF_MONTH, 17);
+		calendar.set(Calendar.HOUR_OF_DAY, 10);
+		calendar.set(Calendar.MINUTE, 45);
+		calendar.set(Calendar.SECOND, 0);
+		calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+		//
 		SolrInputDocument solr = new SolrInputDocument();
-		Date d = Calendar.getInstance().getTime();
-		solr.setField(SolrFields.CRAWL_DATE, d);
+		Date d = calendar.getTime();
+		solr.setField(SolrFields.CRAWL_DATE, WARCIndexer.formatter.format(d));
 		solr.setField(SolrFields.SOLR_URL, uri);
 		//
 		annotator.applyAnnotations(uri, solr);
