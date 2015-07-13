@@ -59,6 +59,9 @@ public class LanguageDetector {
             "ta", "te", "th", "tl", "tr", "uk", "ur", "vi", "zh-cn", "zh-tw"
 	};
 
+	// Only take the first 100,000 characters:
+	private static final int MAX_TEXT_LEN = 100 * 1000;
+
     public LanguageDetector(Config conf) {
         final long start = System.nanoTime();
         if (conf != null && conf.hasPath("warc.index.extract.content.language.langdetectprofiles")) {
@@ -123,6 +126,10 @@ public class LanguageDetector {
 	public String detectLanguage( String text ) {
         final long start = System.nanoTime();
         try {
+			// Avoid ngramming totally massive texts:
+			if (text != null && text.length() > MAX_TEXT_LEN) {
+				text = text.substring(0, MAX_TEXT_LEN);
+			}
             // Attept to use Tika module first (should be good for long texts)
             LanguageIdentifier li = new LanguageIdentifier(text);
             // Only return that result if it's credible:
