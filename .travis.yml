@@ -13,5 +13,7 @@ before_script:
  - "umask 022"
  - "mkdir inputs"
 
+sudo: false
+
 notifications:
   slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk
