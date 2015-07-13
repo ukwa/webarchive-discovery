@@ -169,7 +169,8 @@ public class WARCPayloadAnalysers {
 				solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
 			} catch( Exception i ) {
 				// Note that DROID complains about some URLs with an IllegalArgumentException.
-				log.error( i + ": " + i.getMessage() + ";dd; " + header.getUrl() + " @" + header.getOffset() );
+				log.error(i + ": " + i.getMessage() + ";dd; " + header.getUrl()
+						+ " @" + header.getOffset(), i);
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                "WARCPayloadAnalyzers.analyze#droid", droidStart);

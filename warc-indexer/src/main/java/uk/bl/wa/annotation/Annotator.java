@@ -117,7 +117,9 @@ public class Annotator {
 				.getValue());
 		if (solr.getField(SolrFields.CRAWL_DATES) != null) {
 			for (Object d : solr.getField(SolrFields.CRAWL_DATES).getValues()) {
-				crawl_dates.add((String) d);
+				@SuppressWarnings("unchecked")
+				HashMap<String, String> dhm = (HashMap<String, String>) d;
+				crawl_dates.addAll(dhm.values());
 			}
 		}
 

@@ -68,6 +68,9 @@ import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFacto
 import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalysers;
@@ -295,8 +298,10 @@ public class WARCIndexer {
 			solr.setField(SolrFields.SOURCE_FILE, archiveName);
 			solr.setField(SolrFields.SOURCE_FILE_OFFSET,
 					"" + header.getOffset());
-			byte[] md5digest = md5.digest( fullUrl.getBytes( "UTF-8" ) );
-			String md5hex = new String( Base64.encodeBase64( md5digest ) );
+			byte[] url_md5digest = md5.digest(fullUrl.getBytes("UTF-8"));
+			// String url_base64 =
+			// Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
+			String url_md5hex = Base64.encodeBase64String(url_md5digest);
 			solr.setField( SolrFields.SOLR_URL, fullUrl );
             if (addNormalisedURL) {
                 solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(fullUrl) );
@@ -413,14 +418,14 @@ public class WARCIndexer {
 			// Prepare crawl date information:
 			String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
 			Date crawlDate =  getWaybackDate( waybackDate );
-			String crawlDateString = parseCrawlDate( waybackDate );
+			String crawlDateString = parseCrawlDate(waybackDate);
 			
 			// Optionally use a hash-based ID to store only one version of a URL:
 			String id = null;
 			if( hashUrlId ) {
-				id = hash + "/" + md5hex;
+				id = hash + "/" + url_md5hex;
 			} else {
-				id = waybackDate + "/" + md5hex;
+				id = url_md5hex + "/" + waybackDate;
 			}
 			// Set these last:
 			solr.setField( SolrFields.ID, id );
@@ -430,42 +435,49 @@ public class WARCIndexer {
 			// Payload has been cached, ready to check crawl dates:
 			// -----------------------------------------------------
 			
-			// Query for currently known crawl dates:
 			HashSet<Date> currentCrawlDates = new HashSet<Date>();
-			if( this.checkSolrForDuplicates && solrServer != null ) {
-				SolrQuery q = new SolrQuery("id:\""+id+"\"");
-				q.addField(SolrFields.CRAWL_DATES);
-				try {
-					QueryResponse results = solrServer.query(q);
-					if( results.getResults().size() > 0 ) {
-						SolrDocument fr = results.getResults().get(0);
-						if( fr.containsKey(SolrFields.CRAWL_DATES)) {
-							for( Object cds : fr.getFieldValues(SolrFields.CRAWL_DATES) ) {
-								currentCrawlDates.add((Date) cds);
+			// If we are collapsing records based on hash:
+			if (hashUrlId) {
+				// Query for currently known crawl dates:
+				if (this.checkSolrForDuplicates && solrServer != null) {
+					SolrQuery q = new SolrQuery("id:\"" + id + "\"");
+					q.addField(SolrFields.CRAWL_DATES);
+					try {
+						QueryResponse results = solrServer.query(q);
+						if (results.getResults().size() > 0) {
+							SolrDocument fr = results.getResults().get(0);
+							if (fr.containsKey(SolrFields.CRAWL_DATES)) {
+								for (Object cds : fr
+										.getFieldValues(SolrFields.CRAWL_DATES)) {
+									currentCrawlDates.add((Date) cds);
+								}
 							}
+						} else {
+							log.debug("No matching entries found.");
 						}
-					} else {
-						log.debug("No matching entries found.");
+					} catch (SolrServerException e) {
+						e.printStackTrace();
+						// FIXME retry?
 					}
-				} catch (SolrServerException e) {
-					e.printStackTrace();
-					// FIXME retry?
 				}
-			}
-			
-			// Is the current date unknown? (inc. no-solr-check case):
-			if( ! currentCrawlDates.contains(crawlDate) ) {
-				//  Dates to be merged under the CRAWL_DATES field:
-				solr.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-				solr.mergeField(SolrFields.CRAWL_YEARS,
-						extractYear(header.getDate()));
-			} else {
-				// Otherwise, ensure the all the known dates (i.e. including this one) are copied over:
-				for( Date ccd : currentCrawlDates ) {
-					solr.addField( SolrFields.CRAWL_DATES, formatter.format(ccd) );
-					solr.addField(SolrFields.CRAWL_YEARS, getYearFromDate(ccd));
+
+				// Is the current date unknown? (inc. no-solr-check case):
+				if (!currentCrawlDates.contains(crawlDate)) {
+					// Dates to be merged under the CRAWL_DATES field:
+					solr.mergeField(SolrFields.CRAWL_DATES, crawlDateString);
+					solr.mergeField(SolrFields.CRAWL_YEARS,
+							extractYear(header.getDate()));
+				} else {
+					// Otherwise, ensure the all the known dates (i.e. including
+					// this one) are copied over:
+					for (Date ccd : currentCrawlDates) {
+						solr.addField(SolrFields.CRAWL_DATES,
+								formatter.format(ccd));
+						solr.addField(SolrFields.CRAWL_YEARS,
+								getYearFromDate(ccd));
+					}
+					// TODO This could optionally skip re-submission instead?
 				}
-				// TODO This could optionally skip re-submission instead?
 			}
 			
 			// Sort the dates and find the earliest:
@@ -473,7 +485,7 @@ public class WARCIndexer {
 			dateList.add(crawlDate);
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
-			solr.getSolrDocument().setField(SolrFields.CRAWL_DATE,
+			solr.setField(SolrFields.CRAWL_DATE,
 					formatter.format(firstDate));
 			solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
 			
@@ -487,9 +499,19 @@ public class WARCIndexer {
 				}
 				SolrRecord revisited = new SolrRecord();
 				revisited.setField( SolrFields.ID, id );
-				revisited.mergeField( SolrFields.CRAWL_DATES, crawlDateString );
-				revisited.mergeField(SolrFields.CRAWL_YEARS,
+				// Store crawl-date appropriately depending on whether records
+				// are collapsing on (hash+url) or not:
+				if (hashUrlId) {
+					revisited.mergeField(SolrFields.CRAWL_DATES,
+							crawlDateString);
+					revisited.mergeField(SolrFields.CRAWL_YEARS,
+							extractYear(header.getDate()));
+				} else {
+					revisited
+							.mergeField(SolrFields.CRAWL_DATE, crawlDateString);
+					revisited.mergeField(SolrFields.CRAWL_YEAR,
 						extractYear(header.getDate()));
+				}
 				revisited.setField(SolrFields.SOLR_URL, fullUrl);
 				revisited.setField(SolrFields.WAYBACK_DATE, waybackDate);
 				String payloadDigest = (String) header
@@ -682,7 +704,10 @@ public class WARCIndexer {
 	 * @return
 	 */
 	protected static String parseCrawlDate( String waybackDate ) {
-		return formatter.format( getWaybackDate( waybackDate ) );
+		DateTimeFormatter iso_df = ISODateTimeFormat.dateTimeNoMillis()
+				.withZone(DateTimeZone.UTC);
+		return iso_df.print(new org.joda.time.DateTime(
+				getWaybackDate(waybackDate)));
 	}
 
 	/**

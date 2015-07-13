@@ -39,6 +39,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
@@ -51,6 +53,8 @@ import uk.bl.wa.util.Instrument;
  *
  */
 public class SolrRecord implements Serializable {
+
+	private static Log log = LogFactory.getLog(SolrRecord.class);
 
 	private static final long serialVersionUID = -4556484652176976470L;
 	
@@ -179,7 +183,7 @@ public class SolrRecord implements Serializable {
         }
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("add", value );
-		doc.addField( solr_property, operation);
+		doc.addField(solr_property, operation);
 	}
 
 	/**

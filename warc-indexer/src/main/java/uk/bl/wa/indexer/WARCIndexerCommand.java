@@ -55,6 +55,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.client.solrj.SolrServerException;
+import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
@@ -64,11 +65,11 @@ import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
-import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -83,6 +84,8 @@ public class WARCIndexerCommand {
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
 	
+	private static boolean debugMode = true;
+
 	/**
 	 * 
 	 * @param args
@@ -378,7 +381,21 @@ public class WARCIndexerCommand {
 	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
 		if( docs.size() > 0 && docs.size() >= limit ) {
             final long start = System.nanoTime();
-			solr.add( docs );
+			if (log.isDebugEnabled() || debugMode) {
+				for (SolrInputDocument doc : docs) {
+					try {
+						solr.updateSolrDoc(doc);
+					} catch (Exception e) {
+						log.error("Failed to post document - got exception: ",
+								e);
+						log.error("Failed document was:\n"
+								+ ClientUtils.toXML(doc));
+						System.exit(1);
+					}
+				}
+			} else {
+				solr.add(docs);
+			}
             Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#docdelivery",
                                "WARCIndexerCommanc.checkSubmission#solradd", start);
             docs.clear();
