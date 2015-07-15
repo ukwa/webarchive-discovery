@@ -72,17 +72,17 @@
    <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
    <!-- BL fields: -->
-   <field name="last_modified_year" type="string" indexed="true" stored="true"/>
+   <field name="last_modified_year" type="string" indexed="true" stored="true" docValues="true"/>
    <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    
    <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
         that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
    <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
    <!-- The underyling WARC record type -->
-   <field name="record_type" type="string" indexed="false" stored="true" multiValued="false"/>
+   <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The url_type is used to distinguish certain URLs, e.g. so they can be 'title level records'.
         Values are 'slashpage' (for a hosts homepage), or 'embed' ? -->
-   <field name="url_type" type="text_general" indexed="true" stored="true"/>
+   <field name="url_type" type="string" indexed="true" stored="true" docValues="true"/>
    <!-- Length of the content, in bytes: -->
    <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content encoding: -->

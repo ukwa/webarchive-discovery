@@ -84,7 +84,7 @@ public class WARCIndexerCommand {
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
 	private static final String CLI_FOOTER = "";
 	
-	private static boolean debugMode = true;
+	private static boolean debugMode = false;
 
 	/**
 	 * 
@@ -321,15 +321,8 @@ public class WARCIndexerCommand {
                         if (solrUrl == null) {
                             writeXMLToFile(doc.toXml(), fileOutput);
                         } else {
-                            // Post to Solr
-                            try {
                                 docs.add(doc.getSolrDocument());
-                                checkSubmission(solrWeb, docs, batchSize);
-                            } catch (SolrServerException s) {
-                                log.warn("SolrServerException: " + inputFile, s);
-                            } catch (IOException i) {
-                                log.warn("IOException: " + inputFile, i);
-                            }
+							checkSubmission(solrWeb, docs, batchSize, false);
                         }
                         recordCount++;
                     }
@@ -343,6 +336,8 @@ public class WARCIndexerCommand {
             Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
+		// Submit any remaining docs:
+		checkSubmission(solrWeb, docs, batchSize, true);
         if (!disableCommit) {
             // Commit the updates:
             commit(solrWeb);
@@ -378,27 +373,37 @@ public class WARCIndexerCommand {
 	 * @throws SolrServerException
 	 * @throws IOException
 	 */
-	private static void checkSubmission( SolrWebServer solr, List<SolrInputDocument> docs, int limit ) throws SolrServerException, IOException {
-		if( docs.size() > 0 && docs.size() >= limit ) {
-            final long start = System.nanoTime();
-			if (log.isDebugEnabled() || debugMode) {
-				for (SolrInputDocument doc : docs) {
-					try {
-						solr.updateSolrDoc(doc);
-					} catch (Exception e) {
-						log.error("Failed to post document - got exception: ",
-								e);
-						log.error("Failed document was:\n"
-								+ ClientUtils.toXML(doc));
-						System.exit(1);
+	private static void checkSubmission(SolrWebServer solr,
+			List<SolrInputDocument> docs, int limit, boolean force) {
+		if (docs.size() > 0 && docs.size() >= limit || force) {
+			try {
+				final long start = System.nanoTime();
+				if (log.isTraceEnabled() || debugMode) {
+					for (SolrInputDocument doc : docs) {
+						try {
+							solr.updateSolrDoc(doc);
+						} catch (Exception e) {
+							log.error(
+									"Failed to post document - got exception: ",
+									e);
+							log.error("Failed document was:\n"
+									+ ClientUtils.toXML(doc));
+							System.exit(1);
+						}
 					}
+				} else {
+					solr.add(docs);
 				}
-			} else {
-				solr.add(docs);
+				Instrument.timeRel(
+						"WARCIndexerCommand.parseWarcFiles#docdelivery",
+						"WARCIndexerCommanc.checkSubmission#solradd", start);
+				docs.clear();
+			} catch (SolrServerException s) {
+				log.warn("SolrServerException: ", s);
+			} catch (IOException i) {
+				log.warn("IOException: ", i);
 			}
-            Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#docdelivery",
-                               "WARCIndexerCommanc.checkSubmission#solradd", start);
-            docs.clear();
+
 		}
 	}
 	

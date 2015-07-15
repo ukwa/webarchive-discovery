@@ -269,6 +269,9 @@ public class WARCIndexer {
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
+				log.debug("Looking at "
+						+ header.getHeaderValue(HEADER_KEY_TYPE));
+
 				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
@@ -507,9 +510,8 @@ public class WARCIndexer {
 					revisited.mergeField(SolrFields.CRAWL_YEARS,
 							extractYear(header.getDate()));
 				} else {
-					revisited
-							.mergeField(SolrFields.CRAWL_DATE, crawlDateString);
-					revisited.mergeField(SolrFields.CRAWL_YEAR,
+					revisited.setField(SolrFields.CRAWL_DATE, crawlDateString);
+					revisited.setField(SolrFields.CRAWL_YEAR,
 						extractYear(header.getDate()));
 				}
 				revisited.setField(SolrFields.SOLR_URL, fullUrl);
@@ -842,11 +844,10 @@ public class WARCIndexer {
 	}
 
 	private boolean checkRecordType( String type ) {
-		for( String include : record_type_includes ) {
-			if( type.equals( include ) ) {
+		if (record_type_includes.contains(type)) {
 				return true;
-			}
 		}
+		log.debug("Skipping record of type " + type);
 		return false;
 	}
 

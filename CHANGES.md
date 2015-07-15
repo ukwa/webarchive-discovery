@@ -1,8 +1,15 @@
 2.2.0
 -----
 
+**NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes.
+
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
 * Switched to separate fields for the source file and offset references, and dropped the _s suffix.
+* No docValues for crawl_dates due to an apparent bug in Solr [#64](https://github.com/ukwa/webarchive-discovery/issues/64)
+* Fixed bug in command-line client where final set of documents were not being submitted to Solr.
+* Added and filled resource_name field.
+* Made first_bytes shingler optional.
+* Updated to Tika 1.9 and Nanite 1.2.1-83.
 
 2.1.0
 -----
