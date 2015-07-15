@@ -230,6 +230,9 @@
    <dynamicField name="*_coordinate" type="tdouble" indexed="true" stored="false" docValues="true"/>
    <!-- :BL -->
 
+   <!-- Pseudo-field to allow random sorting etc. -->
+   <dynamicField name="random_*" type="random" />
+
  </fields>
 
 
