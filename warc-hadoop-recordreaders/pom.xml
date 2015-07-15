@@ -4,7 +4,7 @@
    <parent>
       <groupId>uk.bl.wa.discovery</groupId>
       <artifactId>warc-discovery</artifactId>
-      <version>2.2.0-BETA-4</version>
+      <version>2.2.0-BETA-5-SNAPSHOT</version>
       <relativePath>..</relativePath>
    </parent>
    <licenses>
