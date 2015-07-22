@@ -129,7 +129,7 @@ public class LinkExtractor {
 		}
 		// Return a value:
 		if( suffix == null ) return null;
-		return suffix.name();
+		return suffix.toString();
 	}
 	
 	public static String extractPrivateSuffix( String url ) {
@@ -168,7 +168,7 @@ public class LinkExtractor {
 		}
 		// Return a value:
 		if( suffix == null ) return null;
-		return suffix.name();
+		return suffix.toString();
     }
 	
 	public static void main( String[] args ) {

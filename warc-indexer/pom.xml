@@ -258,6 +258,10 @@
                <artifactId>antlr-runtime</artifactId>
                <groupId>org.antlr</groupId>
             </exclusion>
+            <exclusion>
+               <artifactId>guava</artifactId>
+               <groupId>com.google.guava</groupId>
+            </exclusion>
          </exclusions>
       </dependency>      
       <dependency>
@@ -273,7 +277,7 @@
       <dependency>
          <groupId>org.netpreserve.commons</groupId>
          <artifactId>webarchive-commons</artifactId>
-         <version>1.1.6</version>
+         <version>${webarchive.commons.version}</version>
          <exclusions>
             <exclusion>
                <artifactId>slf4j-api</artifactId>
@@ -300,6 +304,11 @@
                <groupId>com.google.guava</groupId>
             </exclusion>
          </exclusions>
+      </dependency>
+      <dependency>
+         <groupId>com.google.guava</groupId>
+         <artifactId>guava</artifactId>
+         <version>17.0</version>
       </dependency>
 	</dependencies>
 </project>
