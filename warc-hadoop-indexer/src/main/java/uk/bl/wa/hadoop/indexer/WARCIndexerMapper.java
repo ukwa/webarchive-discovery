@@ -61,8 +61,10 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 	@Override
 	public void configure( JobConf job ) {
-		innerConfigure(ConfigFactory.parseString(job
+		if (this.config == null) {
+			innerConfigure(ConfigFactory.parseString(job
 				.get(WARCIndexerRunner.CONFIG_PROPERTIES)));
+		}
 
 		// Other properties:
 		mapTaskId = job.get("mapred.task.id");
@@ -120,9 +122,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		SolrRecord solr = new SolrRecord(key.toString(), rec.getHeader());
 		try {
 			if (!header.getHeaderFields().isEmpty()) {
-				LOG.info("windex: " + windex);
-				LOG.info("key: " + key);
-				LOG.info("value: " + value);
 				// Do the indexing:
 				solr = windex.extract(key.toString(),
 						value.getRecord());

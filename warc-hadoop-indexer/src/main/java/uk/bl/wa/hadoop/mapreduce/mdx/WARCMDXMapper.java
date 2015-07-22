@@ -39,8 +39,10 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 	@Override
 	public void configure(JobConf job) {
-		wim = new WARCIndexerMapper();
-		wim.configure(job);
+		if (wim == null) {
+			wim = new WARCIndexerMapper();
+			wim.configure(job);
+		}
 	}
 
 	@Override
