@@ -118,6 +118,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);
+		// OR TextOutputFormat?
 		conf.set("map.output.key.field.separator", "");
 		// Compress the output from the maps, to cut down temp space
 		// requirements between map and reduce.

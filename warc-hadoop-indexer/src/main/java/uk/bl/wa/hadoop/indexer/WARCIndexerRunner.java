@@ -35,6 +35,7 @@ import uk.bl.wa.util.ConfigPrinter;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValueFactory;
 
 /**
  * WARCIndexerRunner
@@ -50,7 +51,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.] [-x] [output XML in OAI-PMH format]";
 	private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
-	public static final String CONFIG_APPLY_ANNOTATIONS = "webarchive.indexer.applyAnnotations";
+	public static final String CONFIG_APPLY_ANNOTATIONS = "warc.applyAnnotations";
 
 	protected static String solrHomeZipName = "solr_home.zip";
 
@@ -89,6 +90,10 @@ public class WARCIndexerRunner extends Configured implements Tool {
 			ConfigPrinter.print(index_conf);
 			System.exit(0);
 		}
+		// Decide whether to apply annotations:
+		index_conf = index_conf.withValue(CONFIG_APPLY_ANNOTATIONS,
+				ConfigValueFactory.fromAnyRef(applyAnnotations));
+		// Store the properties:
 		conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
 				.render(ConfigRenderOptions.concise()));
 		LOG.info("Loaded warc config.");
@@ -164,9 +169,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 			conf.setBoolean("fs.hdfs.impl.disable.cache", true);
 		}
 		conf.setBoolean("mapred.output.oai-pmh", this.exportXml);
-
-		// Decide whether to apply annotations:
-		conf.setBoolean(CONFIG_APPLY_ANNOTATIONS, this.applyAnnotations);
 
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);

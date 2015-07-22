@@ -1,9 +1,7 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -38,8 +36,6 @@ public class WARCMDXReducer extends MapReduceBase implements
 	}
 
 	/**
-	 * Sets up our SolrServer. Presumes the existence of either
-	 * "warc.solr.zookepers" or "warc.solr.servers" in the config.
 	 */
 	@Override
 	public void configure(JobConf job) {
@@ -51,43 +47,19 @@ public class WARCMDXReducer extends MapReduceBase implements
 			OutputCollector<Text, Text> output, Reporter reporter)
 					throws IOException {
 
-		// Go through the documents for this shard:
 		long noValues = 0;
 		Text map;
 		MDX mdx;
-		List<MDX> revisits = new ArrayList<MDX>();
-		List<Text> mdxs = new ArrayList<Text>();
 		while (values.hasNext()) {
 			map = values.next();
 			noValues++;
 			mdx = MDX.fromJSONString(map.toString());
 			
-			if( "revist".equals(mdx.getRecordType())) {
-				revisits.add(mdx);
-				log.info("Resolving... " + key + " " + map);
-			} else {
-				mdxs.add(map);
-				log.info("Recording... " + key + " " + map);
-			}
+			// Reformat the key:
+			Text outKey = new Text(mdx.getHash());
 			
-		}
-		
-		// Merge/resolve:
-		if (mdxs.size() == 0) {
-			log.warn("Could not resolve revists for " + key);
-			reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
-		} else {
-			for (MDX rmdx : revisits) {
-				// FIXME Add a reconstituted MDX to the output:
-				rmdx.getHash();
-			}
-		}
-
-		// Now collect...
-		for (Text tmdx : mdxs) {
-
-			// Post-process:
-			output.collect(key, tmdx);
+			// Collect:
+			output.collect(outKey, map);
 			
 			// Report:
 			reporter.incrCounter(MyCounters.NUM_RECORDS, 1);

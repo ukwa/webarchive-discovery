@@ -61,13 +61,28 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 	@Override
 	public void configure( JobConf job ) {
+		innerConfigure(ConfigFactory.parseString(job
+				.get(WARCIndexerRunner.CONFIG_PROPERTIES)));
+
+		// Other properties:
+		mapTaskId = job.get("mapred.task.id");
+		inputFile = job.get("map.input.file");
+		LOG.info("Got task.id " + mapTaskId + " and input.file " + inputFile);
+
+	}
+
+	public void innerConfigure(Config jobConfig) {
 		try {
 			// Get config from job property:
-			config = ConfigFactory.parseString( job.get( WARCIndexerRunner.CONFIG_PROPERTIES ) );
+			config = jobConfig;
 			// Initialise indexer:
 			this.windex = new WARCIndexer( config );
-			boolean applyAnnotations = job.getBoolean(
-					WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS, false);
+			// Decide whether to try to apply annotations:
+			boolean applyAnnotations = false;
+			if( config.hasPath(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS)) {
+				applyAnnotations = config
+						.getBoolean(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS);
+			}
 			if (applyAnnotations) {
 				LOG.info("Attempting to load annotations from 'annotations.json'...");
 				Annotations ann = Annotations.fromJsonFile("annotations.json");
@@ -81,11 +96,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
 				String collection = config.getString(SolrWebServer.COLLECTION);
 				sp = new Solate(zkHost, collection, numShards);
 			}
-			// Other properties:
-			mapTaskId = job.get("mapred.task.id");
-			inputFile = job.get("map.input.file");
-			LOG.info("Got task.id " + mapTaskId + " and input.file "
-					+ inputFile);
 
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
@@ -98,10 +108,10 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		}
 	}
 
-	@Override
-	public void map(Text key, WritableArchiveRecord value,
-			OutputCollector<IntWritable, WritableSolrRecord> output,
+	public WritableSolrRecord innerMap(Text key,
+			WritableArchiveRecord value,
 			Reporter reporter) throws IOException {
+
 		ArchiveRecordHeader header = value.getRecord().getHeader();
 
 		noRecords++;
@@ -110,6 +120,9 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		SolrRecord solr = new SolrRecord(key.toString(), rec.getHeader());
 		try {
 			if (!header.getHeaderFields().isEmpty()) {
+				LOG.info("windex: " + windex);
+				LOG.info("key: " + key);
+				LOG.info("value: " + value);
 				// Do the indexing:
 				solr = windex.extract(key.toString(),
 						value.getRecord());
@@ -119,14 +132,8 @@ public class WARCIndexerMapper extends MapReduceBase implements
 					LOG.debug("WARCIndexer returned NULL for: "
 							+ header.getUrl());
 					reporter.incrCounter(MyCounters.NUM_NULLS, 1);
-					return;
+					return null;
 				}
-
-				// String host = (String)
-				// solr.getFieldValue(SolrFields.SOLR_HOST);
-				// if (host == null) {
-				// host = "unknown.host";
-				// }
 
 				// Increment record counter:
 				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
@@ -139,7 +146,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		} catch (Exception e) {
 			LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; "
-					+ header.getUrl() + "; " + header.getOffset());
+					+ header.getUrl() + "; " + header.getOffset(), e);
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 			// Store it:
@@ -155,20 +162,13 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			solr.addParseException(e);
 		}
 
-		// Get the right key for the right partition:
-		IntWritable oKey = null;
-		if (sp != null) {
-			oKey = new IntWritable(
-					sp.getPartition(null, solr.getSolrDocument()));
-		} else {
-			// Otherwise use a random assignment:
-			int iKey = (int) (Math.round(Math.random() * numShards));
-			oKey = new IntWritable(iKey);
-		}
-
 		// Wrap up and collect the result:
 		WritableSolrRecord wsolr = new WritableSolrRecord(solr);
-		output.collect(oKey, wsolr);
+
+		// Get the right key for the right partition:
+		if (sp != null) {
+			wsolr.setPartition(sp.getPartition(null, solr.getSolrDocument()));
+		}
 
 		// Occasionally update application-level status
 		if ((noRecords % 1000) == 0) {
@@ -177,6 +177,28 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			reporter.progress();
 		}
 
+		return wsolr;
+
+	}
+
+	@Override
+	public void map(Text key, WritableArchiveRecord value,
+			OutputCollector<IntWritable, WritableSolrRecord> output,
+			Reporter reporter) throws IOException {
+
+		WritableSolrRecord wsolr = this.innerMap(key, value, reporter);
+
+		// Get the right key for the right partition:
+		IntWritable oKey = null;
+		if (sp != null) {
+			oKey = new IntWritable(wsolr.getPartition());
+		} else {
+			// Otherwise use a random assignment:
+			int iKey = (int) (Math.round(Math.random() * numShards));
+			oKey = new IntWritable(iKey);
+		}
+
+		output.collect(oKey, wsolr);
 	}
 
 

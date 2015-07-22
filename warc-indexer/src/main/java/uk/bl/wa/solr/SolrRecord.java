@@ -247,4 +247,28 @@ public class SolrRecord implements Serializable {
 		addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
 				+ ": " + e.getMessage());
 	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getUrl() {
+		return (String) getField(SolrFields.SOLR_URL).getFirstValue();
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getWaybackDate() {
+		return (String) getField(SolrFields.WAYBACK_DATE).getFirstValue();
+	}
+
+	/**
+	 * 
+	 * @return
+	 */
+	public String getHash() {
+		return (String) getField(SolrFields.HASH).getFirstValue();
+	}
 }

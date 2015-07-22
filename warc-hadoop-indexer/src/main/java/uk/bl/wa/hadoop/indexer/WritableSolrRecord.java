@@ -19,6 +19,8 @@ public class WritableSolrRecord  implements Writable, Serializable {
 	
 	private SolrRecord sr = new SolrRecord();
 
+	private int partition;
+
 	WritableSolrRecord() { }
 
 	public WritableSolrRecord( SolrRecord sr ) {
@@ -42,6 +44,21 @@ public class WritableSolrRecord  implements Writable, Serializable {
 	
 	public SolrRecord getSolrRecord() {
 		return this.sr;
+	}
+
+	/**
+	 * @return the partition
+	 */
+	public int getPartition() {
+		return partition;
+	}
+
+	/**
+	 * @param partition
+	 *            the partition to set
+	 */
+	public void setPartition(int partition) {
+		this.partition = partition;
 	}
 
 }

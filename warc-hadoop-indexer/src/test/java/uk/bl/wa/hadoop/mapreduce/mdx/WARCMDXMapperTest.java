@@ -47,9 +47,10 @@ public class WARCMDXMapperTest {
 		conf.set(WARCMDXGenerator.CONFIG_PROPERTIES, c.withOnlyPath("warc")
 				.root().render(ConfigRenderOptions.concise()));
 		// Set up the mapper etc.:
-		WARCMDXMapper mapper = new WARCMDXMapper(conf);
+		WARCMDXMapper mapper = new WARCMDXMapper();
 		WARCMDXReducer reducer = new WARCMDXReducer();
 		mapDriver = MapDriver.newMapDriver(mapper);
+		mapDriver.setConfiguration(conf);
 		reduceDriver = ReduceDriver.newReduceDriver(reducer);
 		mapReduceDriver = MapReduceDriver.newMapReduceDriver();
 	}

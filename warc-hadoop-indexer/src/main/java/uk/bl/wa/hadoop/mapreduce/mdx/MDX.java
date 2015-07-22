@@ -10,9 +10,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.httpclient.URIException;
 import org.apache.solr.common.SolrInputField;
+import org.archive.url.SURTTokenizer;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.annotate.JsonIgnore;
 import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -68,6 +71,19 @@ public class MDX {
 		return url;
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
+	@JsonIgnore
+	public String getUrlAsSURT() {
+		try {
+			return SURTTokenizer.exactKey(url);
+		} catch (URIException e) {
+			// Fall back on normal URI:
+			return url;
+		}
+	}
 
 
 	/**
