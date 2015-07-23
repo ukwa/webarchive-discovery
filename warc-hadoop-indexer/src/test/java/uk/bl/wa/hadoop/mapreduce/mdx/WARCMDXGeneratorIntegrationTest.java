@@ -1,5 +1,7 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -17,6 +19,9 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
+import org.apache.hadoop.io.SequenceFile;
+import org.apache.hadoop.io.Writable;
+import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
@@ -43,6 +48,12 @@ public class WARCMDXGeneratorIntegrationTest {
 
 	private final Path input = new Path("inputs");
 	private final Path output = new Path("outputs");
+
+	// Exported results
+	public static File outputSeq = new File("target/test.seq");
+
+	// Job configuration:
+	private JobConf jobConf;
 
 	@Before
 	public void setUp() throws Exception {
@@ -71,6 +82,8 @@ public class WARCMDXGeneratorIntegrationTest {
 		for (String filename : testWarcs) {
 			copyFileToTestCluster(filename);
 		}
+
+		jobConf = this.mrCluster.createJobConf();
 
 		log.warn("Spun up test cluster.");
 	}
@@ -123,19 +136,17 @@ public class WARCMDXGeneratorIntegrationTest {
 
 		// run job
 		log.info("Setting up job config...");
-		JobConf conf = this.mrCluster.createJobConf();
-		wir.createJobConf(conf, args);
+		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
-		JobClient.runJob(conf);
+		JobClient.runJob(jobConf);
 		log.info("Job finished, checking the results...");
 
-		// check the output
+		// check the output exists
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
 		Assert.assertEquals(1, outputFiles.length);
 
-		// Check contents of the output:
-		File outputSeq = new File("target/test.seq");
+		// Copy the output out:
 		FileOutputStream fout = new FileOutputStream(outputSeq);
 		for (Path output : outputFiles) {
 			log.info(" --- output : " + output);
@@ -147,6 +158,27 @@ public class WARCMDXGeneratorIntegrationTest {
 			}
 		}
 		fout.close();
+
+		// Check contents of the output:
+		Configuration config = new Configuration();
+		Path path = new Path(
+				WARCMDXGeneratorIntegrationTest.outputSeq.getAbsolutePath());
+		SequenceFile.Reader reader = new SequenceFile.Reader(
+				FileSystem.get(config), path, config);
+		WritableComparable key = (WritableComparable) reader.getKeyClass()
+				.newInstance();
+		Writable value = (Writable) reader.getValueClass().newInstance();
+
+		MDX mdx;
+		int counter = 0;
+		while (reader.next(key, value)) {
+			mdx = MDX.fromJSONString(value.toString());
+			System.out.println("Key is: " + key + " record_type: "
+					+ mdx.getRecordType() + " SURT: " + mdx.getUrlAsSURT());
+			counter++;
+		}
+		assertEquals(114, counter);
+		reader.close();
 	}
 
 	@After

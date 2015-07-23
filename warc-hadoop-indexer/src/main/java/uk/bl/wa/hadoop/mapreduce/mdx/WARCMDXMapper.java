@@ -62,13 +62,13 @@ public class WARCMDXMapper extends MapReduceBase implements
 			solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED);
 
 			// Wrap up the result:
-			LOG.info("XML: " + solr.toXml());
 			MDX mdx = MDX.fromWritabelSolrRecord(solr);
 			Text result = new Text(mdx.toJSON());
 			// Wrap up the key:
-			// Text oKey = new Text(mdx.getRecordType() + "\t" + mdx.getUrl()
-			// + "\t" + mdx.getTs());
 			Text oKey = new Text(mdx.getHash());
+			// Alternative key, based on record type + url + timestamp
+			// Text oKey = new Text(mdx.getUrl() + "\t" + mdx.getTs() + "\t"
+			// + mdx.getRecordType());
 
 			// Collect
 			output.collect(oKey, result);
