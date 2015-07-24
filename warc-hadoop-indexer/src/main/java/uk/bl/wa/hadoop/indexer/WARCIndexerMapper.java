@@ -187,17 +187,22 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		WritableSolrRecord wsolr = this.innerMap(key, value, reporter);
 
-		// Get the right key for the right partition:
-		IntWritable oKey = null;
-		if (sp != null) {
-			oKey = new IntWritable(wsolr.getPartition());
-		} else {
-			// Otherwise use a random assignment:
-			int iKey = (int) (Math.round(Math.random() * numShards));
-			oKey = new IntWritable(iKey);
-		}
+		// Pass to reduce stage if successful:
+		if (wsolr != null) {
 
-		output.collect(oKey, wsolr);
+			// Get the right key for the right partition:
+			IntWritable oKey = null;
+			if (sp != null) {
+				oKey = new IntWritable(wsolr.getPartition());
+			} else {
+				// Otherwise use a random assignment:
+				int iKey = (int) (Math.round(Math.random() * numShards));
+				oKey = new IntWritable(iKey);
+			}
+
+			output.collect(oKey, wsolr);
+
+		}
 	}
 
 
