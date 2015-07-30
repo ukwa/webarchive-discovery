@@ -275,9 +275,14 @@ public class WARCIndexer {
 				if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
 					return null;
 				}
+				// Store WARC record type:
 				solr.setField(SolrFields.SOLR_RECORD_TYPE,
 						(String) header.getHeaderValue(HEADER_KEY_TYPE));
-			} // else we're processing ARCs so nothing to filter and no revists
+			} else {
+				// else we're processing ARCs so nothing to filter and no
+				// revisits
+				solr.setField(SolrFields.SOLR_RECORD_TYPE, "arc");
+			}
 
 			if( header.getUrl() == null )
 				return null;

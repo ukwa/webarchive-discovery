@@ -35,9 +35,9 @@ import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
+import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
-import uk.bl.wa.util.Instrument;
 
 /**
  * @author anj
@@ -134,6 +134,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 					// Store colour:
 					solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
 							metadata.get(FaceDetectionParser.DOM_COL));
+					// TODO Extract multiple characteristic colours as well
 				}
                 Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                    "ImageAnalyzer.analyze#facesanddominant", deepStart);

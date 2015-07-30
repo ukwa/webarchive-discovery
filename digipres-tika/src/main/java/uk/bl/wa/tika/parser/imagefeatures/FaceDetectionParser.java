@@ -4,7 +4,6 @@
 package uk.bl.wa.tika.parser.imagefeatures;
 
 import java.awt.Color;
-import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -17,10 +16,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.imageio.ImageIO;
-
-import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
@@ -30,14 +27,12 @@ import org.apache.tika.parser.ParseContext;
 import org.openimaj.image.FImage;
 import org.openimaj.image.ImageUtilities;
 import org.openimaj.image.MBFImage;
-import org.openimaj.image.colour.RGBColour;
 import org.openimaj.image.colour.Transforms;
 import org.openimaj.image.pixel.statistics.HistogramModel;
 import org.openimaj.image.processing.face.detection.DetectedFace;
 import org.openimaj.image.processing.face.detection.FaceDetector;
 import org.openimaj.image.processing.face.detection.HaarCascadeDetector;
 import org.openimaj.image.processing.face.detection.keypoints.FKEFaceDetector;
-import org.openimaj.image.processing.face.detection.keypoints.FacialKeypoint;
 import org.openimaj.image.processing.face.detection.keypoints.KEDetectedFace;
 import org.openimaj.math.geometry.shape.Rectangle;
 import org.xml.sax.ContentHandler;
@@ -62,6 +57,7 @@ public class FaceDetectionParser extends AbstractParser {
 
 	public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
 	public static final String DOM_COL = "DOMCOL";
+	public static final String DOM_COLS = "DOMCOLS";
 	public static final Property IMAGE_HEIGHT = Property.externalInteger("IMAGE_HEIGHT");
 	public static final Property IMAGE_WIDTH = Property.externalInteger("IMAGE_WIDTH");
 	public static final Property IMAGE_SIZE = Property.externalInteger("IMAGE_SIZE");
