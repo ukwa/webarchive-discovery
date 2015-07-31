@@ -61,7 +61,7 @@ public class WARCMDXSequenceMerger extends Configured implements Tool {
 		this.setup(args, conf);
 
 		// Reducer count:
-		int numReducers = 10;
+		int numReducers = 1;
 
 		// Add input paths:
 		LOG.info("Reading input files...");
