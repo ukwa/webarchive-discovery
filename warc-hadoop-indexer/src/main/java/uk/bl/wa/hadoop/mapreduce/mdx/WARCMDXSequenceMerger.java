@@ -20,8 +20,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -80,8 +78,8 @@ public class WARCMDXSequenceMerger extends Configured implements Tool {
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(SequenceFileInputFormat.class);
-		conf.setMapperClass(Mapper.class);
-		conf.setReducerClass(Reducer.class);
+		// conf.setMapperClass(Mapper.class);
+		// conf.setReducerClass(Reducer.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);

@@ -185,7 +185,7 @@ public class MDX {
 	 * @param solr
 	 * @return
 	 */
-	public static MDX fromWritabelSolrRecord(SolrRecord solr) {
+	public static MDX fromWritableSolrRecord(SolrRecord solr) {
 		MDX m = new MDX();
 		m.setHash(solr.getFieldValue(SolrFields.HASH).toString());
 		m.setUrl(solr.getFieldValue(SolrFields.SOLR_URL).toString());

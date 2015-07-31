@@ -59,10 +59,11 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 			// Strip out text:
 			solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
-			solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED);
+			// solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED);
+			// Or tokenise and count tokens?
 
 			// Wrap up the result:
-			MDX mdx = MDX.fromWritabelSolrRecord(solr);
+			MDX mdx = MDX.fromWritableSolrRecord(solr);
 			Text result = new Text(mdx.toJSON());
 			// Wrap up the key:
 			Text oKey = new Text(mdx.getHash());

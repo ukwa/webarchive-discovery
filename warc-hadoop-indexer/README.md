@@ -33,3 +33,11 @@ or to check your supplied configuration is kicking in:
     $ hadoop jar target/warc-hadoop-indexer-1.1.1-SNAPSHOT.jar -Dconfig.file=configs/jisc.conf uk.bl.wa.util.ConfigPrinter 
 
 [1]: https://github.com/typesafehub/config
+
+MDX Work
+--------
+
+
+    $ hadoop jar warc-hadoop-indexer/target/warc-hadoop-indexer-*-job.jar uk.bl.wa.hadoop.mapreduce.mdx.WARCMDXGenerator -c configs/jisc-vmtest.conf -i <inputs.txt> -o <output-folder> -w
+
+    
