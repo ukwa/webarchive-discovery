@@ -180,6 +180,14 @@ public class MDX {
 		return null;
 	}
 
+	private static String stringValueOrUnset(Object val) {
+		if (val == null) {
+			return "unset";
+		} else {
+			return val.toString();
+		}
+	}
+
 	/**
 	 * 
 	 * @param solr
@@ -187,11 +195,11 @@ public class MDX {
 	 */
 	public static MDX fromWritableSolrRecord(SolrRecord solr) {
 		MDX m = new MDX();
-		m.setHash(solr.getFieldValue(SolrFields.HASH).toString());
-		m.setUrl(solr.getFieldValue(SolrFields.SOLR_URL).toString());
-		m.setTs(solr.getFieldValue(SolrFields.WAYBACK_DATE).toString());
-		m.setRecordType(solr.getFieldValue(SolrFields.SOLR_RECORD_TYPE)
-				.toString());
+		m.setHash(stringValueOrUnset(solr.getFieldValue(SolrFields.HASH)));
+		m.setUrl(stringValueOrUnset(solr.getFieldValue(SolrFields.SOLR_URL)));
+		m.setTs(stringValueOrUnset(solr.getFieldValue(SolrFields.WAYBACK_DATE)));
+		m.setRecordType(stringValueOrUnset(solr
+				.getFieldValue(SolrFields.SOLR_RECORD_TYPE)));
 		// Pass though Solr fields:
 		for( String f : solr.getSolrDocument().getFieldNames() ) {
 			SolrInputField v = solr.getSolrDocument().get(f);
