@@ -11,14 +11,14 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 
-public class MDXSequenceIterator implements Iterator<MDX> {
+public class MDXSeqIterator implements Iterator<MDX> {
 
 	private Reader reader;
 	private Text key;
 	private Text value;
 	private boolean hasNext;
 
-	public MDXSequenceIterator(File seq) throws IOException,
+	public MDXSeqIterator(File seq) throws IOException,
 			InstantiationException, IllegalAccessException {
 		Configuration config = new Configuration();
 		Path path = new Path(seq.getAbsolutePath());

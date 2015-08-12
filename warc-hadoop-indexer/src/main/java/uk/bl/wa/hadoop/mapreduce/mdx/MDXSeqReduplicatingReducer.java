@@ -1,7 +1,9 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -15,16 +17,16 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 
 @SuppressWarnings({ "deprecation" })
-public class WARCMDXReducer extends MapReduceBase implements
+public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 		Reducer<Text, Text, Text, Text> {
 
-	private static Log log = LogFactory.getLog(WARCMDXReducer.class);
+	private static Log log = LogFactory.getLog(MDXSeqReduplicatingReducer.class);
 
 	static enum MyCounters {
 		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, TO_REDUPLICATE, NUM_RESOLVED_REVISITS
 	}
 
-	public WARCMDXReducer() {
+	public MDXSeqReduplicatingReducer() {
 		try {
 			Properties props = new Properties();
 			props.load(getClass().getResourceAsStream(
@@ -49,17 +51,26 @@ public class WARCMDXReducer extends MapReduceBase implements
 
 		long noValues = 0;
 		Text map;
-		MDX mdx;
+		MDX mdx, exemplar = null;
+		List<MDX> toReduplicate = new ArrayList<MDX>();
 		while (values.hasNext()) {
 			map = values.next();
 			noValues++;
 			mdx = MDX.fromJSONString(map.toString());
 			
 			// Reformat the key:
-			Text outKey = new Text(mdx.getHash());
-			
-			// Collect:
-			output.collect(outKey, map);
+			if( !"revisit".equals(mdx.getRecordType()) ) {
+				if( "response".equals(mdx.getRecordType()) ) {
+					exemplar = mdx;
+				}
+				// Collect complete records:
+				Text outKey = new Text(mdx.getHash());
+				output.collect(outKey, map);
+			} else {
+				// Report:
+				reporter.incrCounter(MyCounters.TO_REDUPLICATE, 1);
+				toReduplicate.add(mdx);
+			}
 			
 			// Report:
 			reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
@@ -72,6 +83,21 @@ public class WARCMDXReducer extends MapReduceBase implements
 						.getValue());	    
 			}
 
+		}
+		
+		// Now fix up revisits:
+		for( MDX rmdx : toReduplicate ) {
+			if( exemplar != null ) {
+				// Modify record type and and merge the properties:
+				rmdx.setRecordType("reduplicated");
+				rmdx.getProperties().putAll(exemplar.getProperties());
+				reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
+			} else {
+				reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
+			}
+			// Collect complete records:
+			Text outKey = new Text(rmdx.getHash());
+			output.collect(outKey, new Text(rmdx.toJSON()));
 		}
 
 	}

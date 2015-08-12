@@ -48,7 +48,7 @@ public class WARCMDXMapperTest {
 				.root().render(ConfigRenderOptions.concise()));
 		// Set up the mapper etc.:
 		WARCMDXMapper mapper = new WARCMDXMapper();
-		WARCMDXReducer reducer = new WARCMDXReducer();
+		MDXSeqReduplicatingReducer reducer = new MDXSeqReduplicatingReducer();
 		mapDriver = MapDriver.newMapDriver(mapper).withConfiguration(conf);
 		reduceDriver = ReduceDriver.newReduceDriver(reducer);
 		mapReduceDriver = MapReduceDriver.newMapReduceDriver();

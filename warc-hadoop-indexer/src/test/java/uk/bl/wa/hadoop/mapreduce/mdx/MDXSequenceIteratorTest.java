@@ -21,7 +21,7 @@ public class MDXSequenceIteratorTest {
 	public void testMDXOutput() throws Exception {
 
 		// Check contents of the output:
-		Iterator<MDX> i = new MDXSequenceIterator(mdxWarcBothSeq);
+		Iterator<MDX> i = new MDXSeqIterator(mdxWarcBothSeq);
 		MDX mdx;
 		int counter = 0;
 		while (i.hasNext()) {

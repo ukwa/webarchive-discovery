@@ -114,7 +114,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(ArchiveFileInputFormat.class);
 		conf.setMapperClass(WARCMDXMapper.class);
-		conf.setReducerClass(WARCMDXReducer.class);
+		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);

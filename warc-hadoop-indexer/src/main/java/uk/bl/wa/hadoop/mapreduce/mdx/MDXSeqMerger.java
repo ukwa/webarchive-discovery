@@ -3,9 +3,6 @@ package uk.bl.wa.hadoop.mapreduce.mdx;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -23,18 +20,12 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reducer;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
-
-import uk.bl.wa.hadoop.mapreduce.mdx.WARCMDXReducer.MyCounters;
 
 /**
  * WARCIndexerRunner
@@ -45,8 +36,8 @@ import uk.bl.wa.hadoop.mapreduce.mdx.WARCMDXReducer.MyCounters;
  */
 
 @SuppressWarnings({ "deprecation" })
-public class MDXSequenceMerger extends Configured implements Tool {
-	private static final Log LOG = LogFactory.getLog(MDXSequenceMerger.class);
+public class MDXSeqMerger extends Configured implements Tool {
+	private static final Log LOG = LogFactory.getLog(MDXSeqMerger.class);
 	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "MapReduce job for merging MDX sequence files.";
 
@@ -88,7 +79,7 @@ public class MDXSequenceMerger extends Configured implements Tool {
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(SequenceFileInputFormat.class);
 		// conf.setMapperClass(Mapper.class);
-		conf.setReducerClass(ReduplicatingReducer.class);
+		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);
@@ -110,7 +101,7 @@ public class MDXSequenceMerger extends Configured implements Tool {
 	public int run(String[] args) throws IOException, ParseException,
 			KeeperException, InterruptedException {
 		// Set up the base conf:
-		JobConf conf = new JobConf(getConf(), MDXSequenceMerger.class);
+		JobConf conf = new JobConf(getConf(), MDXSeqMerger.class);
 
 		// Get the job configuration:
 		this.createJobConf(conf, args);
@@ -155,75 +146,8 @@ public class MDXSequenceMerger extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		int ret = ToolRunner.run(new MDXSequenceMerger(), args);
+		int ret = ToolRunner.run(new MDXSeqMerger(), args);
 		System.exit(ret);
 	}
 
-	/**
-	 * 
-	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
-	 *
-	 */
-	public class ReduplicatingReducer extends MapReduceBase implements
-			Reducer<Text, Text, Text, Text> {
-
-		@Override
-		public void reduce(Text key, Iterator<Text> values,
-				OutputCollector<Text, Text> output, Reporter reporter)
-				throws IOException {
-			
-			long noValues = 0;
-			Text map;
-			MDX mdx, exemplar = null;
-			List<MDX> toReduplicate = new ArrayList<MDX>();
-			while (values.hasNext()) {
-				map = values.next();
-				noValues++;
-				mdx = MDX.fromJSONString(map.toString());
-				
-				// Reformat the key:
-				if( !"revisit".equals(mdx.getRecordType()) ) {
-					if( "response".equals(mdx.getRecordType()) ) {
-						exemplar = mdx;
-					}
-					// Collect complete records:
-					Text outKey = new Text(mdx.getHash());
-					output.collect(outKey, map);
-				} else {
-					// Report:
-					reporter.incrCounter(MyCounters.TO_REDUPLICATE, 1);
-					toReduplicate.add(mdx);
-				}
-				
-				// Report:
-				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
-				// Occasionally update application-level status:
-				if ((noValues % 1000) == 0) {
-					reporter.setStatus("Processed "
-							+ noValues
-							+ ", dropped "
-							+ reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS)
-							.getValue());	    
-				}
-
-			}
-			
-			// Now fix up revisits:
-			for( MDX rmdx : toReduplicate ) {
-				if( exemplar != null ) {
-					// Modify record type and and merge the properties:
-					rmdx.setRecordType("reduplicated");
-					rmdx.getProperties().putAll(exemplar.getProperties());
-					reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
-				} else {
-					reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
-				}
-				// Collect complete records:
-				Text outKey = new Text(rmdx.getHash());
-				output.collect(outKey, new Text(rmdx.toJSON()));
-			}
-
-		}
-
-	}
 }
