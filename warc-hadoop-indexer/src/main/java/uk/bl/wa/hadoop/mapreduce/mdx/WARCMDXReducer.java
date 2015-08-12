@@ -21,7 +21,7 @@ public class WARCMDXReducer extends MapReduceBase implements
 	private static Log log = LogFactory.getLog(WARCMDXReducer.class);
 
 	static enum MyCounters {
-		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS
+		NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, TO_REDUPLICATE, NUM_RESOLVED_REVISITS
 	}
 
 	public WARCMDXReducer() {
