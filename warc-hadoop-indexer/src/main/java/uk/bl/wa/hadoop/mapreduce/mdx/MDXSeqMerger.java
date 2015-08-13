@@ -151,7 +151,9 @@ public class MDXSeqMerger extends Configured implements Tool {
 		this.inputPath = cmd.getOptionValue("i");
 		this.outputPath = cmd.getOptionValue("o");
 		this.wait = cmd.hasOption("w");
-		this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+		if (cmd.hasOption("r")) {
+			this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+		}
 	}
 
 	/**
