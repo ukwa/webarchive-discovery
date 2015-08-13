@@ -45,6 +45,9 @@ public class MDXSeqMerger extends Configured implements Tool {
 	private String outputPath;
 	private boolean wait;
 
+	// Reducer count:
+	int numReducers = 10;
+
 	/**
 	 * 
 	 * @param args
@@ -59,9 +62,6 @@ public class MDXSeqMerger extends Configured implements Tool {
 			InterruptedException {
 		// Parse the command-line parameters.
 		this.setup(args, conf);
-
-		// Reducer count:
-		int numReducers = 1;
 
 		// Add input paths:
 		LOG.info("Reading input files...");
@@ -87,7 +87,19 @@ public class MDXSeqMerger extends Configured implements Tool {
 		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
 		conf.setMapOutputValueClass(Text.class);
+		LOG.info("Used " + numReducers + " reducers.");
 		conf.setNumReduceTasks(numReducers);
+
+		// Compress the output from the maps, to cut down temp space
+		// requirements between map and reduce.
+		conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
+																// for 0.20.x ?
+		conf.set("mapred.compress.map.output", "true");
+		// conf.set("mapred.map.output.compression.codec",
+		// "org.apache.hadoop.io.compress.GzipCodec");
+		// Ensure the JARs we provide take precedence over ones from Hadoop:
+		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
+
 	}
 
 	/**
@@ -126,6 +138,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 		options.addOption("i", true, "input file list");
 		options.addOption("o", true, "output directory");
 		options.addOption("w", false, "wait for job to finish");
+		options.addOption("r", true, "number of reducers");
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(options, otherArgs);
@@ -138,6 +151,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 		this.inputPath = cmd.getOptionValue("i");
 		this.outputPath = cmd.getOptionValue("o");
 		this.wait = cmd.hasOption("w");
+		this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
 	}
 
 	/**
