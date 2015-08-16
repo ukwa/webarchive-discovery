@@ -133,7 +133,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(Text.class);
+		conf.setMapOutputValueClass(MDXWritable.class);
 		conf.setNumReduceTasks(numReducers);
 	}
 

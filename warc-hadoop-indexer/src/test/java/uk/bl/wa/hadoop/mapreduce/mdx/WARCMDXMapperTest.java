@@ -34,8 +34,8 @@ public class WARCMDXMapperTest {
 
 	private static final Log LOG = LogFactory.getLog(WARCMDXMapperTest.class);
 
-	MapDriver<Text, WritableArchiveRecord, Text, Text> mapDriver;
-	ReduceDriver<Text, Text, Text, Text> reduceDriver;
+	MapDriver<Text, WritableArchiveRecord, Text, MDXWritable> mapDriver;
+	ReduceDriver<Text, MDXWritable, Text, Text> reduceDriver;
 	MapReduceDriver<Text, WritableArchiveRecord, Text, MapWritable, Text, MapWritable> mapReduceDriver;
 
 
@@ -56,7 +56,7 @@ public class WARCMDXMapperTest {
 
 	@Test
 	public void testMapper() throws IOException {
-		
+
 		Set<String> skippableRecords = new HashSet<String>();
 		skippableRecords.add("application/warc-fields");
 		skippableRecords.add("text/dns");
@@ -64,13 +64,13 @@ public class WARCMDXMapperTest {
 		File inputFile = new File(
 				"../warc-indexer/src/test/resources/gov.uk-revisit-warcs/BL-20140325121225068-00000-32090~opera~8443.warc.gz");
 		String archiveName = inputFile.getName();
-		
-        ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
-        Iterator<ArchiveRecord> ir = reader.iterator();
-        ArchiveRecord record;
+
+		ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
+		Iterator<ArchiveRecord> ir = reader.iterator();
+		ArchiveRecord record;
 		Text key = new Text();
 		WritableArchiveRecord value = new WritableArchiveRecord();
-        while( ir.hasNext()) {
+		while (ir.hasNext()) {
 			record = (ArchiveRecord) ir.next();
 			key.set(archiveName);
 			value.setRecord(record);
@@ -80,16 +80,15 @@ public class WARCMDXMapperTest {
 			// Skip records that can't be analysed:
 			if (skippableRecords.contains(record.getHeader()
 					.getMimetype()))
-					continue;
+				continue;
 
 			// Run through them all:
-				LOG.info("Running without testing output...");
-				mapDriver.setInput(key, value);
-				List<Pair<Text, Text>> result = mapDriver.run();
-				if (result != null && result.size() > 0) {
-					MDX mdx = MDX.fromJSONString(result.get(0).getSecond()
-							.toString());
-					LOG.info("RESULT MDX: " + mdx);
+			LOG.info("Running without testing output...");
+			mapDriver.setInput(key, value);
+			List<Pair<Text, MDXWritable>> result = mapDriver.run();
+			if (result != null && result.size() > 0) {
+				MDX mdx = result.get(0).getSecond().getMDX();
+				LOG.info("RESULT MDX: " + mdx);
 
 				// Perform a specific check for one of the items:
 				if ("http://data.gov.uk/".equals(record.getHeader().getUrl())
@@ -105,8 +104,8 @@ public class WARCMDXMapperTest {
 					assertEquals(testMdx.getTs(), mdx.getTs());
 				}
 
-				}
-				mapDriver.resetOutput();
+			}
+			mapDriver.resetOutput();
 		}
 	}
 

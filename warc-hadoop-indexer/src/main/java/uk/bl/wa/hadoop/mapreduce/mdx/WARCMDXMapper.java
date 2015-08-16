@@ -21,7 +21,7 @@ import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCMDXMapper extends MapReduceBase implements
-		Mapper<Text, WritableArchiveRecord, Text, Text> {
+		Mapper<Text, WritableArchiveRecord, Text, MDXWritable> {
 	private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
 
 	private WARCIndexerMapper wim;
@@ -47,7 +47,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 	@Override
 	public void map(Text key, WritableArchiveRecord value,
-			OutputCollector<Text, Text> output,
+			OutputCollector<Text, MDXWritable> output,
 			Reporter reporter) throws IOException {
 
 		// Use the main indexing code:
@@ -64,7 +64,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 			// Wrap up the result:
 			MDX mdx = MDX.fromWritableSolrRecord(solr);
-			Text result = new Text(mdx.toJSON());
+			MDXWritable result = new MDXWritable(mdx);
 			// Wrap up the key:
 			Text oKey = new Text(mdx.getHash());
 			// Alternative key, based on record type + url + timestamp
