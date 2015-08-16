@@ -20,10 +20,6 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
-import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -81,16 +77,20 @@ public class MDXSeqMerger extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(conf, new Path(this.outputPath));
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
+		// Input
 		conf.setInputFormat(SequenceFileInputFormat.class);
+		// M-R
 		conf.setMapperClass(MDXSeqMapper.class);
 		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
+		// Map outputs
+		conf.setMapOutputKeyClass(Text.class);
+		conf.setMapOutputValueClass(MDXWritable.class);
+		// Job outputs
+		conf.setOutputKeyClass(Text.class);
+		conf.setOutputValueClass(Text.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(Text.class);
-		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(MDXWritable.class);
 		LOG.info("Used " + numReducers + " reducers.");
 		conf.setNumReduceTasks(numReducers);
 
@@ -168,19 +168,6 @@ public class MDXSeqMerger extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		int ret = ToolRunner.run(new MDXSeqMerger(), args);
 		System.exit(ret);
-	}
-
-	public class MDXSeqMapper extends MapReduceBase implements
-			Mapper<Text, Text, Text, MDXWritable> {
-
-		@Override
-		public void map(Text key, Text value,
-				OutputCollector<Text, MDXWritable> output, Reporter reporter)
-				throws IOException {
-			output.collect(value,
-					new MDXWritable(MDX.fromJSONString(value.toString())));
-		}
-
 	}
 
 }

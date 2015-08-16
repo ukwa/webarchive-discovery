@@ -48,12 +48,10 @@ public class WARCMDXGeneratorIntegrationTest {
 
 	private final Path input = new Path("inputs");
 	private final Path output = new Path("outputs");
+	private final Path outputMerged = new Path("outputs-merged");
 
 	// Exported results
 	public static File outputSeq = new File("target/test.seq");
-
-	// Job configuration:
-	private JobConf jobConf;
 
 	@Before
 	public void setUp() throws Exception {
@@ -83,8 +81,6 @@ public class WARCMDXGeneratorIntegrationTest {
 			copyFileToTestCluster(filename);
 		}
 
-		jobConf = this.mrCluster.createJobConf();
-
 		log.warn("Spun up test cluster.");
 	}
 
@@ -106,6 +102,18 @@ public class WARCMDXGeneratorIntegrationTest {
 		log.info("Copy completed.");
 	}
 
+	private File writeInputFile(Path[] inputFiles) throws Exception {
+		// Make a list:
+		File tmpInputsFile = File.createTempFile("inputs", ".txt");
+		tmpInputsFile.deleteOnExit();
+		Writer s = new FileWriter(tmpInputsFile);
+		for (Path p : inputFiles) {
+			s.write(p.toString() + "\n");
+		}
+		s.close();
+		return tmpInputsFile;
+	}
+
 	@SuppressWarnings("deprecation")
 	@Test
 	public void testMDXGenerator() throws Exception {
@@ -118,14 +126,8 @@ public class WARCMDXGeneratorIntegrationTest {
 				.listStatus(new Path(input, "gov.uk-revisit-warcs/"),
 						new OutputLogFilter()));
 		Assert.assertEquals(2, inputFiles.length);
-		// Make a list:
-		File tmpInputsFile = File.createTempFile("inputs", ".txt");
-		tmpInputsFile.deleteOnExit();
-		Writer s = new FileWriter(tmpInputsFile);
-		for (Path p : inputFiles) {
-			s.write(p.toString() + "\n");
-		}
-		s.close();
+		// Create a file of the inputs
+		File tmpInputsFile = writeInputFile(inputFiles);
 
 		// Set up arguments for the job:
 		String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
@@ -135,7 +137,9 @@ public class WARCMDXGeneratorIntegrationTest {
 		WARCMDXGenerator wir = new WARCMDXGenerator();
 
 		// run job
+		// Job configuration:
 		log.info("Setting up job config...");
+		JobConf jobConf = this.mrCluster.createJobConf();
 		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
 		JobClient.runJob(jobConf);
@@ -179,6 +183,31 @@ public class WARCMDXGeneratorIntegrationTest {
 		}
 		assertEquals(114, counter);
 		reader.close();
+		
+		
+		// Now test the MDXSeqMerger
+		testSeqMerger(outputFiles);
+	}
+
+	private void testSeqMerger(Path[] inputFiles) throws Exception {
+
+		// Create a file of the inputs
+		File tmpInputsFile = writeInputFile(inputFiles);
+
+		// Set up arguments for the job:
+		String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
+				this.outputMerged.getName(), "-r", "1" };
+
+		// Set up the WARCIndexerRunner
+		MDXSeqMerger msm = new MDXSeqMerger();
+
+		// run job
+		log.info("Setting up job config...");
+		JobConf jobConf = this.mrCluster.createJobConf();
+		msm.createJobConf(jobConf, args);
+		log.info("Running job...");
+		JobClient.runJob(jobConf);
+		log.info("Job finished, checking the results...");
 	}
 
 	@After
