@@ -82,7 +82,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(SequenceFileInputFormat.class);
-		// conf.setMapperClass(Mapper.class);
+		conf.setMapperClass(MDXSeqMapper.class);
 		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
