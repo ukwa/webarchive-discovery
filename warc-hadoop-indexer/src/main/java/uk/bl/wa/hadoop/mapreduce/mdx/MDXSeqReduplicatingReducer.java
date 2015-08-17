@@ -26,6 +26,9 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 		NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, TO_REDUPLICATE, NUM_RESOLVED_REVISITS
 	}
 
+	private static final Text revisit = new Text("revisit");
+	private static final Text response = new Text("response");
+
 	public MDXSeqReduplicatingReducer() {
 		try {
 			Properties props = new Properties();
@@ -58,8 +61,8 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 			noValues++;
 			
 			// Reformat the key:
-			if( !"revisit".equals(mdx.getRecordType()) ) {
-				if( "response".equals(mdx.getRecordType()) ) {
+			if (!revisit.equals(mdx.getRecordType())) {
+				if (response.equals(mdx.getRecordType())) {
 					exemplar = mdx.getMDX();
 				}
 				// Collect complete records:
