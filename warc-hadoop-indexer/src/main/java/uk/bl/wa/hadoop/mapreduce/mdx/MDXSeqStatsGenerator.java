@@ -58,6 +58,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	public static String FORMATS_SUMMARY_NAME = "fmts";
 	public static String FORMATS_FFB_NAME = "fmtsffb";
 	public static String HOST_LINKS_NAME = "hostlinks";
+	public static String GEO_NAME = "geo";
 	public static String KEY_PREFIX = "__";
 
 
@@ -108,6 +109,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
+				TextOutputFormat.class, Text.class, Text.class);
+		MultipleOutputs.addMultiNamedOutput(conf, GEO_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
 
 		TextOutputFormat.setCompressOutput(conf, true);
@@ -231,14 +234,29 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						for (String link_host : hosts) {
 							String link = host + "\t" + link_host;
 							output.collect(new Text(HOST_LINKS_NAME
-									+ KEY_PREFIX + year),
- new Text(year + "\t"
+									+ KEY_PREFIX + year), new Text(year + "\t"
 									+ link));
 						}
 					} else {
 						// TBA Reporter that hosts was null;
 					}
 
+				}
+				// Now look for postcodes:
+				List<String> postcodes = p.get(SolrFields.POSTCODE);
+				List<String> locations = p.get(SolrFields.LOCATIONS);
+				if (postcodes != null) {
+					for (int i = 0; i < postcodes.size(); i++) {
+						String location = "";
+						if (locations != null
+								&& locations.size() == postcodes.size()) {
+							location = locations.get(i);
+						}
+						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
+								+ postcodes.get(i) + "\t" + locations.get(i);
+						output.collect(new Text(GEO_NAME + KEY_PREFIX + year),
+								new Text(result));
+					}
 				}
 			} else {
 				// TBA reporter to say how many request records ignored.
