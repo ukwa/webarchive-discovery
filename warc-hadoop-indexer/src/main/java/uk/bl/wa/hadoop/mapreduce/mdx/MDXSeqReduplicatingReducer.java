@@ -60,19 +60,20 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 			mdx = values.next();
 			noValues++;
 			
-			// Reformat the key:
-			if (!revisit.equals(mdx.getRecordType())) {
-				if (response.equals(mdx.getRecordType())) {
+			// Collect the revisit records:
+			if (revisit.equals(mdx.getRecordType())) {
+				// Add this revisit record to the stack:
+				reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
+				toReduplicate.add(mdx);
+			} else {
+				// Record a response record:
+				if (exemplar == null && response.equals(mdx.getRecordType())) {
+					log.info("Recorded exemplar for " + key);
 					exemplar = mdx.getMDX();
 				}
 				// Collect complete records:
 				Text outKey = new Text(mdx.getHash());
 				output.collect(outKey, mdx.getMDXAsText());
-			} else {
-				// Report:
-				reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
-				reporter.incrCounter(MyCounters.TO_REDUPLICATE, 1);
-				toReduplicate.add(mdx);
 			}
 			
 			// Report:
@@ -84,11 +85,7 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 						+ noValues
 						+ ", of which "
 						+ reporter.getCounter(MyCounters.TO_REDUPLICATE)
-								.getValue()
-						+ "/"
-						+ reporter.getCounter(MyCounters.NUM_REVISITS)
-								.getValue()
-						+ " records that need reduplication.");
+								.getValue() + " records need reduplication.");
 			}
 
 		}
@@ -104,7 +101,6 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 				rmdx.setRecordType("reduplicated");
 				rmdx.getProperties().putAll(exemplar.getProperties());
 				reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
-				reporter.incrCounter(MyCounters.TO_REDUPLICATE, -1);
 				// Collect resolved records:
 				output.collect(outKey, new Text(rmdx.toJSON()));
 			} else {

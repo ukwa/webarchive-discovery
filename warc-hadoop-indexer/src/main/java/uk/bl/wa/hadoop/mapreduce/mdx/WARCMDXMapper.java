@@ -64,7 +64,6 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 			// Wrap up the result:
 			MDX mdx = MDX.fromWritableSolrRecord(solr);
-			MDXWritable result = new MDXWritable(mdx);
 			// Wrap up the key:
 			Text oKey = new Text(mdx.getHash());
 			// Alternative key, based on record type + url + timestamp
@@ -72,6 +71,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 			// + mdx.getRecordType());
 
 			// Collect
+			MDXWritable result = new MDXWritable(mdx);
 			output.collect(oKey, result);
 		}
 

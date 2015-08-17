@@ -24,7 +24,7 @@ public class MDXSeqMapper extends MapReduceBase implements
 	public void map(Text key, Text value,
 			OutputCollector<Text, MDXWritable> output, Reporter reporter)
 			throws IOException {
-		output.collect(value,
+		output.collect(key,
 				new MDXWritable(MDX.fromJSONString(value.toString())));
 	}
 
