@@ -17,6 +17,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.compress.GzipCodec;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
@@ -26,6 +27,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
+import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -52,6 +54,12 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	private String inputPath;
 	private String outputPath;
 	private boolean wait;
+
+	public static String FORMATS_SUMMARY_NAME = "fmts";
+	public static String FORMATS_FFB_NAME = "fmtsffb";
+	public static String HOST_LINKS_NAME = "hostlinks";
+	public static String KEY_PREFIX = "__";
+
 
 	/**
 	 * 
@@ -86,7 +94,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(SequenceFileInputFormat.class);
-		conf.setMapperClass(MDXSeqAnalyserMapper.class);
+		conf.setMapperClass(MDXSeqStatsMapper.class);
 		conf.setReducerClass(FrequencyCountingReducer.class);
 		conf.setOutputFormat(TextOutputFormat.class);
 		conf.setOutputKeyClass(Text.class);
@@ -94,6 +102,16 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		conf.setMapOutputKeyClass(Text.class);
 		conf.setMapOutputValueClass(Text.class);
 		conf.setNumReduceTasks(numReducers);
+		
+		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_SUMMARY_NAME,
+				TextOutputFormat.class, Text.class, Text.class);
+		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_NAME,
+				TextOutputFormat.class, Text.class, Text.class);
+		MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
+				TextOutputFormat.class, Text.class, Text.class);
+
+		TextOutputFormat.setCompressOutput(conf, true);
+		TextOutputFormat.setOutputCompressorClass(conf, GzipCodec.class);
 	}
 
 	/**
@@ -161,11 +179,19 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
 	 *
 	 */
-	public class MDXSeqAnalyserMapper extends MapReduceBase implements
+	static public class MDXSeqStatsMapper extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
 
-		private boolean scanFormats = false;
+		private boolean scanFormats = true;
 		private boolean scanHostLinks = true;
+
+		private static String getFirstOrNull(List<String> list) {
+			if (list == null || list.isEmpty()) {
+				return "null";
+			} else {
+				return list.get(0);
+			}
+		}
 
 		@Override
 		public void map(Text key, Text value,
@@ -175,19 +201,47 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			MDX mdx = MDX.fromJSONString(value.toString());
 			Map<String, List<String>> p = mdx.getProperties();
 			String year = mdx.getTs().substring(0, 4);
-			// Generate format summary:
-			if (scanFormats) {
-				String formats = p.get(SolrFields.SOLR_CONTENT_TYPE).get(0);
-				output.collect(new Text(year), new Text(formats));
-			}
-			// Generate host link graph
-			if (scanHostLinks) {
-				String host = p.get(SolrFields.SOLR_HOST).get(0);
-				for (String link_host : p.get(SolrFields.SOLR_LINKS_HOSTS)) {
-					String link = host + "\t" + link_host;
-					output.collect(new Text(year), new Text(link));
-				}
+			if (!"request".equals(mdx.getRecordType())) {
+				// Generate format summary:
+				if (scanFormats) {
+					String cts = getFirstOrNull(p
+							.get(SolrFields.CONTENT_TYPE_SERVED));
+					String ctt = getFirstOrNull(p
+							.get(SolrFields.CONTENT_TYPE_TIKA));
+					String ctd = getFirstOrNull(p
+							.get(SolrFields.CONTENT_TYPE_DROID));
+					output.collect(new Text(FORMATS_SUMMARY_NAME + KEY_PREFIX
+							+ year), new Text(year + "\t" + cts + "\t" + ctt
+							+ "\t" + ctd));
 
+					String ct = getFirstOrNull(p
+							.get(SolrFields.SOLR_CONTENT_TYPE));
+					String ctext = getFirstOrNull(p
+							.get(SolrFields.CONTENT_TYPE_EXT));
+					String ctffb = getFirstOrNull(p.get(SolrFields.CONTENT_FFB));
+					output.collect(new Text(FORMATS_FFB_NAME + KEY_PREFIX
+							+ year), new Text(year + "\t" + ct + "\t" + ctext
+							+ "\t" + ctffb));
+				}
+				// Generate host link graph
+				if (scanHostLinks) {
+					String host = getFirstOrNull(p.get(SolrFields.SOLR_HOST));
+					List<String> hosts = p.get(SolrFields.SOLR_LINKS_HOSTS);
+					if (hosts != null) {
+						for (String link_host : hosts) {
+							String link = host + "\t" + link_host;
+							output.collect(new Text(HOST_LINKS_NAME
+									+ KEY_PREFIX + year),
+ new Text(year + "\t"
+									+ link));
+						}
+					} else {
+						// TBA Reporter that hosts was null;
+					}
+
+				}
+			} else {
+				// TBA reporter to say how many request records ignored.
 			}
 		}
 

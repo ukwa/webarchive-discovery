@@ -78,7 +78,8 @@ public class WARCMDXGeneratorIntegrationTest {
 
 		// prepare for tests
 		for (String filename : testWarcs) {
-			copyFileToTestCluster(filename);
+			copyFileToTestCluster(getFileSystem(), input,
+					"../warc-indexer/src/test/resources/", filename);
 		}
 
 		log.warn("Spun up test cluster.");
@@ -88,13 +89,14 @@ public class WARCMDXGeneratorIntegrationTest {
 		return dfsCluster.getFileSystem();
 	}
 
-	private void copyFileToTestCluster(String filename) throws IOException {
+	public static void copyFileToTestCluster(FileSystem fs, Path input,
+			String prefix, String filename)
+			throws IOException {
 		Path targetPath = new Path(input, filename);
-		File sourceFile = new File("../warc-indexer/src/test/resources/"
-				+ filename);
+		File sourceFile = new File(prefix + filename);
 		log.info("Copying " + filename + " into cluster at "
 				+ targetPath.toUri() + "...");
-		FSDataOutputStream os = getFileSystem().create(targetPath);
+		FSDataOutputStream os = fs.create(targetPath);
 		InputStream is = new FileInputStream(sourceFile);
 		IOUtils.copy(is, os);
 		is.close();
@@ -102,7 +104,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		log.info("Copy completed.");
 	}
 
-	private File writeInputFile(Path[] inputFiles) throws Exception {
+	public static File writeInputFile(Path[] inputFiles) throws Exception {
 		// Make a list:
 		File tmpInputsFile = File.createTempFile("inputs", ".txt");
 		tmpInputsFile.deleteOnExit();
