@@ -68,7 +68,6 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 			} else {
 				// Record a response record:
 				if (exemplar == null && response.equals(mdx.getRecordType())) {
-					log.info("Recorded exemplar for " + key);
 					exemplar = mdx.getMDX();
 				}
 				// Collect complete records:
