@@ -23,7 +23,7 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 	private static Log log = LogFactory.getLog(MDXSeqReduplicatingReducer.class);
 
 	static enum MyCounters {
-		NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, TO_REDUPLICATE, NUM_RESOLVED_REVISITS
+		NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS
 	}
 
 	private static final Text revisit = new Text("revisit");
@@ -84,7 +84,7 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 				reporter.setStatus("Processed "
 						+ noValues
 						+ ", of which "
-						+ reporter.getCounter(MyCounters.TO_REDUPLICATE)
+						+ reporter.getCounter(MyCounters.NUM_REVISITS)
 								.getValue() + " records need reduplication.");
 			}
 

@@ -59,6 +59,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	public static String FORMATS_FFB_NAME = "fmtsffb";
 	public static String HOST_LINKS_NAME = "hostlinks";
 	public static String GEO_NAME = "geo";
+	public static String GEO_SUMMARY_NAME = "geosum";
 	public static String KEY_PREFIX = "__";
 
 
@@ -111,6 +112,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addMultiNamedOutput(conf, GEO_NAME,
+				TextOutputFormat.class, Text.class, Text.class);
+		MultipleOutputs.addMultiNamedOutput(conf, GEO_SUMMARY_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
 
 		TextOutputFormat.setCompressOutput(conf, true);
@@ -242,7 +245,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 					}
 
 				}
-				// Now look for postcodes:
+				// Now look for postcodes and locations:
 				List<String> postcodes = p.get(SolrFields.POSTCODE);
 				List<String> locations = p.get(SolrFields.LOCATIONS);
 				if (postcodes != null) {
@@ -254,8 +257,15 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						}
 						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
 								+ postcodes.get(i) + "\t" + locations.get(i);
+						// Full geo-index:
 						output.collect(new Text(GEO_NAME + KEY_PREFIX + year),
 								new Text(result));
+						// Geo-summary:
+						if (!"".equals(location)) {
+							String summary = year + "\t" + locations.get(i);
+							output.collect(new Text(GEO_SUMMARY_NAME
+									+ KEY_PREFIX + year), new Text(summary));
+						}
 					}
 				}
 			} else {
