@@ -38,7 +38,7 @@ import org.apache.zookeeper.KeeperException;
 @SuppressWarnings({ "deprecation" })
 public class MDXSeqMerger extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog(MDXSeqMerger.class);
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "MapReduce job for merging MDX sequence files.";
 
 	private String inputPath;

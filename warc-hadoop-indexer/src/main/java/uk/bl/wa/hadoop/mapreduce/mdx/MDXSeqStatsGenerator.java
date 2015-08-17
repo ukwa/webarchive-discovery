@@ -48,7 +48,7 @@ import uk.bl.wa.solr.SolrFields;
 @SuppressWarnings({ "deprecation" })
 public class MDXSeqStatsGenerator extends Configured implements Tool {
 	private static final Log LOG = LogFactory.getLog(MDXSeqStatsGenerator.class);
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "MapReduce job extracting data from MDX Sequence Files.";
 
 	private String inputPath;
@@ -62,6 +62,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	public static String GEO_SUMMARY_NAME = "geosum";
 	public static String KEY_PREFIX = "__";
 
+	// Reducer count:
+	private int numReducers = 1;
 
 	/**
 	 * 
@@ -77,9 +79,6 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			InterruptedException {
 		// Parse the command-line parameters.
 		this.setup(args, conf);
-
-		// Reducer count:
-		int numReducers = 1;
 
 		// Add input paths:
 		LOG.info("Reading input files...");
@@ -156,6 +155,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		options.addOption("i", true, "input file list");
 		options.addOption("o", true, "output directory");
 		options.addOption("w", false, "wait for job to finish");
+		options.addOption("r", true, "number of reducers");
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(options, otherArgs);
@@ -168,6 +168,9 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		this.inputPath = cmd.getOptionValue("i");
 		this.outputPath = cmd.getOptionValue("o");
 		this.wait = cmd.hasOption("w");
+		if (cmd.hasOption("r")) {
+			this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+		}
 	}
 
 	/**
@@ -254,9 +257,11 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						if (locations != null
 								&& locations.size() == postcodes.size()) {
 							location = locations.get(i);
+						} else {
+							// TBA report unresolved locations
 						}
 						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
-								+ postcodes.get(i) + "\t" + locations.get(i);
+								+ postcodes.get(i) + "\t" + location;
 						// Full geo-index:
 						output.collect(new Text(GEO_NAME + KEY_PREFIX + year),
 								new Text(result));
