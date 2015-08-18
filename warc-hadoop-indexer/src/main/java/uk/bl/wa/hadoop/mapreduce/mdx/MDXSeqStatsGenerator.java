@@ -266,13 +266,15 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						} else {
 							// TBA report unresolved locations
 						}
-						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
-								+ postcodes.get(i) + "\t" + location;
-						// Full geo-index (at year-month level to avoid
-						// overloading a few reducers):
-						output.collect(new Text(GEO_NAME + KEY_PREFIX
-								+ year_month),
-								new Text(result));
+						// Full geo-index
+						// This does not work as should not go through
+						// FrequencyCountingReducer.
+						// String result = mdx.getTs() + "/" + mdx.getUrl() +
+						// "\t"
+						// + postcodes.get(i) + "\t" + location;
+						// output.collect(new Text(GEO_NAME + KEY_PREFIX
+						// + year_month),
+						// new Text(result));
 						// Geo-summary:
 						if (!"".equals(location)) {
 							String summary = year + "\t" + locations.get(i);
