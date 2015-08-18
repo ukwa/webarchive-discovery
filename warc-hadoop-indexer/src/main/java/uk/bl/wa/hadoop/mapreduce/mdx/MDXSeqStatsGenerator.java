@@ -210,7 +210,12 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			MDX mdx = MDX.fromJSONString(value.toString());
 			Map<String, List<String>> p = mdx.getProperties();
 			String year = mdx.getTs().substring(0, 4);
-			String year_month = mdx.getTs().substring(0, 6);
+			String year_month = year;
+			if (mdx.getTs().length() >= 6) {
+				year_month = mdx.getTs().substring(0, 6);
+			} else {
+				year_month = year + "xx";
+			}
 			if (!"request".equals(mdx.getRecordType())) {
 				// Generate format summary:
 				if (scanFormats) {
