@@ -20,6 +20,10 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -168,6 +172,28 @@ public class MDXSeqMerger extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		int ret = ToolRunner.run(new MDXSeqMerger(), args);
 		System.exit(ret);
+	}
+
+	/**
+	 * Simple mapper class to turn MDX-as-Text into MDXWritables.
+	 * 
+	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+	 *
+	 */
+	static public class MDXSeqMapper extends MapReduceBase implements
+			Mapper<Text, Text, Text, MDXWritable> {
+
+		public MDXSeqMapper() {
+		}
+
+		@Override
+		public void map(Text key, Text value,
+				OutputCollector<Text, MDXWritable> output, Reporter reporter)
+				throws IOException {
+			output.collect(key,
+					new MDXWritable(MDX.fromJSONString(value.toString())));
+		}
+
 	}
 
 }

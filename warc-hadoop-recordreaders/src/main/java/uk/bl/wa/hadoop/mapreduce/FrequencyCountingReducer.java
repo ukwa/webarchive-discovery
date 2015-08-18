@@ -27,7 +27,7 @@ public class FrequencyCountingReducer extends MapReduceBase implements Reducer<T
 	private static Logger log = Logger
 			.getLogger(FrequencyCountingReducer.class);
 	
-	MultipleOutputs mos;
+	private MultipleOutputs mos;
 
 	/*
 	 * (non-Javadoc)
@@ -72,12 +72,10 @@ public class FrequencyCountingReducer extends MapReduceBase implements Reducer<T
 			String[] fp = key.toString().split("__");
 			collector = mos.getCollector(fp[0], fp[1], reporter);
 			outKey = new Text(fp[1]);
-			log.info("Got key: " + key + " outTo " + fp[0] + " outKey "
-					+ outKey);
 		}
+		log.info("For key: " + key + " outKey " + outKey + " outputting "
+				+ matches.size() + " unique values.");
 		for( String match : matches.keySet() ) {
-			// This ignores the count:
-			// result.set( match );
 			// This outputs the count:
 			result.set(match + "\t" + matches.get(match).get());
 			// And collect:
@@ -96,4 +94,5 @@ public class FrequencyCountingReducer extends MapReduceBase implements Reducer<T
 		super.close();
 		mos.close();
 	}
+
 }

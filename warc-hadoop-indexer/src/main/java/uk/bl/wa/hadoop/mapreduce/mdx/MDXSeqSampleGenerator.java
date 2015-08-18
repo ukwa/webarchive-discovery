@@ -3,8 +3,10 @@ package uk.bl.wa.hadoop.mapreduce.mdx;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Vector;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -14,6 +16,7 @@ import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.commons.math3.random.RandomDataGenerator;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -25,6 +28,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
@@ -34,8 +38,6 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
 import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqSampleGenerator.MDXSeqSampleMapper;
 import uk.bl.wa.solr.SolrFields;
 
 /**
@@ -47,8 +49,8 @@ import uk.bl.wa.solr.SolrFields;
  */
 
 @SuppressWarnings({ "deprecation" })
-public class MDXSeqStatsGenerator extends Configured implements Tool {
-	private static final Log LOG = LogFactory.getLog(MDXSeqStatsGenerator.class);
+public class MDXSeqSampleGenerator extends Configured implements Tool {
+	private static final Log LOG = LogFactory.getLog(MDXSeqSampleGenerator.class);
 	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
 	private static final String CLI_HEADER = "MapReduce job extracting data from MDX Sequence Files.";
 
@@ -56,10 +58,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	private String outputPath;
 	private boolean wait;
 
-	public static String FORMATS_SUMMARY_NAME = "formats";
-	public static String FORMATS_FFB_NAME = "formatsExt";
-	public static String HOST_LINKS_NAME = "hostLinks";
-	public static String GEO_SUMMARY_NAME = "geo";
+	public static String GEO_NAME = "geoSample";
+	public static String FORMATS_FFB_SAMPLE_NAME = "formatsExtSample";
 	public static String KEY_PREFIX = "__";
 
 	// Reducer count:
@@ -95,8 +95,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		conf.setInputFormat(SequenceFileInputFormat.class);
-		conf.setMapperClass(MDXSeqStatsMapper.class);
-		conf.setReducerClass(FrequencyCountingReducer.class);
+		conf.setMapperClass(MDXSeqSampleMapper.class);
+		conf.setReducerClass(ReservoirSamplingReducer.class);
 		conf.setOutputFormat(TextOutputFormat.class);
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
@@ -104,13 +104,10 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		conf.setMapOutputValueClass(Text.class);
 		conf.setNumReduceTasks(numReducers);
 		
-		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_SUMMARY_NAME,
+		MultipleOutputs.addMultiNamedOutput(conf, GEO_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
-		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
-		MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
-		MultipleOutputs.addMultiNamedOutput(conf, GEO_SUMMARY_NAME,
+
+		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_SAMPLE_NAME,
 				TextOutputFormat.class, Text.class, Text.class);
 
 		TextOutputFormat.setCompressOutput(conf, true);
@@ -128,7 +125,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	public int run(String[] args) throws IOException, ParseException,
 			KeeperException, InterruptedException {
 		// Set up the base conf:
-		JobConf conf = new JobConf(getConf(), MDXSeqStatsGenerator.class);
+		JobConf conf = new JobConf(getConf(), MDXSeqSampleGenerator.class);
 
 		// Get the job configuration:
 		this.createJobConf(conf, args);
@@ -177,7 +174,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		int ret = ToolRunner.run(new MDXSeqStatsGenerator(), args);
+		int ret = ToolRunner.run(new MDXSeqSampleGenerator(), args);
 		System.exit(ret);
 	}
 
@@ -186,11 +183,19 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
 	 *
 	 */
-	static public class MDXSeqStatsMapper extends MapReduceBase implements
+	static public class MDXSeqSampleMapper extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
 
 		private boolean scanFormats = true;
 		private boolean scanHostLinks = true;
+
+		static String getFirstOrNull(List<String> list) {
+			if (list == null || list.isEmpty()) {
+				return "";
+			} else {
+				return list.get(0);
+			}
+		}
 
 		@Override
 		public void map(Text key, Text value,
@@ -207,47 +212,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 				year_month = year + "xx";
 			}
 			if (!"request".equals(mdx.getRecordType())) {
-				// Generate format summary:
-				if (scanFormats) {
-					String cts = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_SERVED));
-					String ctt = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_TIKA));
-					String ctd = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_DROID));
-					output.collect(new Text(FORMATS_SUMMARY_NAME + KEY_PREFIX
-							+ year), new Text(year + "\t" + cts + "\t" + ctt
-							+ "\t" + ctd));
-
-					String ct = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.SOLR_CONTENT_TYPE));
-					String ctext = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_EXT));
-					String ctffb = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_FFB));
-					output.collect(new Text(FORMATS_FFB_NAME + KEY_PREFIX
-							+ year), new Text(year + "\t" + ct + "\t" + ctext
-							+ "\t" + ctffb));
-				}
-				// Generate host link graph
-				if (scanHostLinks) {
-					String host = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.SOLR_HOST));
-					List<String> hosts = p.get(SolrFields.SOLR_LINKS_HOSTS);
-					if (hosts != null) {
-						for (String link_host : hosts) {
-							String link = host + "\t" + link_host;
-							output.collect(new Text(HOST_LINKS_NAME
-									+ KEY_PREFIX + year + KEY_PREFIX + host),
-									new Text(year + "\t"
-									+ link));
-						}
-					} else {
-						// TBA Reporter that hosts was null;
-					}
-
-				}
-				// Now look for postcodes and locations:
+				// Look for postcodes and locations:
 				List<String> postcodes = p.get(SolrFields.POSTCODE);
 				List<String> locations = p.get(SolrFields.LOCATIONS);
 				if (postcodes != null) {
@@ -260,25 +225,114 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 							// TBA report unresolved locations
 						}
 						// Full geo-index
-						// This does not work as should not go through
-						// FrequencyCountingReducer.
-						// String result = mdx.getTs() + "/" + mdx.getUrl() +
-						// "\t"
-						// + postcodes.get(i) + "\t" + location;
-						// output.collect(new Text(GEO_NAME + KEY_PREFIX
-						// + year_month),
-						// new Text(result));
-						// Geo-summary:
-						if (!"".equals(location)) {
-							String summary = year + "\t" + locations.get(i);
-							output.collect(new Text(GEO_SUMMARY_NAME
-									+ KEY_PREFIX + year), new Text(summary));
-						}
+						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
+								+ postcodes.get(i) + "\t" + location;
+						output.collect(new Text(GEO_NAME + KEY_PREFIX
+								+ year_month), new Text(result));
 					}
 				}
+				// Look for examples from formats
+				String ct = getFirstOrNull(p.get(SolrFields.SOLR_CONTENT_TYPE));
+				String ctext = getFirstOrNull(p
+						.get(SolrFields.CONTENT_TYPE_EXT));
+				String ctffb = getFirstOrNull(p.get(SolrFields.CONTENT_FFB));
+				output.collect(new Text(FORMATS_FFB_SAMPLE_NAME + KEY_PREFIX
+						+ year),
+						new Text(year + "\t" + ct + "\t" + ctext + "\t" + ctffb
+								+ "\t" + mdx.getTs() + "/" + mdx.getUrl()));
+
 			} else {
 				// TBA reporter to say how many request records ignored.
 			}
+		}
+
+	}
+	
+	/**
+	 * This reservoir-sampling reducer selects a finite random subset of any
+	 * stream of values passed to it.
+	 * 
+	 * Defaults to 1000 items in the sample.
+	 * 
+	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+	 *
+	 */
+	static public class ReservoirSamplingReducer extends MapReduceBase
+			implements Reducer<Text, Text, Text, Text> {
+
+		private int numSamples = 1000;
+		private long defaultSeed = 1231241245l;
+		private MultipleOutputs mos;
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see
+		 * org.apache.hadoop.mapred.MapReduceBase#configure(org.apache.hadoop
+		 * .mapred .JobConf)
+		 */
+		@Override
+		public void configure(JobConf job) {
+			super.configure(job);
+			mos = new MultipleOutputs(job);
+		}
+
+		@Override
+		public void reduce(Text key, Iterator<Text> values,
+				OutputCollector<Text, Text> output, Reporter reporter)
+				throws IOException {
+
+			Text item;
+			long numItemsSeen = 0;
+			Vector<Text> reservoir = new Vector<Text>();
+			RandomDataGenerator random = new RandomDataGenerator();
+			// Fix the seed so repoducible by default:
+			random.reSeed(defaultSeed);
+
+			// Iterate through all values:
+			while (values.hasNext()) {
+				item = values.next();
+
+				if (reservoir.size() < numSamples) {
+					// reservoir not yet full, just append
+					reservoir.add(item);
+				} else {
+					// find a sample to replace
+					long rIndex = random.nextLong(0, numItemsSeen);
+					if (rIndex < numSamples) {
+						reservoir.set((int) rIndex, item);
+					}
+				}
+				numItemsSeen++;
+			}
+
+			// Choose the output:
+
+			// Now output the sample:
+			Text outKey = key;
+			OutputCollector<Text, Text> collector;
+			int pos = key.find("__");
+			if (pos == -1) {
+				collector = output;
+			} else {
+				String[] fp = key.toString().split("__");
+				collector = mos.getCollector(fp[0], fp[1], reporter);
+				outKey = new Text(fp[1]);
+			}
+			for (Text sto : reservoir) {
+				collector.collect(outKey, sto);
+			}
+		}
+
+		/*
+		 * (non-Javadoc)
+		 * 
+		 * @see org.apache.hadoop.mapred.MapReduceBase#close()
+		 */
+		@Override
+		public void close() throws IOException {
+			super.close();
+			mos.close();
 		}
 
 	}
