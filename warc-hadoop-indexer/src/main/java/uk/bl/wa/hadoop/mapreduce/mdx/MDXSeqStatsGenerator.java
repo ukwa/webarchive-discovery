@@ -246,7 +246,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						for (String link_host : hosts) {
 							String link = host + "\t" + link_host;
 							output.collect(new Text(HOST_LINKS_NAME
-									+ KEY_PREFIX + year), new Text(year + "\t"
+									+ KEY_PREFIX + year + KEY_PREFIX + host),
+									new Text(year + "\t"
 									+ link));
 						}
 					} else {

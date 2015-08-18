@@ -45,7 +45,7 @@ public class FrequencyCountingReducer extends MapReduceBase implements Reducer<T
 	@Override
 	public void reduce( Text key, Iterator<Text> iterator, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
 		
-		log.info("Reducing for key: " + key);
+		log.warn("Reducing for key: " + key);
 
 		// Use a simple set to collect only distinct results for this key:
 		Map<String,MutableInt> matches = new HashMap<String,MutableInt>();
