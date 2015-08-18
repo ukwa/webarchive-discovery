@@ -210,6 +210,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			MDX mdx = MDX.fromJSONString(value.toString());
 			Map<String, List<String>> p = mdx.getProperties();
 			String year = mdx.getTs().substring(0, 4);
+			String year_month = mdx.getTs().substring(0, 6);
 			if (!"request".equals(mdx.getRecordType())) {
 				// Generate format summary:
 				if (scanFormats) {
@@ -262,8 +263,10 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						}
 						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
 								+ postcodes.get(i) + "\t" + location;
-						// Full geo-index:
-						output.collect(new Text(GEO_NAME + KEY_PREFIX + year),
+						// Full geo-index (at year-month level to avoid
+						// overloading a few reducers):
+						output.collect(new Text(GEO_NAME + KEY_PREFIX
+								+ year_month),
 								new Text(result));
 						// Geo-summary:
 						if (!"".equals(location)) {
