@@ -346,7 +346,7 @@ public class WARCIndexer {
 					|| url.getPath().matches("/index\\.[a-z]+$")) {
 				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
 			// Spot 'robots.txt':
-			} else if (url.getPath().equals("/robots.txt")) {
+			} else if (url.getPath().equalsIgnoreCase("/robots.txt")) {
 				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
 			} else {
 				solr.setField(SolrFields.SOLR_URL_TYPE,
@@ -501,7 +501,8 @@ public class WARCIndexer {
 			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			
 			// If this is a revisit record, we should just return an update to the crawl_dates:
-			if(  WARCConstants.WARCRecordType.revisit.name().equals( header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
+			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase(
+					(String) header.getHeaderValue(HEADER_KEY_TYPE))) {
 				if( currentCrawlDates.contains(crawlDate) ) {
 					return null;
 				}
@@ -610,7 +611,7 @@ public class WARCIndexer {
 			// Get the other headers:
 			for( Header h : httpHeaders ) {
 				// Get the type from the server
-				if (h.getName().equals(HttpHeaders.CONTENT_TYPE)
+				if (h.getName().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE)
 						&& solr.getField(SolrFields.CONTENT_TYPE_SERVED) == null) {
 					String servedType = h.getValue();
 					if (servedType.length() > 200)
@@ -618,9 +619,9 @@ public class WARCIndexer {
 					solr.addField(SolrFields.CONTENT_TYPE_SERVED, servedType);
 				}
 				// Also, grab the X-Powered-By or Server headers if present:
-				if( h.getName().equals( "X-Powered-By" ) )
+				if (h.getName().equalsIgnoreCase("X-Powered-By"))
 					solr.addField( SolrFields.SERVER, h.getValue() );
-				if( h.getName().equals( HttpHeaders.SERVER ) )
+				if (h.getName().equalsIgnoreCase(HttpHeaders.SERVER))
 					solr.addField( SolrFields.SERVER, h.getValue() );
 			}
 		} catch( NumberFormatException e ) {
@@ -819,7 +820,8 @@ public class WARCIndexer {
 
 	private boolean checkUrl( String url ) {
 		for( String exclude : url_excludes ) {
-			if( !"".equals( exclude ) && url.matches( ".*" + exclude + ".*" ) ) {
+			if (!"".equalsIgnoreCase(exclude)
+					&& url.matches(".*" + exclude + ".*")) {
 				return false;
 			}
 		}
@@ -828,7 +830,7 @@ public class WARCIndexer {
 
 	private boolean checkProtocol( String url ) {
 		for( String include : protocol_includes ) {
-			if( "".equals( include ) || url.startsWith( include ) ) {
+			if ("".equalsIgnoreCase(include) || url.startsWith(include)) {
 				return true;
 			}
 		}
@@ -840,7 +842,7 @@ public class WARCIndexer {
 			return false;
 		// Check for match:
 		for( String include : response_includes ) {
-			if( "".equals( include ) || statusCode.startsWith( include ) ) {
+			if ("".equalsIgnoreCase(include) || statusCode.startsWith(include)) {
 				return true;
 			}
 		}
