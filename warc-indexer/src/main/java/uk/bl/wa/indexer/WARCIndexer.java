@@ -135,6 +135,9 @@ public class WARCIndexer {
     private final boolean addNormalisedURL;
     private final AggressiveUrlCanonicalizer urlNormaliser = new AggressiveUrlCanonicalizer();
 
+	// Also canonicalise the HOST field (e.g. drop "www.")
+	public static final boolean CANONICALISE_HOST = true;
+
 	/* ------------------------------------------------------------ */
 
 	/**
@@ -352,8 +355,11 @@ public class WARCIndexer {
 				solr.setField(SolrFields.SOLR_URL_TYPE,
 						SolrFields.SOLR_URL_TYPE_NORMAL);
 			}
-			// Record the domain (strictly, the host):
+			// Record the host (an canonicalised), the domain
+			// and the public suffix:
 			String host = url.getHost();
+			if (CANONICALISE_HOST)
+				host = canon.urlStringToKey(host).replace("/", "");
 			solr.setField( SolrFields.SOLR_HOST, host );
 			solr.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
 			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );

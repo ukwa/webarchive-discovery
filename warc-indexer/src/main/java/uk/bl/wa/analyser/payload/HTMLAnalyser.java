@@ -37,6 +37,7 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.extract.LinkExtractor;
+import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -125,13 +126,15 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 				Set<String> cHostSet = new HashSet<String>();
                 for (String host: hosts) {
 					// Canonicalise the host:
-					String cHost;
-					try {
-						cHost = canon.urlStringToKey(host).replace("/", "");
-					} catch (URIException e) {
-						log.error("Failed to canonicalise host: " + host + ": "
-								+ e);
-						cHost = host;
+					String cHost = host;
+					if (WARCIndexer.CANONICALISE_HOST) {
+						try {
+							cHost = canon.urlStringToKey(host).replace("/", "");
+						} catch (URIException e) {
+							log.error("Failed to canonicalise host: " + host
+									+ ": " + e);
+							cHost = host;
+						}
 					}
 					cHostSet.add(cHost);
 				}
