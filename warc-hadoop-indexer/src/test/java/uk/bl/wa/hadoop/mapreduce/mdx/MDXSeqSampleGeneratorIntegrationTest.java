@@ -18,6 +18,7 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.codehaus.plexus.util.IOUtil;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -125,6 +126,20 @@ public class MDXSeqSampleGeneratorIntegrationTest {
 
 		// Check contents of the output:
 		// TBA
+	}
+
+	@After
+	public void tearDown() throws Exception {
+		log.warn("Tearing down test cluster...");
+		if (dfsCluster != null) {
+			dfsCluster.shutdown();
+			dfsCluster = null;
+		}
+		if (mrCluster != null) {
+			mrCluster.shutdown();
+			mrCluster = null;
+		}
+		log.warn("Torn down test cluster.");
 	}
 
 }
