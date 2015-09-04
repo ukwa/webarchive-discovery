@@ -9,7 +9,10 @@
 * Fixed bug in command-line client where final set of documents were not being submitted to Solr.
 * Added and filled resource_name field.
 * Made first_bytes shingler optional.
-* Updated to Tika 1.9 and Nanite 1.2.1-83.
+* Updated to Tika 1.10 and Nanite 1.2.2-82.
+* Non-existant elements crop up in elements_used for plain text [#35](https://github.com/ukwa/webarchive-discovery/issues/35)
+* Date-based partial updates not working [#64](https://github.com/ukwa/webarchive-discovery/issues/64) 
+* Added Map-Reduce tools to generate 'MDX' (Metadata inDeX) sequence files, for resolving revisits and generating datasets of samples and stats. See [#65](https://github.com/ukwa/webarchive-discovery/issues/65) and [#16](https://github.com/ukwa/webarchive-discovery/issues/16).
 
 2.1.0
 -----
