@@ -199,13 +199,10 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			// Parse the MDX:
 			MDX mdx = MDX.fromJSONString(value.toString());
 			Map<String, List<String>> p = mdx.getProperties();
+
 			String year = mdx.getTs().substring(0, 4);
-			String year_month = year;
-			if (mdx.getTs().length() >= 6) {
-				year_month = mdx.getTs().substring(0, 6);
-			} else {
-				year_month = year + "xx";
-			}
+
+			// Only extract from requests:
 			if (!"request".equals(mdx.getRecordType())) {
 				// Generate format summary:
 				if (scanFormats) {
@@ -236,14 +233,24 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 					List<String> hosts = p.get(SolrFields.SOLR_LINKS_HOSTS);
 					if (hosts != null) {
 						for (String link_host : hosts) {
+							// Record the link:
 							String link = host + "\t" + link_host;
-							output.collect(new Text(HOST_LINKS_NAME
-									+ KEY_PREFIX + year + KEY_PREFIX + host),
-									new Text(year + "\t"
-									+ link));
+							// Make a sub-key for the reducer so individual
+							// reducers don't get overloaded:
+							String host_key = host;
+							if (host != null && host.length() > 3)
+								host_key = host_key.substring(0, 3);
+							// And collect:
+							output.collect(
+									new Text(HOST_LINKS_NAME + KEY_PREFIX
+											+ year + KEY_PREFIX + host_key),
+									new Text(year + "\t" + link));
 						}
+						// Reporter;
+						reporter.incrCounter("MDX-Records", "Hosts", 1);
 					} else {
-						// TBA Reporter that hosts was null;
+						// Reporter that hosts was null;
+						reporter.incrCounter("MDX-Records", "Hosts-Null", 1);
 					}
 
 				}
@@ -257,7 +264,9 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 								&& locations.size() == postcodes.size()) {
 							location = locations.get(i);
 						} else {
-							// TBA report unresolved locations
+							// Reporter;
+							reporter.incrCounter("MDX-Records",
+									"Unresolved-Locations", 1);
 						}
 						// Full geo-index
 						// This does not work as should not go through
@@ -273,11 +282,17 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 							String summary = year + "\t" + locations.get(i);
 							output.collect(new Text(GEO_SUMMARY_NAME
 									+ KEY_PREFIX + year), new Text(summary));
+						} else {
+							// Reporter;
+							reporter.incrCounter("MDX-Records",
+									"Empty-Locations", 1);
 						}
 					}
 				}
 			} else {
-				// TBA reporter to say how many request records ignored.
+				// Reporter;
+				reporter.incrCounter("MDX-Records",
+						"Ignored-" + mdx.getRecordType() + "-Record", 1);
 			}
 		}
 

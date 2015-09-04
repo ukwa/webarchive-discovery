@@ -186,9 +186,6 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
 	static public class MDXSeqSampleMapper extends MapReduceBase implements
 			Mapper<Text, Text, Text, Text> {
 
-		private boolean scanFormats = true;
-		private boolean scanHostLinks = true;
-
 		static String getFirstOrNull(List<String> list) {
 			if (list == null || list.isEmpty()) {
 				return "";
@@ -222,7 +219,9 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
 								&& locations.size() == postcodes.size()) {
 							location = locations.get(i);
 						} else {
-							// TBA report unresolved locations
+							// Reporter;
+							reporter.incrCounter("MDX-Records",
+									"Unresolved-Locations", 1);
 						}
 						// Full geo-index
 						String result = mdx.getTs() + "/" + mdx.getUrl() + "\t"
@@ -242,7 +241,9 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
 								+ "\t" + mdx.getTs() + "/" + mdx.getUrl()));
 
 			} else {
-				// TBA reporter to say how many request records ignored.
+				// Reporter;
+				reporter.incrCounter("MDX-Records",
+						"Ignored-" + mdx.getRecordType() + "-Record", 1);
 			}
 		}
 
@@ -307,8 +308,6 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
 			}
 
 			// Choose the output:
-
-			// Now output the sample:
 			Text outKey = key;
 			OutputCollector<Text, Text> collector;
 			int pos = key.find("__");
@@ -316,12 +315,20 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
 				collector = output;
 			} else {
 				String[] fp = key.toString().split("__");
-				collector = mos.getCollector(fp[0], fp[1], reporter);
+				collector = getCollector(fp[0], fp[1], reporter);
 				outKey = new Text(fp[1]);
 			}
+
+			// Now output the sample:
 			for (Text sto : reservoir) {
 				collector.collect(outKey, sto);
 			}
+		}
+
+		@SuppressWarnings("unchecked")
+		private OutputCollector<Text, Text> getCollector(String fp, String fp2,
+				Reporter reporter) throws IOException {
+			return mos.getCollector(fp, fp2, reporter);
 		}
 
 		/*
