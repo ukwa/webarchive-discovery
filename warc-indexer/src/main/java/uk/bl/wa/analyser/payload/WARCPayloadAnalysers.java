@@ -78,6 +78,8 @@ public class WARCPayloadAnalysers {
 	public WARCPayloadAnalysers(Config conf) {
 		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
 		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
+		log.info("first_bytes config: " + this.extractContentFirstBytes + " "
+				+ this.firstBytesLength);
 		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
 		this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
 		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );

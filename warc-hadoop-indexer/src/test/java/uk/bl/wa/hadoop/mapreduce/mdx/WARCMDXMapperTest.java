@@ -43,7 +43,7 @@ public class WARCMDXMapperTest {
 	public void setUp() {
 		// Overload the config:
 		JobConf conf = new JobConf();
-		Config c = ConfigFactory.parseResources("mdx-test.conf");
+		Config c = ConfigFactory.load("mdx");
 		conf.set(WARCMDXGenerator.CONFIG_PROPERTIES, c.withOnlyPath("warc")
 				.root().render(ConfigRenderOptions.concise()));
 		// Set up the mapper etc.:
