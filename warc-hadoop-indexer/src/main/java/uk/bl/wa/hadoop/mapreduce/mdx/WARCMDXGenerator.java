@@ -78,7 +78,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		if (this.configPath != null) {
 			index_conf = ConfigFactory.parseFile(new File(this.configPath));
 		} else {
-			index_conf = ConfigFactory.load();
+			index_conf = ConfigFactory.load("mdx");
 		}
 		if (this.dumpConfig) {
 			ConfigPrinter.print(index_conf);

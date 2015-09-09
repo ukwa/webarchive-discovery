@@ -14,6 +14,7 @@
 * Date-based partial updates not working [#64](https://github.com/ukwa/webarchive-discovery/issues/64) 
 * Added Map-Reduce tools to generate 'MDX' (Metadata inDeX) sequence files, for resolving revisits and generating datasets of samples and stats. See [#65](https://github.com/ukwa/webarchive-discovery/issues/65) and [#16](https://github.com/ukwa/webarchive-discovery/issues/16).
 * Fix generator extraction [#58](https://github.com/ukwa/webarchive-discovery/issues/58)
+* In MDX, extract audio/video metadata for analysis. [#67](https://github.com/ukwa/webarchive-discovery/issues/67)
 
 2.1.0
 -----
