@@ -36,6 +36,11 @@ import org.archive.wayback.resourcestore.indexer.WarcIndexer;
 
 public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparable<?>, Value extends Writable>
 	extends RecordReader<Text, Text> {
+
+    public static final String CDX_09 = " CDX N b a m s k r V g";
+    public static final String CDX_10 = " CDX A b a m s k r M V g";
+    public static final String CDX_11 = " CDX N b a m s k r M S V g";
+
     private static final Logger LOGGER = Logger
 	    .getLogger(DereferencingArchiveToCDXRecordReader.class.getName());
     private LineRecordReader internal = new LineRecordReader();
@@ -61,7 +66,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
 	this.filesystem = fileSplit.getPath().getFileSystem(conf);
 	try {
 	    this.cdxFormat = new CDXFormat(conf.get("cdx.format",
-		    " CDX A b a m s k r M V g"));
+ CDX_10));
 	    this.hdfs = Boolean.parseBoolean(conf.get("cdx.hdfs", "false"));
 	} catch (CDXFormatException e) {
 	    LOGGER.error("initialize(): " + e.getMessage());

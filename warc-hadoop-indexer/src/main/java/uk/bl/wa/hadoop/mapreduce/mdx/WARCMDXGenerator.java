@@ -91,7 +91,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 
 		// Reducer count:
 		// server.
-		int numReducers = 1;
+		int numReducers = 10;
 		try {
 			numReducers = index_conf.getInt("warc.hadoop.num_reducers");
 		} catch (NumberFormatException n) {

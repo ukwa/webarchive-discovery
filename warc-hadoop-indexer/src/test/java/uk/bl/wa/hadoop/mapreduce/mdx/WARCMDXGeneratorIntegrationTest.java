@@ -150,7 +150,8 @@ public class WARCMDXGeneratorIntegrationTest {
 		// check the output exists
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
-		Assert.assertEquals(1, outputFiles.length);
+		// Default is 10 reducers:
+		Assert.assertEquals(10, outputFiles.length);
 
 		// Copy the output out:
 		FileOutputStream fout = new FileOutputStream(outputSeq);

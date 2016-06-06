@@ -32,6 +32,7 @@ import org.archive.hadoop.mapreduce.AlphaPartitioner;
 
 import uk.bl.wa.hadoop.mapreduce.io.TextOutputFormat;
 import uk.bl.wa.hadoop.mapreduce.lib.ArchiveToCDXFileInputFormat;
+import uk.bl.wa.hadoop.mapreduce.lib.DereferencingArchiveToCDXRecordReader;
 
 /**
  * @author rcoram
@@ -47,7 +48,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
     private boolean hdfs;
     private boolean wait;
     private int numReducers;
-    private String metaTag = "O";
+    private String metaTag = "-";
 
     private void setup(String args[], Configuration conf)
 	    throws ParseException, URISyntaxException {
@@ -60,7 +61,8 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 	options.addOption("w", false, "Wait for completion.");
 	options.addOption("r", true, "Num. Reducers");
 	options.addOption("a", true, "ARK identifier lookup");
-	options.addOption("m", true, "Meta-tag character");
+        options.addOption("m", true,
+                "Meta-tag character (we use 'O' for open and 'L' for LD)");
 	options.addOption(OptionBuilder.withArgName("property=value")
 		.hasArgs(2).withValueSeparator()
 		.withDescription("use value for given property").create("D"));
@@ -70,7 +72,8 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 	this.inputPath = cmd.getOptionValue("i");
 	this.outputPath = cmd.getOptionValue("o");
 	this.splitFile = cmd.getOptionValue("s");
-	this.cdxFormat = cmd.getOptionValue("c", " CDX A b a m s k r M V g");
+        this.cdxFormat = cmd.getOptionValue("c",
+                DereferencingArchiveToCDXRecordReader.CDX_11);
 	this.hdfs = cmd.hasOption("h");
 	this.wait = cmd.hasOption("w");
 	this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
