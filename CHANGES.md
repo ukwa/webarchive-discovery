@@ -16,7 +16,7 @@
 * Fix generator extraction [#58](https://github.com/ukwa/webarchive-discovery/issues/58)
 * In MDX, extract audio/video metadata for analysis. [#67](https://github.com/ukwa/webarchive-discovery/issues/67)
 * Default to storing text in the MDX rather than stripping it.
-* Switch to Java 7 (required by Tika 1.10)
+* ~~Switch to Java 7 (required by Tika 1.10)~~ Reverted to Tika 1.9 and Java 6 as that's all we can support right now.
 
 2.1.0
 -----
