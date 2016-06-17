@@ -11,9 +11,9 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.MapWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mrunit.MapDriver;
 import org.apache.hadoop.mrunit.MapReduceDriver;
 import org.apache.hadoop.mrunit.ReduceDriver;
@@ -24,11 +24,11 @@ import org.archive.io.ArchiveRecord;
 import org.junit.Before;
 import org.junit.Test;
 
-import uk.bl.wa.hadoop.WritableArchiveRecord;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
+
+import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 public class WARCMDXMapperTest {
 
@@ -42,7 +42,7 @@ public class WARCMDXMapperTest {
 	@Before
 	public void setUp() {
 		// Overload the config:
-		JobConf conf = new JobConf();
+        Configuration conf = new Configuration();
 		Config c = ConfigFactory.load("mdx");
 		conf.set(WARCMDXGenerator.CONFIG_PROPERTIES, c.withOnlyPath("warc")
 				.root().render(ConfigRenderOptions.concise()));

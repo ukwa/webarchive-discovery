@@ -13,6 +13,8 @@ import org.apache.commons.cli.OptionBuilder;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.filecache.DistributedCache;
@@ -26,6 +28,7 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.partition.TotalOrderPartitioner;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.archive.hadoop.mapreduce.AlphaPartitioner;
@@ -41,6 +44,9 @@ import uk.bl.wa.hadoop.mapreduce.lib.DereferencingArchiveToCDXRecordReader;
 
 @SuppressWarnings("static-access")
 public class ArchiveCDXGenerator extends Configured implements Tool {
+
+    private static final Log log = LogFactory.getLog(ArchiveCDXGenerator.class);
+
     private String inputPath;
     private String outputPath;
     private String splitFile;
@@ -82,7 +88,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
             System.out.println("Adding ARK lookup: " + lookup);
             DistributedCache.addCacheFile(lookup, conf);
         }
-        if (inputPath == null || outputPath == null || splitFile == null) {
+        if (inputPath == null || outputPath == null) {
             HelpFormatter formatter = new HelpFormatter();
             formatter.printHelp("ArchiveCDXGenerator", options);
             System.exit(1);
@@ -108,11 +114,12 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
             return (lineCount / 3);
     }
 
-    @Override
-    public int run(String[] args) throws Exception {
-        Job job = new Job(getConf(),
+    protected Job createJobConf(Configuration conf, String[] args)
+            throws Exception {
+
+        Job job = new Job(conf,
                 "ArchiveCDXGenerator" + "_" + System.currentTimeMillis());
-        Configuration conf = job.getConfiguration();
+
         this.setup(args, conf);
 
         Path input = new Path(this.inputPath);
@@ -126,12 +133,16 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         conf.set("cdx.metatag", this.metaTag);
         conf.set("mapred.map.tasks.speculative.execution", "false");
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
-        AlphaPartitioner.setPartitionPath(conf, this.splitFile);
 
         job.setMapperClass(Mapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
-        job.setPartitionerClass(AlphaPartitioner.class);
+        if (this.splitFile != null) {
+            AlphaPartitioner.setPartitionPath(conf, this.splitFile);
+            job.setPartitionerClass(AlphaPartitioner.class);
+        } else {
+            job.setPartitionerClass(TotalOrderPartitioner.class);
+        }
         job.setReducerClass(Reducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
@@ -142,6 +153,15 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         FileStatus inputStatus = fs.getFileStatus(input);
         FileInputFormat.setMaxInputSplitSize(job, inputStatus.getLen()
                 / getNumMapTasks(new Path(this.inputPath), conf));
+        return job;
+    }
+
+
+    @Override
+    public int run(String[] args) throws Exception {
+
+        Job job = createJobConf(getConf(), args);
+
         job.submit();
         if (this.wait)
             job.waitForCompletion(true);
