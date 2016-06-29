@@ -15,10 +15,10 @@ import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Assert;
 import org.junit.Test;
 
-public class DereferencingArchiveToCDXRecordReaderText {
+public class DereferencingArchiveToCDXRecordReaderTest {
 
     private static final Log log = LogFactory
-            .getLog(DereferencingArchiveToCDXRecordReader.class);
+            .getLog(DereferencingArchiveToCDXRecordReaderTest.class);
 
     @Test
     public void testCDX11() throws Exception {

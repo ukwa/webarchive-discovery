@@ -23,6 +23,8 @@ import org.apache.hadoop.fs.FileStatus;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.lib.InputSampler;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -114,17 +116,21 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
             return (lineCount / 3);
     }
 
-    protected Job createJobConf(Configuration conf, String[] args)
+    protected Job createJob(String[] args)
             throws Exception {
 
-        Job job = new Job(conf,
+        Job job = new Job();
+        job.setJobName(
                 "ArchiveCDXGenerator" + "_" + System.currentTimeMillis());
+
+        Configuration conf = job.getConfiguration();
 
         this.setup(args, conf);
 
         Path input = new Path(this.inputPath);
         FileInputFormat.addInputPath(job, input);
-        FileOutputFormat.setOutputPath(job, new Path(this.outputPath));
+        Path outputPath = new Path(this.outputPath);
+        FileOutputFormat.setOutputPath(job, outputPath);
         job.setInputFormatClass(ArchiveToCDXFileInputFormat.class);
         job.setOutputFormatClass(TextOutputFormat.class);
         conf.set("map.output.key.field.separator", "");
@@ -138,10 +144,17 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
         if (this.splitFile != null) {
+            log.info("Setting splitFile to " + this.splitFile);
             AlphaPartitioner.setPartitionPath(conf, this.splitFile);
             job.setPartitionerClass(AlphaPartitioner.class);
         } else {
             job.setPartitionerClass(TotalOrderPartitioner.class);
+            TotalOrderPartitioner.setPartitionFile(job.getConfiguration(),
+                    new Path(outputPath, "_partitions.lst"));
+            // FIXME This probably won't work - need to update to recent API
+            JobConf jc = new JobConf(conf);
+            InputSampler.writePartitionFile(jc,
+                    new InputSampler.RandomSampler(1, 10000));
         }
         job.setReducerClass(Reducer.class);
         job.setOutputKeyClass(Text.class);
@@ -160,7 +173,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
     @Override
     public int run(String[] args) throws Exception {
 
-        Job job = createJobConf(getConf(), args);
+        Job job = createJob(args);
 
         job.submit();
         if (this.wait)
