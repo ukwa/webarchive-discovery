@@ -27,12 +27,12 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
-import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.util.ConfigPrinter;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
+
+import uk.bl.wa.hadoop.ArchiveFileInputFormat;
+import uk.bl.wa.util.ConfigPrinter;
 
 /**
  * WARCIndexerRunner
@@ -50,6 +50,8 @@ public class WARCMDXGenerator extends Configured implements Tool {
 	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
 	protected static String solrHomeZipName = "solr_home.zip";
+
+    public static String WARC_HADOOP_NUM_REDUCERS = "warc.hadoop.num_reducers";
 
 	private String inputPath;
 	private String outputPath;
@@ -76,8 +78,10 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		// them
 		Config index_conf;
 		if (this.configPath != null) {
+            LOG.info("Loading config from: " + configPath);
 			index_conf = ConfigFactory.parseFile(new File(this.configPath));
 		} else {
+            LOG.info("Using default config: mdx");
 			index_conf = ConfigFactory.load("mdx");
 		}
 		if (this.dumpConfig) {
@@ -86,17 +90,17 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		}
 		conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
 				.render(ConfigRenderOptions.concise()));
-		LOG.info("Loaded warc config.");
-		LOG.info(index_conf.getString("warc.title"));
+        LOG.info("Loaded warc config: " + index_conf.getString("warc.title"));
 
 		// Reducer count:
-		// server.
-		int numReducers = 10;
-		try {
-			numReducers = index_conf.getInt("warc.hadoop.num_reducers");
-		} catch (NumberFormatException n) {
-			numReducers = 10;
+        int numReducers = 10;
+        if (index_conf.hasPath(WARC_HADOOP_NUM_REDUCERS)) {
+            numReducers = index_conf.getInt(WARC_HADOOP_NUM_REDUCERS);
 		}
+        if (conf.getInt(WARC_HADOOP_NUM_REDUCERS, -1) != -1) {
+            LOG.info("Overriding num_reducers using Hadoop config.");
+            numReducers = conf.getInt(WARC_HADOOP_NUM_REDUCERS, numReducers);
+        }
 
 		// Add input paths:
 		LOG.info("Reading input files...");
