@@ -205,7 +205,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
             fields[gIndex] = warcArkLookup.get(fields[gIndex]) + "#"
                     + fields[gIndex];
         } else {
-            fields[gIndex] = new URI(path).getPath();
+            fields[gIndex] = path;
         }
         return StringUtils.join(fields, " ");
     }

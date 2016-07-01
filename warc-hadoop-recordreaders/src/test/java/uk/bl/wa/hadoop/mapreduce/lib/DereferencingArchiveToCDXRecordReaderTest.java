@@ -20,14 +20,8 @@ public class DereferencingArchiveToCDXRecordReaderTest {
     private static final Log log = LogFactory
             .getLog(DereferencingArchiveToCDXRecordReaderTest.class);
 
-    @Test
-    public void testCDX11() throws Exception {
-
-        Configuration conf = new Configuration();
-        
-        conf.set("cdx.format", DereferencingArchiveToCDXRecordReader.CDX_11);
-        conf.setBoolean("cdx.hdfs", false);
-
+    private void runCDXTest(Configuration conf, String expected)
+            throws Exception {
         File testFile = new File("src/test/resources/rr-test-inputs.txt");
         Path path = new Path(testFile.getAbsoluteFile().toURI().toString());
         FileSplit split = new FileSplit(path, 0, testFile.length(), null);
@@ -50,9 +44,34 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         }
         // Check the third value is as expected
         log.debug(value);
-        Assert.assertEquals(
-                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - - 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz",
-                value);
+        Assert.assertEquals(expected, value);
+    }
+
+    @Test
+    public void testCDX11() throws Exception {
+
+        Configuration conf = new Configuration();
+        
+        conf.set("cdx.format", DereferencingArchiveToCDXRecordReader.CDX_11);
+        conf.setBoolean("cdx.hdfs", false);
+        
+        this.runCDXTest(conf,
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - - 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+
+    }
+
+    @Test
+    public void testCDX11HdfsPath() throws Exception {
+
+        Configuration conf = new Configuration();
+
+        conf.set("cdx.format", DereferencingArchiveToCDXRecordReader.CDX_11);
+        conf.setBoolean("cdx.hdfs", true);
+
+        this.runCDXTest(conf,
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - - 776 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+
+
     }
 
 }
