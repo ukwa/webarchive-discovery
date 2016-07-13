@@ -16,7 +16,6 @@ import org.apache.log4j.PropertyConfigurator;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
-import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
@@ -56,11 +55,6 @@ public class WARCMDXMapper extends MapReduceBase implements
 		// Ignore skipped records, where wsolr will be NULL:
 		if (wsolr != null) {
 			SolrRecord solr = wsolr.getSolrRecord();
-
-			// Strip out text:
-			solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
-			// solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED);
-			// Or tokenise and count tokens?
 
 			// Wrap up the result:
 			MDX mdx = MDX.fromWritableSolrRecord(solr);

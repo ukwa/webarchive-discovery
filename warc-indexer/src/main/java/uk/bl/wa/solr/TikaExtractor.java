@@ -58,10 +58,10 @@ import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
 import uk.bl.wa.extract.Times;
+import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
-import uk.bl.wa.util.Instrument;
 
 
 /**
@@ -357,10 +357,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			solr.addField(SolrFields.GENERATOR, metadata.get("xmp:CreatorTool"));
 			// For PDF, support other metadata tags:
 			//solr.addField(SolrFields.GENERATOR, metadata.get( "creator" )); // This appears to be dc:creator i.e. author.
-			solr.addField(SolrFields.GENERATOR, metadata.get( "producer" ));
-			solr.addField(SolrFields.GENERATOR, metadata.get( Metadata.SOFTWARE ));
-			solr.addField(SolrFields.GENERATOR, metadata.get( "generator" ));
-			solr.addField(SolrFields.GENERATOR, metadata.get( "Software" ));
+			solr.addField(SolrFields.GENERATOR, metadata.get("producer"));
+			solr.addField(SolrFields.GENERATOR, metadata.get(Metadata.SOFTWARE));
+			solr.addField(SolrFields.GENERATOR, metadata.get("software"));
+			solr.addField(SolrFields.GENERATOR, metadata.get("Software"));
+			solr.addField(SolrFields.GENERATOR, metadata.get("generator"));
+			solr.addField(SolrFields.GENERATOR, metadata.get("Generator"));
+			solr.addField(SolrFields.GENERATOR, metadata.get("ProgId"));
 			
 			// Application ID, MS Office only AFAICT, and the VERSION is only doc
 			String software = null;

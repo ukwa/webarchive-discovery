@@ -17,3 +17,6 @@ sudo: false
 
 notifications:
   slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk
+
+after_success:
+  - bash <(curl -s https://codecov.io/bash)

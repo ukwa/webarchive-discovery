@@ -70,6 +70,8 @@ public class WARCMDXGeneratorIntegrationTest {
 
 		//
 		Configuration conf = new Configuration();
+        System.setProperty("test.build.data",
+                new File("target/mini-dfs").getAbsolutePath());
 		dfsCluster = new MiniDFSCluster(conf, 1, true, null);
 		dfsCluster.getFileSystem().makeQualified(input);
 		dfsCluster.getFileSystem().makeQualified(output);
@@ -142,6 +144,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		// Job configuration:
 		log.info("Setting up job config...");
 		JobConf jobConf = this.mrCluster.createJobConf();
+        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 1);
 		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
 		JobClient.runJob(jobConf);
@@ -150,9 +153,10 @@ public class WARCMDXGeneratorIntegrationTest {
 		// check the output exists
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
-		Assert.assertEquals(1, outputFiles.length);
+		// Default is 10 reducers:
+        Assert.assertEquals(1, outputFiles.length);
 
-		// Copy the output out:
+        // Copy the output out of HDFS and onto local FS:
 		FileOutputStream fout = new FileOutputStream(outputSeq);
 		for (Path output : outputFiles) {
 			log.info(" --- output : " + output);
@@ -162,6 +166,7 @@ public class WARCMDXGeneratorIntegrationTest {
 			} else {
 				log.info(" --- ...skipping directory...");
 			}
+            fout.flush();
 		}
 		fout.close();
 
@@ -185,7 +190,6 @@ public class WARCMDXGeneratorIntegrationTest {
 		}
 		assertEquals(114, counter);
 		reader.close();
-		
 		
 		// Now test the MDXSeqMerger
 		testSeqMerger(outputFiles);

@@ -1,0 +1,2 @@
+../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz
+../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.warc.gz

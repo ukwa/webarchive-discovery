@@ -1,0 +1,5 @@
+# Solr instance for running tests against
+solr:
+  build: .
+  ports:
+    - "8983:8983"
