@@ -70,7 +70,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         options.addOption("r", true, "Num. Reducers");
         options.addOption("a", true, "ARK identifier lookup");
         options.addOption("m", true,
-                "Meta-tag character (we use 'O' for open and 'L' for LD)");
+                "Meta-tag character (we use 'O' for open, 'L' for LD, 'X' for exclude.)");
         options.addOption(OptionBuilder.withArgName("property=value").hasArgs(2)
                 .withValueSeparator()
                 .withDescription("use value for given property").create("D"));
