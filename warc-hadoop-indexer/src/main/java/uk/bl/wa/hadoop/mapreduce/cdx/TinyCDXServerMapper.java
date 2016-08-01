@@ -99,12 +99,13 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
         }
 
         // Also pass to reducers for cross-checking.
-        try {
-            context.write(key, value);
-        } catch (Exception e) {
-            log.error("Write failed.", e);
+        if (context != null) {
+            try {
+                context.write(key, value);
+            } catch (Exception e) {
+                log.error("Write failed.", e);
+            }
         }
-
     }
 
     private void send_batch(Context context) {
@@ -196,7 +197,7 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
 
         // Test it:
         TinyCDXServerMapper mapper = new TinyCDXServerMapper();
-        mapper.batch_size = 2;
+        mapper.batch_size = 20;
         mapper.endpoint = "http://localhost:9090/t2";
         while (cdxlines.hasNext()) {
             Text cdxline = new Text(cdxlines.next());

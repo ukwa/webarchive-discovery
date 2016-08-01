@@ -181,6 +181,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         job.setReducerClass(Reducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
+        conf.setInt("mapred.map.tasks", 1);
         job.setNumReduceTasks(this.numReducers);
         job.setJarByClass(ArchiveCDXGenerator.class);
 
