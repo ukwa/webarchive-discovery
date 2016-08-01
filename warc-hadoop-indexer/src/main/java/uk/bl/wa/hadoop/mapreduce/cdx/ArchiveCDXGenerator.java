@@ -160,23 +160,24 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         } else {
             // Default to the pass-through mapper:
             job.setMapperClass(Mapper.class);
+            // Set up the split:
+            if (this.splitFile != null) {
+                log.info("Setting splitFile to " + this.splitFile);
+                AlphaPartitioner.setPartitionPath(conf, this.splitFile);
+                job.setPartitionerClass(AlphaPartitioner.class);
+            } else {
+                job.setPartitionerClass(TotalOrderPartitioner.class);
+                TotalOrderPartitioner.setPartitionFile(job.getConfiguration(),
+                        new Path(outputPath, "_partitions.lst"));
+                // FIXME This probably won't work - need to update to recent API
+                JobConf jc = new JobConf(conf);
+                InputSampler.writePartitionFile(jc,
+                        new InputSampler.RandomSampler(1, 10000));
+            }
         }
-
+        // General config:
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
-        if (this.splitFile != null) {
-            log.info("Setting splitFile to " + this.splitFile);
-            AlphaPartitioner.setPartitionPath(conf, this.splitFile);
-            job.setPartitionerClass(AlphaPartitioner.class);
-        } else {
-            job.setPartitionerClass(TotalOrderPartitioner.class);
-            TotalOrderPartitioner.setPartitionFile(job.getConfiguration(),
-                    new Path(outputPath, "_partitions.lst"));
-            // FIXME This probably won't work - need to update to recent API
-            JobConf jc = new JobConf(conf);
-            InputSampler.writePartitionFile(jc,
-                    new InputSampler.RandomSampler(1, 10000));
-        }
         job.setReducerClass(Reducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);

@@ -66,6 +66,9 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
         batch_size = context.getConfiguration()
                 .getInt("tinycdxserver.batch_size", 100);
 
+        System.setProperty("http.proxyHost", "explorer-private");
+        System.setProperty("http.proxyPort", "3127");
+
     }
 
     /*
