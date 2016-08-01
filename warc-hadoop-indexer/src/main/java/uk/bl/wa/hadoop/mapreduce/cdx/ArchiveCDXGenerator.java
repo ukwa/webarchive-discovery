@@ -73,13 +73,13 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         options.addOption("a", true, "ARK identifier lookup");
         options.addOption("m", true,
                 "Meta-tag character (we use 'O' for open, 'L' for LD, 'X' for exclude.)");
-        options.addOption(OptionBuilder.withArgName("property=value").hasArgs(2)
-                .withValueSeparator()
-                .withDescription("use value for given property").create("D"));
         options.addOption("t", true,
                 "TinyCDXServer endpoint to use, e.g. 'http://localhost:8080/collection'.");
         options.addOption("B", true,
                 "Batch size to use when POSTing to a TinyCDXServer, defaults to '1000'.");
+        options.addOption(OptionBuilder.withArgName("property=value").hasArgs(2)
+                .withValueSeparator()
+                .withDescription("use value for given property").create("D"));
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
