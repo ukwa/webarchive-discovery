@@ -49,6 +49,9 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
     // The batch to build up and post
     private List<Text> batch = new ArrayList<Text>();
 
+    // Total:
+    private long total_records = 0;
+
     /*
      * (non-Javadoc)
      * 
@@ -63,8 +66,9 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
 
         endpoint = context.getConfiguration().get("tinycdxserver.endpoint",
                 "http://localhost:9090/test");
+        log.warn("Sending to " + endpoint);
         batch_size = context.getConfiguration()
-                .getInt("tinycdxserver.batch_size", 100);
+                .getInt("tinycdxserver.batch_size", 1000);
 
         System.setProperty("http.proxyHost", "explorer-private");
         System.setProperty("http.proxyPort", "3127");
@@ -83,12 +87,17 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                     throws IOException, InterruptedException {
         // Add to the batch:
         batch.add(value);
+        total_records++;
+
+        // Send if we're ready:
         if (batch.size() >= batch_size) {
-            send_batch();
+            log.error("Example key:" + key);
+            log.error("Example value:" + value);
+            send_batch(context);
         }
     }
 
-    private void send_batch() {
+    private void send_batch(Context context) {
         boolean retry = true;
         while (retry) {
             try {
@@ -106,6 +115,7 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                 os.close();
                 if (conn.getResponseCode() == 200) {
                     // It worked! No need to retry:
+                    log.info("Sent " + batch.size() + " records.");
                     batch.clear();
                     retry = false;
                 } else {
@@ -114,6 +124,13 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
             } catch (Exception e) {
                 log.warn("POSTing failed with ", e);
             }
+            // Record progress:
+            try {
+                context.write(new Text("BATCHES"), new Text("1"));
+            } catch (Exception e) {
+                log.error("Write failed.", e);
+            }
+            context.setStatus("POSTed " + total_records + " records...");
         }
     }
 
@@ -129,7 +146,7 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
             throws IOException, InterruptedException {
         super.cleanup(context);
         if (this.batch.size() > 0) {
-            this.send_batch();
+            this.send_batch(context);
         }
     }
 
