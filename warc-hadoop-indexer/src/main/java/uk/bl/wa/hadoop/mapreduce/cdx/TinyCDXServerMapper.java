@@ -1,7 +1,9 @@
 package uk.bl.wa.hadoop.mapreduce.cdx;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -68,7 +70,7 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                 "http://localhost:9090/test");
         log.warn("Sending to " + endpoint);
         batch_size = context.getConfiguration()
-                .getInt("tinycdxserver.batch_size", 1000);
+                .getInt("tinycdxserver.batch_size", 10000);
 
         System.setProperty("http.proxyHost", "explorer-private");
         System.setProperty("http.proxyPort", "3127");
@@ -114,14 +116,24 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                 HttpURLConnection conn = (HttpURLConnection) u.openConnection();
                 conn.setDoOutput(true);
                 conn.setRequestMethod("POST");
-                conn.setRequestProperty("Content-Type", "text/plain");
+                conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded");
                 OutputStream os = conn.getOutputStream();
                 for (Text t : this.batch) {
-                    os.write(t.toString().getBytes("UTF-8"));
-                    os.write('\n');
+                    String line = t.toString() + "\n";
+                    os.write(line.getBytes("UTF-8"));
                 }
                 os.close();
                 if (conn.getResponseCode() == 200) {
+                    // Read the response:
+                    BufferedReader in = new BufferedReader(
+                            new InputStreamReader(conn.getInputStream()));
+                    String inputLine;
+                    StringBuffer response = new StringBuffer();
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                    in.close();
+                    log.info(response.toString());
                     // It worked! No need to retry:
                     log.info("Sent " + batch.size() + " records.");
                     batch.clear();
@@ -133,12 +145,14 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                 log.warn("POSTing failed with ", e);
             }
             // Record progress:
-            try {
-                context.write(new Text("BATCH"), new Text("BATCH"));
-            } catch (Exception e) {
-                log.error("Write failed.", e);
+            if (context != null) {
+                try {
+                    context.write(new Text("BATCH"), new Text("BATCH"));
+                } catch (Exception e) {
+                    log.error("Write failed.", e);
+                }
+                context.setStatus("POSTed " + total_records + " records...");
             }
-            context.setStatus("POSTed " + total_records + " records...");
         }
     }
 
@@ -182,8 +196,8 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
 
         // Test it:
         TinyCDXServerMapper mapper = new TinyCDXServerMapper();
-        mapper.batch_size = 10;
-        mapper.endpoint = "http://localhost:9090/test";
+        mapper.batch_size = 2;
+        mapper.endpoint = "http://localhost:9090/t2";
         while (cdxlines.hasNext()) {
             Text cdxline = new Text(cdxlines.next());
             mapper.map(cdxline, cdxline, null);
