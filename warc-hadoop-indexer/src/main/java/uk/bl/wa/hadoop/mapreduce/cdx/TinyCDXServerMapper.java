@@ -95,6 +95,14 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
             log.error("Example value:" + value);
             send_batch(context);
         }
+
+        // Also pass to reducers for cross-checking.
+        try {
+            context.write(key, value);
+        } catch (Exception e) {
+            log.error("Write failed.", e);
+        }
+
     }
 
     private void send_batch(Context context) {
@@ -126,7 +134,7 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
             }
             // Record progress:
             try {
-                context.write(new Text("BATCHES"), new Text("1"));
+                context.write(new Text("BATCH"), new Text("BATCH"));
             } catch (Exception e) {
                 log.error("Write failed.", e);
             }
