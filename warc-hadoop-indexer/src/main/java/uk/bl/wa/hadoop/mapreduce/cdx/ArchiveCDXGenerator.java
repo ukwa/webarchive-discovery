@@ -57,6 +57,8 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
     private boolean wait;
     private int numReducers;
     private String metaTag = "-";
+    private String cdxserver = null;
+    private int cdxserver_batch_size = 100;
 
     private void setup(String args[], Configuration conf)
             throws ParseException, URISyntaxException {
@@ -74,6 +76,10 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         options.addOption(OptionBuilder.withArgName("property=value").hasArgs(2)
                 .withValueSeparator()
                 .withDescription("use value for given property").create("D"));
+        options.addOption("t", true,
+                "TinyCDXServer endpoint to use, e.g. 'http://localhost:8080/collection'.");
+        options.addOption("B", true,
+                "Batch size to use when POSTing to a TinyCDXServer, defaults to '1000'.");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, args);
@@ -97,6 +103,12 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         }
         if (cmd.hasOption("m")) {
             metaTag = cmd.getOptionValue("m");
+        }
+        if (cmd.hasOption("t")) {
+            this.cdxserver = cmd.getOptionValue("t");
+            this.cdxserver_batch_size = Integer
+                    .parseInt(cmd.getOptionValue("B", "1000"));
+            this.cdxFormat = DereferencingArchiveToCDXRecordReader.CDX_11;
         }
     }
 
@@ -140,7 +152,16 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         conf.set("mapred.map.tasks.speculative.execution", "false");
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
 
-        job.setMapperClass(Mapper.class);
+        // POST directly to the tinycdxserver:
+        if (this.cdxserver != null) {
+            conf.set("tinycdxserver.endpoint", this.cdxserver);
+            conf.setInt("tinycdxserver.batch_size", this.cdxserver_batch_size);
+            job.setMapperClass(TinyCDXServerMapper.class);
+        } else {
+            // Default to the pass-through mapper:
+            job.setMapperClass(Mapper.class);
+        }
+
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
         if (this.splitFile != null) {
