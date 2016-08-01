@@ -90,7 +90,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
                 DereferencingArchiveToCDXRecordReader.CDX_11);
         this.hdfs = cmd.hasOption("h");
         this.wait = cmd.hasOption("w");
-        this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+        this.numReducers = Integer.parseInt(cmd.getOptionValue("r", "10"));
         if (cmd.hasOption("a")) {
             URI lookup = new URI(cmd.getOptionValue("a"));
             System.out.println("Adding ARK lookup: " + lookup);
