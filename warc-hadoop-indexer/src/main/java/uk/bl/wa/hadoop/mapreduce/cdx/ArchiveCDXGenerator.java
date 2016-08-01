@@ -90,7 +90,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
                 DereferencingArchiveToCDXRecordReader.CDX_11);
         this.hdfs = cmd.hasOption("h");
         this.wait = cmd.hasOption("w");
-        this.numReducers = Integer.parseInt(cmd.getOptionValue("r", "10"));
+        this.numReducers = Integer.parseInt(cmd.getOptionValue("r", "1"));
         if (cmd.hasOption("a")) {
             URI lookup = new URI(cmd.getOptionValue("a"));
             System.out.println("Adding ARK lookup: " + lookup);
@@ -152,14 +152,23 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         conf.set("mapred.map.tasks.speculative.execution", "false");
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
 
+        // General config:
+        job.setMapperClass(Mapper.class);
+        job.setMapOutputKeyClass(Text.class);
+        job.setMapOutputValueClass(Text.class);
+        job.setOutputKeyClass(Text.class);
+        job.setOutputValueClass(Text.class);
+        job.setNumReduceTasks(this.numReducers);
+        job.setJarByClass(ArchiveCDXGenerator.class);
+
         // POST directly to the tinycdxserver:
         if (this.cdxserver != null) {
             conf.set("tinycdxserver.endpoint", this.cdxserver);
             conf.setInt("tinycdxserver.batch_size", this.cdxserver_batch_size);
-            job.setMapperClass(TinyCDXServerMapper.class);
+            job.setReducerClass(TinyCDXServerReducer.class);
         } else {
-            // Default to the pass-through mapper:
-            job.setMapperClass(Mapper.class);
+            // Default to the pass-through reducer:
+            job.setReducerClass(Reducer.class);
             // Set up the split:
             if (this.splitFile != null) {
                 log.info("Setting splitFile to " + this.splitFile);
@@ -175,15 +184,6 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
                         new InputSampler.RandomSampler(1, 10000));
             }
         }
-        // General config:
-        job.setMapOutputKeyClass(Text.class);
-        job.setMapOutputValueClass(Text.class);
-        job.setReducerClass(Reducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-        conf.setInt("mapred.map.tasks", 1);
-        job.setNumReduceTasks(this.numReducers);
-        job.setJarByClass(ArchiveCDXGenerator.class);
 
         FileSystem fs = input.getFileSystem(conf);
         FileStatus inputStatus = fs.getFileStatus(input);
