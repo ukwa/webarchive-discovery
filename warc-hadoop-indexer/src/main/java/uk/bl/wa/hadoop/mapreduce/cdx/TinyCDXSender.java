@@ -30,7 +30,7 @@ public class TinyCDXSender {
     private int batch_size;
 
     // The batch to build up and post
-    private List<Text> batch = new ArrayList<Text>();
+    private List<String> batch = new ArrayList<String>();
 
     // Total:
     private long total_records = 0;
@@ -45,7 +45,7 @@ public class TinyCDXSender {
 
     public void add(Text value) {
         // Add to the batch:
-        batch.add(value);
+        batch.add(value.toString());
         total_records++;
 
         // Send if we're ready:
@@ -67,8 +67,8 @@ public class TinyCDXSender {
                 conn.setRequestProperty("Content-Type",
                         "application/x-www-form-urlencoded");
                 OutputStream os = conn.getOutputStream();
-                for (Text t : this.batch) {
-                    String line = t.toString() + "\n";
+                for (String t : this.batch) {
+                    String line = t + "\n";
                     os.write(line.getBytes("UTF-8"));
                 }
                 os.close();

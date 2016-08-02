@@ -127,13 +127,13 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
 
         // Test it:
         TinyCDXServerMapper mapper = new TinyCDXServerMapper();
-        // mapper.tcs.batch_size = 20;
-        // mapper.tcs.endpoint = "http://localhost:9090/t2";
+        mapper.tcs = new TinyCDXSender("http://localhost:9090/t3", 20);
+        Text cdxline = new Text();
         while (cdxlines.hasNext()) {
-            Text cdxline = new Text(cdxlines.next());
+            cdxline.set(cdxlines.next());
             mapper.map(cdxline, cdxline, null);
         }
-        mapper.cleanup(null);
+        mapper.tcs.close();
 
     }
 }
