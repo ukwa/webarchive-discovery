@@ -153,7 +153,6 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
 
         // General config:
-        job.setMapperClass(Mapper.class);
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
         job.setOutputKeyClass(Text.class);
@@ -165,9 +164,16 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         if (this.cdxserver != null) {
             conf.set("tinycdxserver.endpoint", this.cdxserver);
             conf.setInt("tinycdxserver.batch_size", this.cdxserver_batch_size);
+            // Perform the update in the Map phase (difficult to control number
+            // of clients)
+            // job.setMapperClass(TinyCDXServerMapper.class);
+            // job.setReducerClass(Reducer.class);
+            // Perform the update in the reduce phase:
+            job.setMapperClass(Mapper.class);
             job.setReducerClass(TinyCDXServerReducer.class);
         } else {
-            // Default to the pass-through reducer:
+            // Default to the pass-through mapper and reducer:
+            job.setMapperClass(Mapper.class);
             job.setReducerClass(Reducer.class);
             // Set up the split:
             if (this.splitFile != null) {

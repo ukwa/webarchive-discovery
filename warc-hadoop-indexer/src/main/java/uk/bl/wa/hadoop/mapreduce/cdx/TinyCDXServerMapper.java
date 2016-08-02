@@ -74,11 +74,11 @@ public class TinyCDXServerMapper extends Mapper<Text, Text, Text, Text> {
                     throws IOException, InterruptedException {
 
         tcs.add(value);
-        // Also pass to reducers for cross-checking.
         // Record progress:
         if (context != null) {
             context.setStatus("Seen " + tcs.getTotalRecords()
                     + " records, sent " + tcs.getTotalSentRecords() + "...");
+            // Also pass to reducers for cross-checking.
             try {
                 context.write(key, value);
             } catch (Exception e) {

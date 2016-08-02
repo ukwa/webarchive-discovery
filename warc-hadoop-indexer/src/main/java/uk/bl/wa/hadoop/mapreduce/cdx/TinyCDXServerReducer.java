@@ -22,6 +22,9 @@ public class TinyCDXServerReducer
 
     private TinyCDXSender tcs;
 
+    private long num_unique;
+    private long num_lines;
+
     /*
      * (non-Javadoc)
      * 
@@ -44,6 +47,9 @@ public class TinyCDXServerReducer
 
         System.setProperty("http.proxyHost", "explorer-private");
         System.setProperty("http.proxyPort", "3127");
+
+        num_unique = 0;
+        num_lines = 0;
     }
 
     /*
@@ -80,6 +86,15 @@ public class TinyCDXServerReducer
         // TODO Auto-generated method stub
         super.cleanup(context);
         tcs.close();
+        // Update status:
+        if (context != null) {
+            context.setStatus("Seen " + tcs.getTotalRecords()
+                    + " records, sent " + tcs.getTotalSentRecords() + "...");
+            // And send totals:
+            context.write(new Text("NUM_LINES"), new Text("" + this.num_lines));
+            context.write(new Text("NUM_UNIQUE_LINES"),
+                    new Text("" + this.num_unique));
+        }
     }
 
 }
