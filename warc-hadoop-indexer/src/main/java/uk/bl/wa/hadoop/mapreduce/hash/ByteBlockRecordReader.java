@@ -23,6 +23,7 @@ public class ByteBlockRecordReader extends RecordReader<Path, BytesWritable> {
     private BytesWritable buf = new BytesWritable();
     private long bytes_read = 0;
     private long file_length = 0;
+    private int buf_size = 1000 * 1000;
 
     @Override
     public void close() throws IOException {
@@ -55,6 +56,7 @@ public class ByteBlockRecordReader extends RecordReader<Path, BytesWritable> {
             fsdis = fSys.open(path);
             file_length = fSys.getContentSummary(path).getLength();
         } else {
+            log.error("Only FileSplit supported!");
             throw new IOException("Need FileSplit input...");
         }
 
@@ -62,19 +64,16 @@ public class ByteBlockRecordReader extends RecordReader<Path, BytesWritable> {
 
     @Override
     public boolean nextKeyValue() throws IOException, InterruptedException {
-        byte[] bytes = new byte[10000000];
+        byte[] bytes = new byte[buf_size];
         // Attempt to read a chunk:
         int count = fsdis.read(bytes);
         // If we're out of bytes, report that:
         if (count == -1) {
-            log.info("Out of bytes.");
             buf = null;
             return false;
         }
         bytes_read += count;
-        log.info("Read " + bytes_read + " bytes of " + path);
         // Otherwise, push the new bytes into the BytesWritable:
-        // buf.set(bytes, 0, count);
         buf = new BytesWritable(Arrays.copyOfRange(bytes, 0, count));
         return true;
     }

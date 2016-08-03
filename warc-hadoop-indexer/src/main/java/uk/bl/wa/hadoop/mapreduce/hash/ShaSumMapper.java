@@ -38,8 +38,8 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
     protected void cleanup(
             Mapper<Path, BytesWritable, Text, Text>.Context context)
                     throws IOException, InterruptedException {
+        log.debug("Cleaning up and emitting final result...");
         super.cleanup(context);
-        log.info("Cleaning up...");
         this.emit(context);
     }
 
@@ -81,13 +81,10 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
             current = key;
             bytes_seen = 0;
             md.reset();
-            log.info("Now looking at " + key);
+            log.debug("Now hashing " + current);
         }
-        log.info("Got some bytes, " + Hex.encodeHexString(value.getBytes()));
-        log.info("Got some bytes, size = " + value.getBytes().length);
         md.update(value.getBytes(), 0, value.getLength());
         bytes_seen += value.getLength();
-        log.info("Consumed " + bytes_seen + " bytes...");
     }
 
     private void emit(Context context) {
@@ -95,9 +92,10 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
             return;
         // Otherwise:
         try {
-            Text name = new Text(current.getName());
-            Text hex = new Text(Hex.encodeHexString(md.digest()));
-            log.info("Got " + name + " " + hex + " from " + bytes_seen);
+            Text name = new Text(current.getParent().toUri().getPath());
+            Text hex = new Text(Hex.encodeHexString(md.digest()) + " "
+                    + bytes_seen + " " + current.toUri().getPath());
+            log.debug("Got " + name + " " + hex + " from " + bytes_seen);
             context.write(name, hex);
         } catch (IOException e) {
             // TODO Auto-generated catch block
