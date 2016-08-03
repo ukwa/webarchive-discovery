@@ -81,7 +81,7 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
             current = key;
             bytes_seen = 0;
             md.reset();
-            log.debug("Now hashing " + current);
+            log.info("Hashing " + current);
         }
         md.update(value.getBytes(), 0, value.getLength());
         bytes_seen += value.getLength();
