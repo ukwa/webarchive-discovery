@@ -41,7 +41,7 @@ public class HdfsFileHasher extends Configured implements Tool {
         Configuration conf = this.getConf();
 
         // Create job
-        Job job = new Job(conf, "Tool Job");
+        Job job = new Job(conf, "HDFS File Checksummer (SHA-512)");
         job.setJarByClass(HdfsFileHasher.class);
 
         // Setup MapReduce job

@@ -1,5 +1,7 @@
 package uk.bl.wa.hadoop.mapreduce.hash;
 
+import static org.junit.Assert.assertEquals;
+
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -56,6 +58,7 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
 		//Assert.assertEquals(1, outputFiles.length);
 		
 		// Check contents of the output:
+		int line_count = 0;
 		for( Path output : outputFiles ) {
 			log.info(" --- output : "+output);
 			if( getFileSystem().isFile(output) ) {
@@ -64,6 +67,13 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
 				String line = null;
 				while( ( line = reader.readLine()) != null ) {
 					log.info(line);
+                    line_count++;
+                    // Check:
+                    if (line_count == 1) {
+                        assertEquals(
+                                "/user/andy/inputs\t722eb9d7bfeb0b2ad2dd9c8a2fd7105f2880b139e5248e9b13a41d69ec63893b9afc034751be1432d867e171f4c6293ac89fc4e85c09a72288c16fd40f5996b2 26164 /user/andy/inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz",
+                                line);
+                    }
 				}
 				reader.close();
 			} else {
