@@ -71,7 +71,12 @@ public class HdfsFileHasher extends Configured implements Tool {
             if (fs.isFile(path)) {
                 FileInputFormat.addInputPath(job, path);
             } else if (fs.isDirectory(path)) {
-                for (FileStatus fstat : fs.listStatus(path)) {
+                FileStatus[] listing = fs.listStatus(path);
+                int list_count = 0;
+                for (FileStatus fstat : listing) {
+                    list_count++;
+                    log.info("Checking " + list_count + "/" + listing.length
+                            + " " + fstat.getPath().getName());
                     if (!fstat.isDir()) {
                         FileInputFormat.addInputPath(job, fstat.getPath());
                     }
