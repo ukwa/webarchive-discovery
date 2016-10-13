@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.analysers.nlp;
+package uk.bl.wa.nlp.analysers;
 
 /*
  * #%L
@@ -35,7 +35,7 @@ import org.apache.tika.metadata.Metadata;
 import com.typesafe.config.Config;
 
 import uk.bl.wa.analyser.text.AbstractTextAnalyser;
-import uk.bl.wa.parsers.nlp.StanfordAnnotatorParser;
+import uk.bl.wa.nlp.parsers.StanfordAnnotatorParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
