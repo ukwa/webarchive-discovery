@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.parsers;
+package uk.bl.wa.parsers.nlp;
 
 /*
  * #%L

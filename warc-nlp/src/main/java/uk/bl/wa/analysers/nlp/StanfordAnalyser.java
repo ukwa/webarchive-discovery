@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.analyser.text;
+package uk.bl.wa.analysers.nlp;
 
 /*
  * #%L
@@ -34,7 +34,8 @@ import org.apache.tika.metadata.Metadata;
 
 import com.typesafe.config.Config;
 
-import uk.bl.wa.parsers.StanfordAnnotatorParser;
+import uk.bl.wa.analyser.text.AbstractTextAnalyser;
+import uk.bl.wa.parsers.nlp.StanfordAnnotatorParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
@@ -44,7 +45,7 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public class StanfordAnalyser extends AbstractTextAnalyser {
 
-	StanfordAnnotatorParser parser = new StanfordAnnotatorParser();
+    StanfordAnnotatorParser parser = new StanfordAnnotatorParser();
 	
 	public static final int MAX_CHARS_TO_ANALYSE = 10000;
 

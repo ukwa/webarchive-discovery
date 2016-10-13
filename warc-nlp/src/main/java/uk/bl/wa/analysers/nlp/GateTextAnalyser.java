@@ -1,3 +1,4 @@
+package uk.bl.wa.analysers.nlp;
 ///**
 // *  A nice idea, but seems to rely of many local resources from the local filesystem, which is awkward.
 //
