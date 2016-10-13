@@ -1,5 +1,6 @@
 package uk.bl.wa.nlp.wordvec;
 
+import java.io.FileReader;
 import java.util.Collection;
 
 import org.deeplearning4j.models.embeddings.loader.WordVectorSerializer;
@@ -18,7 +19,7 @@ public class WordvecProcessor {
     public static void main(String[] args) throws Exception {
 
         SentenceIterator iter = new StanfordSentenceIterator(
-                "My 1st sentence. “Does it work for questions?” My third sentence.");
+                new FileReader("src/test/resources/Mona_Lisa.txt"));
 
         // Use Stanford NLP sentence splitter:
 
@@ -27,7 +28,7 @@ public class WordvecProcessor {
         t.setTokenPreProcessor(new CommonPreprocessor());
 
         log.info("Building model....");
-        Word2Vec vec = new Word2Vec.Builder().minWordFrequency(1).iterations(1)
+        Word2Vec vec = new Word2Vec.Builder().minWordFrequency(5).iterations(1)
                 .layerSize(100).seed(42).windowSize(5).iterate(iter)
                 .tokenizerFactory(t).build();
 
@@ -38,9 +39,10 @@ public class WordvecProcessor {
 
         // Write word vectors
         WordVectorSerializer.writeWordVectors(vec, "pathToWriteto.txt");
+        WordVectorSerializer.writeFullModel(vec, "pathToWriteto.model");
 
         log.info("Closest Words:");
-        Collection<String> lst = vec.wordsNearest("sentence", 10);
+        Collection<String> lst = vec.wordsNearest("french", 10);
         System.out.println(lst);
         // UiServer server = UiServer.getInstance();
         // System.out.println("Started on port " + server.getPort());

@@ -35,6 +35,11 @@ public class StanfordSentenceIterator implements SentenceIterator {
         dpi = dp.iterator();
     }
 
+    public StanfordSentenceIterator(Reader reader) {
+        dp = new DocumentPreprocessor(reader);
+        dpi = dp.iterator();
+    }
+
     /* (non-Javadoc)
      * @see org.deeplearning4j.text.sentenceiterator.SentenceIterator#nextSentence()
      */
