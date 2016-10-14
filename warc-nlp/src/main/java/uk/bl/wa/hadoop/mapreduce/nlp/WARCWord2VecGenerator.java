@@ -46,6 +46,7 @@ import uk.bl.wa.util.ConfigPrinter;
  * The reducer should be set up to update a set of word vectors, as in
  * {@link https://github.com/deeplearning4j/dl4j-examples/blob/master/dl4j-examples/src/main/java/org/deeplearning4j/examples/nlp/word2vec/Word2VecUptrainingExample.java}
  * 
+ * {@link https://deeplearning4j.org/word2vec} for more details.
  * 
  * @author anjackson
  */
