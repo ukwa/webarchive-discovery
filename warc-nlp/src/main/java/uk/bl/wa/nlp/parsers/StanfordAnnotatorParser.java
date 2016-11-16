@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.parsers;
+package uk.bl.wa.nlp.parsers;
 
 /*
  * #%L
@@ -53,7 +53,7 @@ import edu.stanford.nlp.ling.CoreLabel;
 import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations;
+import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.SentimentAnnotatedTree;
 import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 
@@ -157,7 +157,7 @@ public class StanfordAnnotatorParser extends AbstractParser {
 		double totalSentences = 0;
 		int[] sentiments = new int[5];
 		for(CoreMap sentence: sentences) {
-			Tree tree = sentence.get(SentimentCoreAnnotations.AnnotatedTree.class);
+            Tree tree = sentence.get(SentimentAnnotatedTree.class);
 			int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
 			totalSentiment += sentiment;
 			totalSentences++;

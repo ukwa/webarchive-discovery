@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.parsers;
+package uk.bl.wa.nlp.parsers;
 
 /*
  * #%L
@@ -36,6 +36,8 @@ import org.apache.tika.metadata.Metadata;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
+
+import uk.bl.wa.nlp.parsers.StanfordAnnotatorParser;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

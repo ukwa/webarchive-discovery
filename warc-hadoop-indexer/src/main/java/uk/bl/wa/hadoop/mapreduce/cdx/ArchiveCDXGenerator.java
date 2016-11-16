@@ -57,6 +57,8 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
     private boolean wait;
     private int numReducers;
     private String metaTag = "-";
+    private String cdxserver = null;
+    private int cdxserver_batch_size = 100;
 
     private void setup(String args[], Configuration conf)
             throws ParseException, URISyntaxException {
@@ -71,6 +73,10 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         options.addOption("a", true, "ARK identifier lookup");
         options.addOption("m", true,
                 "Meta-tag character (we use 'O' for open, 'L' for LD, 'X' for exclude.)");
+        options.addOption("t", true,
+                "TinyCDXServer endpoint to use, e.g. 'http://localhost:8080/collection'.");
+        options.addOption("B", true,
+                "Batch size to use when POSTing to a TinyCDXServer, defaults to '10000'.");
         options.addOption(OptionBuilder.withArgName("property=value").hasArgs(2)
                 .withValueSeparator()
                 .withDescription("use value for given property").create("D"));
@@ -84,7 +90,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
                 DereferencingArchiveToCDXRecordReader.CDX_11);
         this.hdfs = cmd.hasOption("h");
         this.wait = cmd.hasOption("w");
-        this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+        this.numReducers = Integer.parseInt(cmd.getOptionValue("r", "1"));
         if (cmd.hasOption("a")) {
             URI lookup = new URI(cmd.getOptionValue("a"));
             System.out.println("Adding ARK lookup: " + lookup);
@@ -97,6 +103,12 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         }
         if (cmd.hasOption("m")) {
             metaTag = cmd.getOptionValue("m");
+        }
+        if (cmd.hasOption("t")) {
+            this.cdxserver = cmd.getOptionValue("t");
+            this.cdxserver_batch_size = Integer
+                    .parseInt(cmd.getOptionValue("B", "10000"));
+            this.cdxFormat = DereferencingArchiveToCDXRecordReader.CDX_11;
         }
     }
 
@@ -140,27 +152,44 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         conf.set("mapred.map.tasks.speculative.execution", "false");
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
 
-        job.setMapperClass(Mapper.class);
+        // General config:
         job.setMapOutputKeyClass(Text.class);
         job.setMapOutputValueClass(Text.class);
-        if (this.splitFile != null) {
-            log.info("Setting splitFile to " + this.splitFile);
-            AlphaPartitioner.setPartitionPath(conf, this.splitFile);
-            job.setPartitionerClass(AlphaPartitioner.class);
-        } else {
-            job.setPartitionerClass(TotalOrderPartitioner.class);
-            TotalOrderPartitioner.setPartitionFile(job.getConfiguration(),
-                    new Path(outputPath, "_partitions.lst"));
-            // FIXME This probably won't work - need to update to recent API
-            JobConf jc = new JobConf(conf);
-            InputSampler.writePartitionFile(jc,
-                    new InputSampler.RandomSampler(1, 10000));
-        }
-        job.setReducerClass(Reducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
         job.setNumReduceTasks(this.numReducers);
         job.setJarByClass(ArchiveCDXGenerator.class);
+
+        // POST directly to the tinycdxserver:
+        if (this.cdxserver != null) {
+            conf.set("tinycdxserver.endpoint", this.cdxserver);
+            conf.setInt("tinycdxserver.batch_size", this.cdxserver_batch_size);
+            // Perform the update in the Map phase (difficult to control number
+            // of clients)
+            // job.setMapperClass(TinyCDXServerMapper.class);
+            // job.setReducerClass(Reducer.class);
+            // Perform the update in the reduce phase:
+            job.setMapperClass(Mapper.class);
+            job.setReducerClass(TinyCDXServerReducer.class);
+        } else {
+            // Default to the pass-through mapper and reducer:
+            job.setMapperClass(Mapper.class);
+            job.setReducerClass(Reducer.class);
+            // Set up the split:
+            if (this.splitFile != null) {
+                log.info("Setting splitFile to " + this.splitFile);
+                AlphaPartitioner.setPartitionPath(conf, this.splitFile);
+                job.setPartitionerClass(AlphaPartitioner.class);
+            } else {
+                job.setPartitionerClass(TotalOrderPartitioner.class);
+                TotalOrderPartitioner.setPartitionFile(job.getConfiguration(),
+                        new Path(outputPath, "_partitions.lst"));
+                // FIXME This probably won't work - need to update to recent API
+                JobConf jc = new JobConf(conf);
+                InputSampler.writePartitionFile(jc,
+                        new InputSampler.RandomSampler(1, 10000));
+            }
+        }
 
         FileSystem fs = input.getFileSystem(conf);
         FileStatus inputStatus = fs.getFileStatus(input);
