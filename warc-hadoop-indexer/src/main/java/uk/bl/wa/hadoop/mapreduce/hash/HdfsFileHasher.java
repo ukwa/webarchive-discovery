@@ -97,6 +97,14 @@ public class HdfsFileHasher extends Configured implements Tool {
     }
 
     /**
+     * This job takes two arguments: <local-input-list> <hdfs-output-dir>
+     * 
+     * The first is a pointer to a local file containing a list of HDFS paths to
+     * hash.
+     * 
+     * The second is an output directory to store the results of the hashing
+     * process in.
+     * 
      * @param args
      * @throws Exception
      */
@@ -104,8 +112,6 @@ public class HdfsFileHasher extends Configured implements Tool {
         int res = ToolRunner.run(new Configuration(), new HdfsFileHasher(),
                 args);
         System.exit(res);
-        // TODO Auto-generated method stub
-
     }
 
 }
