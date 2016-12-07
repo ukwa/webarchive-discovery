@@ -93,7 +93,7 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
         // Otherwise:
         try {
             Text name = new Text(current.getParent().toUri().getPath());
-            Text hex = new Text(Hex.encodeHexString(md.digest()) + " "
+            Text hex = new Text(Hex.encodeHex(md.digest()).toString() + " "
                     + bytes_seen + " " + current.toUri().getPath());
             log.debug("Got " + name + " " + hex + " from " + bytes_seen);
             context.write(name, hex);

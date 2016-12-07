@@ -16,7 +16,7 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
 import org.junit.Test;
 
-import uk.bl.wa.hadoop.MapReduceTestBaseClass;
+import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
 /**
  * 

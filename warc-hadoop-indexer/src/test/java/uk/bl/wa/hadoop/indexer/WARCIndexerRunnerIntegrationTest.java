@@ -14,7 +14,7 @@ import org.apache.hadoop.mapred.OutputLogFilter;
 import org.junit.Assert;
 import org.junit.Test;
 
-import uk.bl.wa.hadoop.MapReduceTestBaseClass;
+import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
 /**
  * 

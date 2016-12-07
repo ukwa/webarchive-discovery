@@ -5,7 +5,6 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.URI;
-import org.apache.commons.httpclient.URIException;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -13,7 +12,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.Logger;
-import org.apache.tika.Tika;
+//import org.apache.tika.Tika;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
@@ -25,7 +24,7 @@ public class WARCRegexMapper extends MapReduceBase implements Mapper<Text, Writa
 	
 	private Pattern pattern;
 	
-	Tika tika = new Tika();
+    // Tika tika = new Tika();
 	
 	public WARCRegexMapper() {}
 
