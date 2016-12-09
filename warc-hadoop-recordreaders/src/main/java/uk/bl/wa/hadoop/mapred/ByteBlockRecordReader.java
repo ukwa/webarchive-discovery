@@ -4,7 +4,6 @@
 package uk.bl.wa.hadoop.mapred;
 
 import java.io.IOException;
-import java.util.Arrays;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -32,7 +31,6 @@ public class ByteBlockRecordReader
 
     private FSDataInputStream fsdis;
     private Path path;
-    private BytesWritable buf = new BytesWritable();
     private long bytes_read = 0;
     private long file_length = 0;
     private int buf_size = 1000 * 1000;
@@ -78,7 +76,7 @@ public class ByteBlockRecordReader
      */
     @Override
     public BytesWritable createValue() {
-        return buf;
+        return new BytesWritable();
     }
 
     /* (non-Javadoc)
@@ -101,7 +99,7 @@ public class ByteBlockRecordReader
      * @see org.apache.hadoop.mapred.RecordReader#next(java.lang.Object, java.lang.Object)
      */
     @Override
-    public boolean next(Path arg0, BytesWritable arg1) throws IOException {
+    public boolean next(Path path, BytesWritable buf) throws IOException {
         byte[] bytes = new byte[buf_size];
         // Attempt to read a chunk:
         int count = fsdis.read(bytes);
@@ -112,7 +110,7 @@ public class ByteBlockRecordReader
         }
         bytes_read += count;
         // Otherwise, push the new bytes into the BytesWritable:
-        buf = new BytesWritable(Arrays.copyOfRange(bytes, 0, count));
+        buf.set(bytes, 0, count);
         return true;
     }
 
