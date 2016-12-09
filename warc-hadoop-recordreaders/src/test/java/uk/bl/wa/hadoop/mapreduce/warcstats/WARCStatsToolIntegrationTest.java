@@ -100,62 +100,125 @@ public class WARCStatsToolIntegrationTest {
 		log.info("Copy completed.");
 	}
 
-	@Test
-	public void testFullWARCStatsJob() throws Exception {
-		// prepare for test
-		//createTextInputFile();
+    @Test
+    public void testFullWARCStatsJob() throws Exception {
+        // prepare for test
+        // createTextInputFile();
 
-		log.info("Checking input file is present...");
-		// Check that the input file is present:
-		Path[] inputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-				input, new OutputLogFilter()));
-		Assert.assertEquals(2, inputFiles.length);
-		
-		// Set up arguments for the job:
-		// FIXME The input file could be written by this test.
-		String[] args = {"src/test/resources/test-inputs.txt", this.output.getName()};
-		
-		// Set up the config and tool
-		Config config = ConfigFactory.load();
-		WARCStatsTool wir = new WARCStatsTool();
+        log.info("Checking input file is present...");
+        // Check that the input file is present:
+        Path[] inputFiles = FileUtil.stat2Paths(
+                getFileSystem().listStatus(input, new OutputLogFilter()));
+        Assert.assertEquals(2, inputFiles.length);
 
-		// run job
-		log.info("Setting up job config...");
-		JobConf conf = this.mrCluster.createJobConf();
-		wir.createJobConf(conf, args);
-		// Disable speculative execution for tests:
-		conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
-		log.info("Running job...");
-		JobClient.runJob(conf);
-		log.info("Job finished, checking the results...");
+        // Set up arguments for the job:
+        // FIXME The input file could be written by this test.
+        String[] args = { "src/test/resources/test-inputs.txt",
+                this.output.getName() };
 
-		// check the output
-		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-				output, new OutputLogFilter()));
-		Assert.assertEquals( config.getInt( "warc.hadoop.num_reducers" ), outputFiles.length );
-		
-		// Check contents of the output:
-		for( Path output : outputFiles ) {
-			log.info(" --- output : "+output);
-			if( getFileSystem().isFile(output) ) {
-				InputStream is = getFileSystem().open(output);
-				BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-				String line = null;
-				while( ( line = reader.readLine()) != null ) {
-					log.info(line);
-					if( line.startsWith("RECORD-TOTAL")) {
-						assertEquals("RECORD-TOTAL\t32",line);
-					}
-				}
-				reader.close();
-			} else {
-				log.info(" --- ...skipping directory...");
-			}
-		}
- 		//Assert.assertEquals("a\t2", reader.readLine());
-		//Assert.assertEquals("b\t1", reader.readLine());
-		//Assert.assertNull(reader.readLine());
-	}
+        // Set up the config and tool
+        Config config = ConfigFactory.load();
+        WARCStatsTool wir = new WARCStatsTool();
+
+        // run job
+        log.info("Setting up job config...");
+        JobConf conf = this.mrCluster.createJobConf();
+        wir.createJobConf(conf, args);
+        // Disable speculative execution for tests:
+        conf.set("mapred.reduce.tasks.speculative.execution", "false");
+        log.info("Running job...");
+        JobClient.runJob(conf);
+        log.info("Job finished, checking the results...");
+
+        // check the output
+        Path[] outputFiles = FileUtil.stat2Paths(
+                getFileSystem().listStatus(output, new OutputLogFilter()));
+        Assert.assertEquals(config.getInt("warc.hadoop.num_reducers"),
+                outputFiles.length);
+
+        // Check contents of the output:
+        for (Path output : outputFiles) {
+            log.info(" --- output : " + output);
+            if (getFileSystem().isFile(output)) {
+                InputStream is = getFileSystem().open(output);
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(is));
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    log.info(line);
+                    if (line.startsWith("RECORD-TOTAL")) {
+                        assertEquals("RECORD-TOTAL\t32", line);
+                    }
+                }
+                reader.close();
+            } else {
+                log.info(" --- ...skipping directory...");
+            }
+        }
+        // Assert.assertEquals("a\t2", reader.readLine());
+        // Assert.assertEquals("b\t1", reader.readLine());
+        // Assert.assertNull(reader.readLine());
+    }
+
+    @Test
+    public void testFullWARCRawStatsJob() throws Exception {
+        // prepare for test
+        // createTextInputFile();
+
+        log.info("Checking input file is present...");
+        // Check that the input file is present:
+        Path[] inputFiles = FileUtil.stat2Paths(
+                getFileSystem().listStatus(input, new OutputLogFilter()));
+        Assert.assertEquals(2, inputFiles.length);
+
+        // Set up arguments for the job:
+        // FIXME The input file could be written by this test.
+        String[] args = { "-i", "src/test/resources/test-inputs.txt", "-o",
+                this.output.getName(), "-w" };
+
+        // Set up the config and tool
+        Config config = ConfigFactory.load();
+        WARCRawStatsMDXGenerator wir = new WARCRawStatsMDXGenerator();
+
+        // run job
+        log.info("Setting up job config...");
+        JobConf conf = this.mrCluster.createJobConf();
+        wir.createJobConf(conf, args);
+        // Disable speculative execution for tests:
+        conf.set("mapred.reduce.tasks.speculative.execution", "false");
+        log.info("Running job...");
+        JobClient.runJob(conf);
+        log.info("Job finished, checking the results...");
+
+        // check the output
+        Path[] outputFiles = FileUtil.stat2Paths(
+                getFileSystem().listStatus(output, new OutputLogFilter()));
+        Assert.assertEquals(config.getInt("warc.hadoop.num_reducers"),
+                outputFiles.length);
+
+        // Check contents of the output:
+        for (Path output : outputFiles) {
+            log.info(" --- output : " + output);
+            if (getFileSystem().isFile(output)) {
+                InputStream is = getFileSystem().open(output);
+                BufferedReader reader = new BufferedReader(
+                        new InputStreamReader(is));
+                String line = null;
+                while ((line = reader.readLine()) != null) {
+                    log.info(line);
+                    if (line.startsWith("RECORD-TOTAL")) {
+                        assertEquals("RECORD-TOTAL\t32", line);
+                    }
+                }
+                reader.close();
+            } else {
+                log.info(" --- ...skipping directory...");
+            }
+        }
+        // Assert.assertEquals("a\t2", reader.readLine());
+        // Assert.assertEquals("b\t1", reader.readLine());
+        // Assert.assertNull(reader.readLine());
+    }
 
 	@After
 	public void tearDown() throws Exception {

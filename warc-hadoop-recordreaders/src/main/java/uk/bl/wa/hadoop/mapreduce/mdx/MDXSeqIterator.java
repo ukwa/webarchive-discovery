@@ -10,6 +10,7 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
+import org.json.JSONException;
 
 /**
  * This helper class can iterate through a sequence file that holds MDX records.
@@ -42,7 +43,12 @@ public class MDXSeqIterator implements Iterator<MDX> {
 
 	@Override
 	public MDX next() {
-		MDX mdx = MDX.fromJSONString(value.toString());
+        MDX mdx;
+        try {
+            mdx = new MDX(value.toString());
+        } catch (JSONException e1) {
+            mdx = null;
+        }
 		try {
 			hasNext = reader.next(key, value);
 		} catch (IOException e) {

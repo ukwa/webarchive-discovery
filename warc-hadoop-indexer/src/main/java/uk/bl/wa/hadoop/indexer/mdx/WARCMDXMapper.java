@@ -16,18 +16,18 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.common.SolrInputField;
+import org.json.JSONException;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCMDXMapper extends MapReduceBase implements
-		Mapper<Text, WritableArchiveRecord, Text, MDXWritable> {
+        Mapper<Text, WritableArchiveRecord, Text, Text> {
 	private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
 
 	private WARCIndexerMapper wim;
@@ -53,7 +53,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 	@Override
 	public void map(Text key, WritableArchiveRecord value,
-			OutputCollector<Text, MDXWritable> output,
+            OutputCollector<Text, Text> output,
 			Reporter reporter) throws IOException {
 
 		// Use the main indexing code:
@@ -64,16 +64,23 @@ public class WARCMDXMapper extends MapReduceBase implements
 			SolrRecord solr = wsolr.getSolrRecord();
 
 			// Wrap up the result:
-            MDX mdx = fromWritableSolrRecord(solr);
+            MDX mdx;
 			// Wrap up the key:
-			Text oKey = new Text(mdx.getHash());
-			// Alternative key, based on record type + url + timestamp
-			// Text oKey = new Text(mdx.getUrl() + "\t" + mdx.getTs() + "\t"
-			// + mdx.getRecordType());
+            Text oKey;
+            try {
+                mdx = fromWritableSolrRecord(solr);
+                oKey = new Text(mdx.getHash());
 
-			// Collect
-			MDXWritable result = new MDXWritable(mdx);
-			output.collect(oKey, result);
+                // Alternative key, based on record type + url + timestamp
+                // Text oKey = new Text(mdx.getUrl() + "\t" + mdx.getTs() + "\t"
+                // + mdx.getRecordType());
+
+                // Collect
+                Text result = new Text(mdx.toString());
+                output.collect(oKey, result);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
 		}
 
 	}
@@ -82,8 +89,10 @@ public class WARCMDXMapper extends MapReduceBase implements
      * 
      * @param solr
      * @return
+     * @throws JSONException
      */
-    public static MDX fromWritableSolrRecord(SolrRecord solr) {
+    public static MDX fromWritableSolrRecord(SolrRecord solr)
+            throws JSONException {
         MDX m = new MDX();
         m.setHash(stringValueOrUnset(solr.getFieldValue(SolrFields.HASH)));
         m.setUrl(stringValueOrUnset(solr.getFieldValue(SolrFields.SOLR_URL)));
@@ -99,7 +108,7 @@ public class WARCMDXMapper extends MapReduceBase implements
             while (i.hasNext()) {
                 vals.add(i.next().toString());
             }
-            m.getProperties().put(f, vals);
+            m.put(f, vals);
         }
 
         return m;

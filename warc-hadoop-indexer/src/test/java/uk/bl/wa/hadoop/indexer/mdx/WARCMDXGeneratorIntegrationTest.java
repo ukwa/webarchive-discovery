@@ -32,7 +32,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import uk.bl.wa.hadoop.indexer.mdx.WARCMDXGenerator;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqMerger;
 
@@ -187,7 +186,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		MDX mdx;
 		int counter = 0;
 		while (reader.next(key, value)) {
-			mdx = MDX.fromJSONString(value.toString());
+            mdx = new MDX(value.toString());
 			System.out.println("Key is: " + key + " record_type: "
 					+ mdx.getRecordType() + " SURT: " + mdx.getUrlAsSURT());
 			counter++;

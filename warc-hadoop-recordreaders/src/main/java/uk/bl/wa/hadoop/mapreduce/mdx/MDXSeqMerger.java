@@ -30,6 +30,7 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
+import org.json.JSONException;
 
 /**
  * 
@@ -190,8 +191,12 @@ public class MDXSeqMerger extends Configured implements Tool {
 		public void map(Text key, Text value,
 				OutputCollector<Text, MDXWritable> output, Reporter reporter)
 				throws IOException {
-			output.collect(key,
-					new MDXWritable(MDX.fromJSONString(value.toString())));
+            try {
+                output.collect(key, new MDXWritable(new MDX(value.toString())));
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 		}
 
 	}

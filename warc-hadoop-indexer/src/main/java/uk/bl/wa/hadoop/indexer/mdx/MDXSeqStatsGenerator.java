@@ -3,8 +3,6 @@ package uk.bl.wa.hadoop.indexer.mdx;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -32,9 +30,10 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
+import org.json.JSONArray;
+import org.json.JSONException;
 
 import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.hadoop.indexer.mdx.MDXSeqSampleGenerator.MDXSeqSampleMapper;
 import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.solr.SolrFields;
@@ -197,9 +196,9 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		public void map(Text key, Text value,
 				OutputCollector<Text, Text> output, Reporter reporter)
 				throws IOException {
+            try {
 			// Parse the MDX:
-			MDX mdx = MDX.fromJSONString(value.toString());
-			Map<String, List<String>> p = mdx.getProperties();
+            MDX mdx = new MDX(value.toString());
 
 			String year = mdx.getTs().substring(0, 4);
 
@@ -207,33 +206,28 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			if (!"request".equals(mdx.getRecordType())) {
 				// Generate format summary:
 				if (scanFormats) {
-					String cts = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_SERVED));
-					String ctt = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_TIKA));
-					String ctd = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_DROID));
+                    String cts = mdx.getString(SolrFields.CONTENT_TYPE_SERVED);
+                    String ctt = mdx.getString(SolrFields.CONTENT_TYPE_TIKA);
+                    String ctd = mdx.getString(SolrFields.CONTENT_TYPE_DROID);
 					output.collect(new Text(FORMATS_SUMMARY_NAME + KEY_PREFIX
 							+ year), new Text(year + "\t" + cts + "\t" + ctt
 							+ "\t" + ctd));
 
-					String ct = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.SOLR_CONTENT_TYPE));
-					String ctext = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_TYPE_EXT));
-					String ctffb = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.CONTENT_FFB));
+                    String ct = mdx.getString(SolrFields.SOLR_CONTENT_TYPE);
+                    String ctext = mdx.getString(SolrFields.CONTENT_TYPE_EXT);
+                    String ctffb = mdx.getString(SolrFields.CONTENT_FFB);
 					output.collect(new Text(FORMATS_FFB_NAME + KEY_PREFIX
 							+ year), new Text(year + "\t" + ct + "\t" + ctext
 							+ "\t" + ctffb));
 				}
 				// Generate host link graph
 				if (scanHostLinks) {
-					String host = MDXSeqSampleMapper.getFirstOrNull(p
-							.get(SolrFields.SOLR_HOST));
-					List<String> hosts = p.get(SolrFields.SOLR_LINKS_HOSTS);
+					String host = mdx.getString(SolrFields.SOLR_HOST);
+                    JSONArray hosts = mdx
+                            .getJSONArray(SolrFields.SOLR_LINKS_HOSTS);
 					if (hosts != null) {
-						for (String link_host : hosts) {
+                        for (int i = 0; i < hosts.length(); i++) {
+                            String link_host = hosts.getString(i);
 							// Record the link:
 							String link = host + "\t" + link_host;
 							// Make a sub-key for the reducer so individual
@@ -256,14 +250,14 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 
 				}
 				// Now look for postcodes and locations:
-				List<String> postcodes = p.get(SolrFields.POSTCODE);
-				List<String> locations = p.get(SolrFields.LOCATIONS);
+                JSONArray postcodes = mdx.getJSONArray(SolrFields.POSTCODE);
+                JSONArray locations = mdx.getJSONArray(SolrFields.LOCATIONS);
 				if (postcodes != null) {
-					for (int i = 0; i < postcodes.size(); i++) {
+                    for (int i = 0; i < postcodes.length(); i++) {
 						String location = "";
 						if (locations != null
-								&& locations.size() == postcodes.size()) {
-							location = locations.get(i);
+                                && locations.length() == postcodes.length()) {
+                            location = locations.getString(i);
 						} else {
 							// Reporter;
 							reporter.incrCounter("MDX-Records",
@@ -280,7 +274,8 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 						// new Text(result));
 						// Geo-summary:
 						if (!"".equals(location)) {
-							String summary = year + "\t" + locations.get(i);
+                            String summary = year + "\t"
+                                    + locations.getString(i);
 							output.collect(new Text(GEO_SUMMARY_NAME
 									+ KEY_PREFIX + year), new Text(summary));
 						} else {
@@ -295,6 +290,11 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 				reporter.incrCounter("MDX-Records",
 						"Ignored-" + mdx.getRecordType() + "-Record", 1);
 			}
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
+
 		}
 
 	}

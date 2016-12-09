@@ -15,6 +15,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONException;
 
 /**
  * 
@@ -26,97 +27,110 @@ import org.apache.log4j.PropertyConfigurator;
  */
 @SuppressWarnings({ "deprecation" })
 public class MDXReduplicatingReducer extends MapReduceBase implements
-		Reducer<Text, MDXWritable, Text, Text> {
+        Reducer<Text, Text, Text, Text> {
 
-	private static Log log = LogFactory.getLog(MDXReduplicatingReducer.class);
+    private static Log log = LogFactory.getLog(MDXReduplicatingReducer.class);
 
-	static enum MyCounters {
-		NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS
-	}
+    static enum MyCounters {
+        NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS
+    }
 
-	private static final Text revisit = new Text("revisit");
-	private static final Text response = new Text("response");
+    private static final Text revisit = new Text("revisit");
+    private static final Text response = new Text("response");
 
-	public MDXReduplicatingReducer() {
-		try {
-			Properties props = new Properties();
-			props.load(getClass().getResourceAsStream(
-					"/log4j-override.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (IOException e1) {
-			log.error("Failed to load log4j config from properties file.");
-		}
-	}
+    public MDXReduplicatingReducer() {
+        try {
+            Properties props = new Properties();
+            props.load(getClass()
+                    .getResourceAsStream("/log4j-override.properties"));
+            PropertyConfigurator.configure(props);
+        } catch (IOException e1) {
+            log.error("Failed to load log4j config from properties file.");
+        }
+    }
 
-	/**
-	 */
-	@Override
-	public void configure(JobConf job) {
-		log.info("Initialisation complete.");
-	}
+    /**
+     */
+    @Override
+    public void configure(JobConf job) {
+        log.info("Initialisation complete.");
+    }
 
-	@Override
-	public void reduce(Text key, Iterator<MDXWritable> values,
-			OutputCollector<Text, Text> output, Reporter reporter)
-					throws IOException {
+    @Override
+    public void reduce(Text key, Iterator<Text> values,
+            OutputCollector<Text, Text> output, Reporter reporter)
+            throws IOException {
 
-		long noValues = 0;
-		MDXWritable mdx;
-		MDX exemplar = null;
-		List<MDXWritable> toReduplicate = new ArrayList<MDXWritable>();
-		while (values.hasNext()) {
-			mdx = values.next();
-			noValues++;
-			
-			// Collect the revisit records:
-			if (revisit.equals(mdx.getRecordType())) {
-				// Add this revisit record to the stack:
-				reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
-				toReduplicate.add(mdx);
-			} else {
-				// Record a response record:
-				if (exemplar == null && response.equals(mdx.getRecordType())) {
-					exemplar = mdx.getMDX();
-				}
-				// Collect complete records:
-				Text outKey = new Text(mdx.getHash());
-				output.collect(outKey, mdx.getMDXAsText());
-			}
-			
-			// Report:
-			reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
+        try {
+            long noValues = 0;
+            String json;
+            MDX mdx;
+            String exemplar = null;
+            List<MDX> toReduplicate = new ArrayList<MDX>();
+            while (values.hasNext()) {
+                json = values.next().toString();
+                mdx = new MDX(json);
+                noValues++;
 
-			// Occasionally update status report:
-			if ((noValues % 1000) == 0) {
-				reporter.setStatus("Processed "
-						+ noValues
-						+ ", of which "
-						+ reporter.getCounter(MyCounters.NUM_REVISITS)
-								.getValue() + " records need reduplication.");
-			}
+                // Collect the revisit records:
+                if (revisit.equals(mdx.getRecordType())) {
+                    // Add this revisit record to the stack:
+                    reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
+                    toReduplicate.add(mdx);
+                } else {
+                    // Record a response record:
+                    if (exemplar == null
+                            && response.equals(mdx.getRecordType())) {
+                        exemplar = json;
+                    }
+                    // Collect complete records:
+                    Text outKey = new Text(mdx.getHash());
+                    output.collect(key, new Text(mdx.toString()));
+                }
 
-		}
-		
-		// Now fix up revisits:
-		for (MDXWritable rmdxw : toReduplicate) {
-			// Set outKey based on hash:
-			Text outKey = rmdxw.getHash();
-			// Handle merge:
-			if( exemplar != null ) {
-				// Modify record type and and merge the properties:
-				MDX rmdx = rmdxw.getMDX();
-				rmdx.setRecordType("reduplicated");
-				rmdx.getProperties().putAll(exemplar.getProperties());
-				reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
-				// Collect resolved records:
-				output.collect(outKey, new Text(rmdx.toJSON()));
-			} else {
-				reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
-				// Collect unresolved records:
-				output.collect(outKey, rmdxw.getMDXAsText());
-			}
-		}
+                // Report:
+                reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
 
-	}
+                // Occasionally update status report:
+                if ((noValues % 1000) == 0) {
+                    reporter.setStatus("Processed " + noValues + ", of which "
+                            + reporter.getCounter(MyCounters.NUM_REVISITS)
+                                    .getValue()
+                            + " records need reduplication.");
+                }
+
+            }
+
+            // Now fix up revisits:
+            for (MDX rmdxw : toReduplicate) {
+                // Set outKey based on hash:
+                // Text outKey = new rmdxw.getHash();
+                // Handle merge:
+                if (exemplar != null) {
+                    // Modify record type and and merge the properties:
+                    MDX rmdx = new MDX(exemplar);
+                    @SuppressWarnings("unchecked")
+                    Iterator<String> keys = rmdxw.keys();
+                    while (keys.hasNext()) {
+                        String k = keys.next();
+                        rmdx.put(k, rmdxw.get(k));
+                    }
+                    rmdx.setRecordType("reduplicated");
+                    reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
+                    // Collect resolved records:
+                    output.collect(key, new Text(rmdx.toString()));
+                } else {
+                    reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
+                    // Collect unresolved records:
+                    output.collect(key, new Text(rmdxw.toString()));
+                }
+            }
+        } catch (JSONException e) {
+            log.error("Exception in MDX reducer.", e);
+            e.printStackTrace();
+            reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+        }
+
+    }
 
 }

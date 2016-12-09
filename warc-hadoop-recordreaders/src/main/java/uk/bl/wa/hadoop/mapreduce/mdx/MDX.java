@@ -3,19 +3,11 @@
  */
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
 import org.apache.commons.httpclient.URIException;
 import org.archive.url.SURTTokenizer;
-import org.codehaus.jackson.JsonGenerationException;
-import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.annotate.JsonIgnore;
-import org.codehaus.jackson.annotate.JsonProperty;
-import org.codehaus.jackson.map.JsonMappingException;
-import org.codehaus.jackson.map.ObjectMapper;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 /**
  * This defines an MDX record, containing minimal explicit metadata and a
@@ -24,52 +16,66 @@ import org.codehaus.jackson.map.ObjectMapper;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class MDX {
+public class MDX extends JSONObject {
 
-    private ObjectMapper mapper = new ObjectMapper();
+    // Main fields, from CDXJ
+    public static final String URL_KEY = "url-key"; // The URL key, often
+                                                    // canonicalised, SURTed
+                                                    // etc.
+    public static final String TIMESTAMP = "timestamp"; // Should be
+                                                        // YYYYMMDDhhmmss
+                                                        // format.
+    public static final String URL = "url";
+    public static final String DIGEST = "digest";
+    public static final String LENGTH = "length";
+    public static final String OFFSET = "offset";
+    public static final String FILENAME = "filename";
 
-	@JsonProperty
-	private String hash;
+    // Additional metadata fields:
+    public static final String RECORD_TYPE = "record-type";
+    public static final String DATE = "date"; // Crawl date in ISO format
 
-	@JsonProperty
-	private String url;
+    public MDX(String jsonString) throws JSONException {
+        super(jsonString);
+    }
 
-	@JsonProperty
-	private String ts;
+    public MDX() {
+        super();
+    }
 
-	@JsonProperty
-	private String recordType;
-
-	@JsonProperty
-	private Map<String, List<String>> properties = new HashMap<String, List<String>>();
-
-	/**
-	 * @return the hash
-	 */
-	public String getHash() {
-		return hash;
+    /**
+     * @return the hash
+     * @throws JSONException
+     */
+    public String getHash() throws JSONException {
+        return this.getString(DIGEST);
 	}
 
 	/**
-	 * @param hash the hash to set
-	 */
-	public void setHash(String hash) {
-		this.hash = hash;
+     * @param hash
+     *            the hash to set
+     * @throws JSONException
+     */
+    public void setHash(String hash) throws JSONException {
+        this.put(DIGEST, hash);
 	}
 
 	/**
-	 * @return the url
-	 */
-	public String getUrl() {
-		return url;
+     * @return the url
+     * @throws JSONException
+     */
+    public String getUrl() throws JSONException {
+        return this.getString(URL);
 	}
 
 	/**
-	 * 
-	 * @return
-	 */
+     * 
+     * @return
+     * @throws JSONException
+     */
 	@JsonIgnore
-	public String getUrlAsSURT() {
+    public String getUrlAsSURT() throws JSONException {
+        String url = this.getString(URL);
 		try {
 			return SURTTokenizer.exactKey(url);
 		} catch (URIException e) {
@@ -79,93 +85,46 @@ public class MDX {
 	}
 
 	/**
-	 * @param url the url to set
-	 */
-	public void setUrl(String url) {
-		this.url = url;
+     * @param url
+     *            the url to set
+     * @throws JSONException
+     */
+    public void setUrl(String url) throws JSONException {
+        this.put(URL, url);
 	}
 
 	/**
-	 * @return the ts
-	 */
-	public String getTs() {
-		return ts;
+     * @return the ts
+     * @throws JSONException
+     */
+    public String getTs() throws JSONException {
+        return this.getString(TIMESTAMP);
 	}
 
 	/**
-	 * @param ts the ts to set
-	 */
-	public void setTs(String ts) {
-		this.ts = ts;
+     * @param ts
+     *            the ts to set
+     * @throws JSONException
+     */
+    public void setTs(String ts) throws JSONException {
+        this.put(TIMESTAMP, ts);
 	}
 
 	/**
-	 * @return the record_type
-	 */
-	public String getRecordType() {
-		return recordType;
+     * @return the record_type
+     * @throws JSONException
+     */
+    public String getRecordType() throws JSONException {
+        return this.getString(RECORD_TYPE);
 	}
 
 	/**
-	 * @param record_type
-	 *            the record_type to set
-	 */
-	public void setRecordType(String recordType) {
-		this.recordType = recordType;
-	}
-
-	/**
-	 * @return the properties
-	 */
-	public Map<String, List<String>> getProperties() {
-		return properties;
-	}
-
-    /* --- */
-
-	public String toJSON() {
-		try {
-			return mapper.writeValueAsString(this);
-		} catch (JsonGenerationException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString() {
-		return toJSON();
-	}
-
-	/* --- */
-
-	public static MDX fromJSONString(String json) {
-		ObjectMapper mapper = new ObjectMapper();
-		try {
-			return mapper.readValue(json, MDX.class);
-		} catch (JsonParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (JsonMappingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return null;
+     * @param record_type
+     *            the record_type to set
+     * @throws JSONException
+     */
+    public void setRecordType(String recordType) throws JSONException {
+        this.put(RECORD_TYPE, recordType);
 	}
 
 }

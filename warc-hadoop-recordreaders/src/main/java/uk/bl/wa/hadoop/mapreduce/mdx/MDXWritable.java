@@ -9,6 +9,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.io.Writable;
+import org.json.JSONException;
 
 /**
  * 
@@ -43,12 +44,21 @@ public class MDXWritable implements Writable {
 	}
 
 	/* For use */
-	public MDXWritable(MDX mdx) {
-		this.hash = new Text(mdx.getHash());
-		this.url = new Text(mdx.getUrl());
+    public MDXWritable(MDX mdx) throws JSONException {
+        if (mdx.getHash() != null) {
+            this.hash = new Text(mdx.getHash());
+        } else {
+            this.hash = new Text();
+            ;
+        }
+        if (mdx.getUrl() != null) {
+            this.url = new Text(mdx.getUrl());
+        } else {
+            this.url = new Text();
+        }
 		this.ts = new Text(mdx.getTs());
 		this.recordType = new Text(mdx.getRecordType());
-		this.mdx = new Text(mdx.toJSON());
+        this.mdx = new Text(mdx.toString());
 	}
 
 	@Override
@@ -98,10 +108,11 @@ public class MDXWritable implements Writable {
 	}
 
 	/**
-	 * @return the mdx
-	 */
-	public MDX getMDX() {
-		return MDX.fromJSONString(mdx.toString());
+     * @return the mdx
+     * @throws JSONException
+     */
+    public MDX getMDX() throws JSONException {
+        return new MDX(mdx.toString());
 	}
 
 	/**
