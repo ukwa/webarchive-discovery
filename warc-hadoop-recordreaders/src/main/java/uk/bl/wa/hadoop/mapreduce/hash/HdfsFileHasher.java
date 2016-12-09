@@ -23,6 +23,8 @@ import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import uk.bl.wa.hadoop.mapreduce.lib.input.UnsplittableInputFileFormat;
+
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *

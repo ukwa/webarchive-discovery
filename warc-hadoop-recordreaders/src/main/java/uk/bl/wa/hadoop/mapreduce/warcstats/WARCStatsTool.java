@@ -16,15 +16,16 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
 import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 /**
  * @author Andrew.Jackson@bl.uk
@@ -87,7 +88,10 @@ public class WARCStatsTool extends Configured implements Tool {
 		
 		// Submit it:
 		JobClient client = new JobClient( conf );
-		client.submitJob( conf );
+        RunningJob job = client.submitJob(conf);
+
+        // And await completion before exiting...
+        job.waitForCompletion();
 		
 		return 0;
 	}
@@ -97,7 +101,7 @@ public class WARCStatsTool extends Configured implements Tool {
 	 * @throws Exception at runtime
 	 */
 	public static void main(String[] args) throws Exception {
-		if( !( args.length > 0 ) ) {
+        if (!(args.length == 2)) {
 			System.out.println( "Need input file.list and output dir!" );
 			System.exit( 0 );
 

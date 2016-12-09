@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.hadoop.mapreduce.hash;
+package uk.bl.wa.hadoop.mapreduce.lib.input;
 
 import java.io.IOException;
 
