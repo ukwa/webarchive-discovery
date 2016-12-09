@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import static org.junit.Assert.assertEquals;
 
@@ -31,6 +31,10 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import uk.bl.wa.hadoop.indexer.mdx.WARCMDXGenerator;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqMerger;
 
 public class WARCMDXGeneratorIntegrationTest {
 

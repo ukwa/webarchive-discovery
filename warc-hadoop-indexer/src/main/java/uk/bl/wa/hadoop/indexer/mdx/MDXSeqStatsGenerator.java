@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
@@ -34,8 +34,9 @@ import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
 import uk.bl.wa.hadoop.TextOutputFormat;
+import uk.bl.wa.hadoop.indexer.mdx.MDXSeqSampleGenerator.MDXSeqSampleMapper;
 import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqSampleGenerator.MDXSeqSampleMapper;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.solr.SolrFields;
 
 /**

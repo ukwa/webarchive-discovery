@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import static org.junit.Assert.assertEquals;
 
@@ -29,6 +29,11 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
+import uk.bl.wa.hadoop.indexer.mdx.WARCMDXGenerator;
+import uk.bl.wa.hadoop.indexer.mdx.WARCMDXMapper;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
 
 public class WARCMDXMapperTest {
 
@@ -48,7 +53,7 @@ public class WARCMDXMapperTest {
 				.root().render(ConfigRenderOptions.concise()));
 		// Set up the mapper etc.:
 		WARCMDXMapper mapper = new WARCMDXMapper();
-		MDXSeqReduplicatingReducer reducer = new MDXSeqReduplicatingReducer();
+		MDXReduplicatingReducer reducer = new MDXReduplicatingReducer();
 		mapDriver = MapDriver.newMapDriver(mapper).withConfiguration(conf);
 		reduceDriver = ReduceDriver.newReduceDriver(reducer);
 		mapReduceDriver = MapReduceDriver.newMapReduceDriver();

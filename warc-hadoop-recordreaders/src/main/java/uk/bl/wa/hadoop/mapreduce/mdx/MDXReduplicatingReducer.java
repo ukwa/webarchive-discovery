@@ -16,11 +16,19 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 
+/**
+ * 
+ * This reducer takes MDX entries ordered by hash, and re-populates
+ * empty/deduplicated MDX records.
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 @SuppressWarnings({ "deprecation" })
-public class MDXSeqReduplicatingReducer extends MapReduceBase implements
+public class MDXReduplicatingReducer extends MapReduceBase implements
 		Reducer<Text, MDXWritable, Text, Text> {
 
-	private static Log log = LogFactory.getLog(MDXSeqReduplicatingReducer.class);
+	private static Log log = LogFactory.getLog(MDXReduplicatingReducer.class);
 
 	static enum MyCounters {
 		NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS
@@ -29,7 +37,7 @@ public class MDXSeqReduplicatingReducer extends MapReduceBase implements
 	private static final Text revisit = new Text("revisit");
 	private static final Text response = new Text("response");
 
-	public MDXSeqReduplicatingReducer() {
+	public MDXReduplicatingReducer() {
 		try {
 			Properties props = new Properties();
 			props.load(getClass().getResourceAsStream(

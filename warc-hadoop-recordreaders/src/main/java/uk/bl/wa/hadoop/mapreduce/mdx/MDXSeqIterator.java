@@ -11,6 +11,12 @@ import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.io.Text;
 
+/**
+ * This helper class can iterate through a sequence file that holds MDX records.
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 public class MDXSeqIterator implements Iterator<MDX> {
 
 	private Reader reader;

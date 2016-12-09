@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -23,14 +23,16 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.bl.wa.hadoop.indexer.mdx.MDXSeqStatsGenerator;
+
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class MDXSeqSampleGeneratorIntegrationTest {
+public class MDXSeqStatsGeneratorIntegrationTest {
 
 	private static final Log log = LogFactory
-			.getLog(MDXSeqSampleGeneratorIntegrationTest.class);
+			.getLog(MDXSeqStatsGeneratorIntegrationTest.class);
 
 	// Test cluster:
 	private MiniDFSCluster dfsCluster = null;
@@ -93,7 +95,7 @@ public class MDXSeqSampleGeneratorIntegrationTest {
 				this.output.getName() };
 
 		// Set up the WARCIndexerRunner
-		MDXSeqSampleGenerator wir = new MDXSeqSampleGenerator();
+		MDXSeqStatsGenerator wir = new MDXSeqStatsGenerator();
 
 		// run job
 		// Job configuration:

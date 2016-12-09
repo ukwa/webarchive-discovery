@@ -1,7 +1,6 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
@@ -21,43 +20,37 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MapReduceBase;
+import org.apache.hadoop.mapred.Mapper;
+import org.apache.hadoop.mapred.OutputCollector;
+import org.apache.hadoop.mapred.Reporter;
+import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-
-import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.util.ConfigPrinter;
-
 /**
- * WARCIndexerRunner
  * 
- * Extracts text/metadata using from a series of Archive files.
+ * This takes multiple MDX sequence files and merges them using the
+ * re-duplicating reducer.
  * 
- * @author rcoram
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  */
 
 @SuppressWarnings({ "deprecation" })
-public class WARCMDXGenerator extends Configured implements Tool {
-	private static final Log LOG = LogFactory.getLog(WARCMDXGenerator.class);
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
-	private static final String CLI_HEADER = "MapReduce method for extracting metadata/text from Archive Records";
-	public static final String CONFIG_PROPERTIES = "warc_indexer_config";
-
-	protected static String solrHomeZipName = "solr_home.zip";
-
-    public static String WARC_HADOOP_NUM_REDUCERS = "warc.hadoop.num_reducers";
+public class MDXSeqMerger extends Configured implements Tool {
+	private static final Log LOG = LogFactory.getLog(MDXSeqMerger.class);
+	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
+	private static final String CLI_HEADER = "MapReduce job for merging MDX sequence files.";
 
 	private String inputPath;
 	private String outputPath;
-	private String configPath;
 	private boolean wait;
-	private boolean dumpConfig;
+
+	// Reducer count:
+	int numReducers = 10;
 
 	/**
 	 * 
@@ -68,39 +61,11 @@ public class WARCMDXGenerator extends Configured implements Tool {
 	 * @throws InterruptedException
 	 * @throws KeeperException
 	 */
-	protected void createJobConf(JobConf conf, String[] args)
+    public void createJobConf(JobConf conf, String[] args)
 			throws IOException, ParseException, KeeperException,
 			InterruptedException {
 		// Parse the command-line parameters.
 		this.setup(args, conf);
-
-		// Store application properties where the mappers/reducers can access
-		// them
-		Config index_conf;
-		if (this.configPath != null) {
-            LOG.info("Loading config from: " + configPath);
-			index_conf = ConfigFactory.parseFile(new File(this.configPath));
-		} else {
-            LOG.info("Using default config: mdx");
-			index_conf = ConfigFactory.load("mdx");
-		}
-		if (this.dumpConfig) {
-			ConfigPrinter.print(index_conf);
-			System.exit(0);
-		}
-		conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
-				.render(ConfigRenderOptions.concise()));
-        LOG.info("Loaded warc config: " + index_conf.getString("warc.title"));
-
-		// Reducer count:
-        int numReducers = 10;
-        if (index_conf.hasPath(WARC_HADOOP_NUM_REDUCERS)) {
-            numReducers = index_conf.getInt(WARC_HADOOP_NUM_REDUCERS);
-		}
-        if (conf.getInt(WARC_HADOOP_NUM_REDUCERS, -1) != -1) {
-            LOG.info("Overriding num_reducers using Hadoop config.");
-            numReducers = conf.getInt(WARC_HADOOP_NUM_REDUCERS, numReducers);
-        }
 
 		// Add input paths:
 		LOG.info("Reading input files...");
@@ -116,29 +81,33 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(conf, new Path(this.outputPath));
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
-		conf.setInputFormat(ArchiveFileInputFormat.class);
-		conf.setMapperClass(WARCMDXMapper.class);
-		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
+		// Input
+		conf.setInputFormat(SequenceFileInputFormat.class);
+		// M-R
+		conf.setMapperClass(MDXSeqMapper.class);
+		conf.setReducerClass(MDXReduplicatingReducer.class);
+		// Map outputs
+		conf.setMapOutputKeyClass(Text.class);
+		conf.setMapOutputValueClass(MDXWritable.class);
+		// Job outputs
+		conf.setOutputKeyClass(Text.class);
+		conf.setOutputValueClass(Text.class);
 		conf.setOutputFormat(SequenceFileOutputFormat.class);
 		SequenceFileOutputFormat.setOutputCompressionType(conf,
 				CompressionType.BLOCK);
-		// OR TextOutputFormat?
-		conf.set("map.output.key.field.separator", "");
+		LOG.info("Used " + numReducers + " reducers.");
+		conf.setNumReduceTasks(numReducers);
+
 		// Compress the output from the maps, to cut down temp space
 		// requirements between map and reduce.
 		conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
-		// for 0.20.x ?
+																// for 0.20.x ?
 		conf.set("mapred.compress.map.output", "true");
 		// conf.set("mapred.map.output.compression.codec",
 		// "org.apache.hadoop.io.compress.GzipCodec");
 		// Ensure the JARs we provide take precedence over ones from Hadoop:
 		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(Text.class);
-		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(MDXWritable.class);
-		conf.setNumReduceTasks(numReducers);
 	}
 
 	/**
@@ -152,7 +121,7 @@ public class WARCMDXGenerator extends Configured implements Tool {
 	public int run(String[] args) throws IOException, ParseException,
 			KeeperException, InterruptedException {
 		// Set up the base conf:
-		JobConf conf = new JobConf(getConf(), WARCMDXGenerator.class);
+		JobConf conf = new JobConf(getConf(), MDXSeqMerger.class);
 
 		// Get the job configuration:
 		this.createJobConf(conf, args);
@@ -176,9 +145,8 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		Options options = new Options();
 		options.addOption("i", true, "input file list");
 		options.addOption("o", true, "output directory");
-		options.addOption("c", true, "path to configuration");
 		options.addOption("w", false, "wait for job to finish");
-		options.addOption("d", false, "dump configuration");
+		options.addOption("r", true, "number of reducers");
 
 		CommandLineParser parser = new PosixParser();
 		CommandLine cmd = parser.parse(options, otherArgs);
@@ -191,10 +159,9 @@ public class WARCMDXGenerator extends Configured implements Tool {
 		this.inputPath = cmd.getOptionValue("i");
 		this.outputPath = cmd.getOptionValue("o");
 		this.wait = cmd.hasOption("w");
-		if (cmd.hasOption("c")) {
-			this.configPath = cmd.getOptionValue("c");
+		if (cmd.hasOption("r")) {
+			this.numReducers = Integer.parseInt(cmd.getOptionValue("r"));
 		}
-		this.dumpConfig = cmd.hasOption("d");
 	}
 
 	/**
@@ -203,8 +170,30 @@ public class WARCMDXGenerator extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		int ret = ToolRunner.run(new WARCMDXGenerator(), args);
+		int ret = ToolRunner.run(new MDXSeqMerger(), args);
 		System.exit(ret);
+	}
+
+	/**
+	 * Simple mapper class to turn MDX-as-Text into MDXWritables.
+	 * 
+	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+	 *
+	 */
+	static public class MDXSeqMapper extends MapReduceBase implements
+			Mapper<Text, Text, Text, MDXWritable> {
+
+		public MDXSeqMapper() {
+		}
+
+		@Override
+		public void map(Text key, Text value,
+				OutputCollector<Text, MDXWritable> output, Reporter reporter)
+				throws IOException {
+			output.collect(key,
+					new MDXWritable(MDX.fromJSONString(value.toString())));
+		}
+
 	}
 
 }

@@ -1,6 +1,9 @@
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -12,10 +15,14 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.solr.common.SolrInputField;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
+import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
@@ -57,7 +64,7 @@ public class WARCMDXMapper extends MapReduceBase implements
 			SolrRecord solr = wsolr.getSolrRecord();
 
 			// Wrap up the result:
-			MDX mdx = MDX.fromWritableSolrRecord(solr);
+            MDX mdx = fromWritableSolrRecord(solr);
 			// Wrap up the key:
 			Text oKey = new Text(mdx.getHash());
 			// Alternative key, based on record type + url + timestamp
@@ -71,5 +78,39 @@ public class WARCMDXMapper extends MapReduceBase implements
 
 	}
 
+    /**
+     * 
+     * @param solr
+     * @return
+     */
+    public static MDX fromWritableSolrRecord(SolrRecord solr) {
+        MDX m = new MDX();
+        m.setHash(stringValueOrUnset(solr.getFieldValue(SolrFields.HASH)));
+        m.setUrl(stringValueOrUnset(solr.getFieldValue(SolrFields.SOLR_URL)));
+        m.setTs(stringValueOrUnset(
+                solr.getFieldValue(SolrFields.WAYBACK_DATE)));
+        m.setRecordType(stringValueOrUnset(
+                solr.getFieldValue(SolrFields.SOLR_RECORD_TYPE)));
+        // Pass though Solr fields:
+        for (String f : solr.getSolrDocument().getFieldNames()) {
+            SolrInputField v = solr.getSolrDocument().get(f);
+            Iterator<Object> i = v.getValues().iterator();
+            List<String> vals = new ArrayList<String>();
+            while (i.hasNext()) {
+                vals.add(i.next().toString());
+            }
+            m.getProperties().put(f, vals);
+        }
+
+        return m;
+    }
+
+    private static String stringValueOrUnset(Object val) {
+        if (val == null) {
+            return "unset";
+        } else {
+            return val.toString();
+        }
+    }
 
 }

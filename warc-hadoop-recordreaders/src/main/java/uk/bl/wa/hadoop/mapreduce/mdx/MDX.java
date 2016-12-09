@@ -4,14 +4,11 @@
 package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.httpclient.URIException;
-import org.apache.solr.common.SolrInputField;
 import org.archive.url.SURTTokenizer;
 import org.codehaus.jackson.JsonGenerationException;
 import org.codehaus.jackson.JsonParseException;
@@ -20,16 +17,16 @@ import org.codehaus.jackson.annotate.JsonProperty;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
 
-import uk.bl.wa.solr.SolrFields;
-import uk.bl.wa.solr.SolrRecord;
-
 /**
+ * This defines an MDX record, containing minimal explicit metadata and a
+ * general hash-map of arrays for other data.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
 public class MDX {
 
-	ObjectMapper mapper = new ObjectMapper();
+    private ObjectMapper mapper = new ObjectMapper();
 
 	@JsonProperty
 	private String hash;
@@ -53,16 +50,12 @@ public class MDX {
 		return hash;
 	}
 
-
-
 	/**
 	 * @param hash the hash to set
 	 */
 	public void setHash(String hash) {
 		this.hash = hash;
 	}
-
-
 
 	/**
 	 * @return the url
@@ -85,15 +78,12 @@ public class MDX {
 		}
 	}
 
-
 	/**
 	 * @param url the url to set
 	 */
 	public void setUrl(String url) {
 		this.url = url;
 	}
-
-
 
 	/**
 	 * @return the ts
@@ -102,16 +92,12 @@ public class MDX {
 		return ts;
 	}
 
-
-
 	/**
 	 * @param ts the ts to set
 	 */
 	public void setTs(String ts) {
 		this.ts = ts;
 	}
-
-
 
 	/**
 	 * @return the record_type
@@ -134,6 +120,8 @@ public class MDX {
 	public Map<String, List<String>> getProperties() {
 		return properties;
 	}
+
+    /* --- */
 
 	public String toJSON() {
 		try {
@@ -178,40 +166,6 @@ public class MDX {
 			e.printStackTrace();
 		}
 		return null;
-	}
-
-	private static String stringValueOrUnset(Object val) {
-		if (val == null) {
-			return "unset";
-		} else {
-			return val.toString();
-		}
-	}
-
-	/**
-	 * 
-	 * @param solr
-	 * @return
-	 */
-	public static MDX fromWritableSolrRecord(SolrRecord solr) {
-		MDX m = new MDX();
-		m.setHash(stringValueOrUnset(solr.getFieldValue(SolrFields.HASH)));
-		m.setUrl(stringValueOrUnset(solr.getFieldValue(SolrFields.SOLR_URL)));
-		m.setTs(stringValueOrUnset(solr.getFieldValue(SolrFields.WAYBACK_DATE)));
-		m.setRecordType(stringValueOrUnset(solr
-				.getFieldValue(SolrFields.SOLR_RECORD_TYPE)));
-		// Pass though Solr fields:
-		for( String f : solr.getSolrDocument().getFieldNames() ) {
-			SolrInputField v = solr.getSolrDocument().get(f);
-			Iterator<Object> i = v.getValues().iterator();
-			List<String> vals = new ArrayList<String>();
-			while (i.hasNext()) {
-				vals.add(i.next().toString());
-			}
-			m.getProperties().put(f, vals);
-		}
-		
-		return m;
 	}
 
 }

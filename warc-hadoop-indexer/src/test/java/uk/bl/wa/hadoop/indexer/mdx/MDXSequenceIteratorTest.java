@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.mapreduce.mdx;
+package uk.bl.wa.hadoop.indexer.mdx;
 
 import static org.junit.Assert.assertEquals;
 
@@ -7,6 +7,9 @@ import java.util.Iterator;
 
 import org.junit.Before;
 import org.junit.Test;
+
+import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
+import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqIterator;
 
 public class MDXSequenceIteratorTest {
 

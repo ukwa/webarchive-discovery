@@ -14,7 +14,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.SequenceFile.CompressionType;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -24,26 +23,26 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.hadoop.mapred.SequenceFileInputFormat;
-import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.TextInputFormat;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
 /**
- * WARCIndexerRunner
  * 
- * Extracts text/metadata using from a series of Archive files.
+ * This takes multiple MDX (line-oriented) files and merges them using the
+ * re-duplicating reducer.
  * 
- * @author rcoram
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  */
 
 @SuppressWarnings({ "deprecation" })
-public class MDXSeqMerger extends Configured implements Tool {
-	private static final Log LOG = LogFactory.getLog(MDXSeqMerger.class);
-	private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
-	private static final String CLI_HEADER = "MapReduce job for merging MDX sequence files.";
+public class MDXMerger extends Configured implements Tool {
+	private static final Log LOG = LogFactory.getLog(MDXMerger.class);
+    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] (to wait for completion)";
+    private static final String CLI_HEADER = "MapReduce job for merging MDX files.";
 
 	private String inputPath;
 	private String outputPath;
@@ -61,7 +60,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 	 * @throws InterruptedException
 	 * @throws KeeperException
 	 */
-	protected void createJobConf(JobConf conf, String[] args)
+    public void createJobConf(JobConf conf, String[] args)
 			throws IOException, ParseException, KeeperException,
 			InterruptedException {
 		// Parse the command-line parameters.
@@ -82,19 +81,17 @@ public class MDXSeqMerger extends Configured implements Tool {
 
 		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
 		// Input
-		conf.setInputFormat(SequenceFileInputFormat.class);
+        conf.setInputFormat(TextInputFormat.class);
 		// M-R
 		conf.setMapperClass(MDXSeqMapper.class);
-		conf.setReducerClass(MDXSeqReduplicatingReducer.class);
+		conf.setReducerClass(MDXReduplicatingReducer.class);
 		// Map outputs
 		conf.setMapOutputKeyClass(Text.class);
 		conf.setMapOutputValueClass(MDXWritable.class);
 		// Job outputs
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
-		conf.setOutputFormat(SequenceFileOutputFormat.class);
-		SequenceFileOutputFormat.setOutputCompressionType(conf,
-				CompressionType.BLOCK);
+        conf.setOutputFormat(TextOutputFormat.class);
 		LOG.info("Used " + numReducers + " reducers.");
 		conf.setNumReduceTasks(numReducers);
 
@@ -121,7 +118,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 	public int run(String[] args) throws IOException, ParseException,
 			KeeperException, InterruptedException {
 		// Set up the base conf:
-		JobConf conf = new JobConf(getConf(), MDXSeqMerger.class);
+		JobConf conf = new JobConf(getConf(), MDXMerger.class);
 
 		// Get the job configuration:
 		this.createJobConf(conf, args);
@@ -170,7 +167,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 	 * @throws Exception
 	 */
 	public static void main(String[] args) throws Exception {
-		int ret = ToolRunner.run(new MDXSeqMerger(), args);
+		int ret = ToolRunner.run(new MDXMerger(), args);
 		System.exit(ret);
 	}
 
