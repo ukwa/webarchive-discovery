@@ -4,13 +4,15 @@
 package uk.bl.wa.hadoop.mapred;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
+import org.apache.hadoop.io.compress.CompressionCodec;
+import org.apache.hadoop.io.compress.CompressionCodecFactory;
 import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -29,11 +31,13 @@ public class ByteBlockRecordReader
     private static final Log log = LogFactory
             .getLog(ByteBlockRecordReader.class);
 
-    private FSDataInputStream fsdis;
+    private InputStream fsdis;
     private Path path;
     private long bytes_read = 0;
     private long file_length = 0;
     private int buf_size = 1000 * 1000;
+
+    private CompressionCodecFactory compressionCodecs;
 
     /**
      * 
@@ -41,14 +45,24 @@ public class ByteBlockRecordReader
      * @param conf
      * @throws IOException
      */
-    public ByteBlockRecordReader(InputSplit inputSplit, JobConf conf)
+    public ByteBlockRecordReader(InputSplit inputSplit, JobConf conf,
+            boolean autoDecompress)
             throws IOException {
         if (inputSplit instanceof FileSplit) {
             FileSplit fs = (FileSplit) inputSplit;
             path = fs.getPath();
             FileSystem fSys = path.getFileSystem(conf);
-            fsdis = fSys.open(path);
             file_length = fSys.getContentSummary(path).getLength();
+            fsdis = fSys.open(path);
+
+            // Support auto-decompression of compressed files:
+            if (autoDecompress) {
+                compressionCodecs = new CompressionCodecFactory(conf);
+                final CompressionCodec codec = compressionCodecs.getCodec(path);
+                if (codec != null) {
+                    fsdis = codec.createInputStream(fsdis);
+                }
+            }
         } else {
             log.error("Only FileSplit supported!");
             throw new IOException("Need FileSplit input...");
