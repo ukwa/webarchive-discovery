@@ -20,17 +20,13 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
-import org.apache.hadoop.mapred.OutputCollector;
-import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
-import org.json.JSONException;
 
 /**
  * 
@@ -85,11 +81,11 @@ public class MDXSeqMerger extends Configured implements Tool {
 		// Input
 		conf.setInputFormat(SequenceFileInputFormat.class);
 		// M-R
-		conf.setMapperClass(MDXSeqMapper.class);
+        conf.setMapperClass(Mapper.class);
 		conf.setReducerClass(MDXReduplicatingReducer.class);
 		// Map outputs
 		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(MDXWritable.class);
+        conf.setMapOutputValueClass(Text.class);
 		// Job outputs
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
@@ -173,32 +169,6 @@ public class MDXSeqMerger extends Configured implements Tool {
 	public static void main(String[] args) throws Exception {
 		int ret = ToolRunner.run(new MDXSeqMerger(), args);
 		System.exit(ret);
-	}
-
-	/**
-	 * Simple mapper class to turn MDX-as-Text into MDXWritables.
-	 * 
-	 * @author Andrew Jackson <Andrew.Jackson@bl.uk>
-	 *
-	 */
-	static public class MDXSeqMapper extends MapReduceBase implements
-			Mapper<Text, Text, Text, MDXWritable> {
-
-		public MDXSeqMapper() {
-		}
-
-		@Override
-		public void map(Text key, Text value,
-				OutputCollector<Text, MDXWritable> output, Reporter reporter)
-				throws IOException {
-            try {
-                output.collect(key, new MDXWritable(new MDX(value.toString())));
-            } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
-            }
-		}
-
 	}
 
 }

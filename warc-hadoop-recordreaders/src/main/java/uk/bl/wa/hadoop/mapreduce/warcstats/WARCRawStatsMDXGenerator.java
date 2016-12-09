@@ -27,7 +27,6 @@ import org.apache.zookeeper.KeeperException;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
 
 /**
  * 
@@ -96,7 +95,7 @@ public class WARCRawStatsMDXGenerator extends Configured implements Tool {
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
-		conf.setMapOutputValueClass(MDXWritable.class);
+        conf.setMapOutputValueClass(Text.class);
 		conf.setNumReduceTasks(numReducers);
 	}
 
