@@ -72,11 +72,15 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                 mdx = new MDX(json);
                 noValues++;
 
+                log.info("JSON: " + json);
+                log.info("MDX Record Type: " + mdx.getRecordType());
+
                 // Collect the revisit records:
                 if (revisit.equals(mdx.getRecordType())) {
                     // Add this revisit record to the stack:
                     reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
                     toReduplicate.add(mdx);
+                    log.info("REVISIT!");
                 } else {
                     // Record a response record:
                     if (exemplar == null

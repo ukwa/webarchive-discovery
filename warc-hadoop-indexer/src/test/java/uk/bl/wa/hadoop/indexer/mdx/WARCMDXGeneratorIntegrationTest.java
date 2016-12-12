@@ -54,7 +54,8 @@ public class WARCMDXGeneratorIntegrationTest {
 	private final Path outputMerged = new Path("outputs-merged");
 
 	// Exported results
-	public static File outputSeq = new File("target/test.seq");
+    public static File outputSeq = new File("target/test.seq");
+    public static File outputMergedSeq = new File("target/test-merged.seq");
 
 	@Before
 	public void setUp() throws Exception {
@@ -147,7 +148,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		// Job configuration:
 		log.info("Setting up job config...");
 		JobConf jobConf = this.mrCluster.createJobConf();
-        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 2);
+        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 1);
 		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
 		JobClient.runJob(jobConf);
@@ -156,8 +157,9 @@ public class WARCMDXGeneratorIntegrationTest {
 		// check the output exists
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
-        // Default is 2 reducers:
-        Assert.assertEquals(2, outputFiles.length);
+        // Default is 1 reducers (as knitting together multiple sequence files
+        // is not a mere matter of concatentation):
+        Assert.assertEquals(1, outputFiles.length);
 
         // Copy the output out of HDFS and onto local FS:
 		FileOutputStream fout = new FileOutputStream(outputSeq);
@@ -175,10 +177,7 @@ public class WARCMDXGeneratorIntegrationTest {
 
 		// Check contents of the output:
 		Configuration config = new Configuration();
-		Path path = new Path(
-				WARCMDXGeneratorIntegrationTest.outputSeq.getAbsolutePath());
-        // SequenceFile.Reader reader = new SequenceFile.Reader(
-        // FileSystem.get(config), path, config);
+        Path path = new Path(outputSeq.getAbsolutePath());
 		SequenceFile.Reader reader = new SequenceFile.Reader(
 				FileSystem.get(config), path, config);
 		WritableComparable key = (WritableComparable) reader.getKeyClass()
@@ -219,6 +218,23 @@ public class WARCMDXGeneratorIntegrationTest {
 		log.info("Running job...");
 		JobClient.runJob(jobConf);
 		log.info("Job finished, checking the results...");
+
+        // Copy the output out of HDFS and onto local FS:
+        FileOutputStream fout = new FileOutputStream(outputMergedSeq);
+        Path[] outputFiles = FileUtil.stat2Paths(getFileSystem()
+                .listStatus(outputMerged, new OutputLogFilter()));
+        for (Path output : outputFiles) {
+            log.info(" --- output : " + output);
+            if (getFileSystem().isFile(output)) {
+                InputStream is = getFileSystem().open(output);
+                IOUtil.copy(is, fout);
+            } else {
+                log.info(" --- ...skipping directory...");
+            }
+            fout.flush();
+        }
+        fout.close();
+
 	}
 
 	@After
