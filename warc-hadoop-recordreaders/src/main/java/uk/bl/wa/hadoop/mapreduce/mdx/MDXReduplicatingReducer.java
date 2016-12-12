@@ -35,8 +35,8 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
         NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS
     }
 
-    private static final Text revisit = new Text("revisit");
-    private static final Text response = new Text("response");
+    private static final String revisit = "revisit";
+    private static final String response = "response";
 
     public MDXReduplicatingReducer() {
         try {
@@ -72,15 +72,11 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                 mdx = new MDX(json);
                 noValues++;
 
-                log.info("JSON: " + json);
-                log.info("MDX Record Type: " + mdx.getRecordType());
-
                 // Collect the revisit records:
                 if (revisit.equals(mdx.getRecordType())) {
                     // Add this revisit record to the stack:
                     reporter.incrCounter(MyCounters.NUM_REVISITS, 1);
                     toReduplicate.add(mdx);
-                    log.info("REVISIT!");
                 } else {
                     // Record a response record:
                     if (exemplar == null
