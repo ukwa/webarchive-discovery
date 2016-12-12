@@ -6,6 +6,7 @@ package uk.bl.wa.hadoop.mapreduce.warcstats;
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.IOException;
+import java.util.Date;
 
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
@@ -24,6 +25,7 @@ import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 import org.archive.url.UsableURI;
 import org.archive.url.UsableURIFactory;
+import org.archive.util.ArchiveUtils;
 import org.json.JSONException;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
@@ -55,7 +57,13 @@ public class WARCRawStatsMapper extends MapReduceBase
 
         try {
             MDX mdx = new MDX();
-            mdx.setTs(header.getDate());
+            Date crawl_date = ArchiveUtils
+                    .parse14DigitISODate(header.getDate(), null);
+            if (crawl_date != null) {
+                mdx.setTs(ArchiveUtils.get14DigitDate(crawl_date));
+            } else {
+                mdx.setTs(header.getDate());
+            }
             mdx.setUrl(header.getUrl());
             mdx.setHash(header.getDigest());
 

@@ -84,7 +84,6 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                         exemplar = json;
                     }
                     // Collect complete records:
-                    Text outKey = new Text(mdx.getHash());
                     output.collect(key, new Text(mdx.toString()));
                 }
 
@@ -100,6 +99,11 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                 }
 
             }
+
+            // Mis-reduce status:
+            log.info("Mid-reduce: Processed " + noValues + ", of which "
+                    + reporter.getCounter(MyCounters.NUM_REVISITS).getValue()
+                    + " records need reduplication.");
 
             // Now fix up revisits:
             for (MDX rmdxw : toReduplicate) {

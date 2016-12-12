@@ -29,8 +29,11 @@ public class MDXSequenceIteratorTest {
 		int counter = 0;
 		while (i.hasNext()) {
 			mdx = i.next();
-			System.out.println("Key is: " + mdx.getHash() + " record_type: "
-					+ mdx.getRecordType() + " SURT: " + mdx.getUrlAsSURT());
+            // System.err.println("mdx: " + mdx);
+            System.out.println("Hash is: " + mdx.getString("hash")
+                    + " record_type: "
+                    + mdx.getString("recordType") + " SURT: "
+                    + mdx.getUrlAsSURT());
 			counter++;
 		}
 		System.out.println("Total records: " + counter);

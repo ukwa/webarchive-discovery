@@ -204,6 +204,12 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
             try {
                 // Parse the MDX:
                 MDX mdx = new MDX(value.toString());
+                if (mdx.getTs() == null) {
+                    // FIXME Hack for older-style records, which used 'ts'
+                    // instead of
+                    // MDX.TIMESTAMP:
+                    mdx.setTs(mdx.getString("ts"));
+                }
                 String year = mdx.getTs().substring(0, 4);
                 String year_month = year;
                 if (mdx.getTs().length() >= 6) {
@@ -213,9 +219,11 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
                 }
                 if (!"request".equals(mdx.getRecordType())) {
                     // Look for postcodes and locations:
-                    JSONArray postcodes = mdx.getJSONArray(SolrFields.POSTCODE);
-                    JSONArray locations = mdx
-                            .getJSONArray(SolrFields.LOCATIONS);
+                    // FIXME Hack as still using old properties field
+                    JSONArray postcodes = mdx.getJSONObject("properties")
+                            .optJSONArray(SolrFields.POSTCODE);
+                    JSONArray locations = mdx.getJSONObject("properties")
+                            .optJSONArray(SolrFields.LOCATIONS);
                     if (postcodes != null) {
                         for (int i = 0; i < postcodes.length(); i++) {
                             String location = "";
@@ -237,9 +245,13 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
                         }
                     }
                     // Look for examples from formats
-                    String ct = mdx.getString(SolrFields.SOLR_CONTENT_TYPE);
-                    String ctext = mdx.getString(SolrFields.CONTENT_TYPE_EXT);
-                    String ctffb = mdx.getString(SolrFields.CONTENT_FFB);
+                    // FIXME Hack as still using old properties field
+                    String ct = mdx.getJSONObject("properties")
+                            .optString(SolrFields.SOLR_CONTENT_TYPE);
+                    String ctext = mdx.getJSONObject("properties")
+                            .optString(SolrFields.CONTENT_TYPE_EXT);
+                    String ctffb = mdx.getJSONObject("properties")
+                            .optString(SolrFields.CONTENT_FFB);
                     output.collect(
                             new Text(FORMATS_FFB_SAMPLE_NAME + KEY_PREFIX
                                     + year),
@@ -253,8 +265,7 @@ public class MDXSeqSampleGenerator extends Configured implements Tool {
                             "Ignored-" + mdx.getRecordType() + "-Record", 1);
                 }
             } catch (JSONException e) {
-                // TODO Auto-generated catch block
-                e.printStackTrace();
+                LOG.error("Error when processing: " + value, e);
             }
 
         }

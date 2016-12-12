@@ -20,9 +20,9 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.SequenceFileInputFormat;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.lib.IdentityMapper;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -81,7 +81,7 @@ public class MDXSeqMerger extends Configured implements Tool {
 		// Input
 		conf.setInputFormat(SequenceFileInputFormat.class);
 		// M-R
-        conf.setMapperClass(Mapper.class);
+        conf.setMapperClass(IdentityMapper.class);
 		conf.setReducerClass(MDXReduplicatingReducer.class);
 		// Map outputs
 		conf.setMapOutputKeyClass(Text.class);

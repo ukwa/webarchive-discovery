@@ -92,16 +92,15 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
             return;
         // Otherwise:
         try {
+            byte[] digest = md.digest(); // Get once as reset after .digest()
             Text name = new Text(current.getParent().toUri().getPath());
-            Text hex = new Text(Hex.encodeHex(md.digest()).toString() + " "
+            Text hex = new Text(new String(Hex.encodeHex(digest)) + " "
                     + bytes_seen + " " + current.toUri().getPath());
             log.debug("Got " + name + " " + hex + " from " + bytes_seen);
             context.write(name, hex);
         } catch (IOException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (InterruptedException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }

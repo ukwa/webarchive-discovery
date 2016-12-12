@@ -147,7 +147,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		// Job configuration:
 		log.info("Setting up job config...");
 		JobConf jobConf = this.mrCluster.createJobConf();
-        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 1);
+        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 2);
 		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
 		JobClient.runJob(jobConf);
@@ -156,8 +156,8 @@ public class WARCMDXGeneratorIntegrationTest {
 		// check the output exists
 		Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
 				output, new OutputLogFilter()));
-		// Default is 10 reducers:
-        Assert.assertEquals(1, outputFiles.length);
+        // Default is 2 reducers:
+        Assert.assertEquals(2, outputFiles.length);
 
         // Copy the output out of HDFS and onto local FS:
 		FileOutputStream fout = new FileOutputStream(outputSeq);
@@ -177,6 +177,8 @@ public class WARCMDXGeneratorIntegrationTest {
 		Configuration config = new Configuration();
 		Path path = new Path(
 				WARCMDXGeneratorIntegrationTest.outputSeq.getAbsolutePath());
+        // SequenceFile.Reader reader = new SequenceFile.Reader(
+        // FileSystem.get(config), path, config);
 		SequenceFile.Reader reader = new SequenceFile.Reader(
 				FileSystem.get(config), path, config);
 		WritableComparable key = (WritableComparable) reader.getKeyClass()

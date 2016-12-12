@@ -47,9 +47,13 @@ public class MDX extends JSONObject {
      * @return the hash
      * @throws JSONException
      */
-    public String getHash() throws JSONException {
-        return this.getString(DIGEST);
-	}
+    public String getHash() {
+        try {
+            return this.getString(DIGEST);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
 
 	/**
      * @param hash
@@ -58,17 +62,21 @@ public class MDX extends JSONObject {
      */
     public void setHash(String hash) throws JSONException {
         this.put(DIGEST, hash);
-	}
+    }
 
-	/**
+    /**
      * @return the url
      * @throws JSONException
      */
-    public String getUrl() throws JSONException {
-        return this.getString(URL);
-	}
+    public String getUrl() {
+        try {
+            return this.getString(URL);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
 
-	/**
+    /**
      * 
      * @return
      * @throws JSONException
@@ -84,47 +92,55 @@ public class MDX extends JSONObject {
 		}
 	}
 
-	/**
+    /**
      * @param url
      *            the url to set
      * @throws JSONException
      */
     public void setUrl(String url) throws JSONException {
         this.put(URL, url);
-	}
+    }
 
-	/**
+    /**
      * @return the ts
      * @throws JSONException
      */
-    public String getTs() throws JSONException {
-        return this.getString(TIMESTAMP);
-	}
+    public String getTs() {
+        try {
+            return this.getString(TIMESTAMP);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
 
-	/**
+    /**
      * @param ts
      *            the ts to set
      * @throws JSONException
      */
     public void setTs(String ts) throws JSONException {
         this.put(TIMESTAMP, ts);
-	}
+    }
 
-	/**
+    /**
      * @return the record_type
      * @throws JSONException
      */
-    public String getRecordType() throws JSONException {
-        return this.getString(RECORD_TYPE);
-	}
+    public String getRecordType() {
+        try {
+            return this.getString(RECORD_TYPE);
+        } catch (JSONException e) {
+            return null;
+        }
+    }
 
-	/**
+    /**
      * @param record_type
      *            the record_type to set
      * @throws JSONException
      */
     public void setRecordType(String recordType) throws JSONException {
         this.put(RECORD_TYPE, recordType);
-	}
+    }
 
 }

@@ -200,31 +200,46 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 			// Parse the MDX:
             MDX mdx = new MDX(value.toString());
 
+                if (mdx.getTs() == null) {
+                    // FIXME Hack for older-style records, which used 'ts'
+                    // instead of
+                    // MDX.TIMESTAMP:
+                    mdx.setTs(mdx.getString("ts"));
+                }
+
 			String year = mdx.getTs().substring(0, 4);
 
 			// Only extract from requests:
 			if (!"request".equals(mdx.getRecordType())) {
 				// Generate format summary:
 				if (scanFormats) {
-                    String cts = mdx.getString(SolrFields.CONTENT_TYPE_SERVED);
-                    String ctt = mdx.getString(SolrFields.CONTENT_TYPE_TIKA);
-                    String ctd = mdx.getString(SolrFields.CONTENT_TYPE_DROID);
+                        String cts = mdx.getJSONObject("properties")
+                                .optString(SolrFields.CONTENT_TYPE_SERVED);
+                        String ctt = mdx.getJSONObject("properties")
+                                .optString(SolrFields.CONTENT_TYPE_TIKA);
+                        String ctd = mdx.getJSONObject("properties")
+                                .optString(SolrFields.CONTENT_TYPE_DROID);
 					output.collect(new Text(FORMATS_SUMMARY_NAME + KEY_PREFIX
 							+ year), new Text(year + "\t" + cts + "\t" + ctt
 							+ "\t" + ctd));
 
-                    String ct = mdx.getString(SolrFields.SOLR_CONTENT_TYPE);
-                    String ctext = mdx.getString(SolrFields.CONTENT_TYPE_EXT);
-                    String ctffb = mdx.getString(SolrFields.CONTENT_FFB);
+                        String ct = mdx.getJSONObject("properties")
+                                .optString(SolrFields.SOLR_CONTENT_TYPE);
+                        String ctext = mdx.getJSONObject("properties")
+                                .optString(SolrFields.CONTENT_TYPE_EXT);
+                        String ctffb = mdx.getJSONObject("properties")
+                                .optString(SolrFields.CONTENT_FFB);
 					output.collect(new Text(FORMATS_FFB_NAME + KEY_PREFIX
 							+ year), new Text(year + "\t" + ct + "\t" + ctext
 							+ "\t" + ctffb));
 				}
 				// Generate host link graph
 				if (scanHostLinks) {
-					String host = mdx.getString(SolrFields.SOLR_HOST);
+                        String host = mdx.getJSONObject("properties")
+                                .optString(SolrFields.SOLR_HOST);
                     JSONArray hosts = mdx
-                            .getJSONArray(SolrFields.SOLR_LINKS_HOSTS);
+                                .getJSONObject("properties")
+                                .optJSONArray(SolrFields.SOLR_LINKS_HOSTS);
 					if (hosts != null) {
                         for (int i = 0; i < hosts.length(); i++) {
                             String link_host = hosts.getString(i);
@@ -250,8 +265,10 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 
 				}
 				// Now look for postcodes and locations:
-                JSONArray postcodes = mdx.getJSONArray(SolrFields.POSTCODE);
-                JSONArray locations = mdx.getJSONArray(SolrFields.LOCATIONS);
+                    JSONArray postcodes = mdx.getJSONObject("properties")
+                            .optJSONArray(SolrFields.POSTCODE);
+                    JSONArray locations = mdx.getJSONObject("properties")
+                            .optJSONArray(SolrFields.LOCATIONS);
 				if (postcodes != null) {
                     for (int i = 0; i < postcodes.length(); i++) {
 						String location = "";

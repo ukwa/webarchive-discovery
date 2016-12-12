@@ -103,12 +103,16 @@ public class WARCMDXMapper extends MapReduceBase implements
         // Pass though Solr fields:
         for (String f : solr.getSolrDocument().getFieldNames()) {
             SolrInputField v = solr.getSolrDocument().get(f);
-            Iterator<Object> i = v.getValues().iterator();
-            List<String> vals = new ArrayList<String>();
-            while (i.hasNext()) {
-                vals.add(i.next().toString());
+            if (v.getValueCount() > 1) {
+                Iterator<Object> i = v.getValues().iterator();
+                List<String> vals = new ArrayList<String>();
+                while (i.hasNext()) {
+                    vals.add(i.next().toString());
+                }
+                m.put(f, vals);
+            } else {
+                m.put(f, v.getFirstValue());
             }
-            m.put(f, vals);
         }
 
         return m;
