@@ -21,7 +21,7 @@
 <!-- :BL -->
 
  <fields>
-   <field name="_version_" type="long" indexed="true" stored="true"/>
+   <field name="_version_" type="long" indexed="true" docValues="true"/>
    <field name="_root_" type="string" indexed="true" stored="false"/>
 
    <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" /> 
@@ -38,7 +38,7 @@
    <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
    <!-- :BL -->
    <!-- BL: changed to string rather than text_general -->
-   <field name="resourcename" type="string" indexed="true" stored="true"/>
+   <field name="resourcename" type="string" indexed="true" docValues="true"/>
    <!-- :BL -->
 
    <!-- BL: added multiValued true to subject -->
@@ -47,14 +47,15 @@
 
    <field name="description" type="text_general" indexed="true" stored="true"/>
    <field name="comments" type="text_general" indexed="true" stored="true"/>
-   <field name="author" type="string" indexed="true" stored="true" docValues="true"/>
+   <field name="author" type="string" indexed="true" docValues="true"/>
    <field name="keywords" type="text_general" indexed="true" stored="true"/>
    <!-- BL: Changed to string and tdate rather than text_general and date... -->
-   <field name="url" type="string" indexed="true" stored="true" docValues="true"/>
-   <field name="url_norm" type="string" indexed="true" stored="true" docValues="true"/>
-   <field name="content_type" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
-   <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
-   <field name="links" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="url" type="string" indexed="true" docValues="true"/>
+   <field name="url_norm" type="string" indexed="true" docValues="true"/>
+   <field name="content_type" type="string" indexed="true" multiValued="true" docValues="true"/>
+   <field name="last_modified" type="tdate" indexed="true" docValues="true"/>
+   <field name="links" type="string" indexed="true" multiValued="true" docValues="true"/>
+   <field name="links_norm" type="string" indexed="true" multiValued="true" docValues="true"/>
    <!-- :BL -->
 
    <!-- Main body of document extracted by SolrCell.
@@ -72,86 +73,77 @@
    <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
 
    <!-- BL fields: -->
-   <field name="last_modified_year" type="string" indexed="true" stored="true" docValues="true"/>
-   <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
+   <field name="content_text_length" type="tlong" indexed="true" multiValued="false" docValues="true"/>
    
-   <!-- The id_long is a long integer ID field used to distinguish records when integrated into systems 
-        that required integer IDs.  Not guarenteed to be unique, unlike 'id': -->
-   <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
    <!-- The underyling WARC record type -->
-   <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="record_type" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The url_type is used to distinguish certain URLs, e.g. so they can be 'title level records'.
         Values are 'slashpage' (for a hosts homepage), or 'embed' ? -->
-   <field name="url_type" type="string" indexed="true" stored="true" docValues="true"/>
+   <field name="url_type" type="string" indexed="true" docValues="true"/>
    <!-- Length of the content, in bytes: -->
-   <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="content_length" type="tlong" indexed="true" multiValued="false" docValues="true"/>
    <!-- The content encoding: -->
-   <field name="content_encoding" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="content_encoding" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The content language - ISO 639 Language Codes: -->
-   <field name="content_language" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="content_language" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The 'normalised' (simplified) content type: -->
-   <field name="content_type_norm" type="string" indexed="true" stored="true" multiValued="false" default="other"/>
+   <field name="content_type_norm" type="string" indexed="true" multiValued="false" docValues="true" default="other"/>
 
    <!-- The harvest date, but in wayback format: 'YYYYMMDDHHMMSS' -->
-   <field name="wayback_date" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="wayback_date" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The ealiest harvest/crawl date, as a date, and also as multi-valued for hash-based ID. -->
-   <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false" docValues="true"/>
-   <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
+   <field name="crawl_date" type="tdate" indexed="true" multiValued="false" docValues="true"/>
    <!-- The harvest/crawl year (for faceting), and also as multi-valued for hash-based ID. -->
-   <field name="crawl_year" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="crawl_years" type="string" indexed="true" stored="true" multiValued="true"/>
-   <!-- The harvest/crawl year and month, for faceting -->
-   <field name="crawl_year_month" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-   <!-- The harvest/crawl year, month and day, for faceting -->
-   <field name="crawl_year_month_day" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="crawl_year" type="string" indexed="true" docValues="true" multiValued="false"/>
 
    <!-- The domain for this URL: -->
-   <field name="host" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="host" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The private suffix a.k.a domain for this host: -->
-   <field name="domain" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="domain" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The public suffix of the host domain, i.e. co.uk, org, etc: -->
-   <field name="public_suffix" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="public_suffix" type="string" indexed="true" multiValued="false" docValues="true"/>
    
    <!-- The hostnames of discovered outlinks -->
-   <field name="links_hosts" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="links_hosts" type="string" indexed="true" multiValued="true" docValues="true"/>
    <!-- The private suffixs of the target domains of any links, i.e. example.co.uk, example.org, etc: -->
-   <field name="links_domains" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="links_domains" type="string" indexed="true" multiValued="true" docValues="true"/>
    <!-- The public suffixs of the target domains of any links, i.e. co.uk, org, etc: -->
-   <field name="links_public_suffixes" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="links_public_suffixes" type="string" indexed="true" docValues="true" multiValued="true"/>
 
    <!-- The digest/hash of the content (e.g. sha1:UYIPOGACBXSSCQVMBGTCGYOFBHFO5TTL, WARC only?): -->
-   <field name="hash" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="hash" type="string" indexed="true" docValues="true" multiValued="false"/>
 
    <!-- The referring URL - not actually populated at present. -->
-   <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
+   <field name="referrer_url" type="string" indexed="false" docValues="true" multiValued="false"/>
 
    <!-- The publication date, as a date -->
-   <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+   <field name="publication_date" type="tdate" indexed="true" docValues="true" multiValued="false"/>
    <!-- The publication year, for faceting -->
-   <field name="publication_year" type="string" indexed="true" stored="true" multiValued="false"/>
+   <field name="publication_year" type="string" indexed="true" docValues="true" multiValued="false"/>
 
    <!-- Collections this item belongs to (top-level, not sub-collections) -->
-   <field name="collection" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="collection" type="string" indexed="true" multiValued="true" docValues="true"/>
    
    <!-- All collections and sub-collections this item belongs to -->
-   <field name="collections" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   <field name="collections" type="string" indexed="true" multiValued="true" docValues="true"/>
    
    <!-- NOTE on Text - note that neither 'text' nor 'text_ns' are stored, and therefore not retrievable/fragment-highlight-able -->
    
    <!-- WCT fields -->
-   <field name="wct_target_id" type="string" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_instance_id" type="int" indexed="true" stored="true" multiValued="false"/>
-   <field name="wct_collections" type="string" indexed="true" stored="true" multiValued="true"/>
-   <field name="wct_subjects" type="string" indexed="true" stored="true" multiValued="true"/>
+   <field name="wct_target_id" type="string" indexed="true" docValues="true" multiValued="false"/>
+   <field name="wct_instance_id" type="int" indexed="true" docValues="true" multiValued="false"/>
+   <field name="wct_collections" type="string" indexed="true" docValues="true" multiValued="true"/>
+   <field name="wct_subjects" type="string" indexed="true" docValues="true" multiValued="true"/>
    <field name="wct_description" type="text_general" indexed="true" stored="true"/>
-   <field name="wct_title" type="string" indexed="true" stored="true"/>
-   <field name="wct_agency" type="string" indexed="true" stored="true" multiValued="false"/> <!-- default="British Library"/  -->
+   <field name="wct_title" type="string" indexed="true" docValues="true"/>
+   <field name="wct_agency" type="string" indexed="true" docValues="true" multiValued="false"/> <!-- default="British Library"/  -->
 
    <!-- Format fields -->
    <!-- The version of the content type, e.g. '1.4' for PDF-1.4: -->
-   <field name="content_type_version" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="content_type_version" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The 'full' content type, e.g. including charset parameters: -->
-   <field name="content_type_full" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="content_type_full" type="string" indexed="true" multiValued="false" docValues="true"/>
    <!-- The content type, as determined via Apache Tika: -->
    <field name="content_type_tika" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- The content type, as determined by Droid: -->
@@ -197,9 +189,9 @@
    <field name="sentiment_score" type="tfloat" indexed="true" stored="true" multiValued="false"/>
 
    <!-- The size of images, in pixels? or tags/ranges? -->
-   <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
-   <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
-   <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="image_width" type="tlong" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="image_height" type="tlong" indexed="true" stored="true" multiValued="false" docValues="true"/>
+   <field name="image_size" type="tlong" indexed="true" stored="true" multiValued="false" docValues="true"/>
    <!-- Locations of faces detected in the images -->
    <field name='image_faces_count' type='tint' indexed='true' stored='true' multiValued='false'/>
    <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
