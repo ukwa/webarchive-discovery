@@ -57,12 +57,12 @@ import org.joda.time.format.ISODateTimeFormat;
 import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
-import uk.bl.wa.extract.Times;
-import uk.bl.wa.util.Instrument;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import de.l3s.boilerpipe.extractors.ArticleExtractor;
+import uk.bl.wa.extract.Times;
+import uk.bl.wa.util.Instrument;
 
 /**
  * c.f. uk.bl.wap.tika.TikaDeepIdentifier
@@ -483,7 +483,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		ContentHandler ch = new BodyContentHandler(new SpaceTrimWriter(out));
 		// Optionally wrap in the 'boilerpipe' boilerplate-remover:
 		if (this.useBoilerpipe) {
-			BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch);
+            // Use ArticleExtractor following this research:
+            // http://ws-dl.blogspot.co.uk/2017/03/2017-03-20-survey-of-5-boilerplate.html
+            BoilerpipeContentHandler bpch = new BoilerpipeContentHandler(ch,
+                    ArticleExtractor.INSTANCE);
 			bpch.setIncludeMarkup(false);
 			ch = bpch;
 		}
