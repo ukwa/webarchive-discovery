@@ -26,16 +26,16 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
+import com.typesafe.config.ConfigValueFactory;
+
 import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.ConfigPrinter;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValueFactory;
 
 /**
  * WARCIndexerRunner
@@ -217,7 +217,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		options.addOption("d", false, "dump configuration");
 		options.addOption("x", false, "output XML in OAI-PMH format");
 		options.addOption("a", false,
-				"apply annotations found via '-files annotations.json'");
+                "apply annotations found via '-files annotations.json,openAccessSurts.txt'");
 		// TODO: Problematic with "hadoop jar"?
 		// I think starting with the GenericOptionsParser (above) should resolve
 		// this?

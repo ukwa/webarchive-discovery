@@ -16,18 +16,20 @@ import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.util.SurtPrefixSet;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.map.JsonMappingException;
 
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import uk.bl.wa.annotation.Annotations;
+import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements
@@ -88,7 +90,11 @@ public class WARCIndexerMapper extends MapReduceBase implements
 			if (applyAnnotations) {
 				LOG.info("Attempting to load annotations from 'annotations.json'...");
 				Annotations ann = Annotations.fromJsonFile("annotations.json");
-				windex.setAnnotations(ann);
+                LOG.info(
+                        "Attempting to load OA SURTS from 'openAccessSurts.txt'...");
+                SurtPrefixSet oaSurts = Annotator
+                        .loadSurtPrefix("openAccessSurts.txt");
+                windex.setAnnotations(ann, oaSurts);
 			}
 
 			// Set up sharding:

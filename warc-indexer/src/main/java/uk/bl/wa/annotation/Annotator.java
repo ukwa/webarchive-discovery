@@ -3,6 +3,9 @@
  */
 package uk.bl.wa.annotation;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+
 /*
  * #%L
  * warc-indexer
@@ -51,6 +54,8 @@ import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
 import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
+import org.archive.url.UsableURIFactory;
+import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jdom.JDOMException;
 
@@ -70,6 +75,8 @@ public class Annotator {
 	
 	private Annotations annotations;
 
+    private SurtPrefixSet openAccessSurts = null;
+
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 	
 
@@ -85,14 +92,39 @@ public class Annotator {
 		return new Annotator(act.getAnnotations());
 	}
 
+    /**
+     * 
+     * @param surtPrefixFile
+     * @return
+     * @throws FileNotFoundException
+     */
+    public static SurtPrefixSet loadSurtPrefix(String surtPrefixFile)
+            throws FileNotFoundException {
+        SurtPrefixSet surtPrefix = new SurtPrefixSet();
+        FileReader fileReader = new FileReader(surtPrefixFile);
+        surtPrefix.importFrom(fileReader);
+        return surtPrefix;
+    }
+
 	/**
 	 * Allow annotations to be defined outside of ACT.
 	 * 
 	 * @param annotations
 	 */
-	public Annotator(Annotations annotations) {
-		this.annotations = annotations;
-	}
+    public Annotator(Annotations annotations) {
+        this.annotations = annotations;
+        this.openAccessSurts = null;
+    }
+
+    /**
+     * 
+     * @param annotations
+     * @param oaSurts
+     */
+    public Annotator(Annotations annotations, SurtPrefixSet oaSurts) {
+        this.annotations = annotations;
+        this.openAccessSurts = oaSurts;
+    }
 
 	/**
 	 * Runs through the 3 possible scopes, determining the appropriate part
@@ -153,6 +185,16 @@ public class Annotator {
 				updateCollections(subdomains.get(key), solr, crawl_dates);
 			}
 		}
+
+        // Also use the prefix-based whitelist to note Open Access records:
+        if (this.openAccessSurts != null) {
+            String surt = SurtPrefixSet
+                    .getCandidateSurt(
+                            UsableURIFactory.getInstance(uri.toString()));
+            if (this.openAccessSurts.containsPrefixOf(surt)) {
+                setUpdateField(solr, SolrFields.ACCESS_TERMS, "OA");
+            }
+        }
 	}
 
 	/**

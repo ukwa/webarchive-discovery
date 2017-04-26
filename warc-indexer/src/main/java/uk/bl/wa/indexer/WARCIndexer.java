@@ -64,6 +64,7 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
+import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
 import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
@@ -71,6 +72,10 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalysers;
@@ -83,10 +88,6 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.Instrument;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
 
 /**
  * 
@@ -225,8 +226,8 @@ public class WARCIndexer {
 	 * 
 	 * @param ann
 	 */
-	public void setAnnotations(Annotations ann) {
-		this.ant = new Annotator(ann);
+    public void setAnnotations(Annotations ann, SurtPrefixSet openAccessSurts) {
+        this.ant = new Annotator(ann, openAccessSurts);
 	}
 
 	/**

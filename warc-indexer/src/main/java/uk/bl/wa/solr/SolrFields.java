@@ -116,6 +116,7 @@ public interface SolrFields {
 	public static final String SENTIMENT_SCORE = "sentiment_score";
 	
 	public static final String LICENSE_URL = "license_url";
+    public static final String ACCESS_TERMS = "access_terms";
 	
 	public static final String SSDEEP_PREFIX = "ssdeep_hash_bs_";
 	public static final String SSDEEP_NGRAM_PREFIX = "ssdeep_hash_ngram_bs_";

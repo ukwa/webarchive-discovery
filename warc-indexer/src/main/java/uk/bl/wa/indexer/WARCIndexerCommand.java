@@ -60,16 +60,18 @@ import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
-
-import uk.bl.wa.annotation.Annotations;
-import uk.bl.wa.solr.SolrFields;
-import uk.bl.wa.solr.SolrRecord;
-import uk.bl.wa.solr.SolrWebServer;
-import uk.bl.wa.util.Instrument;
+import org.archive.util.SurtPrefixSet;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
+
+import uk.bl.wa.annotation.Annotations;
+import uk.bl.wa.annotation.Annotator;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.util.Instrument;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -258,9 +260,12 @@ public class WARCIndexerCommand {
 		// Add in annotations, if set:
 		if (annotationsFile != null) {
 			Annotations ann = Annotations.fromJsonFile(annotationsFile);
-			windex.setAnnotations(ann);
+            SurtPrefixSet oaSurts = Annotator
+                    .loadSurtPrefix("openAccessSurts.txt");
+            windex.setAnnotations(ann, oaSurts);
 		}
 		
+
 		// To be indexed:
 		ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 
 		int totInputFile = args.length;
