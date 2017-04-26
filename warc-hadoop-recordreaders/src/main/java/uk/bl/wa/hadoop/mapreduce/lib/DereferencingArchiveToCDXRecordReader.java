@@ -189,6 +189,13 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
         }
     }
 
+    /*
+     * So, to get the compressed length, I need to iterate the ARC/WARC reader
+     * myself, always getting the current and the next values, and using the
+     * offsets of each. i.e. we'd store the current and next, not just the
+     * current, and swap them as part of the 'get next'
+     */
+
     @Override
     public Text getCurrentKey() throws IOException, InterruptedException {
         return this.key;

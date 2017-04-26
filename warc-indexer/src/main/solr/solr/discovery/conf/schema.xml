@@ -211,6 +211,9 @@
 
    <!-- Details of any embedded licenses: -->
    <field name="license_url" type="string" indexed="true" stored="true" multiValued="true" docValues="true"/>
+   
+   <!-- Overall Access Terms, e.g. 'oa' &&|| 'npld' -->
+   <field name="access_terms" type="string" indexed="true" multiValued="true" docValues="true"/>
 
    <!-- Store identity of the source file and offset this record came from. -->
    <field name="source_file" type="string" indexed="true" stored="true" docValues="true"/>
