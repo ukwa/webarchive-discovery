@@ -64,8 +64,8 @@ public class AnnotatorTest {
 
 	@Test
 	public void testApplyAnnotations() throws URIException, URISyntaxException {
-		innerTestApplyAnnotations("http://en.wikipedia.org/wiki/Mona_Lisa", 3);
-		innerTestApplyAnnotations("http://en.wikipedia.org/", 2);
+        innerTestApplyAnnotations("http://en.wikipedia.org/wiki/Mona_Lisa", 4);
+        innerTestApplyAnnotations("http://en.wikipedia.org/", 3);
         innerTestApplyAnnotations("http://www.wikipedia.org/", 2);
 	}
 
