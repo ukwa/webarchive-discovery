@@ -50,11 +50,15 @@ import org.apache.solr.core.CoreContainer;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.exception.ResourceNotAvailableException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.bl.wa.annotation.Annotations;
+import uk.bl.wa.annotation.AnnotationsTest;
+import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.solr.SolrRecord;
 
 /**
@@ -127,13 +131,20 @@ public class WARCIndexerEmbeddedSolrTest {
 
         // Check that URLs are encoding correctly.
         assertEquals( url, document.getFieldValue( "url" ) );
-		assertEquals( url, response.getResults().get( 0 ).get( "url" ) );
+        System.out.println(response.getResults().get(0).get("url"));
+        assertEquals(url, response.getResults().get(0).get("url"));
         
         //  Now generate some Solr documents from WARCs:
 		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
 		// Fire up the indexer:
 		WARCIndexer windex = new WARCIndexer();
+        // Add the annotator:
+        Annotations annotations = Annotations
+                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS);
+        SurtPrefixSet oaSurts = Annotator
+                .loadSurtPrefix(AnnotationsTest.ML_OASURTS);
+        windex.setAnnotations(annotations, oaSurts);
 		// Prevent the indexer from attempting to query Solr:
 		windex.setCheckSolrForDuplicates(false);
 		

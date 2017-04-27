@@ -39,7 +39,8 @@ import org.junit.Test;
  */
 public class AnnotationsTest {
 
-	public static final String ML_ANNOTATIONS = "src/test/resources/annotations/mona-lisa-annotations.json";
+    public static final String ML_ANNOTATIONS = "src/test/resources/annotations/mona-lisa-annotations.json";
+    public static final String ML_OASURTS = "src/test/resources/annotations/openAccessSurts.txt";
 
 	@Test
 	public void testJsonSerialisation() throws JsonParseException,

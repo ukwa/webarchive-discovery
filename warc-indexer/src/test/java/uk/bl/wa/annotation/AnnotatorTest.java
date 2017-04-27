@@ -24,6 +24,7 @@ package uk.bl.wa.annotation;
 
 import static org.junit.Assert.assertTrue;
 
+import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
@@ -33,6 +34,9 @@ import java.util.TimeZone;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.solr.common.SolrInputDocument;
+import org.archive.util.SurtPrefixSet;
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -41,20 +45,28 @@ import uk.bl.wa.solr.SolrFields;
 
 public class AnnotatorTest {
 
-	private Annotations annotations;
-	private Annotator annotator;
+    private Annotator annotator;
+
+    public static Annotator getTestAnnotator()
+            throws JsonParseException, JsonMappingException, IOException {
+        Annotations annotations = Annotations
+                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS);
+        SurtPrefixSet oaSurts = Annotator
+                .loadSurtPrefix(AnnotationsTest.ML_OASURTS);
+        Annotator annotator = new Annotator(annotations, oaSurts);
+        return annotator;
+	}
 
 	@Before
 	public void setUp() throws Exception {
-		annotations = Annotations.fromJsonFile(AnnotationsTest.ML_ANNOTATIONS);
-		annotator = new Annotator(annotations);
+        this.annotator = getTestAnnotator();
 	}
 
 	@Test
 	public void testApplyAnnotations() throws URIException, URISyntaxException {
 		innerTestApplyAnnotations("http://en.wikipedia.org/wiki/Mona_Lisa", 3);
 		innerTestApplyAnnotations("http://en.wikipedia.org/", 2);
-		innerTestApplyAnnotations("http://www.wikipedia.org/", 1);
+        innerTestApplyAnnotations("http://www.wikipedia.org/", 2);
 	}
 
 	private void innerTestApplyAnnotations(String uriString, int expected)
@@ -86,15 +98,27 @@ public class AnnotatorTest {
 			@SuppressWarnings("unchecked")
 			Map<String, String> cmap = (Map<String, String>) val;
 			for (String item : cmap.values()) {
-				System.out.println("Map contains... " + item);
+                System.out.println("Map contains... " + item);
 				if ("Wikipedia".equals(item))
 					found++;
 				if ("Wikipedia|Main Site".equals(item))
 					found++;
 				if ("Wikipedia|Main Site|Mona Lisa".equals(item))
 					found++;
+				
 			}
 		}
+        if (solr.containsKey(SolrFields.ACCESS_TERMS)) {
+            for (Object val : solr.getFieldValues(SolrFields.ACCESS_TERMS)) {
+                @SuppressWarnings("unchecked")
+                Map<String, String> cmap = (Map<String, String>) val;
+                for (String item : cmap.values()) {
+                    System.out.println("Map contains... " + item);
+                    if ("OA".equals(item))
+                        found++;
+                }
+            }
+        }
 		assertTrue("Can't find the " + expected
 				+ " expected entries in 'collections for " + uriString,
 				found == expected);

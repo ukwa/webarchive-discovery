@@ -89,7 +89,7 @@ public class Annotator {
 	public static Annotator annotationsFromAct() throws IOException,
 			JDOMException {
 		AnnotationsFromAct act = new AnnotationsFromAct();
-		return new Annotator(act.getAnnotations());
+        return new Annotator(act.getAnnotations(), null);
 	}
 
     /**
@@ -104,16 +104,6 @@ public class Annotator {
         FileReader fileReader = new FileReader(surtPrefixFile);
         surtPrefix.importFrom(fileReader);
         return surtPrefix;
-    }
-
-	/**
-	 * Allow annotations to be defined outside of ACT.
-	 * 
-	 * @param annotations
-	 */
-    public Annotator(Annotations annotations) {
-        this.annotations = annotations;
-        this.openAccessSurts = null;
     }
 
     /**
@@ -188,6 +178,8 @@ public class Annotator {
 
         // Also use the prefix-based whitelist to note Open Access records:
         if (this.openAccessSurts != null) {
+            LOG.info("Attempting to apply OA Surts: " + this.openAccessSurts
+                    + " to " + uri);
             String surt = SurtPrefixSet
                     .getCandidateSurt(
                             UsableURIFactory.getInstance(uri.toString()));
@@ -330,14 +322,15 @@ public class Annotator {
 		}
 	}
 
-	private static void searchAndApplyAnnotations(Annotations ann,
+    private static void searchAndApplyAnnotations(Annotations ann,
+            SurtPrefixSet oaSurts,
 			String solrServer) throws SolrServerException, URISyntaxException,
 			IOException {
 		// Connect to solr:
 		SolrServer solr = new HttpSolrServer(solrServer);
 
 		// Set up annotator:
-		Annotator anr = new Annotator(ann);
+        Annotator anr = new Annotator(ann, oaSurts);
 
 		// Loop over URL known to ACT:
 		for (String scope : ann.getCollections().keySet()) {
@@ -387,7 +380,8 @@ public class Annotator {
 	public static void main(String[] args) throws IOException, JDOMException,
 			URISyntaxException, SolrServerException {
 		Annotations ann = Annotations.fromJsonFile(args[0]);
-		searchAndApplyAnnotations(ann, args[1]);
+        SurtPrefixSet oaSurts = Annotator.loadSurtPrefix(args[1]);
+        searchAndApplyAnnotations(ann, oaSurts, args[2]);
 	}
 
 }
