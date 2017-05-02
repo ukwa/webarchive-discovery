@@ -125,7 +125,7 @@ public class Annotator {
 	 * @throws URISyntaxException
 	 * @throws URIException
 	 */
-	public void applyAnnotations(URI uri, SolrInputDocument solr)
+    public void applyAnnotations(URI uri, SolrInputDocument solr)
 			throws URISyntaxException, URIException {
 		LOG.debug("Updating collections for "
 				+ solr.getField(SolrFields.SOLR_URL));
@@ -156,12 +156,11 @@ public class Annotator {
 					.get(normd), solr, crawl_dates);
 		}
 		// "All URLs that start like this".
-		String prefix = uri.getScheme() + "://" + uri.getHost();
 		if (this.annotations.getCollections().get("root").keySet()
-				.contains(prefix)) {
+                .contains(normd)) {
 			LOG.debug("Applying root-level annotations...");
 			updateCollections(this.annotations.getCollections().get("root")
-					.get(prefix), solr, crawl_dates);
+                    .get(normd), solr, crawl_dates);
 		}
 		// "All URLs that match match this host or any subdomains".
 		String host;
@@ -170,11 +169,21 @@ public class Annotator {
 				.getCollections().get("subdomains");
 		for( String key : subdomains.keySet() ) {
 			LOG.debug("Applying subdomain annotations for: " + key);
-			host = key;
+            host = URI.create(key).getHost();
+            if( host == null) {
+                host = key;
+            }
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
 				updateCollections(subdomains.get(key), solr, crawl_dates);
 			}
 		}
+
+        // Some debugging info:
+        /*
+         * for (String scope : this.annotations.getCollections().keySet()) {
+         * System.err.println("Scope " + scope); System.err.println("GET " +
+         * this.annotations.getCollections() .get(scope).get(uri.toString())); }
+         */
 
         // Also use the prefix-based whitelist to note Open Access records:
         if (this.openAccessSurts != null) {
@@ -185,6 +194,8 @@ public class Annotator {
                             UsableURIFactory.getInstance(uri.toString()));
             if (this.openAccessSurts.containsPrefixOf(surt)) {
                 setUpdateField(solr, SolrFields.ACCESS_TERMS, "OA");
+            } else {
+                setUpdateField(solr, SolrFields.ACCESS_TERMS, "RRO");
             }
         }
 	}
@@ -243,21 +254,24 @@ public class Annotator {
 			// Iterate over the subjects
 			if (collection.subject != null && collection.subject.length > 0) {
 				for (String subject : collection.subject) {
-					if (this.annotations.getCollectionDateRanges().containsKey(
-							subject)
-							&& this.annotations.getCollectionDateRanges()
-									.get(subject).isInDateRange(date)) {
 						setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
 						LOG.debug("Added collection '" + subject + "' to "
 								+ solr.getField(SolrFields.SOLR_URL));
-					}
 				}
 			}
 		}
 	}
 
+    private static void setUpdateField(SolrInputDocument doc, String field,
+            String value) {
+        if (doc.getField(field) == null
+                || !doc.getField(field).getValues().contains(value)) {
+            doc.addField(field, value);
+        }
+    }
 
-	private static void setUpdateField(SolrInputDocument doc, String field,
+
+    private static void setSolrUpdateField(SolrInputDocument doc, String field,
 			String value) {
 		Map<String, String> operation = new HashMap<String, String>();
 		operation.put("set", value);
@@ -295,7 +309,7 @@ public class Annotator {
 		out.println();
 		for (String field : sortedFieldNames) {
 			out.println(String.format("\t%s: %s", field,
-					doc.getFieldValue(field)));
+                    doc.getFieldValues(field)));
 		}
 		out.println();
 	}

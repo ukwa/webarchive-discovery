@@ -60,8 +60,26 @@ public class DateRange {
 		}
 	}
 
+    public Date getStart() {
+        if (this.start == null) {
+            return new Date(0L);
+        } else {
+            return start;
+        }
+    }
+
+    public Date getEnd() {
+        if (this.end == null) {
+            return getDistantFutureDate();
+        } else {
+            return end;
+        }
+    }
+
 	public boolean isInDateRange(Date date) {
-		return (date.after(start) && date.before(end));
+        // System.err.println("isInDateRange "
+        // + (date.after(getStart()) && date.before(getEnd())));
+        return (date.after(getStart()) && date.before(getEnd()));
 	}
 
 	public String toString() {

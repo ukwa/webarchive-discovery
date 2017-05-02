@@ -36,7 +36,7 @@ import org.codehaus.jackson.annotate.JsonProperty;
 public class UriCollection {
 
 	@JsonProperty
-	protected String collection;
+    protected String collection;
 
 	@JsonProperty
 	protected String[] collections;

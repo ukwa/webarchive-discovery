@@ -217,7 +217,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		options.addOption("d", false, "dump configuration");
 		options.addOption("x", false, "output XML in OAI-PMH format");
 		options.addOption("a", false,
-                "apply annotations found via '-files annotations.json,openAccessSurts.txt'");
+                "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'");
 		// TODO: Problematic with "hadoop jar"?
 		// I think starting with the GenericOptionsParser (above) should resolve
 		// this?

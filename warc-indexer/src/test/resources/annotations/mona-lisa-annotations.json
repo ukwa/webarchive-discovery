@@ -15,7 +15,7 @@
       }
     },
     "root" : {
-      "http://en.wikipedia.org" : {
+      "http://en.wikipedia.org/" : {
         "collection" : "Wikipedia",
         "collections" : [ "Wikipedia", "Wikipedia|Main Site" ],
         "subject" : [ "Crowdsourcing" ]

@@ -29,7 +29,6 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.Map;
 import java.util.TimeZone;
 
 import org.apache.commons.httpclient.URIException;
@@ -94,11 +93,8 @@ public class AnnotatorTest {
 		Annotator.prettyPrint(System.out, solr);
 		int found = 0;
 		//
-		for (Object val : solr.getFieldValues(SolrFields.SOLR_COLLECTIONS)) {
-			@SuppressWarnings("unchecked")
-			Map<String, String> cmap = (Map<String, String>) val;
-			for (String item : cmap.values()) {
-                System.out.println("Map contains... " + item);
+        for (Object item : solr.getFieldValues(SolrFields.SOLR_COLLECTIONS)) {
+            System.out.println("Contains... " + item);
 				if ("Wikipedia".equals(item))
 					found++;
 				if ("Wikipedia|Main Site".equals(item))
@@ -106,21 +102,18 @@ public class AnnotatorTest {
 				if ("Wikipedia|Main Site|Mona Lisa".equals(item))
 					found++;
 				
-			}
 		}
         if (solr.containsKey(SolrFields.ACCESS_TERMS)) {
-            for (Object val : solr.getFieldValues(SolrFields.ACCESS_TERMS)) {
-                @SuppressWarnings("unchecked")
-                Map<String, String> cmap = (Map<String, String>) val;
-                for (String item : cmap.values()) {
-                    System.out.println("Map contains... " + item);
+            for (Object item : solr
+                    .getFieldValues(SolrFields.ACCESS_TERMS)) {
                     if ("OA".equals(item))
                         found++;
-                }
+
             }
         }
 		assertTrue("Can't find the " + expected
-				+ " expected entries in 'collections for " + uriString,
+                + " expected entries in 'collections for " + uriString
+                + ", got " + found,
 				found == expected);
 	}
 

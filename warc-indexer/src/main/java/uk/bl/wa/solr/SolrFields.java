@@ -53,7 +53,7 @@ public interface SolrFields {
 
 	public static final String HASH = "hash";
 	public static final String SOLR_TITLE = "title";
-	public static final String SOLR_SUBJECT = "subject";
+    public static final String SOLR_SUBJECT = "wct_subjects";
 	public static final String SOLR_DESCRIPTION = "description";
 	public static final String SOLR_COMMENTS = "comments";
 	public static final String SOLR_AUTHOR = "author";
