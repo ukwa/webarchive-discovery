@@ -53,7 +53,7 @@
    <properties>
       <solr.version>4.7.2</solr.version>
       <webarchive.commons.version>1.1.6</webarchive.commons.version>
-      <jdk.version>1.6</jdk.version>
+      <jdk.version>1.8</jdk.version>
       <hadoop.version>0.20.2</hadoop.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
