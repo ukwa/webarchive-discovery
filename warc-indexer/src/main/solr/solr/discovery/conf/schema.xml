@@ -51,7 +51,8 @@
         <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="content_encoding" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_language" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
+	    <field name="type" type="string" indexed="true" docValues="true" multiValued="false" default="Other"/>
+	    <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
         <field name="wayback_date" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
         <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>

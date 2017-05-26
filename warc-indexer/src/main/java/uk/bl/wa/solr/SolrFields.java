@@ -68,6 +68,7 @@ public interface SolrFields {
 	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
 	
 	public static final String CONTENT_LANGUAGE = "content_language";
+	public static final String SOLR_TYPE = "type";
 	public static final String SOLR_CONTENT_TYPE = "content_type";
 	public static final String CONTENT_ENCODING = "content_encoding";
 	public static final String CONTENT_VERSION = "content_type_version";

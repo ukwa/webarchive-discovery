@@ -798,24 +798,34 @@ public class WARCIndexer {
 			// Also add a more general, simplified type, as appropriate:
 			if( contentType.matches( "^image/.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
+				solr.setField(SolrFields.SOLR_TYPE, "Image");
 			} else if( contentType.matches( "^audio/.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "audio" );
+				solr.setField(SolrFields.SOLR_TYPE, "Audio");
 			} else if( contentType.matches( "^video/.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "video" );
+				solr.setField(SolrFields.SOLR_TYPE, "Video");
 			} else if( contentType.matches( "^text/htm.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
+				solr.setField(SolrFields.SOLR_TYPE, "Web Page");
 			} else if( contentType.matches( "^application/pdf.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
+				solr.setField(SolrFields.SOLR_TYPE, "Document");
 			} else if( contentType.matches( "^.*word$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
+				solr.setField(SolrFields.SOLR_TYPE, "Document");
 			} else if( contentType.matches( "^.*excel$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
+				solr.setField(SolrFields.SOLR_TYPE, "Data");
 			} else if( contentType.matches( "^.*powerpoint$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
+				solr.setField(SolrFields.SOLR_TYPE, "Presentation");
 			} else if( contentType.matches( "^text/plain.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
+				solr.setField(SolrFields.SOLR_TYPE, "Document");
 			} else {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
+				solr.setField(SolrFields.SOLR_TYPE, "Other");
 			}
 
 			// Remove text from JavaScript, CSS, ...
