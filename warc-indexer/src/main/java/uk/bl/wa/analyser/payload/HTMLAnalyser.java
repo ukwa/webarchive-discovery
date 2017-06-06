@@ -34,6 +34,7 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
+import org.archive.url.SURT;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import uk.bl.wa.extract.LinkExtractor;
@@ -141,6 +142,10 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 				// Store the unique hosts:
 				for (String host : cHostSet) {
 					solr.addField(SolrFields.SOLR_LINKS_HOSTS, host);
+
+                    for(String level : LinkExtractor.allLevels(host)){
+                        solr.addField(SolrFields.SOLR_LINKS_DOMAINS_SURTS, SURT.toSURT(level));
+                    }
 				}
 			}
 			if( this.extractLinkDomains ) {

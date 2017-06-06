@@ -30,7 +30,9 @@ package uk.bl.wa.extract;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import org.apache.tika.metadata.Metadata;
@@ -171,6 +173,40 @@ public class LinkExtractor {
 		return suffix.toString();
     }
 	
+    /**
+     * Returns a list of each level of the given host address. E.g. 'bbc.co.uk' would return:
+     * [uk],[co.uk],[bbc.co.uk]
+     *
+     * @param host The full host address
+     * @return An ImmutableList of Strings, one element per host level
+     */
+    public static ImmutableList<String> allLevels(String host) {
+        InternetDomainName domainName;
+
+        try {
+            domainName = InternetDomainName.from(host);
+        }
+        catch(NullPointerException e) {
+            return null;
+        }
+
+        return (ImmutableList<String>) parentLevels(domainName);
+    }
+
+    private static List<String> parentLevels(InternetDomainName internetDomainName) {
+        List<String> levels;
+
+        if(internetDomainName.hasParent()){
+            levels = parentLevels(internetDomainName.parent());
+        }
+        else {
+            levels = new ArrayList<String>();
+        }
+
+        levels.add(internetDomainName.toString());
+        return levels;
+    }
+
 	public static void main( String[] args ) {
 		System.out.println("TEST: "+extractPublicSuffix("http://www.google.com/test.html"));
 		System.out.println("TEST: "+extractPublicSuffix("http://www.google.co.uk/test.html"));

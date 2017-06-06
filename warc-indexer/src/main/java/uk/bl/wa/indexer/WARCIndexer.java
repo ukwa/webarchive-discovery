@@ -63,6 +63,7 @@ import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
+import org.archive.url.SURT;
 import org.archive.util.ArchiveUtils;
 import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
@@ -318,6 +319,7 @@ public class WARCIndexer {
             if (addNormalisedURL) {
                 solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(fullUrl) );
             }
+
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
 
@@ -345,7 +347,10 @@ public class WARCIndexer {
 					return null;
 				}
 			}
-			// Spot 'slash pages':
+
+            solr.setField(SolrFields.SOLR_URL_PATH, url.getPath());
+
+            // Spot 'slash pages':
 			if (url.getPath().equals("/") || url.getPath().equals("")
 					|| url.getPath().matches("/index\\.[a-z]+$")) {
 				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
@@ -362,7 +367,15 @@ public class WARCIndexer {
 			if (CANONICALISE_HOST)
 				host = canon.urlStringToKey(host).replace("/", "");
 			solr.setField( SolrFields.SOLR_HOST, host );
-			solr.setField( SolrFields.DOMAIN, LinkExtractor.extractPrivateSuffixFromHost( host ) );
+
+            solr.removeField(SolrFields.SOLR_DOMAIN_SURT);
+
+			for(String level : LinkExtractor.allLevels(host)){
+                solr.addField(SolrFields.SOLR_DOMAIN_SURT, SURT.toSURT(level));
+            }
+
+            final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);
+            solr.setField( SolrFields.DOMAIN, domain);
 			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
 
             Instrument.timeRel("WARCIndexer.extract#total",
@@ -405,6 +418,8 @@ public class WARCIndexer {
 					log.error( "FAIL! Unsupported archive record type." );
 					return solr;
 				}
+
+				solr.setField(SolrFields.SOLR_STATUS_CODE, statusCode);
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
 				if( this.checkResponseCode( statusCode ) == false ) {
