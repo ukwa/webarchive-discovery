@@ -371,7 +371,7 @@ public class WARCIndexer {
             solr.removeField(SolrFields.SOLR_DOMAIN_SURT);
 
 			for(String level : LinkExtractor.allLevels(host)){
-                solr.addField(SolrFields.SOLR_DOMAIN_SURT, SURT.toSURT(level));
+                solr.mergeField(SolrFields.SOLR_DOMAIN_SURT, SURT.toSURT(level));
             }
 
             final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);

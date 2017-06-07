@@ -39,6 +39,7 @@
 				<version>2.14.1</version>
 				<configuration>
 					<argLine>-Xmx1024m</argLine>
+					<forkMode>never</forkMode>
 				</configuration>
 			</plugin>
 			<plugin>

@@ -22,6 +22,7 @@ package uk.bl.wa.analyser.payload;
  * #L%
  */
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
@@ -97,6 +98,11 @@ public class HTMLAnalyserTest {
 				SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES).getFirstValue();
 		assertEquals("The suffix should be formatted correctly", "org",
 				suffix);
+
+		// Check links_domains_surts
+        String[] linksDomainsSurts = new String[]{"(org,", "(org,example,"};
+        assertArrayEquals("The SURT domains should be correct", linksDomainsSurts,
+                solr.getField(SolrFields.SOLR_LINKS_DOMAINS_SURTS).getValues().toArray());
 
     }
 }

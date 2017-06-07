@@ -27,6 +27,7 @@ package uk.bl.wa.analyser.payload;
 
 import java.io.InputStream;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.httpclient.URIException;
@@ -139,14 +140,18 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 					}
 					cHostSet.add(cHost);
 				}
-				// Store the unique hosts:
+
+                Set<String> uniqueHostLevels = new LinkedHashSet<String>();
+
+                // Store the unique hosts:
 				for (String host : cHostSet) {
 					solr.addField(SolrFields.SOLR_LINKS_HOSTS, host);
-
-                    for(String level : LinkExtractor.allLevels(host)){
-                        solr.addField(SolrFields.SOLR_LINKS_DOMAINS_SURTS, SURT.toSURT(level));
-                    }
+                    uniqueHostLevels.addAll(LinkExtractor.allLevels(host));
 				}
+
+				for(String hostLevel : uniqueHostLevels) {
+                    solr.addField(SolrFields.SOLR_LINKS_DOMAINS_SURTS, SURT.toSURT(hostLevel));
+                }
 			}
 			if( this.extractLinkDomains ) {
                 for (String domain: domains) {
