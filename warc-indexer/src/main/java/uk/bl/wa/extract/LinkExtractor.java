@@ -190,17 +190,17 @@ public class LinkExtractor {
             return null;
         }
 
-        return (ImmutableList<String>) parentLevels(domainName);
+        return parentLevels(domainName).build();
     }
 
-    private static List<String> parentLevels(InternetDomainName internetDomainName) {
-        List<String> levels;
+    private static ImmutableList.Builder<String> parentLevels(InternetDomainName internetDomainName) {
+        ImmutableList.Builder<String> levels;
 
         if(internetDomainName.hasParent()){
             levels = parentLevels(internetDomainName.parent());
         }
         else {
-            levels = new ArrayList<String>();
+            levels = ImmutableList.builder();
         }
 
         levels.add(internetDomainName.toString());
