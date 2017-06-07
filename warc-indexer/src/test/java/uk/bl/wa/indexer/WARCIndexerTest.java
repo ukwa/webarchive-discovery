@@ -218,7 +218,7 @@ public class WARCIndexerTest {
     }
 
     @Test
-    public void testSurts() throws NoSuchAlgorithmException, IOException {
+    public void testFields() throws NoSuchAlgorithmException, IOException {
         // ID of WARC record to use in test
         final String recordId = "id=jbKtN3dWzLJzaIQxTyPCiA==/20131021215312";
 
