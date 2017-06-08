@@ -35,6 +35,10 @@
         <field name="resourcename" type="text_general" indexed="true" stored="true"/>
         <field name="url" type="string" indexed="true" stored="true" docValues="true"/>
         <field name="url_norm" type="string" indexed="true" stored="true" docValues="true"/>
+
+        <field name="url_path" type="string" indexed="true" stored="true" docValues="true"/>
+        <field name="status_code" type="int" indexed="false" stored="true" docValues="true" />
+
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="links" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -61,10 +65,16 @@
         <field name="crawl_year_month" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_year_month_day" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="host" type="string" indexed="true" docValues="true" multiValued="false"/>
+
+        <field name="domain_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
+
         <field name="domain" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
+	    <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="links_hosts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_domains" type="string" indexed="true" docValues="true" multiValued="true"/>
+
+        <field name="links_domains_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
+
         <field name="links_public_suffixes" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="hash" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>

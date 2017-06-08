@@ -38,6 +38,8 @@ public interface SolrFields {
 	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
 	// Intended for building links-graphs. Normalised the same way as SOLR_LINKS
 	public static final String SOLR_URL_NORMALISED = "url_norm";
+	public static final String SOLR_URL_PATH = "url_path";
+    public static final String SOLR_STATUS_CODE = "status_code";
 	public static final String RESOURCE_NAME = "resourcename"; // type=text_general
 	
 	public static final String SOLR_URL_TYPE = "url_type";
@@ -49,6 +51,7 @@ public interface SolrFields {
 	
 	public static final String SOLR_HOST = "host";
 	public static final String DOMAIN = "domain";
+    public static final String SOLR_DOMAIN_SURT = "domain_surt";
 	public static final String PUBLIC_SUFFIX = "public_suffix";
 
 	public static final String HASH = "hash";
@@ -65,7 +68,8 @@ public interface SolrFields {
 	public static final String SOLR_LINKS = "links";
 	public static final String SOLR_LINKS_HOSTS = "links_hosts";
 	public static final String SOLR_LINKS_DOMAINS = "links_domains";
-	public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
+    public static final String SOLR_LINKS_DOMAINS_SURTS = "links_domains_surts";
+    public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
 	
 	public static final String CONTENT_LANGUAGE = "content_language";
 	public static final String SOLR_TYPE = "type";
