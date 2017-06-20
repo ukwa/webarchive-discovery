@@ -99,7 +99,7 @@
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
-	<field name="type" type="string" indexed="true" docValues="true" multiValued="false" default="Other"/>
+	<field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="url_norm" type="string" indexed="true" stored="true" docValues="true"/>
         <field name="url_path" type="string" indexed="true" stored="true" docValues="true"/>
         <field name="url" type="string" indexed="true" stored="true" docValues="true"/>
