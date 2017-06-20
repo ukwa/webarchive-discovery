@@ -7,13 +7,6 @@
         "subject" : [ "Crowdsourcing" ]
       }
     },
-    "resource" : {
-      "http://en.wikipedia.org/wiki/Mona_Lisa" : {
-        "collection" : "Wikipedia",
-        "collections" : [ "Wikipedia", "Wikipedia|Main Site", "Wikipedia|Main Site|Mona Lisa" ],
-        "subject" : [ "Crowdsourcing" ]
-      }
-    },
     "root" : {
       "http://en.wikipedia.org/" : {
         "collection" : "Wikipedia",
@@ -22,6 +15,13 @@
       }
     },
     "plus1" : {
+    },
+    "resource" : {
+      "http://en.wikipedia.org/wiki/Mona_Lisa" : {
+        "collection" : "Wikipedia",
+        "collections" : [ "Wikipedia", "Wikipedia|Main Site", "Wikipedia|Main Site|Mona Lisa" ],
+        "subject" : [ "Crowdsourcing" ]
+      }
     }
   },
   "collectionDateRanges" : {

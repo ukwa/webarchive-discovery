@@ -58,7 +58,7 @@ public class AnnotationsTest {
 		//
 		ann.getCollections()
 				.get("root")
-				.put("http://en.wikipedia.org",
+                .put("http://en.wikipedia.org/",
 						new UriCollection("Wikipedia", new String[] {
 								"Wikipedia", "Wikipedia|Main Site" },
 								new String[] { "Crowdsourcing" }));
