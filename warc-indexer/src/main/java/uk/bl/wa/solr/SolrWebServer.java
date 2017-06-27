@@ -30,12 +30,12 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.CloudSolrServer;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
-import org.apache.solr.client.solrj.impl.LBHttpSolrServer;
+import org.apache.solr.client.solrj.impl.CloudSolrClient;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
+import org.apache.solr.client.solrj.impl.LBHttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
@@ -50,7 +50,7 @@ import com.typesafe.config.Config;
 public class SolrWebServer {
 	private static Log log = LogFactory.getLog(SolrWebServer.class);
 
-	private SolrServer solrServer;
+    private SolrClient solrServer;
 	
 	public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
 
@@ -72,19 +72,21 @@ public class SolrWebServer {
 		try {
 			if( conf.hasPath(CONF_HTTP_SERVER)) {
 				log.info("Setting up HttpSolrServer client from a url: "+conf.getString(CONF_HTTP_SERVER));
-				solrServer = new HttpSolrServer(
+                solrServer = new HttpSolrClient(
 						conf.getString(CONF_HTTP_SERVER));
 				
 			} else if (conf.hasPath(CONF_ZOOKEEPERS)) {
 				log.info("Setting up CloudSolrServer client via zookeepers.");
-				solrServer = new CloudSolrServer(
+                solrServer = new CloudSolrClient(
 						conf.getString(CONF_ZOOKEEPERS));
-				((CloudSolrServer) solrServer).setDefaultCollection(conf
+                ((CloudSolrClient) solrServer)
+                        .setDefaultCollection(conf
 						.getString(COLLECTION));
 				
 			} else if (conf.hasPath(CONF_HTTP_SERVERS)) {
 				log.info("Setting up LBHttpSolrServer client from servers list.");
-				solrServer = new LBHttpSolrServer(conf.getString(
+                solrServer = new LBHttpSolrClient(
+                        conf.getString(
 						CONF_HTTP_SERVERS).split(","));
 				
 			} else {
@@ -99,7 +101,7 @@ public class SolrWebServer {
 		}
 	}
 
-	public SolrServer getSolrServer() {
+    public SolrClient getSolrServer() {
 		return this.solrServer;
 	}
 
@@ -146,14 +148,16 @@ public class SolrWebServer {
 	}
 
 	/**
-	 * Sends the prepared query to solr and returns the result;
-	 * 
-	 * @param query
-	 * @return
-	 * @throws SolrServerException
-	 */
+     * Sends the prepared query to solr and returns the result;
+     * 
+     * @param query
+     * @return
+     * @throws SolrServerException
+     * @throws IOException
+     */
 
-	public QueryResponse query(SolrQuery query) throws SolrServerException {
+    public QueryResponse query(SolrQuery query)
+            throws SolrServerException, IOException {
 		QueryResponse rsp = solrServer.query(query);
 		return rsp;
 	}

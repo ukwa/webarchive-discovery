@@ -29,10 +29,10 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.params.SolrParams;
@@ -66,7 +66,7 @@ public class CollectionsUpdateTest {
 		String collections = "Health and Social Care Act 2012 - NHS Reforms"
 				+ "|" + "NHS" + "|" + "Acute Trusts";
 
-		SolrServer ss = new HttpSolrServer(server);
+        SolrClient ss = new HttpSolrClient(server);
 
 		doQuery(ss, id);
 
@@ -80,7 +80,7 @@ public class CollectionsUpdateTest {
 
 	}
 
-	private static void doUpdate(SolrServer ss, String id, String collection,
+    private static void doUpdate(SolrClient ss, String id, String collection,
 			String collections) throws SolrServerException, IOException {
 
 		ss.add(createUpdateDocument(id, collection, collections));
@@ -106,8 +106,8 @@ public class CollectionsUpdateTest {
 		return doc;
 	}
 
-	public static void doQuery(SolrServer ss, String id)
-			throws SolrServerException {
+    public static void doQuery(SolrClient ss, String id)
+            throws SolrServerException, IOException {
 		SolrParams p = new SolrQuery("id:\"" + id + "\"");
 		QueryResponse r = ss.query(p);
 		System.out.println("GOT collection "

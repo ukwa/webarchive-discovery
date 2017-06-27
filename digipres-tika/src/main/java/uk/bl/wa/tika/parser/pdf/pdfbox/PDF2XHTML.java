@@ -21,10 +21,10 @@ import java.io.Writer;
 
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDPage;
-import org.apache.pdfbox.util.PDFTextStripper;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotation;
 import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationMarkup;
-import org.apache.pdfbox.util.TextPosition;
+import org.apache.pdfbox.text.PDFTextStripper;
+import org.apache.pdfbox.text.TextPosition;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.metadata.Metadata;
@@ -91,7 +91,7 @@ class PDF2XHTML extends PDFTextStripper {
             throws IOException {
         this.handler = new XHTMLContentHandler(handler, metadata);
         this.extractAnnotationText = extractAnnotationText;
-        setForceParsing(true);
+        // setForceParsing(true);
         setSortByPosition(sortByPosition);
         if (enableAutoSpace) {
             setWordSeparator(" ");
@@ -223,10 +223,10 @@ class PDF2XHTML extends PDFTextStripper {
     @Override
     protected void writeCharacters(TextPosition text) throws IOException {
         try {
-            handler.characters(text.getCharacter());
+            handler.characters(text.getUnicode());
         } catch (SAXException e) {
             throw new IOExceptionWithCause(
-                    "Unable to write a character: " + text.getCharacter(), e);
+                    "Unable to write a character: " + text.getUnicode(), e);
         }
     }
 

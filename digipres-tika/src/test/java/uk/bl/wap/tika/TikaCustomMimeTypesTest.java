@@ -1,6 +1,6 @@
 package uk.bl.wap.tika;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,7 +20,8 @@ public class TikaCustomMimeTypesTest {
 	static {
 		tests.put("src/test/resources/spectrum/MANIC.TAP", "application/x-spectrum-tap; version=basic");
 		tests.put("src/test/resources/spectrum/Manic Miner.tzx", "application/x-spectrum-tzx");
-		tests.put("src/test/resources/wpd/TOPOPREC.WPD", "application/vnd.wordperfect");
+        tests.put("src/test/resources/wpd/TOPOPREC.WPD",
+                "application/vnd.wordperfect; version=6.x");
 		tests.put("src/test/resources/simple.pdf", "application/pdf");
 	}
 

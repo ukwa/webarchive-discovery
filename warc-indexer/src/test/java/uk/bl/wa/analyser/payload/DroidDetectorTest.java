@@ -30,6 +30,7 @@ import static org.junit.Assert.assertEquals;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 import org.apache.tika.metadata.Metadata;
 import org.junit.Before;
@@ -56,22 +57,25 @@ public class DroidDetectorTest {
 	}
 
 	/**
-	 * 
-	 * @throws IOException
-	 * @throws CommandExecutionException
-	 */
+     * 
+     * @throws IOException
+     * @throws CommandExecutionException
+     * @throws URISyntaxException
+     */
 	@Test
 	public void testBasicDetection() throws IOException,
-			CommandExecutionException {
+            CommandExecutionException, URISyntaxException {
+        String s = this.getClass().getClassLoader().getResource("").getPath();
+        System.out.println("Current relative path is: " + s);
 		this.runDroids("src/test/resources/cc.png", "image/png");
 		this.runDroids("src/test/resources/cc0.mp3", "audio/mpeg");
 	}
 
 	private void runDroids(String filename, String expected) throws IOException,
-			CommandExecutionException {
+            CommandExecutionException, URISyntaxException {
 
 		// Set up File and Metadata:
-		File file = new File(filename);
+        File file = new File(filename);
 		Metadata metadata = new Metadata();
 		metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
 

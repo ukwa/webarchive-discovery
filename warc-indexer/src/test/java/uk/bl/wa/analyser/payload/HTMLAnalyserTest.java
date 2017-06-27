@@ -39,11 +39,11 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecordMetaData;
 import org.junit.Test;
 
-import uk.bl.wa.solr.SolrFields;
-import uk.bl.wa.solr.SolrRecord;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * @author Toke Eskildsen <te@statsbiblioteket.dk>
@@ -72,6 +72,7 @@ public class HTMLAnalyserTest {
         core.put("length", Long.toString(SAMPLE.length()));
         core.put("version", "InvalidVersion");
         core.put("absolute-offset", "0");
+        core.put("origin", "");
         ArchiveRecordHeader header = new ARCRecordMetaData("invalid", core);
         SolrRecord solr = new SolrRecord();
         InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());

@@ -31,10 +31,8 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 
-import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
@@ -149,25 +147,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		// Ensure the JARs we provide take precedence over ones from Hadoop:
 		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
-		// If we are indexing into HDFS, we need a copy of the config:
-		if (index_conf.getBoolean("warc.solr.hdfs")) {
-			// Grab the Solr config from ZK and cache it for during the job.
-			if (index_conf.hasPath(SolrWebServer.CONF_ZOOKEEPERS)) {
-				Solate.cacheSolrHome(conf,
-						index_conf.getString(SolrWebServer.CONF_ZOOKEEPERS),
-						index_conf.getString(SolrWebServer.COLLECTION),
-						solrHomeZipName);
-			} else {
-				Solate.cacheSolrHome(conf, null, null, solrHomeZipName);
-			}
-			// TODO Check num_shards == num reducers
-
-			// Note that we need this to ensure FileSystem.get is thread-safe:
-			// @see https://issues.apache.org/jira/browse/HDFS-925
-			// @see
-			// https://mail-archives.apache.org/mod_mbox/hadoop-user/201208.mbox/%3CCA+4kjVt-QE2L83p85uELjWXiog25bYTKOZXdc1Ahun+oBSJYpQ@mail.gmail.com%3E
-			conf.setBoolean("fs.hdfs.impl.disable.cache", true);
-		}
 		conf.setBoolean("mapred.output.oai-pmh", this.exportXml);
 
 		conf.setOutputKeyClass(Text.class);

@@ -18,19 +18,18 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.solr.client.solrj.SolrServer;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-import uk.bl.wa.apache.solr.hadoop.Solate;
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
 import uk.bl.wa.solr.WctFields;
-
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerReducer extends MapReduceBase implements
@@ -38,7 +37,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 	private static Log log = LogFactory.getLog(WARCIndexerReducer.class);
 
-	private SolrServer solrServer;
+    private SolrClient solrServer;
 	private int batchSize;
 	private boolean dummyRun;
 	private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
@@ -87,42 +86,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
 					.get("mapred.output.oai-pmh"));
 
 		// Decide between to-HDFS and to-SolrCloud indexing modes:
-		if (this.useEmbeddedServer) {
-			initEmbeddedServerConfig(job, conf);
-		} else {
-			solrServer = new SolrWebServer(conf).getSolrServer();
-		}
+        solrServer = new SolrWebServer(conf).getSolrServer();
 
 		log.info("Initialisation complete.");
-	}
-
-	private void initEmbeddedServerConfig(JobConf job, Config conf) {
-		try {
-			// Filesystem:
-			job.setBoolean("fs.hdfs.impl.disable.cache", true);
-			fs = FileSystem.get(job);
-			// Input:
-			solrHomeDir = Solate.findSolrConfig(job,
-					WARCIndexerRunner.solrHomeZipName);
-			log.info("Found solrHomeDir " + solrHomeDir);
-		} catch (IOException e) {
-			e.printStackTrace();
-			log.error("FAILED in reducer configuration: " + e);
-		}
-		// Output:
-		outputDir = new Path(conf.getString(SolrWebServer.HDFS_OUTPUT_PATH));
-	}
-
-	private void initEmbeddedServer(int slice) throws IOException {
-
-		// Defined the output directory accordingly:
-		Path outputShardDir = new Path(fs.getHomeDirectory() + "/" + outputDir,
-				this.shardPrefix + slice);
-
-		// Fire up a server:
-		solrServer = Solate.createEmbeddedSolrServer(solrHomeDir, fs,
-				outputDir, outputShardDir);
-
 	}
 
 	@Override
@@ -135,11 +101,6 @@ public class WARCIndexerReducer extends MapReduceBase implements
 
 		// Get the slice number, but counting from 1 instead of 0:
 		int slice = key.get() + 1;
-
-		// For indexing into HDFS, set up a new server per key:
-		if (useEmbeddedServer) {
-			this.initEmbeddedServer(slice);
-		}
 
 		// Go through the documents for this shard:
 		long noValues = 0;
@@ -196,9 +157,9 @@ SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
 			// If we are indexing to HDFS, shut the shard down:
 			if (useEmbeddedServer) {
 				// Commit, and block until the changes have been flushed.
-				solrServer.commit(true, false);
+                solrServer.commit(true, false);
 				// And shut it down.
-				solrServer.shutdown();
+                solrServer.shutdown();
 			}
 
 		} catch (Exception e) {
@@ -227,7 +188,7 @@ SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
 				// Inform that there is progress (still-alive):
 				reporter.progress();
 				// Add the documents:
-				UpdateResponse response = solrServer.add(docs);
+                UpdateResponse response = solrServer.add(docs);
 				log.info("Submitted " + docs.size() + " docs ["
 						+ response.getStatus() + "]");
 				// Update document counter:
