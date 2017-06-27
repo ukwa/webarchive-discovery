@@ -25,7 +25,6 @@ import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
-import uk.bl.wa.apache.solr.hadoop.Solate;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrRecord;
@@ -46,7 +45,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 	private WARCIndexer windex;
 
-	private Solate sp = null;
 	private int numShards = 1;
 	private Config config;
 
@@ -99,11 +97,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 			// Set up sharding:
 			numShards = config.getInt(SolrWebServer.NUM_SHARDS);
-			if (config.hasPath(SolrWebServer.CONF_ZOOKEEPERS)) {
-				String zkHost = config.getString(SolrWebServer.CONF_ZOOKEEPERS);
-				String collection = config.getString(SolrWebServer.COLLECTION);
-				sp = new Solate(zkHost, collection, numShards);
-			}
 
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
@@ -170,11 +163,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		// Wrap up and collect the result:
 		WritableSolrRecord wsolr = new WritableSolrRecord(solr);
 
-		// Get the right key for the right partition:
-		if (sp != null) {
-			wsolr.setPartition(sp.getPartition(null, solr.getSolrDocument()));
-		}
-
 		// Occasionally update application-level status
 		if ((noRecords % 1000) == 0) {
 			reporter.setStatus(noRecords + " processed from " + inputFile);
@@ -196,15 +184,9 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		// Pass to reduce stage if successful:
 		if (wsolr != null) {
 
-			// Get the right key for the right partition:
-			IntWritable oKey = null;
-			if (sp != null) {
-				oKey = new IntWritable(wsolr.getPartition());
-			} else {
-				// Otherwise use a random assignment:
-				int iKey = (int) (Math.round(Math.random() * numShards));
-				oKey = new IntWritable(iKey);
-			}
+            // Use a random assignment:
+            int iKey = (int) (Math.round(Math.random() * numShards));
+            IntWritable oKey = new IntWritable(iKey);
 
 			output.collect(oKey, wsolr);
 

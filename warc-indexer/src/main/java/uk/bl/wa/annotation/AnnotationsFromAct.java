@@ -42,6 +42,7 @@ import java.util.Set;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.common.util.Base64;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
@@ -53,7 +54,6 @@ import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
 import com.google.common.base.Joiner;
-import com.sun.syndication.io.impl.Base64;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -136,7 +136,8 @@ public class AnnotationsFromAct {
 		credentials.append( loginConf.getString( "act.username" ) );
 		credentials.append( ":" );
 		credentials.append( loginConf.getString( "act.password" ) );
-		connection.setRequestProperty( "Authorization", "Basic " + Base64.encode( credentials.toString() ) );
+        connection.setRequestProperty("Authorization", "Basic "
+                + Base64.byteArrayToBase64(credentials.toString().getBytes()));
 		connection.setRequestProperty("Content-Type", "text/plain");
 
 		Scanner scanner;

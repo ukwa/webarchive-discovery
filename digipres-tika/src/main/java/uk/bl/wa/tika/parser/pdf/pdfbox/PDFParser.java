@@ -21,12 +21,10 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.apache.jempbox.xmp.XMPMetadata;
@@ -36,13 +34,10 @@ import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
 import org.apache.pdfbox.cos.COSName;
-import org.apache.pdfbox.cos.COSObject;
 import org.apache.pdfbox.cos.COSString;
-import org.apache.pdfbox.io.RandomAccess;
-import org.apache.pdfbox.io.RandomAccessFile;
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
-import org.apache.pdfbox.persistence.util.COSObjectKey;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TemporaryResources;
@@ -117,14 +112,8 @@ public class PDFParser extends AbstractParser {
             //  for unpacked / processed resources
             // Decide which to do based on if we're reading from a file or not already
             TikaInputStream tstream = TikaInputStream.cast(stream);
-            if (tstream != null && tstream.hasFile()) {
-               // File based, take that as a cue to use a temporary file
-               RandomAccess scratchFile = new RandomAccessFile(tmp.createTemporaryFile(), "rw");
-               pdfDocument = PDDocument.load(new CloseShieldInputStream(stream), scratchFile, true);
-            } else {
-               // Go for the normal, stream based in-memory parsing
-               pdfDocument = PDDocument.load(new CloseShieldInputStream(stream), true);
-            }
+            pdfDocument = PDDocument.load(new CloseShieldInputStream(stream),
+                    MemoryUsageSetting.setupMixed(100 * 1024 * 1024));
            
             if (pdfDocument.isEncrypted()) {
                 String password = null;
@@ -145,8 +134,10 @@ public class PDFParser extends AbstractParser {
                    password = "";
                 }
                
-                try {
-                    pdfDocument.decrypt(password);
+                try { // FIXME This may no longer be requried!?
+                    pdfDocument = PDDocument.load(
+                            new CloseShieldInputStream(stream), "",
+                            MemoryUsageSetting.setupMixed(100 * 1024 * 1024));
                 } catch (Exception e) {
                     // Ignore
                 }
@@ -177,18 +168,10 @@ public class PDFParser extends AbstractParser {
         addMetadata(metadata, "pdf:producer", info.getProducer());
         addMetadata(metadata, Metadata.SUBJECT, info.getSubject());
         addMetadata(metadata, "trapped", info.getTrapped());
-        try {
-            addMetadata(metadata, "created", info.getCreationDate());
-            addMetadata(metadata, Metadata.CREATION_DATE, info.getCreationDate());
-        } catch (IOException e) {
-            // Invalid date format, just ignore
-        }
-        try {
-            Calendar modified = info.getModificationDate(); 
-            addMetadata(metadata, Metadata.LAST_MODIFIED, modified);
-        } catch (IOException e) {
-            // Invalid date format, just ignore
-        }
+        addMetadata(metadata, "created", info.getCreationDate());
+        addMetadata(metadata, Metadata.CREATION_DATE, info.getCreationDate());
+        Calendar modified = info.getModificationDate();
+        addMetadata(metadata, Metadata.LAST_MODIFIED, modified);
         
         // All remaining metadata is custom
         // Copy this over as-is
@@ -196,11 +179,13 @@ public class PDFParser extends AbstractParser {
              "Author", "Creator", "CreationDate", "ModDate",
              "Keywords", "Producer", "Subject", "Title", "Trapped"
         });
-        if( info.getDictionary() != null && info.getDictionary().keySet() != null ) {
-          for(COSName key : info.getDictionary().keySet()) {
+        if (info.getCOSObject() != null
+                && info.getCOSObject().keySet() != null) {
+            for (COSName key : info.getCOSObject().keySet()) {
             String name = key.getName();
             if(! handledMetadata.contains(name)) {
-        	addMetadata(metadata, name, info.getDictionary().getDictionaryObject(key));
+                    addMetadata(metadata, name,
+                            info.getCOSObject().getDictionaryObject(key));
             }
           }
         }
@@ -218,7 +203,8 @@ public class PDFParser extends AbstractParser {
 		//metadata.set("pdf:tampered", ""+reader.isTampered());
         try {
         	if( document.getDocumentCatalog().getMetadata() != null ) {
-        		XMPMetadata xmp = document.getDocumentCatalog().getMetadata().exportXMPMetadata();
+                XMPMetadata xmp = XMPMetadata.load(document.getDocumentCatalog()
+                        .getMetadata().exportXMPMetadata());
         		// There is a special class for grabbing data in the PDF schema - not sure it will add much here:
         		// Could parse xmp:CreatorTool and pdf:Producer etc. etc. out of here.
         		XMPSchemaPDF pdfxmp = xmp.getPDFSchema();
@@ -240,7 +226,7 @@ public class PDFParser extends AbstractParser {
 		}
 		
 		// Attempt to determine Adobe extension level, if present:
-		COSDictionary root = document.getDocumentCatalog().getCOSDictionary();
+        COSDictionary root = document.getDocumentCatalog().getCOSObject();
 		COSDictionary extensions = (COSDictionary) root.getDictionaryObject(COSName.getPDFName("Extensions") );
 		if( extensions != null ) {
 			for( COSName extName : extensions.keySet() ) {

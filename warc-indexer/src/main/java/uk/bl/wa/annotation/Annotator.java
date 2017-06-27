@@ -45,10 +45,10 @@ import java.util.Set;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServer;
 import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.impl.HttpSolrServer;
+import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrDocument;
@@ -315,7 +315,8 @@ public class Annotator {
 	}
 
 	private static void searchAndApplyAnnotations(Annotator anr,
-			SolrServer solr, SolrQuery parameters) throws SolrServerException,
+            SolrClient solr, SolrQuery parameters)
+            throws SolrServerException,
 			URISyntaxException, IOException {
 		QueryResponse response = solr.query(parameters);
 		SolrDocumentList list = response.getResults();
@@ -341,7 +342,7 @@ public class Annotator {
 			String solrServer) throws SolrServerException, URISyntaxException,
 			IOException {
 		// Connect to solr:
-		SolrServer solr = new HttpSolrServer(solrServer);
+        SolrClient solr = new HttpSolrClient(solrServer);
 
 		// Set up annotator:
         Annotator anr = new Annotator(ann, oaSurts);
