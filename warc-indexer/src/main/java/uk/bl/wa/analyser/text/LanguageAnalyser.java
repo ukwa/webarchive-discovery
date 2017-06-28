@@ -3,6 +3,8 @@
  */
 package uk.bl.wa.analyser.text;
 
+import java.io.IOException;
+
 /*
  * #%L
  * warc-indexer
@@ -27,12 +29,14 @@ package uk.bl.wa.analyser.text;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-
-import uk.bl.wa.extract.LanguageDetector;
-import uk.bl.wa.solr.SolrFields;
-import uk.bl.wa.solr.SolrRecord;
+import org.apache.tika.langdetect.OptimaizeLangDetector;
+import org.apache.tika.language.detect.LanguageDetector;
+import org.apache.tika.language.detect.LanguageResult;
 
 import com.typesafe.config.Config;
+
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 
 /**
@@ -52,7 +56,12 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
 	public LanguageAnalyser(Config conf) {
         enabled = !conf.hasPath("warc.index.extract.content.language.enabled") ||
                   conf.getBoolean("warc.index.extract.content.language.enabled");
-        ld = new LanguageDetector(conf);
+        try {
+            ld = new OptimaizeLangDetector().loadModels();
+        } catch (IOException e) {
+            // This should not happen, so raise the alarm:
+            throw new RuntimeException(e);
+        }
 		log.info("Constructed language analyzer with enabled = " + enabled);
 	}
 
@@ -65,9 +74,9 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
             return;
         }
         final long start = System.nanoTime();
-		String li = ld.detectLanguage( text );
+        LanguageResult li = ld.detect(text);
 		if( li != null ) {
-			solr.addField( SolrFields.CONTENT_LANGUAGE, li );
+            solr.addField(SolrFields.CONTENT_LANGUAGE, li.getLanguage());
         }
         Instrument.timeRel("TextAnalyzers#total", "LanguageAnalyzer#total", start);
 	}
