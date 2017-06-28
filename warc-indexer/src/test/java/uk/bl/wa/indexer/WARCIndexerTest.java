@@ -42,13 +42,13 @@ import org.archive.io.ArchiveRecord;
 import org.archive.util.ArchiveUtils;
 import org.junit.Test;
 
-import uk.bl.wa.solr.SolrFields;
-import uk.bl.wa.solr.SolrRecord;
-
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValue;
 import com.typesafe.config.ConfigValueFactory;
+
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 
 public class WARCIndexerTest {
 
@@ -153,7 +153,9 @@ public class WARCIndexerTest {
         // Enable excusion:
         config = this.modifyValueAt(config, "warc.index.exclusions.enabled", true);
         // config exclusion file:
-        File exclusions_file = new File("src/test/resources/exclusion_test.txt");
+        String inputFile = this.getClass().getClassLoader()
+                .getResource("exclusion_test.txt").getPath();
+        File exclusions_file = new File(inputFile);
         assertEquals(true, exclusions_file.exists());
         config = this.modifyValueAt(config, "warc.index.exclusions.file",
                 exclusions_file.getAbsolutePath());
@@ -190,7 +192,9 @@ public class WARCIndexerTest {
         WARCIndexer windex = new WARCIndexer(config2);
         windex.setCheckSolrForDuplicates(false);
 
-        String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
+        String inputFile = this.getClass().getClassLoader()
+                .getResource("IAH-urls-wget.warc.gz")
+                .getPath();
         System.out.println("ArchiveUtils.isGZipped: " + ArchiveUtils.isGzipped(new FileInputStream(inputFile)));
         ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
         Iterator<ArchiveRecord> ir = reader.iterator();
@@ -225,7 +229,8 @@ public class WARCIndexerTest {
         WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
         windex.setCheckSolrForDuplicates(false);
 
-        String inputFile = "src/test/resources/IAH-urls-wget.warc.gz";
+        String inputFile = this.getClass().getClassLoader()
+                .getResource("IAH-urls-wget.warc.gz").getPath();
         System.out.println("ArchiveUtils.isGZipped: " + ArchiveUtils.isGzipped(new FileInputStream(inputFile)));
         ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
         Iterator<ArchiveRecord> ir = reader.iterator();

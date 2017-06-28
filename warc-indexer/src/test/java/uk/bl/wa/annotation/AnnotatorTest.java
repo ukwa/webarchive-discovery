@@ -49,9 +49,9 @@ public class AnnotatorTest {
     public static Annotator getTestAnnotator()
             throws JsonParseException, JsonMappingException, IOException {
         Annotations annotations = Annotations
-                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS);
+                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS_PATH);
         SurtPrefixSet oaSurts = Annotator
-                .loadSurtPrefix(AnnotationsTest.ML_OASURTS);
+                .loadSurtPrefix(AnnotationsTest.ML_OASURTS_PATH);
         Annotator annotator = new Annotator(annotations, oaSurts);
         return annotator;
 	}

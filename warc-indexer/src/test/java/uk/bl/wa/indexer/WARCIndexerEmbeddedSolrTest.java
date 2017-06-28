@@ -67,7 +67,9 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public class WARCIndexerEmbeddedSolrTest {
 
-	private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz";
+    private String testWarc = getClass().getClassLoader().getResource(
+            "wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz")
+            .getPath();
 	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc";
 	//private String testWarc = "src/test/resources/variations.warc.gz";
 	//private String testWarc = "src/test/resources/TEST.arc.gz";
@@ -141,9 +143,9 @@ public class WARCIndexerEmbeddedSolrTest {
 		WARCIndexer windex = new WARCIndexer();
         // Add the annotator:
         Annotations annotations = Annotations
-                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS);
+                .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS_PATH);
         SurtPrefixSet oaSurts = Annotator
-                .loadSurtPrefix(AnnotationsTest.ML_OASURTS);
+                .loadSurtPrefix(AnnotationsTest.ML_OASURTS_PATH);
         windex.setAnnotations(annotations, oaSurts);
 		// Prevent the indexer from attempting to query Solr:
 		windex.setCheckSolrForDuplicates(false);

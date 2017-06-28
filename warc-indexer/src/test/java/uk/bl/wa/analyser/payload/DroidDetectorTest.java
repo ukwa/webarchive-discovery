@@ -65,17 +65,17 @@ public class DroidDetectorTest {
 	@Test
 	public void testBasicDetection() throws IOException,
             CommandExecutionException, URISyntaxException {
-        String s = this.getClass().getClassLoader().getResource("").getPath();
-        System.out.println("Current relative path is: " + s);
-		this.runDroids("src/test/resources/cc.png", "image/png");
-		this.runDroids("src/test/resources/cc0.mp3", "audio/mpeg");
+        this.runDroids("cc.png", "image/png");
+        this.runDroids("cc0.mp3", "audio/mpeg");
 	}
 
 	private void runDroids(String filename, String expected) throws IOException,
             CommandExecutionException, URISyntaxException {
 
-		// Set up File and Metadata:
-        File file = new File(filename);
+        // Set up File and Metadata:
+        String filePath = this.getClass().getClassLoader().getResource(filename)
+                .getPath();
+        File file = new File(filePath);
 		Metadata metadata = new Metadata();
 		metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
 

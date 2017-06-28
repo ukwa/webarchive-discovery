@@ -39,8 +39,15 @@ import org.junit.Test;
  */
 public class AnnotationsTest {
 
-    public static final String ML_ANNOTATIONS = "src/test/resources/annotations/mona-lisa-annotations.json";
-    public static final String ML_OASURTS = "src/test/resources/annotations/openAccessSurts.txt";
+    private static final String ML_ANNOTATIONS = "annotations/mona-lisa-annotations.json";
+    private static final String ML_OASURTS = "annotations/openAccessSurts.txt";
+
+    public static final String ML_ANNOTATIONS_PATH = AnnotationsTest.class
+            .getClassLoader().getResource(AnnotationsTest.ML_ANNOTATIONS)
+            .getPath();
+    public static final String ML_OASURTS_PATH = AnnotationsTest.class
+            .getClassLoader()
+            .getResource(AnnotationsTest.ML_OASURTS).getPath();
 
 	@Test
 	public void testJsonSerialisation() throws JsonParseException,
@@ -78,7 +85,9 @@ public class AnnotationsTest {
 				new DateRange(null, null));
 		String json = ann.toJson();
 		Annotations ann2 = Annotations.fromJson(json);
-		ann2.toJsonFile(ML_ANNOTATIONS);
+        String filePath = this.getClass().getClassLoader()
+                .getResource(ML_ANNOTATIONS).getPath();
+        ann2.toJsonFile(filePath);
 		String json2 = ann2.toJson();
 		// Having performed a full Json-Java-Json cycle, check the Json is the
 		// same:
