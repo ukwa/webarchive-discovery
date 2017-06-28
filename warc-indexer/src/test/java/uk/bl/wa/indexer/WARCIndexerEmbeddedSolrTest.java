@@ -83,7 +83,9 @@ public class WARCIndexerEmbeddedSolrTest {
 	public void setUp() throws Exception {
 		
 		// Note that the following property could be set through JVM level arguments too
-		System.setProperty("solr.solr.home", "src/main/solr/solr");
+        String solrXmlPath = getClass().getClassLoader()
+                .getResource("solr/solr.xml").getPath();
+        System.setProperty("solr.solr.home", new File(solrXmlPath).getParent());
 		System.setProperty("solr.data.dir", "target/solr-test-home");
 		System.setProperty("solr.lock.type", "native");
 		System.out.println("Loading container...");
