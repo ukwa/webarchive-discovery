@@ -26,6 +26,7 @@ package uk.bl.wa.indexer;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -224,7 +225,8 @@ public class WARCIndexerTest {
     @Test
     public void testFields() throws NoSuchAlgorithmException, IOException {
         // ID of WARC record to use in test
-        final String recordId = "id=jbKtN3dWzLJzaIQxTyPCiA==/20131021215312";
+        final String recordId = "jbKtN3dWzLJzaIQxTyPCiA==/20131021215312";
+        boolean foundRecord = false;
 
         WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
         windex.setCheckSolrForDuplicates(false);
@@ -240,7 +242,9 @@ public class WARCIndexerTest {
             ArchiveRecord rec = ir.next();
             SolrRecord doc = windex.extract("", rec);
 
-            if(doc != null && doc.getField(SolrFields.ID).getValue() == recordId) {
+            if(doc != null && doc.getField(SolrFields.ID).getValue().equals(recordId)) {
+                foundRecord = true;
+
                 assertArrayEquals("links_domains_surts is incorrect", new String[]{
                                 "(org,",
                                 "(org,archive,",
@@ -265,5 +269,7 @@ public class WARCIndexerTest {
                 break;
             }
         }
+
+        assertTrue("Test record not found", foundRecord);
     }
 }
