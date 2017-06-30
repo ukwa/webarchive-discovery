@@ -1,7 +1,7 @@
-2.2.0
+3.0.0
 -----
 
-**NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes.
+**NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
 
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
 * Switched to separate fields for the source file and offset references, and dropped the _s suffix.
@@ -9,14 +9,21 @@
 * Fixed bug in command-line client where final set of documents were not being submitted to Solr.
 * Added and filled resource_name field.
 * Made first_bytes shingler optional.
-* Updated to Tika 1.10 and Nanite 1.2.2-82.
 * Non-existant elements crop up in elements_used for plain text [#35](https://github.com/ukwa/webarchive-discovery/issues/35)
 * Date-based partial updates not working [#64](https://github.com/ukwa/webarchive-discovery/issues/64) 
 * Added Map-Reduce tools to generate 'MDX' (Metadata inDeX) sequence files, for resolving revisits and generating datasets of samples and stats. See [#65](https://github.com/ukwa/webarchive-discovery/issues/65) and [#16](https://github.com/ukwa/webarchive-discovery/issues/16).
 * Fix generator extraction [#58](https://github.com/ukwa/webarchive-discovery/issues/58)
 * In MDX, extract audio/video metadata for analysis. [#67](https://github.com/ukwa/webarchive-discovery/issues/67)
 * Default to storing text in the MDX rather than stripping it.
-* ~~Switch to Java 7 (required by Tika 1.10)~~ Reverted to Tika 1.9 and Java 6 as that's all we can support right now.
+* Attempt to improve link extraction via MDX  [#16](https://github.com/ukwa/webarchive-discovery/issues/16)
+* Switch to Java 7 (required by Tika > 1.10) [#69](https://github.com/ukwa/webarchive-discovery/issues/69)
+* Updated to Tika 1.15, Solr 5.5.4, Nanite 1.3.1-90.
+* Deprecated usage of collapse-by-hash mode (i.e. use `use_hash_url_id=false` now) as using updates in this way scales poorly for us.
+* Store host in surt form, and the url path and the status code [#81](https://github.com/ukwa/webarchive-discovery/issues/81)
+* Switched to loading test resources via the classpath [#54](https://github.com/ukwa/webarchive-discovery/issues/54)
+* Added an improved high-level `type` field intended to supersede `content_type_norm` [#82](https://github.com/ukwa/webarchive-discovery/issues/82)
+* Fixed bug where `application/xhtml+xml` was _not_ getting classified as `type:Web Page` and `content_type_norm:html` [#83](https://github.com/ukwa/webarchive-discovery/issues/83).
+
 
 2.1.0
 -----
