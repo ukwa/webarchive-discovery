@@ -94,7 +94,7 @@
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.4.3</version>
+			<version>${slf4j.version.override}</version>
 			<exclusions>
 			   <exclusion>
 			      <groupId>org.slf4j</groupId>
@@ -120,7 +120,10 @@
 		<dependency>
 		   <groupId>org.slf4j</groupId>
 		   <artifactId>slf4j-api</artifactId>
-		   <version>1.4.3</version>
+		   <version>${slf4j.version.override}</version>
 		</dependency>
 	</dependencies>
+	<properties>
+	   <slf4j.version.override>1.5.11</slf4j.version.override>
+	</properties>
 </project>
