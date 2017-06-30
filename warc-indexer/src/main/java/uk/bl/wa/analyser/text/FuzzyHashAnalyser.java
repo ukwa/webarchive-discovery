@@ -70,8 +70,10 @@ public class FuzzyHashAnalyser extends AbstractTextAnalyser {
 			tfh = ssd.fuzzy_hash_buf( text.getBytes( "UTF-8" ) );
 			solr.addField( SolrFields.SSDEEP_PREFIX + tfh.getBlocksize(), tfh.getHash() );
 			solr.addField( SolrFields.SSDEEP_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
-			solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + tfh.getBlocksize(), tfh.getHash() );
-			solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
+            // solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX +
+            // tfh.getBlocksize(), tfh.getHash() );
+            // solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + (
+            // tfh.getBlocksize() * 2 ), tfh.getHash2() );
 		} catch (UnsupportedEncodingException e) {
 			e.printStackTrace();
 		}
