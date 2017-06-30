@@ -814,13 +814,17 @@ public class WARCIndexer {
 			if( contentType.matches( "^image/.*$" ) ) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
 				solr.setField(SolrFields.SOLR_TYPE, "Image");
-			} else if( contentType.matches( "^audio/.*$" ) ) {
+            } else if (contentType.matches("^audio/.*$")
+                    || contentType.matches("^application/vnd.rn-realaudio$")) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "audio" );
 				solr.setField(SolrFields.SOLR_TYPE, "Audio");
-			} else if( contentType.matches( "^video/.*$" ) ) {
+            } else if (contentType.matches("^video/.*$")
+                    || contentType.matches("^application/mp4$")
+                    || contentType.matches("^application/vnd.rn-realmedia$")) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "video" );
 				solr.setField(SolrFields.SOLR_TYPE, "Video");
-			} else if( contentType.matches( "^text/htm.*$" ) ) {
+            } else if (contentType.matches("^text/htm.*$")
+                    || contentType.matches("^application/xhtml.*$")) {
 				solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
 				solr.setField(SolrFields.SOLR_TYPE, "Web Page");
 			} else if( contentType.matches( "^application/pdf.*$" ) ) {
