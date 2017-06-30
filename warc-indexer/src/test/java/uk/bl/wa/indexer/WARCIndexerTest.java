@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
@@ -245,7 +246,13 @@ public class WARCIndexerTest {
             if(doc != null && doc.getField(SolrFields.ID).getValue().equals(recordId)) {
                 foundRecord = true;
 
-                assertArrayEquals("links_domains_surts is incorrect", new String[]{
+                String[] found_lhs = doc
+                        .getField(SolrFields.SOLR_LINKS_HOSTS_SURTS).getValues()
+                        .toArray(new String[] {});
+                Arrays.sort(found_lhs);
+                System.out.println(Arrays.toString(found_lhs));
+                assertArrayEquals("links_hosts_surts is incorrect",
+                        new String[] {
                                 "(org,",
                                 "(org,archive,",
                                 "(org,archive,blog,",
@@ -253,16 +260,17 @@ public class WARCIndexerTest {
                                 "(org,archive,web,faq,",
                                 "(org,openlibrary,",
                                 "(org,sloan,"
-                        },
-                        doc.getField(SolrFields.SOLR_LINKS_HOSTS_SURTS)
-                                .getValues().toArray());
+                        }, found_lhs);
 
-                assertArrayEquals("domain_surt is incorrect", new String[]{
+                String[] found_hs = doc.getField(SolrFields.SOLR_HOST_SURT)
+                        .getValues().toArray(new String[] {});
+                Arrays.sort(found_hs);
+                System.out.println(Arrays.toString(found_hs));
+                assertArrayEquals("host_surt is incorrect",
+                        new String[] {
                                 "(org,",
                                 "(org,archive,"
-                        },
-                        doc.getField(SolrFields.SOLR_HOST_SURT).getValues()
-                                .toArray());
+                        }, found_hs);
 
                 assertEquals("url_path is incorrect", "/", doc.getField(SolrFields.SOLR_URL_PATH).getValue());
 
