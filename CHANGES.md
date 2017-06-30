@@ -17,7 +17,7 @@
 * Default to storing text in the MDX rather than stripping it.
 * Attempt to improve link extraction via MDX  [#16](https://github.com/ukwa/webarchive-discovery/issues/16)
 * Switch to Java 7 (required by Tika > 1.10) [#69](https://github.com/ukwa/webarchive-discovery/issues/69)
-* Updated to Tika 1.15, Solr 5.5.4, Nanite 1.3.1-90.
+* Updated to Tika 1.15, Solr 5.5.4, Nanite 1.3.1-90, OpenWayback 2.3.2.
 * Deprecated usage of collapse-by-hash mode (i.e. use `use_hash_url_id=false` now) as using updates in this way scales poorly for us.
 * Store host in surt form, and the url path and the status code [#81](https://github.com/ukwa/webarchive-discovery/issues/81)
 * Switched to loading test resources via the classpath [#54](https://github.com/ukwa/webarchive-discovery/issues/54)
