@@ -46,6 +46,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 	private WARCIndexer windex;
 
 	private int numShards = 1;
+    private int numReducers = 10;
 	private Config config;
 
 	public WARCIndexerMapper() {
@@ -97,6 +98,13 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 			// Set up sharding:
 			numShards = config.getInt(SolrWebServer.NUM_SHARDS);
+
+            // Get the number of reducers:
+            try {
+                numReducers = config.getInt("warc.hadoop.num_reducers");
+            } catch (NumberFormatException n) {
+                numReducers = 10;
+            }
 
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
@@ -184,10 +192,12 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		// Pass to reduce stage if successful:
 		if (wsolr != null) {
 
-            // Use a random assignment:
-            int iKey = (int) (Math.round(Math.random() * numShards));
-            IntWritable oKey = new IntWritable(iKey);
+            // Use a random assignment per shard:
+            // int iKey = (int) (Math.round(Math.random() * numShards));
+            // Use a random assignment per reducer:
+            int iKey = (int) (Math.round(Math.random() * numReducers));
 
+            IntWritable oKey = new IntWritable(iKey);
 			output.collect(oKey, wsolr);
 
 		}
