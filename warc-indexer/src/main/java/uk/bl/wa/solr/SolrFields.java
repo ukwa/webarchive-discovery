@@ -51,7 +51,7 @@ public interface SolrFields {
 	
 	public static final String SOLR_HOST = "host";
 	public static final String DOMAIN = "domain";
-    public static final String SOLR_DOMAIN_SURT = "domain_surt";
+    public static final String SOLR_HOST_SURT = "host_surt";
 	public static final String PUBLIC_SUFFIX = "public_suffix";
 
 	public static final String HASH = "hash";
@@ -67,8 +67,8 @@ public interface SolrFields {
 	
 	public static final String SOLR_LINKS = "links";
 	public static final String SOLR_LINKS_HOSTS = "links_hosts";
+    public static final String SOLR_LINKS_HOSTS_SURTS = "links_hosts_surts";
 	public static final String SOLR_LINKS_DOMAINS = "links_domains";
-    public static final String SOLR_LINKS_DOMAINS_SURTS = "links_domains_surts";
     public static final String SOLR_LINKS_PUBLIC_SUFFIXES = "links_public_suffixes";
 	
 	public static final String CONTENT_LANGUAGE = "content_language";

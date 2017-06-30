@@ -38,14 +38,14 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.SURT;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
-
-import com.typesafe.config.Config;
 
 /**
  * @author anj
@@ -150,7 +150,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 				}
 
 				for(String hostLevel : uniqueHostLevels) {
-                    solr.addField(SolrFields.SOLR_LINKS_DOMAINS_SURTS, SURT.toSURT(hostLevel));
+                    solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS,
+                            SURT.toSURT(hostLevel));
                 }
 			}
 			if( this.extractLinkDomains ) {

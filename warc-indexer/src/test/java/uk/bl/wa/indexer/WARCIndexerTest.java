@@ -254,13 +254,15 @@ public class WARCIndexerTest {
                                 "(org,openlibrary,",
                                 "(org,sloan,"
                         },
-                        doc.getField(SolrFields.SOLR_LINKS_DOMAINS_SURTS).getValues().toArray());
+                        doc.getField(SolrFields.SOLR_LINKS_HOSTS_SURTS)
+                                .getValues().toArray());
 
                 assertArrayEquals("domain_surt is incorrect", new String[]{
                                 "(org,",
                                 "(org,archive,"
                         },
-                        doc.getField(SolrFields.SOLR_DOMAIN_SURT).getValues().toArray());
+                        doc.getField(SolrFields.SOLR_HOST_SURT).getValues()
+                                .toArray());
 
                 assertEquals("url_path is incorrect", "/", doc.getField(SolrFields.SOLR_URL_PATH).getValue());
 

@@ -54,12 +54,12 @@
         <field name="crawl_years" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="crawl_year" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="description" type="text_general" indexed="true" stored="true"/>
-        <field name="domain_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="domain" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="elements_used" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="generator" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="hash" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="host" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="host_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
         <field name='image_colours' type='string' indexed='true' stored='true' multiValued='true'/>
         <field name='image_dominant_colour' type='string' indexed='true' stored='true' multiValued='false'/>
@@ -72,9 +72,9 @@
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="links_domains_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_domains" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="links_hosts_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_norm" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_public_suffixes" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links" type="string" indexed="true" docValues="true" multiValued="true"/>

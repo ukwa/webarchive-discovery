@@ -103,7 +103,8 @@ public class HTMLAnalyserTest {
 		// Check links_domains_surts
         String[] linksDomainsSurts = new String[]{"(org,", "(org,example,"};
         assertArrayEquals("The SURT domains should be correct", linksDomainsSurts,
-                solr.getField(SolrFields.SOLR_LINKS_DOMAINS_SURTS).getValues().toArray());
+                solr.getField(SolrFields.SOLR_LINKS_HOSTS_SURTS).getValues()
+                        .toArray());
 
     }
 }

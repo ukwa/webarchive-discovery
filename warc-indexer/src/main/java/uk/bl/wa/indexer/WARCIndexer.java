@@ -368,10 +368,10 @@ public class WARCIndexer {
 				host = canon.urlStringToKey(host).replace("/", "");
 			solr.setField( SolrFields.SOLR_HOST, host );
 
-            solr.removeField(SolrFields.SOLR_DOMAIN_SURT);
+            solr.removeField(SolrFields.SOLR_HOST_SURT);
 
 			for(String level : LinkExtractor.allLevels(host)){
-                solr.addField(SolrFields.SOLR_DOMAIN_SURT, SURT.toSURT(level));
+                solr.addField(SolrFields.SOLR_HOST_SURT, SURT.toSURT(level));
             }
 
             final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);
