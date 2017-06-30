@@ -87,15 +87,15 @@
         <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
         <field name="publication_year" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="record_type" type="string" indexed="false" stored="true" multiValued="false"/>
-        <field name="referrer_url" type="string" indexed="false" stored="true" multiValued="false"/>
+        <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+        <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="resourcename" type="text_general" indexed="true" stored="true"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="source_file_offset" type="tint" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
-        <field name="status_code" type="int" indexed="false" stored="true" docValues="true" />
+        <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
