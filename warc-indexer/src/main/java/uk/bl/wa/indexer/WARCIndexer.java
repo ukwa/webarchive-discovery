@@ -550,7 +550,7 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			if (ant != null) {
 				try {
-                    ant.applyAnnotations(URI.create(url.getURI()),
+                    ant.applyAnnotations(URI.create(url.getEscapedURI()),
                             solr.getSolrDocument());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
