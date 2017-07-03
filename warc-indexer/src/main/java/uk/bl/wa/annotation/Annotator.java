@@ -187,7 +187,7 @@ public class Annotator {
 
         // Also use the prefix-based whitelist to note Open Access records:
         if (this.openAccessSurts != null) {
-            LOG.info("Attempting to apply " + this.openAccessSurts.size()
+            LOG.debug("Attempting to apply " + this.openAccessSurts.size()
                     + " OA Surts to " + uri);
             String surt = SurtPrefixSet
                     .getCandidateSurt(
