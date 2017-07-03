@@ -30,17 +30,15 @@ package uk.bl.wa.extract;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 import org.apache.tika.metadata.Metadata;
 
-import uk.bl.wa.parsers.HtmlFeatureParser;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.net.InternetDomainName;
+
+import uk.bl.wa.parsers.HtmlFeatureParser;
 
 /**
  * @author AnJackson
@@ -187,6 +185,11 @@ public class LinkExtractor {
             domainName = InternetDomainName.from(host);
         }
         catch(NullPointerException e) {
+            return null;
+        }
+        catch (IllegalArgumentException e) {
+            // This happens for IP-based hosts, see
+            // https://github.com/ukwa/webarchive-discovery/issues/90
             return null;
         }
 

@@ -282,4 +282,46 @@ public class WARCIndexerTest {
 
         assertTrue("Test record not found", foundRecord);
     }
+
+    @Test
+    public void testIPHost() throws MalformedURLException, IOException,
+            NoSuchAlgorithmException {
+        // Instanciate the indexer:
+        Config config = ConfigFactory.load();
+        List<String> r_i = new ArrayList<String>();
+        r_i.add("2");
+        r_i.add("4");
+        config = this.modifyValueAt(config,
+                "warc.index.extract.response_include", r_i);
+        WARCIndexer windex = new WARCIndexer(config);
+        windex.setCheckSolrForDuplicates(false);
+
+        String inputFile = this.getClass().getClassLoader()
+                .getResource("ip-host-testcase.warc.gz").getPath();
+        System.out.println("ArchiveUtils.isGZipped: "
+                + ArchiveUtils.isGzipped(new FileInputStream(inputFile)));
+        ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
+        Iterator<ArchiveRecord> ir = reader.iterator();
+        int recordCount = 0;
+        int nullCount = 0;
+
+        // Iterate though each record in the WARC file
+        while (ir.hasNext()) {
+            ArchiveRecord rec = ir.next();
+            SolrRecord doc = windex.extract("", rec);
+            recordCount++;
+            if (doc == null) {
+                nullCount++;
+            } else {
+                // System.out.println("DOC: " + doc.toXml());
+            }
+        }
+
+        System.out.println("recordCount: " + recordCount);
+        assertEquals(6, recordCount);
+
+        System.out.println("nullCount: " + nullCount);
+        assertEquals(5, nullCount);
+    }
+
 }

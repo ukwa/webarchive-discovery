@@ -75,6 +75,7 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import com.google.common.collect.ImmutableList;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
@@ -351,14 +352,19 @@ public class WARCIndexer {
 			// Record the host (an canonicalised), the domain
 			// and the public suffix:
 			String host = url.getHost();
+            log.info("HOST: " + host);
 			if (CANONICALISE_HOST)
 				host = canon.urlStringToKey(host).replace("/", "");
 			solr.setField( SolrFields.SOLR_HOST, host );
 
+            // Add the SURT host
             solr.removeField(SolrFields.SOLR_HOST_SURT);
-
-			for(String level : LinkExtractor.allLevels(host)){
-                solr.addField(SolrFields.SOLR_HOST_SURT, SURT.toSURT(level));
+            ImmutableList<String> levels = LinkExtractor.allLevels(host);
+            if (levels != null) {
+                for (String level : levels) {
+                    solr.addField(SolrFields.SOLR_HOST_SURT,
+                            SURT.toSURT(level));
+                }
             }
 
             final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);
