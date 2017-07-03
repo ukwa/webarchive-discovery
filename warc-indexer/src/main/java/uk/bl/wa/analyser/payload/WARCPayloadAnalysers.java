@@ -36,15 +36,15 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.UsableURI;
 import org.archive.url.UsableURIFactory;
 
+import com.google.common.base.Splitter;
+import com.typesafe.config.Config;
+
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.TikaExtractor;
 import uk.bl.wa.util.Instrument;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
-
-import com.google.common.base.Splitter;
-import com.typesafe.config.Config;
 
 
 /**
@@ -209,7 +209,8 @@ public class WARCPayloadAnalysers {
 				log.debug("No specific additional parser for: "+mime);
 			}
 		} catch( Exception i ) {
-			log.error( i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@" + header.getOffset() );
+            log.error(i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@"
+                    + header.getOffset(), i);
 		}
         Instrument.timeRel("WARCIndexer.extract#analyzetikainput",
                            "WARCPayloadAnalyzers.analyze#total", start);
