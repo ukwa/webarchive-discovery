@@ -149,6 +149,7 @@ public class WARCMDXGeneratorIntegrationTest {
 		log.info("Setting up job config...");
 		JobConf jobConf = this.mrCluster.createJobConf();
         jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 1);
+        jobConf.set("mapred.child.java.opts", "-Xmx512m");
 		wir.createJobConf(jobConf, args);
 		log.info("Running job...");
 		JobClient.runJob(jobConf);

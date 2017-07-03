@@ -57,7 +57,6 @@ public abstract class MapReduceTestBaseClass {
         System.setProperty("hadoop.log.dir", "target/test-logs");
         System.setProperty("javax.xml.parsers.SAXParserFactory",
                 "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
-
         //
         Configuration conf = new Configuration();
         dfsCluster = new MiniDFSCluster(conf, 1, true, null);
