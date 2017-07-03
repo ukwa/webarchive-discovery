@@ -182,6 +182,26 @@
          	   <artifactId>guava</artifactId>
          	   <groupId>com.google.guava</groupId>
          	</exclusion>
+         	<exclusion>
+         	   <groupId>org.apache.cxf</groupId>
+         	   <artifactId>cxf-rt-bindings-http</artifactId>
+         	</exclusion>
+         	<exclusion>
+         	   <groupId>org.apache.cxf</groupId>
+         	   <artifactId>cxf-rt-frontend-simple</artifactId>
+         	</exclusion>
+         	<exclusion>
+         	   <groupId>org.apache.cxf</groupId>
+         	   <artifactId>cxf-rt-transports-http</artifactId>
+         	</exclusion>
+         	<exclusion>
+         	   <groupId>org.apache.cxf</groupId>
+         	   <artifactId>cxf-api</artifactId>
+         	</exclusion>
+         	<exclusion>
+         	   <groupId>org.apache.cxf</groupId>
+         	   <artifactId>cxf-rt-bindings-soap</artifactId>
+         	</exclusion>
          </exclusions>
       </dependency>
       <dependency>
