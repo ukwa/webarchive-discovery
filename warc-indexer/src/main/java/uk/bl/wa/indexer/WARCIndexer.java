@@ -28,9 +28,8 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.URL;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -64,6 +63,8 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.io.arc.ARCRecord;
 import org.archive.io.warc.WARCRecord;
 import org.archive.url.SURT;
+import org.archive.url.UsableURI;
+import org.archive.url.UsableURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
@@ -330,23 +331,9 @@ public class WARCIndexer {
 					parseExtension(resourceName));
 			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
 			// Trac #2271: replace string-splitting with URI-based methods.
-			URL url = null;
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
-			try {
-				url = new URL(fullUrl);
-			} catch (MalformedURLException e) {
-				// Some URIs causing problem, so try the canonicalizer; in which
-				// case try with the full URL.
-				log.error(e.getMessage());
-				try {
-					url = new URL("http://" + canon.urlStringToKey(fullUrl));
-				} catch (Exception e2) {
-					// If this fails, abandon all hope.
-					log.error(e2.getMessage());
-					return null;
-				}
-			}
+            UsableURI url = UsableURIFactory.getInstance(fullUrl);
 
             solr.setField(SolrFields.SOLR_URL_PATH, url.getPath());
 
@@ -557,7 +544,8 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			if (ant != null) {
 				try {
-					ant.applyAnnotations(url.toURI(), solr.getSolrDocument());
+                    ant.applyAnnotations(URI.create(url.getURI()),
+                            solr.getSolrDocument());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
 					log.error("Failed to annotate " + url + " : " + e);
