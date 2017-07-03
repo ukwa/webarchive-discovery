@@ -74,9 +74,15 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
             return;
         }
         final long start = System.nanoTime();
-        LanguageResult li = ld.detect(text);
-		if( li != null ) {
-            solr.addField(SolrFields.CONTENT_LANGUAGE, li.getLanguage());
+        try {
+            LanguageResult li = ld.detect(text);
+            if (li != null) {
+                solr.addField(SolrFields.CONTENT_LANGUAGE, li.getLanguage());
+            }
+        } catch (IllegalArgumentException e) {
+            log.error("Exception when determining language of this item: "
+                    + e.getMessage(), e);
+            solr.addField(SolrFields.PARSE_ERROR, e.getMessage());
         }
         Instrument.timeRel("TextAnalyzers#total", "LanguageAnalyzer#total", start);
 	}
