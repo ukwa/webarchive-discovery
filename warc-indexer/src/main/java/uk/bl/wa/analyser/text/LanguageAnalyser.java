@@ -82,7 +82,7 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
         } catch (IllegalArgumentException e) {
             log.error("Exception when determining language of this item: "
                     + e.getMessage(), e);
-            solr.addField(SolrFields.PARSE_ERROR, e.getMessage());
+            solr.addParseException(e);
         }
         Instrument.timeRel("TextAnalyzers#total", "LanguageAnalyzer#total", start);
 	}

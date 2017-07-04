@@ -260,7 +260,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                                "TikaExtractor.extract#parse", parseStart);
 
 			// If there was a parse error, report it:
-			solr.addField( SolrFields.PARSE_ERROR, metadata.get( TikaExtractor.TIKA_PARSE_EXCEPTION ) );
+            solr.addParseException(
+                    metadata.get(TikaExtractor.TIKA_PARSE_EXCEPTION),
+                    new RuntimeException("Exception from Tika"));
 
             final long extractStart = System.nanoTime();
 			// Copy the body text, forcing a UTF-8 encoding:

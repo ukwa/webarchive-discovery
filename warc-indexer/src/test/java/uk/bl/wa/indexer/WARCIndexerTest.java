@@ -32,12 +32,14 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
+import org.apache.commons.httpclient.URIException;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -324,4 +326,19 @@ public class WARCIndexerTest {
         assertEquals(5, nullCount);
     }
 
+    @Test
+    public void testParseURL() throws NoSuchAlgorithmException, URIException {
+        WARCIndexer windex = new WARCIndexer();
+        String[] testUrls = {
+                "http://www.bbc.co.uk/news/business/market_data/chart?chart_primary_ticker=DJSE:INDU&chart_time_period=1_day&canvas_colour=0",
+                "http://www.argos.co.uk/webapp/wcs/stores/servlet/Browse?storeId=10151&langId=110&catalogId=10001&mRR=true&c_1=1|category_ro",
+                "http://www.bbc.co.uk/news/business/market_data/chart?chart_primary_ticker=MISCAM:GOLDAM&chart_time_period=1_month&canvas_co",
+                "http://www.bbc.co.uk/news/business/market_data/chart?chart_primary_ticker=FX^GBP:ILS&chart_time_period=1_month&canvas_colour" };
+        for (String urlString : testUrls) {
+            SolrRecord solr = new SolrRecord();
+            URI test1 = windex.parseURL(solr, urlString);
+            assertEquals(1,
+                    solr.getField(SolrFields.PUBLIC_SUFFIX).getValueCount());
+        }
+    }
 }

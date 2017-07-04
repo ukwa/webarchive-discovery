@@ -47,6 +47,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
+import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -334,42 +335,9 @@ public class WARCIndexer {
 			// Trac #2271: replace string-splitting with URI-based methods.
 			if( fullUrl.length() > 2000 )
 				fullUrl = fullUrl.substring( 0, 2000 );
-            UsableURI url = UsableURIFactory.getInstance(fullUrl);
 
-            solr.setField(SolrFields.SOLR_URL_PATH, url.getPath());
-
-            // Spot 'slash pages':
-			if (url.getPath().equals("/") || url.getPath().equals("")
-					|| url.getPath().matches("/index\\.[a-z]+$")) {
-				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_SLASHPAGE );
-			// Spot 'robots.txt':
-			} else if (url.getPath().equalsIgnoreCase("/robots.txt")) {
-				solr.setField( SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_ROBOTS_TXT );
-			} else {
-				solr.setField(SolrFields.SOLR_URL_TYPE,
-						SolrFields.SOLR_URL_TYPE_NORMAL);
-			}
-			// Record the host (an canonicalised), the domain
-			// and the public suffix:
-			String host = url.getHost();
-            log.info("HOST: " + host);
-			if (CANONICALISE_HOST)
-				host = canon.urlStringToKey(host).replace("/", "");
-			solr.setField( SolrFields.SOLR_HOST, host );
-
-            // Add the SURT host
-            solr.removeField(SolrFields.SOLR_HOST_SURT);
-            ImmutableList<String> levels = LinkExtractor.allLevels(host);
-            if (levels != null) {
-                for (String level : levels) {
-                    solr.addField(SolrFields.SOLR_HOST_SURT,
-                            SURT.toSURT(level));
-                }
-            }
-
-            final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);
-            solr.setField( SolrFields.DOMAIN, domain);
-			solr.setField( SolrFields.PUBLIC_SUFFIX, LinkExtractor.extractPublicSuffixFromHost( host ) );
+            // Add URL-based fields:
+            URI saneURI = parseURL(solr, fullUrl);
 
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
@@ -550,11 +518,11 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			if (ant != null) {
 				try {
-                    ant.applyAnnotations(URI.create(url.getEscapedURI()),
+                    ant.applyAnnotations(saneURI,
                             solr.getSolrDocument());
 				} catch (URISyntaxException e) {
 					e.printStackTrace();
-					log.error("Failed to annotate " + url + " : " + e);
+					log.error("Failed to annotate " + saneURI + " : " + e);
 				}
 			}
 
@@ -605,6 +573,62 @@ public class WARCIndexer {
                            "WARCIndexer.extract#total", start);
         return solr;
 	}
+
+    /**
+     * Perform URL parsing and manipulation
+     * 
+     * @return
+     * 
+     * @throws URIException
+     */
+    protected URI parseURL(SolrRecord solr, String fullUrl)
+            throws URIException {
+        UsableURI url = UsableURIFactory.getInstance(fullUrl);
+
+        solr.setField(SolrFields.SOLR_URL_PATH, url.getPath());
+
+        // Spot 'slash pages':
+        if (url.getPath().equals("/") || url.getPath().equals("")
+                || url.getPath().matches("/index\\.[a-z]+$")) {
+            solr.setField(SolrFields.SOLR_URL_TYPE,
+                    SolrFields.SOLR_URL_TYPE_SLASHPAGE);
+            // Spot 'robots.txt':
+        } else if (url.getPath().equalsIgnoreCase("/robots.txt")) {
+            solr.setField(SolrFields.SOLR_URL_TYPE,
+                    SolrFields.SOLR_URL_TYPE_ROBOTS_TXT);
+        } else {
+            solr.setField(SolrFields.SOLR_URL_TYPE,
+                    SolrFields.SOLR_URL_TYPE_NORMAL);
+        }
+        // Record the host (an canonicalised), the domain
+        // and the public suffix:
+        String host = url.getHost();
+        if (CANONICALISE_HOST)
+            host = canon.urlStringToKey(host).replace("/", "");
+        solr.setField(SolrFields.SOLR_HOST, host);
+
+        // Add the SURT host
+        solr.removeField(SolrFields.SOLR_HOST_SURT);
+        ImmutableList<String> levels = LinkExtractor.allLevels(host);
+        if (levels != null) {
+            for (String level : levels) {
+                solr.addField(SolrFields.SOLR_HOST_SURT, SURT.toSURT(level));
+            }
+        }
+
+        final String domain = LinkExtractor.extractPrivateSuffixFromHost(host);
+        solr.setField(SolrFields.DOMAIN, domain);
+        solr.setField(SolrFields.PUBLIC_SUFFIX,
+                LinkExtractor.extractPublicSuffixFromHost(host));
+
+        // Force correct escaping:
+        org.apache.commons.httpclient.URI tempUri = new org.apache.commons.httpclient
+                .URI(url.getEscapedURI(),
+                false);
+
+        return URI.create(tempUri.getEscapedURI());
+
+    }
 
 	/**
 	 * @param firstDate
