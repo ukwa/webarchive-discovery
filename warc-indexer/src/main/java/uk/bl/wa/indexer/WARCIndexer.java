@@ -294,18 +294,28 @@ public class WARCIndexer {
 
 			if( header.getUrl() == null )
 				return null;
-			String fullUrl = header.getUrl();
+
+            // Get the URL:
+			String targetUrl = header.getUrl();
+
+            // Strip down very long URLs to avoid
+            // "org.apache.commons.httpclient.URIException: Created (escaped)
+            // uuri > 2083"
+            // Trac #2271: replace string-splitting with URI-based methods.
+            if (targetUrl.length() > 2000)
+                targetUrl = targetUrl.substring(0, 2000);
+
 			log.debug("Current heap usage: "
 					+ FileUtils.byteCountToDisplaySize(Runtime.getRuntime()
 							.totalMemory()));
-			log.debug("Processing " + fullUrl + " from " + archiveName);
+			log.debug("Processing " + targetUrl + " from " + archiveName);
 
 			// Check the filters:
-			if( this.checkProtocol( fullUrl ) == false )
+			if( this.checkProtocol( targetUrl ) == false )
 				return null;
-			if( this.checkUrl( fullUrl ) == false )
+			if( this.checkUrl( targetUrl ) == false )
 				return null;
-			if( this.checkExclusionFilter( fullUrl ) == false )
+			if( this.checkExclusionFilter( targetUrl ) == false )
 				return null;
 
 			// --- Basic headers ---
@@ -314,30 +324,27 @@ public class WARCIndexer {
 			solr.setField(SolrFields.SOURCE_FILE, archiveName);
 			solr.setField(SolrFields.SOURCE_FILE_OFFSET,
 					"" + header.getOffset());
-			byte[] url_md5digest = md5.digest(fullUrl.getBytes("UTF-8"));
+            byte[] url_md5digest = md5
+                    .digest(header.getUrl().getBytes("UTF-8"));
 			// String url_base64 =
 			// Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
-			solr.setField( SolrFields.SOLR_URL, fullUrl );
+            solr.setField(SolrFields.SOLR_URL, header.getUrl());
             if (addNormalisedURL) {
-                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(fullUrl) );
+                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(targetUrl) );
             }
 
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
 			long content_length = header.getLength();
 
 			// Also pull out the file extension, if any:
-			String resourceName = parseResourceName(fullUrl);
+			String resourceName = parseResourceName(targetUrl);
 			solr.addField(SolrFields.RESOURCE_NAME, resourceName);
 			solr.addField(SolrFields.CONTENT_TYPE_EXT,
 					parseExtension(resourceName));
-			// Strip down very long URLs to avoid "org.apache.commons.httpclient.URIException: Created (escaped) uuri > 2083"
-			// Trac #2271: replace string-splitting with URI-based methods.
-			if( fullUrl.length() > 2000 )
-				fullUrl = fullUrl.substring( 0, 2000 );
 
             // Add URL-based fields:
-            URI saneURI = parseURL(solr, fullUrl);
+            URI saneURI = parseURL(solr, targetUrl);
 
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
@@ -345,7 +352,7 @@ public class WARCIndexer {
 			InputStream tikainput = null;
 
 			// Only parse HTTP headers for HTTP URIs
-			if( fullUrl.startsWith( "http" ) ) {
+			if( targetUrl.startsWith( "http" ) ) {
 				// Parse HTTP headers:
 				String statusCode = null;
 				if( record instanceof WARCRecord ) {
@@ -503,7 +510,7 @@ public class WARCIndexer {
 					revisited.setField(SolrFields.CRAWL_YEAR,
 						extractYear(header.getDate()));
 				}
-				revisited.setField(SolrFields.SOLR_URL, fullUrl);
+				revisited.setField(SolrFields.SOLR_URL, targetUrl);
 				revisited.setField(SolrFields.WAYBACK_DATE, waybackDate);
 				String payloadDigest = (String) header
 						.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST);

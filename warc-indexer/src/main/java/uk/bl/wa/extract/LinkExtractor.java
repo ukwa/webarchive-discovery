@@ -36,6 +36,7 @@ import java.util.Set;
 import org.apache.tika.metadata.Metadata;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.common.net.InternetDomainName;
 
 import uk.bl.wa.parsers.HtmlFeatureParser;
@@ -179,21 +180,22 @@ public class LinkExtractor {
      * @return An ImmutableList of Strings, one element per host level
      */
     public static ImmutableList<String> allLevels(String host) {
-        InternetDomainName domainName;
+        // Default to empty list
+        Builder<String> result = ImmutableList.builder();
 
         try {
-            domainName = InternetDomainName.from(host);
+            InternetDomainName domainName = InternetDomainName.from(host);
+            result = parentLevels(domainName);
         }
         catch(NullPointerException e) {
-            return null;
+            // ignore errors of this nature
         }
         catch (IllegalArgumentException e) {
             // This happens for IP-based hosts, see
             // https://github.com/ukwa/webarchive-discovery/issues/90
-            return null;
         }
 
-        return parentLevels(domainName).build();
+        return result.build();
     }
 
     private static ImmutableList.Builder<String> parentLevels(InternetDomainName internetDomainName) {
