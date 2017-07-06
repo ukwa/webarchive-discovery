@@ -182,26 +182,6 @@
          	   <artifactId>guava</artifactId>
          	   <groupId>com.google.guava</groupId>
          	</exclusion>
-         	<exclusion>
-         	   <groupId>org.apache.cxf</groupId>
-         	   <artifactId>cxf-rt-bindings-http</artifactId>
-         	</exclusion>
-         	<exclusion>
-         	   <groupId>org.apache.cxf</groupId>
-         	   <artifactId>cxf-rt-frontend-simple</artifactId>
-         	</exclusion>
-         	<exclusion>
-         	   <groupId>org.apache.cxf</groupId>
-         	   <artifactId>cxf-rt-transports-http</artifactId>
-         	</exclusion>
-         	<exclusion>
-         	   <groupId>org.apache.cxf</groupId>
-         	   <artifactId>cxf-api</artifactId>
-         	</exclusion>
-         	<exclusion>
-         	   <groupId>org.apache.cxf</groupId>
-         	   <artifactId>cxf-rt-bindings-soap</artifactId>
-         	</exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -319,6 +299,41 @@
          <groupId>jdom</groupId>
          <artifactId>jdom</artifactId>
          <version>1.1</version>
+      </dependency>
+      <dependency>
+         <groupId>org.netpreserve.openwayback</groupId>
+         <artifactId>openwayback-core</artifactId>
+         <version>2.3.2</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.netpreserve.commons</groupId>
+               <artifactId>commons-web</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>com.sleepycat</groupId>
+               <artifactId>je</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-core</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-web</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-webmvc</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-beans</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.springframework</groupId>
+               <artifactId>spring-context</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
 	</dependencies>
 </project>
