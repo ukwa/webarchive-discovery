@@ -62,10 +62,10 @@
         <field name="host" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="host_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
-        <field name='image_colours' type='string' indexed='true' stored='true' multiValued='true'/>
-        <field name='image_dominant_colour' type='string' indexed='true' stored='true' multiValued='false'/>
-        <field name='image_faces_count' type='tint' indexed='true' stored='true' multiValued='false'/>
-        <field name='image_faces' type='string' indexed='false' stored='true' multiValued='true'/>
+        <field name="image_colours" type="string" indexed="true" stored="true" multiValued="true"/>
+        <field name="image_dominant_colour" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_faces_count" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_faces" type="string" indexed="false" stored="true" multiValued="true"/>
         <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false"/>
