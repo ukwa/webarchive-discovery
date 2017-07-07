@@ -122,6 +122,7 @@ public class WARCIndexerEmbeddedSolrTest {
         document.addField("id", "1");
 		document.addField("title", "my title");
         document.addField( "url", url );
+		document.addField("source_file", "source_file");
 
         System.out.println("Adding document: "+document);
         server.add(document);
@@ -152,11 +153,12 @@ public class WARCIndexerEmbeddedSolrTest {
 		// Prevent the indexer from attempting to query Solr:
 		windex.setCheckSolrForDuplicates(false);
 		
-		ArchiveReader reader = ArchiveReaderFactory.get( new File(testWarc) );
+		File inFile = new File(testWarc);
+		ArchiveReader reader = ArchiveReaderFactory.get(inFile);
 		Iterator<ArchiveRecord> ir = reader.iterator();
 		while( ir.hasNext() ) {
 			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract("",rec);
+			SolrRecord doc = windex.extract(inFile.getName(), rec);
 			if( doc != null ) {
 				//System.out.println(doc.toXml());
 				//break;

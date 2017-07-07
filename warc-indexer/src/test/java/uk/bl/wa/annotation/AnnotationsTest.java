@@ -76,6 +76,13 @@ public class AnnotationsTest {
 						new UriCollection("Wikipedia",
 								new String[] { "Wikipedia" },
 								new String[] { "Crowdsourcing" }));
+		//
+		ann.getCollections()
+				.get("source_file_prefix")
+				.put("flashfrozen-",
+						new UriCollection("Wikipedia", new String[] {
+								"Wikipedia", "Wikipedia|Main Site" },
+								new String[] { "Crowdsourcing" }));
 		// Date ranges:
 		ann.getCollectionDateRanges().put("Wikipedia",
 				new DateRange(null, null));

@@ -63,12 +63,13 @@ public class AnnotatorTest {
 
 	@Test
 	public void testApplyAnnotations() throws URIException, URISyntaxException {
-        innerTestApplyAnnotations("http://en.wikipedia.org/wiki/Mona_Lisa", 4);
-        innerTestApplyAnnotations("http://en.wikipedia.org/", 3);
-        innerTestApplyAnnotations("http://www.wikipedia.org/", 2);
+		innerTestApplyAnnotations("http://en.wikipedia.org/wiki/Mona_Lisa", "", 4);
+		innerTestApplyAnnotations("http://en.wikipedia.org/", "", 3);
+		innerTestApplyAnnotations("http://www.wikipedia.org/", "", 2);
+		innerTestApplyAnnotations("http://www.wikipedia.org/", "flashfrozen-jwat-recompressed.warc.gz", 3);
 	}
 
-	private void innerTestApplyAnnotations(String uriString, int expected)
+	private void innerTestApplyAnnotations(String uriString, String sourceFile, int expected)
 			throws URIException, URISyntaxException {
 		//
 		URI uri = URI.create(uriString);
@@ -88,6 +89,7 @@ public class AnnotatorTest {
 		Date d = calendar.getTime();
 		solr.setField(SolrFields.CRAWL_DATE, WARCIndexer.formatter.format(d));
 		solr.setField(SolrFields.SOLR_URL, uri);
+		solr.setField(SolrFields.SOURCE_FILE, sourceFile);
 		//
 		annotator.applyAnnotations(uri, solr);
 		Annotator.prettyPrint(System.out, solr);

@@ -41,6 +41,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.Log;
@@ -175,6 +177,20 @@ public class Annotator {
             }
 			if( host.equals( domain ) || host.endsWith( "." + domain ) ) {
 				updateCollections(subdomains.get(key), solr, crawl_dates);
+			}
+		}
+		// "All source_file that match this source_file_prefix"
+		Pattern pattern;
+		Matcher matcher;
+		String sourceFile = (String) solr.getField(SolrFields.SOURCE_FILE).getValue();
+		HashMap<String, UriCollection> sourceFilePrefix = this.annotations
+				.getCollections().get("source_file_prefix");
+		for (String key : sourceFilePrefix.keySet()) {
+			LOG.debug("Applying source_file_prefix annotations for: " + key);
+			pattern = Pattern.compile(key);
+			matcher = pattern.matcher(sourceFile);
+			while (matcher.find()) {
+				updateCollections(sourceFilePrefix.get(key), solr, crawl_dates);
 			}
 		}
 
