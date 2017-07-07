@@ -78,7 +78,7 @@ public class AnnotationsTest {
 								new String[] { "Crowdsourcing" }));
 		//
 		ann.getCollections()
-				.get("source_file_prefix")
+				.get("source_file_matches")
 				.put("flashfrozen-",
 						new UriCollection("Wikipedia", new String[] {
 								"Wikipedia", "Wikipedia|Main Site" },

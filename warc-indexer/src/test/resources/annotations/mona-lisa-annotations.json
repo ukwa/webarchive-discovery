@@ -23,7 +23,7 @@
     },
     "plus1" : {
     },
-    "source_file_prefix" : {
+    "source_file_matches" : {
       "flashfrozen-" : {
         "collection" : "Wikipedia",
         "collections" : [ "Wikipedia", "Wikipedia|Main Site" ],

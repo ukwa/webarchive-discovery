@@ -179,18 +179,18 @@ public class Annotator {
 				updateCollections(subdomains.get(key), solr, crawl_dates);
 			}
 		}
-		// "All source_file that match this source_file_prefix"
+		// "All source_file that match this source_file_matches"
 		Pattern pattern;
 		Matcher matcher;
 		String sourceFile = (String) solr.getField(SolrFields.SOURCE_FILE).getValue();
-		HashMap<String, UriCollection> sourceFilePrefix = this.annotations
-				.getCollections().get("source_file_prefix");
-		for (String key : sourceFilePrefix.keySet()) {
-			LOG.debug("Applying source_file_prefix annotations for: " + key);
+		HashMap<String, UriCollection> sourceFileMatches = this.annotations
+				.getCollections().get("source_file_matches");
+		for (String key : sourceFileMatches.keySet()) {
+			LOG.debug("Applying source_file_matches annotations for: " + key);
 			pattern = Pattern.compile(key);
 			matcher = pattern.matcher(sourceFile);
 			while (matcher.find()) {
-				updateCollections(sourceFilePrefix.get(key), solr, crawl_dates);
+				updateCollections(sourceFileMatches.get(key), solr, crawl_dates);
 			}
 		}
 

@@ -73,7 +73,7 @@ public class Annotations {
 		collections.put("plus1", new HashMap<String, UriCollection>());
 		collections.put("root", new HashMap<String, UriCollection>());
 		collections.put("subdomains", new HashMap<String, UriCollection>());
-		collections.put("source_file_prefix", new HashMap<String, UriCollection>());
+		collections.put("source_file_matches", new HashMap<String, UriCollection>());
 
 		// An the date ranges:
 		collectionDateRanges = new HashMap<String, DateRange>();
