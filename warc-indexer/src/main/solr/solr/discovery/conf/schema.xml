@@ -57,7 +57,8 @@
         <field name="domain" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="elements_used" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="generator" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="hash" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="hash" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="hashes" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="host" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="host_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
