@@ -23,6 +23,11 @@
 * Switched to loading test resources via the classpath [#54](https://github.com/ukwa/webarchive-discovery/issues/54)
 * Added an improved high-level `type` field intended to supersede `content_type_norm` [#82](https://github.com/ukwa/webarchive-discovery/issues/82)
 * Fixed bug where `application/xhtml+xml` was _not_ getting classified as `type:Web Page` and `content_type_norm:html` [#83](https://github.com/ukwa/webarchive-discovery/issues/83).
+* Switch date strings to integers where appropriate [#97](https://github.com/ukwa/webarchive-discovery/issues/97)
+* Use a single-valued primary `hash` field and move option of multiple values to `hashes` field [#95](https://github.com/ukwa/webarchive-discovery/issues/95)
+* Extend annotations mechanism to allow source file prefix as a scope [#96](https://github.com/ukwa/webarchive-discovery/pull/96)
+* And various minor bugfixes. See the [3.0.0 Release Milestone](https://github.com/ukwa/webarchive-discovery/milestone/6) for further details.
+
 
 
 2.1.0
