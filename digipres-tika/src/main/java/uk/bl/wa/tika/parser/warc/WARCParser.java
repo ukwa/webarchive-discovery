@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
@@ -51,7 +52,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 /**
- * JHOVE2 ISO9660 module.
+ * WARC Parsing Tika module
  * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  */

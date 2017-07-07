@@ -15,17 +15,19 @@ import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.arc.UncompressedARCReader;
 import org.archive.io.warc.UncompressedWARCReader;
 import org.archive.io.warc.WARCRecord;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 
 /**
+ * 
+ * ARC/WARC supporting extractor
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
