@@ -18,7 +18,7 @@
 
 <schema name="ukwa" version="1.6">
   <fields>
-        <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
+        <field name="id" type="string" indexed="true" stored="false" required="true" multiValued="false" docValues="true"/>
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
@@ -27,17 +27,17 @@
         <field name="access_terms" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="author" type="string" indexed="true" docValues="true"/>
         <field name="category" type="text_general" indexed="true" stored="true"/>
-        <field name="collections" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="collection" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="collections" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="comments" type="text_general" indexed="true" stored="true"/>
         <field name="content_encoding" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_ffb" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
         <field name="content_language" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="content_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="content_length" type="tint" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="content_metadata_ss" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
-        <field name="content_text_length" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="content_text_length" type="tint" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="content_type_droid" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_ext" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_full" type="string" indexed="true" docValues="true" multiValued="false"/>
@@ -48,7 +48,7 @@
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="content_type_version" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
-        <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+        <field name="crawl_date" type="tdate" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="crawl_year_month_day" type="int" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_year_month" type="int" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_years" type="int" indexed="true" docValues="true" multiValued="true"/>
@@ -101,9 +101,9 @@
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
         <field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="url_norm" type="string" indexed="true" stored="true" docValues="true"/>
-        <field name="url_path" type="string" indexed="true" stored="true" docValues="true"/>
-        <field name="url" type="string" indexed="true" stored="true" docValues="true"/>
+        <field name="url_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="url" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_type" type="text_general" indexed="true" stored="true"/>
         <field name="wayback_date" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="wct_agency" type="string" indexed="true" docValues="true" multiValued="false"/>
