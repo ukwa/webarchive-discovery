@@ -66,9 +66,9 @@
         <field name="image_dominant_colour" type="string" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces_count" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces" type="string" indexed="false" stored="true" multiValued="true"/>
-        <field name="image_height" type="tint" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_size" type="tint" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_width" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_height" type="tlong" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_size" type="tlong" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_width" type="tlong" indexed="true" stored="true" multiValued="false"/>
         <field name="keywords" type="text_general" indexed="true" stored="true"/>
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
@@ -94,7 +94,7 @@
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="source_file_offset" type="tint" indexed="true" stored="true" />
+        <field name="source_file_offset" type="tlong" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
         <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
