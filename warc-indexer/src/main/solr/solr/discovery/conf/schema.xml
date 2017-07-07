@@ -49,10 +49,10 @@
         <field name="content_type_version" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
         <field name="crawl_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
-        <field name="crawl_year_month_day" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="crawl_year_month" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="crawl_years" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="crawl_year" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="crawl_year_month_day" type="int" indexed="true" docValues="true" multiValued="false"/>
+        <field name="crawl_year_month" type="int" indexed="true" docValues="true" multiValued="false"/>
+        <field name="crawl_years" type="int" indexed="true" docValues="true" multiValued="true"/>
+        <field name="crawl_year" type="int" indexed="true" docValues="true" multiValued="false"/>
         <field name="description" type="text_general" indexed="true" stored="true"/>
         <field name="domain" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="elements_used" type="string" indexed="true" docValues="true" multiValued="true"/>
