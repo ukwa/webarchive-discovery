@@ -151,11 +151,13 @@ public class Annotator {
 		// String normd = canon.urlStringToKey(uri.toString());
 		String normd = uri.toString();
 		LOG.debug("Comparing with " + normd);
-		if (this.annotations.getCollections().get("resource").keySet()
-				.contains(normd)) {
-			LOG.debug("Applying resource-level annotations...");
-			updateCollections(this.annotations.getCollections().get("resource")
-					.get(normd), solr, crawl_dates);
+        if (this.annotations.getCollections().containsKey("resource")) {
+            if (this.annotations.getCollections().get("resource").keySet()
+                    .contains(normd)) {
+                LOG.debug("Applying resource-level annotations...");
+                updateCollections(this.annotations.getCollections()
+                        .get("resource").get(normd), solr, crawl_dates);
+            }
 		}
 		// "All URLs that start like this".
 		if (this.annotations.getCollections().get("root").keySet()
