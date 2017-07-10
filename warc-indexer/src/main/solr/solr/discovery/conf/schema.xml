@@ -105,7 +105,7 @@
         <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_type" type="text_general" indexed="true" stored="true"/>
-        <field name="wayback_date" type="long" indexed="true" docValues="true" multiValued="false"/>
+        <field name="wayback_date" type="long" indexed="false" stored="true" docValues="false" multiValued="false"/>
         <field name="wct_agency" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="wct_collections" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="wct_description" type="text_general" indexed="true" stored="true"/>

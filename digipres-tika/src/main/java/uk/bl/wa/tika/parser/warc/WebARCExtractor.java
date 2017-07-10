@@ -17,8 +17,8 @@ import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveRecord;
-import org.archive.io.arc.UncompressedARCReader;
-import org.archive.io.warc.UncompressedWARCReader;
+import org.archive.io.arc.ARCReaderFactory;
+import org.archive.io.warc.WARCReaderFactory;
 import org.archive.io.warc.WARCRecord;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -71,9 +71,9 @@ public class WebARCExtractor {
 		// ArchiveReaderFactory.get("name.arc", stream, true);
 		ArchiveReader ar = null;
 		if( isWARC ) {
-			ar = UncompressedWARCReader.get("name.warc", stream, true);
+            ar = WARCReaderFactory.get("dummy-name.warc", stream, true);
 		} else {
-			ar = UncompressedARCReader.get("name.arc", stream, true);
+            ar = ARCReaderFactory.get("dummy-name.arc", stream, true);
 		}
 
 		// Go through the records:
