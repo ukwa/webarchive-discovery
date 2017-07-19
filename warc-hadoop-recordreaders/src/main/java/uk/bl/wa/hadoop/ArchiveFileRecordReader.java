@@ -1,7 +1,9 @@
 package uk.bl.wa.hadoop;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataInputStream;
@@ -50,11 +52,21 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 		}
 		// get correct file system in case there are many (such as in EMR)
 		this.filesystem = FileSystem.get(this.paths[0].toUri(), conf);
-		// Log the paths:
+
+        // Log the paths and check for empty files:
+        List<Path> validPaths = new ArrayList<Path>();
 		for (Path p : this.paths) {
 			log.info("Processing path: " + p);
-			System.out.println("Processing path: " + p);
+            FileStatus s = this.filesystem.getFileStatus(p);
+            if (s.getLen() == 0) {
+                log.warn("Skipping empty file: " + p);
+            } else {
+                validPaths.add(p);
+            }
 		}
+        // Use this list instead:
+        this.paths = validPaths.toArray(this.paths);
+
 		// Queue up the iterator:
 		this.nextFile();
 	}
