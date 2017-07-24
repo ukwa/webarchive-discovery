@@ -142,7 +142,14 @@ public class LinkExtractor {
 		}
 		return extractPrivateSuffixFromHost(host);
 	}
-	
+
+    /**
+     * Attempt to parse out the private domain. Fall back on host if things go
+     * awry.
+     * 
+     * @param host
+     * @return
+     */
     public static String extractPrivateSuffixFromHost( String host ) {
 		if( host == null ) return null;
 		// Parse out the public suffix:
@@ -150,9 +157,12 @@ public class LinkExtractor {
 		try {
 			domainName = InternetDomainName.from(host);
 		} catch( Exception e ) {
-			return null;
+            return host;
 		}
 		InternetDomainName suffix = null;
+        // It appears the IDN class does not know about the various UK
+        // second-level domains.
+        // If it's a UK host, override the result by assuming three levels:
 		if( host.endsWith(".uk")) {
 			ImmutableList<String> parts = domainName.parts();
 			if( parts.size() >= 3 ) {
@@ -167,8 +177,11 @@ public class LinkExtractor {
 				suffix = domainName;
 			}
 		}
-		// Return a value:
-		if( suffix == null ) return null;
+
+        // If it all failed for some reason, fall back on the host value:
+        if (suffix == null)
+            suffix = domainName;
+
 		return suffix.toString();
     }
 	
