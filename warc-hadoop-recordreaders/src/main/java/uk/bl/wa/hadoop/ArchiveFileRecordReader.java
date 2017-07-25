@@ -65,7 +65,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
             }
 		}
         // Use this list instead:
-        this.paths = validPaths.toArray(this.paths);
+        this.paths = validPaths.toArray(new Path[0]);
 
 		// Queue up the iterator:
 		this.nextFile();
@@ -104,8 +104,12 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 
 	@Override
 	public float getProgress() throws IOException {
-		float progress = ( float ) datainputstream.getPos() / ( float ) this.status.getLen();
-		return progress;
+        if (datainputstream != null && this.status != null) {
+            return (float) datainputstream.getPos()
+                    / (float) this.status.getLen();
+        } else {
+            return 1.0f;
+        }
 	}
 
 	@Override
