@@ -315,7 +315,7 @@
 
         <fieldType name="ignored" stored="false" indexed="false" docValues="false" multiValued="true" class="solr.StrField" />
         <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
-        <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate"/>
+        <fieldType name="location" class="solr.LatLonPointSpatialField" docValues="true"/>
 
         <fieldType name="text_ga" class="solr.TextField" positionIncrementGap="100">
                 <analyzer> 
