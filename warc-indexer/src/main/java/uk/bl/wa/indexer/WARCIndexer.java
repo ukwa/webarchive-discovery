@@ -656,6 +656,8 @@ public class WARCIndexer {
 			if( statusCodeInt < 0 || statusCodeInt > 1000 )
 				throw new Exception( "Status code out of range: " + statusCodeInt );
 			// Get the other headers:
+			
+			solr.addField(SolrFields.HTTP_STATUS, Integer.toString(statusCodeInt));
 			for( Header h : httpHeaders ) {
 				// Get the type from the server
 				if (h.getName().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE)
