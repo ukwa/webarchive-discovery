@@ -115,6 +115,8 @@
         <field name="wct_target_id" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="wct_title" type="string" indexed="true" docValues="true"/>
         <field name="xml_root_ns" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="warc_key_id" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="warc_ip" type="string" indexed="true" docValues="true" multiValued="false"/>
         <!--:BL UKWA -->
 
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>

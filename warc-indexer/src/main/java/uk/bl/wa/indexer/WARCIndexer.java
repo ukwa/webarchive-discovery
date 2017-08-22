@@ -25,6 +25,8 @@ package uk.bl.wa.indexer;
  */
 
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_ID;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_IP;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -270,8 +272,8 @@ public class WARCIndexer {
 	 * @return
 	 * @throws IOException
 	 */
-	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {
-        final long start = System.nanoTime();
+	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {      
+	  final long start = System.nanoTime();
 		ArchiveRecordHeader header = record.getHeader();
 		SolrRecord solr = new SolrRecord(archiveName, header);
 		
@@ -284,8 +286,13 @@ public class WARCIndexer {
 					return null;
 				}
 				// Store WARC record type:
-				solr.setField(SolrFields.SOLR_RECORD_TYPE,
-						(String) header.getHeaderValue(HEADER_KEY_TYPE));
+				solr.setField(SolrFields.SOLR_RECORD_TYPE, (String) header.getHeaderValue(HEADER_KEY_TYPE));
+
+				//Store WARC-Record-ID
+				solr.setField(SolrFields.WARC_KEY_ID, (String) header.getHeaderValue(HEADER_KEY_ID));
+                solr.setField(SolrFields.WARC_IP, (String) header.getHeaderValue(HEADER_KEY_IP));
+				
+				
 			} else {
 				// else we're processing ARCs so nothing to filter and no
 				// revisits
@@ -659,7 +666,7 @@ public class WARCIndexer {
 			
 			solr.addField(SolrFields.HTTP_STATUS, Integer.toString(statusCodeInt));
 			for( Header h : httpHeaders ) {
-				// Get the type from the server
+			  // Get the type from the server
 				if (h.getName().equalsIgnoreCase(HttpHeaders.CONTENT_TYPE)
 						&& solr.getField(SolrFields.CONTENT_TYPE_SERVED) == null) {
 					String servedType = h.getValue();

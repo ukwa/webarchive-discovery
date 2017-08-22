@@ -96,6 +96,10 @@ public interface SolrFields {
 	
 	public static final String SOLR_RECORD_TYPE = "record_type";
 	
+	//WARC header information
+	public static final String WARC_KEY_ID = "warc_key_id";
+	public static final String WARC_IP = "warc_ip";
+	
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
 	public static final String SOLR_REFERRER_URI = "referrer_url";
