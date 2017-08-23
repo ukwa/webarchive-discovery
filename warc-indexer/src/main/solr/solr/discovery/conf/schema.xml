@@ -42,8 +42,7 @@
         <field name="content_type_ext" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_full" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
-        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="http_status" type="tint" indexed="true" docValues="true" multiValued="false"/>
+        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>       
         <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
         <field name="content_type_tika" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>

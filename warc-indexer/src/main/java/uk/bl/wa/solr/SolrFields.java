@@ -82,7 +82,6 @@ public interface SolrFields {
 	public static final String CONTENT_TYPE_DROID_B = "content_type_droid_b";	
 	public static final String CONTENT_TYPE_SERVED = "content_type_served";
 	public static final String CONTENT_TYPE_EXT = "content_type_ext";
-	public static final String HTTP_STATUS = "http_status";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
 	public static final String CONTENT_FFB = "content_ffb"; /* The first four bytes */
 	public static final String CONTENT_FIRST_BYTES = "content_first_bytes";
