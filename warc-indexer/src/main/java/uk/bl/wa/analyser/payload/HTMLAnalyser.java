@@ -59,11 +59,12 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private boolean extractLinkHosts;
 	private boolean extractLinks;
 	private boolean extractElementsUsed;
-
+    private boolean extractImageLinks;
+	
 	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
-	public HTMLAnalyser( Config conf ) {
-		this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
+	public HTMLAnalyser( Config conf ) {			  		 
+	    this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
 		log.info("HTML - Extract resource links " + this.extractLinks);
 		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
 		log.info("HTML - Extract host links " + this.extractLinkHosts);
@@ -71,6 +72,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		log.info("HTML - Extract domain links " + this.extractLinkDomains);
 		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
 		log.info("HTML - Extract elements used " + this.extractElementsUsed);
+        this.extractImageLinks = conf.getBoolean( "warc.index.extract.linked.images" );
+	    log.info("HTML - Extract image links " + this.extractElementsUsed);
         hfp = new HtmlFeatureParser(conf);
 	}
 	/**
@@ -102,6 +105,17 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		}
         Instrument.timeRel("HTMLAnalyzer.analyze#total", "HTMLAnalyzer.analyze#parser", start);
 
+        
+        //Process image links
+        if (extractImageLinks){
+          String[] imageLinks = metadata.getValues( HtmlFeatureParser.IMAGE_LINKS );
+          if (imageLinks != null){            
+            for( String link : imageLinks ) { 
+              solr.addField( SolrFields.SOLR_LINKS_IMAGES, link );
+            }
+          }                
+        }
+        
 		// Process links:
 		String[] links_list = metadata.getValues( HtmlFeatureParser.LINK_LIST );
 		if( links_list != null ) {

@@ -65,6 +65,7 @@ public interface SolrFields {
 	public static final String SOLR_COLLECTION = "collection"; // Top-level collection
 	public static final String SOLR_COLLECTIONS = "collections"; // All collections.
 	
+	public static final String SOLR_LINKS_IMAGES = "links_images";
 	public static final String SOLR_LINKS = "links";
 	public static final String SOLR_LINKS_HOSTS = "links_hosts";
     public static final String SOLR_LINKS_HOSTS_SURTS = "links_hosts_surts";

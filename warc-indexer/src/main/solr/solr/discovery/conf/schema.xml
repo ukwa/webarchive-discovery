@@ -73,6 +73,7 @@
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
         <field name="links_domains" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
