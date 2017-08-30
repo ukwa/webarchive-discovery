@@ -151,6 +151,10 @@
         <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <dynamicField name="random_*" type="random" />
 
+        <!--:IMAGE EXIF-->
+        <field name="exif_location" type="location" indexed="true" stored="true" multiValued="false"/>          
+        <field name="exif_version" type="string" indexed="true" stored="true" multiValued="false"/> 
+        
         <!-- BL UKWA: additional -->
         <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>

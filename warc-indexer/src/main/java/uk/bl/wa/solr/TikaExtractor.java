@@ -330,12 +330,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			String date = null;
 			if( metadata.get( Metadata.CREATION_DATE ) != null)
 				date = metadata.get( Metadata.CREATION_DATE );
+
 			if( metadata.get( Metadata.DATE ) != null)
 				date = metadata.get( Metadata.DATE );
 			if( metadata.get( Metadata.MODIFIED ) != null)
 				date = metadata.get( Metadata.MODIFIED );
 			if( date != null ) {
-				DateTimeFormatter df = ISODateTimeFormat.dateTimeParser();
+			    DateTimeFormatter df = ISODateTimeFormat.dateTimeParser();
 				DateTime edate = null;
 				try {
 					edate = df.parseDateTime(date);
@@ -369,6 +370,38 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			solr.addField(SolrFields.GENERATOR, metadata.get("generator"));
 			solr.addField(SolrFields.GENERATOR, metadata.get("Generator"));
 			solr.addField(SolrFields.GENERATOR, metadata.get("ProgId"));
+			
+			//handle image EXIF metaformat
+			String exifVersion = metadata.get("Exif Version");
+					
+			if (exifVersion != null){
+			  solr.addField(SolrFields.EXIF_VERSION, exifVersion);
+			  String exif_artist = metadata.get("Artist");
+               if (exif_artist != null){ // This is a better value for the author field.
+                 solr.removeField(SolrFields.SOLR_AUTHOR); //Clear old value if any. Not multi valued
+                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);                    
+               }
+			  	          
+			  String exif_latitude = metadata.get("GPS Latitude");
+	          String exif_longitude = metadata.get("GPS Longitude");	        
+	          	          
+	          if (exif_latitude != null && exif_longitude != null){
+	            try{
+	              double latitude = DMS2DG(exif_latitude);
+	              double longitude = DMS2DG( exif_longitude);                 
+                  if (latitude != 0d && longitude != 0d){ // Sometimes they are defined but both 0
+                     solr.addField(SolrFields.EXIF_LOCATION, latitude+","+longitude);
+                  }
+	            }
+	            catch(Exception e){ //Just ignore. No GPS data added to solr
+	              log.error("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
+	            }	            	          
+	          }	          	            
+			}
+			//End image exif metadata
+			
+			 
+			
 			
 			// Application ID, MS Office only AFAICT, and the VERSION is only doc
 			String software = null;
@@ -554,4 +587,35 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		}
 		return true;
 	}
+	
+	 /*
+	 * Transform GPS locations from DMS to DG
+	 * 
+	 * example: 55° 37' 38.61" -> 55.62739166666667  
+	 * 
+	 * Equation:
+	 * decimal degress = (sign) * (degrees + minutes/60 + seconds/3600)
+	 */	 
+	private static double DMS2DG(String dms){
+	   int sign = 1;
+	   if (dms.startsWith("-")){ //Find the sign
+         sign = -1;      
+	     dms=dms.substring(1);// remove the -
+	   }
+	     String[] degreesplit = dms.split("°");
+	     int degrees = Integer.parseInt(degreesplit[0].trim());
+	        
+	     String minutesPart = degreesplit[1];
+	     String[] minutesplit = minutesPart.split("'");
+	     int minutes = Integer.parseInt(minutesplit[0].trim());
+	               
+	     String secondsPart=minutesplit[1];
+	     secondsPart=secondsPart.replace("\"", ""); //Remove trailing "
+	     secondsPart=secondsPart.replace(",", "."); //Digits seperation fixed  
+	     double seconds = Double.parseDouble(secondsPart);	       
+	     double decimalDegrees = sign*(degrees + minutes/60d +seconds/3600d);
+	     return decimalDegrees;        
+	   }
+
+	
 }

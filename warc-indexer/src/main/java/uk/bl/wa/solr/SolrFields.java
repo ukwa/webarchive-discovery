@@ -116,6 +116,10 @@ public interface SolrFields {
 	public static final String PUBLICATION_YEAR = "publication_year";
 	public static final String LAST_MODIFIED = "last_modified";
 	public static final String LAST_MODIFIED_YEAR = "last_modified_year";
+		
+	//Image Exif metadata
+	public static final String EXIF_VERSION = "exif_version";
+	public static final String EXIF_LOCATION = "exif_location";	 
 	
 	public static final String POSTCODE = "postcode";
 	public static final String POSTCODE_DISTRICT = "postcode_district";
