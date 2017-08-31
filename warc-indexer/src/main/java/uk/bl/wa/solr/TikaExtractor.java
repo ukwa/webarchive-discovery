@@ -327,7 +327,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 					metadata.get(Metadata.CONTENT_ENCODING));
 
 			// Parse out any embedded date that can act as a created/modified date.
-			// I was not able find a single example where both created and modified where defined and different. So just have a single field to both.
+			// I was not able find a single example where both created and modified where defined and different. I single field is sufficient.
 			String date = null;
 			if( metadata.get( Metadata.CREATION_DATE ) != null)
 				date = metadata.get( Metadata.CREATION_DATE );
