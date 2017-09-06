@@ -380,7 +380,7 @@ public class WARCIndexerCommand {
 	 */
 	private static void checkSubmission(SolrWebServer solr,
 			List<SolrInputDocument> docs, int limit, boolean force) {
-		if (docs.size() > 0 && docs.size() >= limit || force) {
+        if (docs.size() > 0 && (docs.size() >= limit || force)) {
 			try {
 				final long start = System.nanoTime();
 				if (log.isTraceEnabled() || debugMode) {
