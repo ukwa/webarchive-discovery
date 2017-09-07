@@ -2,10 +2,7 @@ language: java
 
 dist: trusty
 
-addons:
-  apt:
-    packages:
-      - oracle-java8-installer
+sudo: required
 
 jdk:
   - oraclejdk8
@@ -21,8 +18,6 @@ before_script:
  - "ulimit -a"
  - "umask 022"
  - "mkdir inputs"
-
-sudo: false
 
 notifications:
   slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk
