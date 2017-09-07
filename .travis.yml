@@ -1,7 +1,16 @@
 language: java
 
+dist: trusty
+
+addons:
+  apt:
+    packages:
+      - oracle-java8-installer
+
 jdk:
-  - oraclejdk7
+  - oraclejdk8
+  - openjdk7
+  - openjdk8
 
 before_script:
  - "echo $JAVA_OPTS"
