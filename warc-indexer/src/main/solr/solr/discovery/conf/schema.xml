@@ -22,6 +22,9 @@
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
+         
+         <!--Not defined in SolrFields. Schema only defintion -->
+        <field name="index_time" type="date" indexed="true" stored="false" docValues="true" default="NOW" /> 
 
         <!-- BL UKWA: additional -->
         <field name="access_terms" type="string" indexed="true" docValues="true" multiValued="true"/>
