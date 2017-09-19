@@ -24,12 +24,8 @@ package uk.bl.wa.util;
 
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
-import org.apache.zookeeper.data.Stat;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 /**
@@ -45,7 +41,9 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Instrument {
     private static Log log = LogFactory.getLog(Instrument.class);
 
-    private static final Map<String, Stats> trackers = new HashMap<String, Stats>();
+    public enum SORT {insert, time, count} // count & time are max -> min
+    
+    private static final Map<String, Stats> trackers = new LinkedHashMap<>();
     private static final long classStart = System.nanoTime();
 
     /**
@@ -79,6 +77,19 @@ public class Instrument {
         time(null, id, nanoAbsolute);
     }
 
+    public static synchronized void createSortedStat(String id, SORT sort, int maxReturnedChildren) {
+        Stats stats = trackers.get(id);
+        if (stats == null) {
+            stats = new Stats(id, sort, maxReturnedChildren);
+            trackers.put(id, stats);
+            return;
+        }
+        if (stats.sort != sort || stats.maxReturnedChildren != maxReturnedChildren) {
+            throw new IllegalStateException(
+                    "The stat '" + id + "' already exists with different sort/max parameters");
+        }
+    }
+
     /**
      * Increment the total time for the tracker with the given ID.
      * Synchronized to handle creation of new Stats.
@@ -107,15 +118,26 @@ public class Instrument {
         pStats.addChild(stats);
     }
 
+    @SuppressWarnings("WeakerAccess")
     public static class Stats {
+
+        public final SORT sort;
+        public final int maxReturnedChildren;
+
         public final String id;
         public final AtomicLong time = new AtomicLong(0);
         public final AtomicLong count = new AtomicLong(0);
-        public final Set<Stats> children = new HashSet<Stats>();
+        private final Set<Stats> children = new LinkedHashSet<Stats>();
         private static final double MD = 1000000d;
 
         public Stats(String id) {
+            this(id, SORT.insert, Integer.MAX_VALUE);
+        }
+
+        public Stats(String id, SORT sort, int maxReturnedChildren) {
             this.id = id;
+            this.sort = sort;
+            this.maxReturnedChildren = maxReturnedChildren;
         }
 
         public void time(long nanoAbsolute) {
@@ -134,6 +156,32 @@ public class Instrument {
 
         public void addChild(Stats child) {
             children.add(child);
+        }
+
+        /**
+         * If {@link #sort} is not {@link SORT#insert}, a sort will be performed on each call to this method.
+         */
+        public Collection<Stats> getChildren() {
+            if (sort == SORT.insert && children.size() <= maxReturnedChildren) {
+                return children;
+            }
+            List<Stats> sorted = new ArrayList<>(children);
+            if (sort != SORT.insert) {
+                Collections.sort(sorted, new Comparator<Stats>() {
+                    @Override
+                    public int compare(Stats o1, Stats o2) {
+                        switch (sort) {
+                            case count: return (int) (o1.count.get() - o2.count.get());
+                            case time: return (int) (o2.time.get() - o1.time.get());
+                            default: throw new IllegalStateException("Unhandled sort " + sort);
+                        }
+                    }
+                });
+            }
+            if (sorted.size() > maxReturnedChildren) {
+                sorted = sorted.subList(0, maxReturnedChildren);
+            }
+            return sorted;
         }
 
         @Override
@@ -159,6 +207,7 @@ public class Instrument {
     }
 
     public static String getStats() {
+        // Locate all root stats (the ones that are not children)
         Set<Stats> topLevel = new HashSet<Stats>(trackers.values());
         for (Stats stats: trackers.values()) {
             for (Stats child: stats.children) {
@@ -166,6 +215,7 @@ public class Instrument {
             }
         }
 
+        // Collect recursive stats from all root elements
         StringBuilder sb = new StringBuilder();
         for (Stats stats: topLevel) {
             getStatsRecursive(stats, sb, "");
@@ -178,7 +228,7 @@ public class Instrument {
             sb.append("\n");
         }
         sb.append(indent).append(stats);
-        for (Stats child: stats.children) {
+        for (Stats child: stats.getChildren()) {
             getStatsRecursive(child, sb, indent + "  ");
         }
     }
@@ -207,4 +257,8 @@ public class Instrument {
         }
     }
 
+    // Unreliable (classStart is not cleared), so package private. Used for test only
+    static void clear() {
+        trackers.clear();
+    }
 }

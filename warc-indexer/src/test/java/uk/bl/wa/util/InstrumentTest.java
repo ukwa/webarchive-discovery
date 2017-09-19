@@ -31,12 +31,24 @@ public class InstrumentTest extends TestCase {
 
     // Not a real test as it requires visual inspection
     public void testHierarchical() {
+        Instrument.clear();
         Instrument.time("top", 123456);
         Instrument.time("top", "mid1", 123457);
         Instrument.time("top", "mid2", 123459);
         Instrument.time("mid1", "bottom", 123460);
         assertTrue("There should be a double indent in\n" + Instrument.getStats(),
                    Instrument.getStats().contains("    "));
+    }
+
+    public void testChildSortAndLimit() {
+        Instrument.clear();
+        Instrument.createSortedStat("top", Instrument.SORT.time, 2);
+        Instrument.time("top", 123456);
+        Instrument.time("top", "mid1", 123457);
+        Instrument.time("top", "mid2", 134459);
+        Instrument.time("top", "mid3", 145500);
+        assertFalse("The output should not contain 'mid1': It is the fastest and the order is 'time' with a limit if 2",
+                    Instrument.getStats().contains("mid1"));
     }
 
 }
