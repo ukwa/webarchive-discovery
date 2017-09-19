@@ -98,16 +98,19 @@ public class Instrument {
      * @param nanoAbsolute the amount of nanoseconds to add.
      */
     public static synchronized void time(String parent, String id, long nanoAbsolute) {
+        getCreateStats(parent, id).time(nanoAbsolute);
+    }
+
+    private static Stats getCreateStats(String parent, String id) {
         Stats stats = trackers.get(id);
         if (stats == null) {
             stats = new Stats(id);
             trackers.put(id, stats);
         }
-        stats.time(nanoAbsolute);
 
         // Check parent connection
         if (parent == null) {
-            return;
+            return stats;
         }
 
         Stats pStats = trackers.get(parent);
@@ -116,6 +119,19 @@ public class Instrument {
             trackers.put(parent, pStats);
         }
         pStats.addChild(stats);
+        return stats;
+    }
+
+    /**
+     * Sets the time and count for the given tracker to the specified values, regardless of previous content.
+     * Synchronized to handle creation of new Stats.
+     * @param parent       provides hierarchical output. If the parent does not exist, it will be created.
+     * @param id           id for a tracker. If it does not exist, it will be created.
+     * @param nano         the amount of nanoseconds to set.
+     * @param count        the count to set.
+     */
+    public static synchronized void setAbsolute(String parent, String id, long nano, long count) {
+        getCreateStats(parent, id).setAbsolute(nano, count);
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -145,6 +161,11 @@ public class Instrument {
             count.incrementAndGet();
         }
 
+        public void setAbsolute(long nano, long count) {
+            this.time.set(nano);
+            this.count.set(count);
+        }
+
         public String toString() {
             // % is only correct for single-threaded processing
             return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#, %.2f%%)",
@@ -171,9 +192,12 @@ public class Instrument {
                     @Override
                     public int compare(Stats o1, Stats o2) {
                         switch (sort) {
-                            case count: return (int) (o1.count.get() - o2.count.get());
-                            case time: return (int) (o2.time.get() - o1.time.get());
-                            default: throw new IllegalStateException("Unhandled sort " + sort);
+                            case count:
+                                return Long.compare(o2.count.get(), o1.count.get());
+                            case time:
+                                return Long.compare(o2.time.get(), o1.time.get());
+                            default:
+                                throw new IllegalStateException("Unhandled sort " + sort);
                         }
                     }
                 });
@@ -192,6 +216,7 @@ public class Instrument {
         public boolean equals(Object obj) {
             return obj instanceof Stats && id.equals(((Stats) obj).id);
         }
+
     }
 
     /**

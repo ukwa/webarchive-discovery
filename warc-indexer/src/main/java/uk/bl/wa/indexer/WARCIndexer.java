@@ -223,7 +223,7 @@ public class WARCIndexer {
 		this.txa = new TextAnalysers(conf);
 
 		// We want stats for the 20 resource types that we spend the most time processing
-		Instrument.createSortedStat("WARCIndexer#MIME_Breakdown", Instrument.SORT.time, 20);
+		Instrument.createSortedStat("WARCIndexer#content_types", Instrument.SORT.time, 20);
 
 		// Log so it's clear this completed ok:
 		log.info("Initialisation of WARCIndexer complete.");
@@ -581,8 +581,10 @@ public class WARCIndexer {
 		}
 		Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
                      "WARCIndexer.extract#total", start);
-		Instrument.timeRel("WARCIndexer#MIME_Breakdown",
-                     "WARCIndexer#MIME_" + solr.getField(SolrFields.CONTENT_TYPE_SERVED), start);
+		String servedType = solr.getField(SolrFields.CONTENT_TYPE_SERVED).toString();
+		Instrument.timeRel("WARCIndexer#content_types",
+                     "WARCIndexer#" + (servedType.contains(";") ? servedType.split(";")[0] : servedType),
+						   start);
         return solr;
 	}
 
