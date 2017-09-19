@@ -275,6 +275,7 @@ public class WARCIndexerCommand {
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
         for (int arcsIndex = 0; arcsIndex < args.length; arcsIndex++) {
+			final long arcStart = System.nanoTime();
             String inputFile = args[arcsIndex];
             if (!disableCommit) {
                 // Commit to make sure index is up to date:
@@ -337,7 +338,7 @@ public class WARCIndexerCommand {
             }
             curInputFile++;
             Instrument.timeRel("WARCIndexerCommand.main#total",
-                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", start);
+                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", arcStart);
             Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
