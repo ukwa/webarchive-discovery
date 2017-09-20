@@ -47,6 +47,14 @@ public class Instrument {
     private static final long classStart = System.nanoTime();
 
     /**
+     * Init must be called as early as possible as this triggers class-load and thus the setting of {@link #classStart}
+     * which is used for calculating relative time usage throughout the project.
+     * Multiple calls have no effect.
+     */
+    public static void init() {
+        log.debug("Initialized with classStart " + classStart + "ns and init call " + System.nanoTime() + "ns");
+    }
+    /**
      * Increment the total time for the tracker with the given ID.
      * The delta is calculated with {@code System.nanotime() - nanoStart}.
      * @param id        id for a tracker. If it does not exist, it will be created.

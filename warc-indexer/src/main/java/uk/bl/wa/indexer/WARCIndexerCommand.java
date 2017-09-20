@@ -80,7 +80,9 @@ import uk.bl.wa.util.Instrument;
 public class WARCIndexerCommand {
 	
 	private static Log log = LogFactory.getLog(WARCIndexerCommand.class);
-	
+	static {
+		Instrument.init();
+	}
 
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
@@ -315,7 +317,7 @@ public class WARCIndexerCommand {
                     doc.addParseException(e);
                 }
 
-                Instrument.timeRel("WARCIndexerCommand.main#total",
+                Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
                 if (doc != null) {
                     final long updateStart = System.nanoTime();
@@ -332,7 +334,7 @@ public class WARCIndexerCommand {
                         }
                         recordCount++;
                     }
-                    Instrument.timeRel("WARCIndexerCommand.main#total",
+                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                        "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
                 }
             }
@@ -343,7 +345,12 @@ public class WARCIndexerCommand {
         }
 
 		// Submit any remaining docs:
-		checkSubmission(solrWeb, docs, batchSize, true);
+		if (docs.size() > 0) {
+			final long updateStart = System.nanoTime();
+			checkSubmission(solrWeb, docs, batchSize, true);
+			Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
+                      "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
+		}
         if (!disableCommit) {
             // Commit the updates:
             commit(solrWeb);

@@ -95,7 +95,6 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
 
     @Override
    	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
-        final long start = System.nanoTime();
         final String name = header.getReaderIdentifier();
         if (name == null || name.isEmpty()) {
             log.debug("No name present for ARC, skipping analyse");
@@ -106,9 +105,6 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
                 break; // Only one rule match
             }
         }
-
-        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
-                           "ARCNameAnalyzer.analyze", start);
    	}
 
     public List<Rule> getRules() {
