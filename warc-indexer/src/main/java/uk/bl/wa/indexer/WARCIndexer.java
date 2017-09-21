@@ -585,6 +585,7 @@ public class WARCIndexer {
 		Instrument.timeRel("WARCIndexer#content_types",
                      "WARCIndexer#" + (servedType.contains(";") ? servedType.split(";")[0] : servedType),
 						   start);
+		Instrument.timeRel("WARCIndexer#content_types", start);
         return solr;
 	}
 

@@ -41,7 +41,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class Instrument {
     private static Log log = LogFactory.getLog(Instrument.class);
 
-    public enum SORT {insert, time, count} // count & time are max -> min
+    public enum SORT {insert, id, time, count, avgtime} // count, time & avgtime are max -> min
     
     private static final Map<String, Stats> trackers = new LinkedHashMap<>();
     private static final long classStart = System.nanoTime();
@@ -176,11 +176,20 @@ public class Instrument {
 
         public String toString() {
             // % is only correct for single-threaded processing
-            return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#, %.2f%%)",
+            return String.format("%s(#=%d, time=%.2fms, avg=%.2f#/ms %.2fms/#, %.2f%%)%s",
                                  id, count.get(), time.get()/MD,
-                                 time.get() == 0 ? 0 : count.get() / (time.get() / MD),
-                                 count.get() == 0 ? 0 : time.get() / MD / count.get(),
-                                 time.get() * 100.0 / (System.nanoTime()-classStart));
+                                 avgCountPerMS(),
+                                 avgMS(),
+                                 time.get() * 100.0 / (System.nanoTime()-classStart),
+                                 sort == SORT.insert ? "" : " top " + maxReturnedChildren + " sort=" + sort);
+        }
+
+        private double avgCountPerMS() {
+            return time.get() == 0 ? 0 : count.get() / (time.get() / MD);
+        }
+
+        private double avgMS() {
+            return count.get() == 0 ? 0 : time.get() / MD / count.get();
         }
 
         public void addChild(Stats child) {
@@ -200,10 +209,14 @@ public class Instrument {
                     @Override
                     public int compare(Stats o1, Stats o2) {
                         switch (sort) {
+                            case id:
+                                return o1.id.compareTo(o2.id);
                             case count:
                                 return Long.compare(o2.count.get(), o1.count.get());
                             case time:
                                 return Long.compare(o2.time.get(), o1.time.get());
+                            case avgtime:
+                                return Double.compare(o2.avgMS(), o1.avgMS());
                             default:
                                 throw new IllegalStateException("Unhandled sort " + sort);
                         }

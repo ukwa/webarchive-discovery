@@ -38,6 +38,7 @@ public class InstrumentTest extends TestCase {
         Instrument.time("mid1", "bottom", 123460);
         assertTrue("There should be a double indent in\n" + Instrument.getStats(),
                    Instrument.getStats().contains("    "));
+        log.info(Instrument.getStats());
     }
 
     public void testChildTimeSortAndLimit() {
