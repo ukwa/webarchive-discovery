@@ -34,6 +34,7 @@ public abstract class MapReduceTestBaseClass {
     // mysterious problems parsing the statusCode.
     // 2. System can't cope with uncompressed inputs right now.
     protected final String[] testWarcs = new String[] {
+            // "BL-20161016184836943-00270-28590~crawler03~8446.warc.gz",
             // "variations.warc.gz",
             // "IAH-20080430204825-00000-blackbook-truncated.arc",
             "IAH-20080430204825-00000-blackbook-truncated.arc.gz",
