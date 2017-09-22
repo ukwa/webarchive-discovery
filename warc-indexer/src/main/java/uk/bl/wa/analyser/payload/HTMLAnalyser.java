@@ -111,7 +111,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
           String[] imageLinks = metadata.getValues( HtmlFeatureParser.IMAGE_LINKS );
           if (imageLinks != null){            
             for( String link : imageLinks ) { 
-              solr.addField( SolrFields.SOLR_LINKS_IMAGES, link );
+              String urlNorm  = canon.canonicalize(link); 
+              solr.addField( SolrFields.SOLR_LINKS_IMAGES, urlNorm);
             }
           }                
         }
@@ -134,8 +135,10 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 					domains.add(ldomain);
 				}
 				// Also store actual resource-level links:
-				if( this.extractLinks )
-					solr.addField( SolrFields.SOLR_LINKS, link );
+				if( this.extractLinks ){
+				    String urlNorm  = canon.canonicalize(link); 
+					solr.addField( SolrFields.SOLR_LINKS, urlNorm );
+				}
 			}
 			// Store the data from the links:
 			if( this.extractLinkHosts ) {
