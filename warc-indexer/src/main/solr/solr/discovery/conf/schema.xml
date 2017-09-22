@@ -122,6 +122,11 @@
         <field name="warc_ip" type="string" indexed="true" docValues="true" multiValued="false"/>
         <!--:BL UKWA -->
 
+
+        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->        
+        <!-- arc_full is required for solrwayback. Will only be used if defined in the config file--> 
+        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/> 
+
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
         <dynamicField name="*_is" type="ints"    indexed="true"  stored="true"/>
         <dynamicField name="*_s"  type="string"  indexed="true"  stored="true" />
