@@ -1,5 +1,6 @@
 package uk.bl.wa.hadoop;
 
+import java.io.EOFException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -136,9 +137,15 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
 				}
 			} catch (Throwable e) {
 				found = false;
-				log.error("ERROR reading " + this.archiveName + ": "
-						+ e.toString());
-			}
+                log.error("ERROR reading " + this.archiveName, e);
+                // Reached the end of the file? If so move on or exit:
+                if (e.getCause() instanceof EOFException) {
+                    log.error("EOF while reading " + this.archiveName);
+                    if (!this.nextFile()) {
+                        break;
+                    }
+                }
+            }
 		}
 		return found;
 	}

@@ -51,7 +51,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
 		// run job
 		log.info("Setting up job config...");
 		JobConf conf = this.mrCluster.createJobConf();
-        conf.set("mapred.child.java.opts", "-Xmx512m");
+        conf.set("mapred.child.java.opts", "-Xmx1024m");
 		wir.createJobConf(conf, args);
 		log.info("Running job...");
 		JobClient.runJob(conf);

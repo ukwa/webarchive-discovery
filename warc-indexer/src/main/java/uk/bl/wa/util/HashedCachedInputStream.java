@@ -151,7 +151,7 @@ public class HashedCachedInputStream {
 			hash = "sha1:" + Base32.encode( digest.digest() );
 			
 		    // For response records, check the hash is consistent with any header hash:
-			if( headerHash != null ) {
+			if( (headerHash != null) && (hash.length() == headerHash.length())) {
 				if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) &&
 					header.getHeaderValue( HEADER_KEY_TYPE ).equals(WARCConstants.WARCRecordType.response.toString())
 						) {
