@@ -334,7 +334,10 @@ public class WARCIndexer {
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
             solr.setField(SolrFields.SOLR_URL, header.getUrl());
             if (addNormalisedURL) {
-                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(targetUrl) );
+            	// TODO: This is very messy. All the URL-normalising should be moved to a helper class
+				String normURL = urlNormaliser.canonicalize(
+						targetUrl.startsWith("https://") ? "http://" + targetUrl.substring(8) : targetUrl);
+                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(normURL) );
             }
 
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
