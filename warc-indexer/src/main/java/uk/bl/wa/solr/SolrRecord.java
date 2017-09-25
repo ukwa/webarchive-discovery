@@ -94,7 +94,8 @@ public class SolrRecord implements Serializable {
 		} catch (CharacterCodingException e) {
 			return "";
 		} finally {
-            Instrument.timeRel("SolrRecord.removeControlCharacters#total", start);
+            Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
+							   "SolrRecord.removeControlCharacters#total", start);
         }
 	}
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");

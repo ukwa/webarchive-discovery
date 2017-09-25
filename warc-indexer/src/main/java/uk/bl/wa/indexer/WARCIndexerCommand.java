@@ -80,7 +80,9 @@ import uk.bl.wa.util.Instrument;
 public class WARCIndexerCommand {
 	
 	private static Log log = LogFactory.getLog(WARCIndexerCommand.class);
-	
+	static {
+		Instrument.init();
+	}
 
 	private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
 	private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
@@ -275,6 +277,7 @@ public class WARCIndexerCommand {
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
 		// Loop through each Warc files
         for (int arcsIndex = 0; arcsIndex < args.length; arcsIndex++) {
+			final long arcStart = System.nanoTime();
             String inputFile = args[arcsIndex];
             if (!disableCommit) {
                 // Commit to make sure index is up to date:
@@ -318,7 +321,7 @@ public class WARCIndexerCommand {
                     doc.addParseException(e);
                 }
 
-                Instrument.timeRel("WARCIndexerCommand.main#total",
+                Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
                 if (doc != null) {
                     final long updateStart = System.nanoTime();
@@ -335,18 +338,23 @@ public class WARCIndexerCommand {
                         }
                         recordCount++;
                     }
-                    Instrument.timeRel("WARCIndexerCommand.main#total",
+                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                        "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
                 }
             }
             curInputFile++;
             Instrument.timeRel("WARCIndexerCommand.main#total",
-                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", start);
+                               "WARCIndexerCommand.parseWarcFiles#fullarcprocess", arcStart);
             Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
 		// Submit any remaining docs:
-		checkSubmission(solrWeb, docs, batchSize, true);
+		if (docs.size() > 0) {
+			final long updateStart = System.nanoTime();
+			checkSubmission(solrWeb, docs, batchSize, true);
+			Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
+                      "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
+		}
         if (!disableCommit) {
             // Commit the updates:
             commit(solrWeb);
