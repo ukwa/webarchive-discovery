@@ -27,14 +27,13 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import java.io.File;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
+import java.io.*;
+import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
 
 import javax.xml.transform.OutputKeys;
 import javax.xml.transform.Result;
@@ -114,6 +113,8 @@ public class WARCIndexerCommand {
 		Options options = new Options();
 		options.addOption("o", "output", true,
 				"The directory to contain the output XML files");
+		options.addOption("z", "output", false,
+				"Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
 		options.addOption("s", "solr", true,
                 "The URL of the Solr instance the document should be sent to");
 		options.addOption("t", "text", false,
@@ -139,6 +140,8 @@ public class WARCIndexerCommand {
 				System.exit( 0 );
 			}
 
+			boolean gzip = line.hasOption("z");
+
 		   	// Get the output directory, if set
 		   	if(line.hasOption("o")){
 		   		outputDir = line.getOptionValue("o");
@@ -147,13 +150,13 @@ public class WARCIndexerCommand {
 		   		}
 		
 		   		outputDir = outputDir + "//";
-		   		System.out.println("Output Directory is: " + outputDir);
+		   		System.out.println("Output Directory is: " + outputDir + " with gzip=" + gzip);
 		   		File dir = new File(outputDir);
 		   		if(!dir.exists()){
 		   			FileUtils.forceMkdir(dir);
 		   		}
 		   	}
-		   	
+
 		   	// Get the Solr Url, if set
 		   	if(line.hasOption("s")){
 		   		solrUrl = line.getOptionValue("s");
@@ -201,7 +204,7 @@ public class WARCIndexerCommand {
             // Check for commit disabling
             disableCommit = line.hasOption("d");
 
-			parseWarcFiles(configFile, outputDir, solrUrl, cli_args,
+			parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
                            isTextRequired, slashPages, batchSize, annotationsFile, disableCommit);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
@@ -220,7 +223,7 @@ public class WARCIndexerCommand {
 	 * @throws TransformerFactoryConfigurationError
 	 * @throws TransformerException
 	 */
-	public static void parseWarcFiles(String configFile, String outputDir,
+	public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
 			String solrUrl, String[] args, boolean isTextRequired,
 			boolean slashPages, int batchSize, String annotationsFile,
             boolean disableCommit)
@@ -288,8 +291,15 @@ public class WARCIndexerCommand {
             File inFile = new File(inputFile);
             String fileName = inFile.getName();
             String outputWarcDir = outputDir + fileName + "//";
+			Writer zipOut = outputDir == null || !gzip ? null :
+					new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
+							outputDir + fileName + ".xml.gz"))), Charset.forName("utf-8"));
+			if (zipOut != null) {
+				zipOut.write("<add>");
+			}
+
             File dir = new File(outputWarcDir);
-            if (!dir.exists() && solrUrl == null) {
+            if (!dir.exists() && solrUrl == null && zipOut == null) {
                 FileUtils.forceMkdir(dir);
             }
 
@@ -329,11 +339,13 @@ public class WARCIndexerCommand {
 
                     if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
                                         doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
-                        // Write XML to file if not posting straight to the server.
-                        if (solrUrl == null) {
+
+                        if (zipOut != null) {
+                        	doc.writeXml(zipOut);
+						} else if (solrUrl == null) {
                             writeXMLToFile(doc.toXml(), fileOutput);
                         } else {
-                                docs.add(doc.getSolrDocument());
+							docs.add(doc.getSolrDocument());
 							checkSubmission(solrWeb, docs, batchSize, false);
                         }
                         recordCount++;
@@ -343,6 +355,11 @@ public class WARCIndexerCommand {
                 }
             }
             curInputFile++;
+            if (zipOut != null) {
+				zipOut.write("</add>");
+            	zipOut.flush();
+            	zipOut.close();
+			}
             Instrument.timeRel("WARCIndexerCommand.main#total",
                                "WARCIndexerCommand.parseWarcFiles#fullarcprocess", arcStart);
             Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
