@@ -83,6 +83,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+import uk.bl.wa.analyser.payload.ARCNameAnalyser;
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalysers;
 import uk.bl.wa.annotation.Annotations;
@@ -135,6 +136,9 @@ public class WARCIndexer {
 	/** Text Analysers */
 	private TextAnalysers txa;
 
+	//Generate fields from regexp on warc-filepath
+	ARCNameAnalyser arcname;
+	
 	/** Annotations */
 	private Annotator ant = null;
 
@@ -223,6 +227,7 @@ public class WARCIndexer {
 		log.info("Setting up analysers...");
 		this.wpa = new WARCPayloadAnalysers(conf);
 		this.txa = new TextAnalysers(conf);
+		this.arcname = new ARCNameAnalyser(conf);
 		
 		// Log so it's clear this completed ok:
 		log.info("Initialisation of WARCIndexer complete.");
@@ -497,12 +502,22 @@ public class WARCIndexer {
 			// Use the current value as the waybackDate:
 			solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
 			
+			   // Parse ARC name
+	        if (!arcname.getRules().isEmpty()) {
+	            final long nameStart = System.nanoTime();
+	            arcname.analyse(header, tikainput, solr);
+	            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+	                               "WARCPayloadAnalyzers.analyze#arcname", nameStart);
+	        }		
 			// If this is a revisit record, we should just return an update to the crawl_dates:
 			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase(
 					(String) header.getHeaderValue(HEADER_KEY_TYPE))) {
+			  if (false){
+			  
 				if( currentCrawlDates.contains(crawlDate) ) {
 					return null;
 				}
+				//Make new record with a few custom fields
 				SolrRecord revisited = new SolrRecord();
 				revisited.setField( SolrFields.ID, id );
 				// Store crawl-date appropriately depending on whether records
@@ -518,13 +533,16 @@ public class WARCIndexer {
 						extractYear(header.getDate()));
 				}
 				revisited.setField(SolrFields.SOLR_URL, targetUrl);
-				revisited.setField(SolrFields.WAYBACK_DATE, waybackDate);
-				String payloadDigest = (String) header
-						.getHeaderValue(WARCConstants.HEADER_KEY_PAYLOAD_DIGEST);
-				revisited.setField(SolrFields.HASH, payloadDigest);
-				revisited.setField(SolrFields.SOLR_RECORD_TYPE,
-						(String) header.getHeaderValue(HEADER_KEY_TYPE));
-				return revisited;
+			    return revisited;
+			  }
+			  else{ //use full revisit data 				
+			    solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
+			    //Copy content_type_served to content_type (no tika/droid for revisits)
+			    solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));			    
+			    processContentType(solr, header, content_length,true);//The value set above is used here for content_type_norm			    
+			    return solr;  
+			  }
+			
 			}
 			
 			// -----------------------------------------------------
@@ -557,7 +575,7 @@ public class WARCIndexer {
 			hcis.cleanup();
 
 			// Derive normalised/simplified content type:
-			processContentType(solr, header, content_length);
+			processContentType(solr, header, content_length, false);
 
 			// -----------------------------------------------------
 			// Payload analysis complete, now performing text analysis:
@@ -798,7 +816,7 @@ public class WARCIndexer {
 	 * @param content_length
 	 */
 	private void processContentType(SolrRecord solr,
-			ArchiveRecordHeader header, long content_length) {
+			ArchiveRecordHeader header, long content_length, boolean revisit) {
 		// Get the current content-type:
 		String contentType = ( String ) solr.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
 
@@ -829,13 +847,12 @@ public class WARCIndexer {
 				contentType = header.getMimetype();
 			}
 		}
-
 		// Determine content type:
 		if( contentType != null )
 			solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
 		
 		// If zero-length, then change to application/x-empty for the 'content_type' field.
-		if (content_length == 0)
+		if (content_length == 0 && !revisit)
 			contentType = "application/x-empty";
 
 		// Content-Type can still be null

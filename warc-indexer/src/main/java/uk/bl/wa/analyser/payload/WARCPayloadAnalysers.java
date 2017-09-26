@@ -70,7 +70,6 @@ public class WARCPayloadAnalysers {
 	public PDFAnalyser pdf;
 	public XMLAnalyser xml;
 	public ImageAnalyser image;
-    public ARCNameAnalyser arcname;
 
 	private boolean extractApachePreflightErrors;
 	private boolean extractImageFeatures;
@@ -109,7 +108,6 @@ public class WARCPayloadAnalysers {
 		if (this.extractImageFeatures) {
 			image = new ImageAnalyser(conf);
 		}
-        arcname = new ARCNameAnalyser(conf);
 	}
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
@@ -178,14 +176,7 @@ public class WARCPayloadAnalysers {
                                "WARCPayloadAnalyzers.analyze#droid", droidStart);
 		}
 
-        // Parse ARC name
-        if (!arcname.getRules().isEmpty()) {
-            final long nameStart = System.nanoTime();
-            arcname.analyse(header, tikainput, solr);
-            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
-                               "WARCPayloadAnalyzers.analyze#arcname", nameStart);
-        }
-
+     
 		try {
 			tikainput.reset();
 			String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
