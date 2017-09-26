@@ -27,7 +27,9 @@ package uk.bl.wa.solr;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.Serializable;
+import java.io.Writer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -61,7 +63,15 @@ public class SolrRecord implements Serializable {
 	public String toXml() {
 		return ClientUtils.toXML( doc );
 	}
-	
+
+	/**
+	 * Write the SolrDocument to the provided writer, sans XML-header.
+	 * Intended for creating batches of documents.
+	 */
+	public void writeXml(Writer writer) throws IOException {
+		ClientUtils.writeXML( doc, writer );
+	}
+
 	private static final int MAX_FIELD_LEN = 200;
 	
 	public SolrRecord() {
