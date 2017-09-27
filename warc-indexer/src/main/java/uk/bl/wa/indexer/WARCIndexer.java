@@ -334,8 +334,11 @@ public class WARCIndexer {
 
 			// Basic metadata:
 			solr.setField(SolrFields.SOURCE_FILE, archiveName);
-			solr.setField(SolrFields.SOURCE_FILE_OFFSET,
-					"" + header.getOffset());
+			solr.setField(SolrFields.SOURCE_FILE_OFFSET,"" + header.getOffset());
+			solr.setField(SolrFields.SOURCE_FILE_PATH, header.getReaderIdentifier()); //Full path of file
+			
+			
+			
             byte[] url_md5digest = md5
                     .digest(header.getUrl().getBytes("UTF-8"));
 			// String url_base64 =
