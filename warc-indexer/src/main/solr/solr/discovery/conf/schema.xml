@@ -22,6 +22,9 @@
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
+         
+         <!--Not defined in SolrFields. Schema only defintion -->
+        <field name="index_time" type="date" indexed="true" stored="false" docValues="true" default="NOW" /> 
 
         <!-- BL UKWA: additional -->
         <field name="access_terms" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -42,7 +45,7 @@
         <field name="content_type_ext" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_full" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
-        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>       
         <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
         <field name="content_type_tika" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -73,6 +76,7 @@
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
         <field name="links_domains" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -94,6 +98,7 @@
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="source_file_path" type="string" indexed="true" docValues="true" />
         <field name="source_file_offset" type="tlong" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
         <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
@@ -114,7 +119,14 @@
         <field name="wct_target_id" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="wct_title" type="string" indexed="true" docValues="true"/>
         <field name="xml_root_ns" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="warc_key_id" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="warc_ip" type="string" indexed="true" docValues="true" multiValued="false"/>
         <!--:BL UKWA -->
+
+
+        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->        
+        <!-- arc_full is required for solrwayback. Will only be used if defined in the config file--> 
+        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/> 
 
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
         <dynamicField name="*_is" type="ints"    indexed="true"  stored="true"/>
@@ -148,6 +160,10 @@
         <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <dynamicField name="random_*" type="random" />
 
+        <!--:IMAGE EXIF-->
+        <field name="exif_location" type="location" indexed="true" stored="true" multiValued="false"/>          
+        <field name="exif_version" type="string" indexed="true" stored="true" multiValued="false"/> 
+        
         <!-- BL UKWA: additional -->
         <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>

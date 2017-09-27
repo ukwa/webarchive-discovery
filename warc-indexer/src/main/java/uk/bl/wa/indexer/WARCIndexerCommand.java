@@ -237,7 +237,13 @@ public class WARCIndexerCommand {
 		Config conf = ConfigFactory.load();
 		if (configFile != null) {
 			log.info("Loading config from log file: " + configFile);
-			conf = ConfigFactory.parseFile(new File(configFile));
+			File configFilePath = new File(configFile);
+			if (!configFilePath.exists()){
+			  log.error("Config file not found:"+configFile);
+	          System.exit( 0 );            			  
+			}
+			
+			conf = ConfigFactory.parseFile(configFilePath);
 			// ConfigPrinter.print(conf);
 			// conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
 			log.info("Loaded warc config.");

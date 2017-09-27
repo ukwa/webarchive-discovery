@@ -73,12 +73,14 @@ public class HtmlFeatureParser extends AbstractParser {
 	// Max errors to returm:
 	private int max_errors;
     private final boolean normaliseLinks;
-
+    private boolean extractImageLinks=false;
+    
 	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
     // Explicit property to get faster link handling as it allows for set with multiple values (same as LINKS?)
     public static final Property LINK_LIST = Property.internalTextBag("LinkList");
 	public static final Property LINKS = Property.internalTextBag("LINK-LIST");
 	public static final String FIRST_PARAGRAPH = "FirstParagraph";
+	public static final Property IMAGE_LINKS = Property.internalTextBag("ImageLinks");
 	public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
 	public static final Property NUM_PARSE_ERRORS = Property
 			.internalInteger("Html-Parse-Error-Count");
@@ -86,6 +88,7 @@ public class HtmlFeatureParser extends AbstractParser {
 
     // Setting this to true also adds the field url_norm to the Solr document in WARCIndexer
     public static final String CONF_LINKS_NORMALISE = "warc.index.extract.linked.normalise";
+    public static final String CONF_LINKS_EXTRACT_IMAGE_LINKS = "warc.index.extract.linked.images";
     public static final boolean DEFAULT_LINKS_NORMALISE = false;
 
 	/**
@@ -95,10 +98,16 @@ public class HtmlFeatureParser extends AbstractParser {
         this(ConfigFactory.empty());
    	}
     public HtmlFeatureParser(Config conf) {
-           normaliseLinks = conf.hasPath(CONF_LINKS_NORMALISE) ?
+      normaliseLinks = conf.hasPath(CONF_LINKS_NORMALISE) ?
                    conf.getBoolean(CONF_LINKS_NORMALISE) :
                    DEFAULT_LINKS_NORMALISE;
    		this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
+   
+   		
+   	   extractImageLinks = conf.hasPath(CONF_LINKS_EXTRACT_IMAGE_LINKS) ?
+            conf.getBoolean(CONF_LINKS_EXTRACT_IMAGE_LINKS) :
+            false;
+   		
     }
 
 	/**
@@ -165,11 +174,19 @@ public class HtmlFeatureParser extends AbstractParser {
 			metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
 
 		// Get the links (no image links):
-		Set<String> links = this.extractLinks(doc, false);
+		Set<String> links = this.extractLinks(doc);
 		if( links != null && links.size() > 0 ) {
 			metadata.set(LINK_LIST, links.toArray(new String[links.size()]));
         }
-
+		
+		//get the image links
+		if (extractImageLinks){
+		  Set<String> imageLinks = this.extractImageLinks(doc);
+          if( imageLinks  != null && imageLinks .size() > 0 ) {
+             metadata.set(IMAGE_LINKS, imageLinks.toArray(new String[imageLinks.size()]));
+          }
+		}
+		
 		// Get the publication date, from BBC pages:
 		for( Element meta : doc.select("meta[name=OriginalPublicationDate]") ) {
 			metadata.set(ORIGINAL_PUB_DATE, meta.attr("content"));
@@ -220,7 +237,7 @@ public class HtmlFeatureParser extends AbstractParser {
 	/**
 	 * Use a tolerant parser to extract all of the absolute a href links from a document.
 	 * 
-	 * Does not extract other links, e.g. stylesheets, etc. etc. Image links optional.
+	 * Does not extract other links, e.g. stylesheets, etc. etc. Image extracting in another field
 	 * 
 	 * @param input The InputStream
 	 * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
@@ -228,25 +245,30 @@ public class HtmlFeatureParser extends AbstractParser {
 	 * @return
 	 * @throws java.io.IOException
 	 */
-	private Set<String> extractLinks( Document doc, boolean includeImgLinks ) throws IOException {
+	private Set<String> extractLinks( Document doc) throws IOException {
 		Set<String> linkset = new HashSet<String>();
 		
 		// All a with href
 		for( Element link : doc.select("a[href]") ) {
 			linkset.add( normaliseLink(link.attr("abs:href")));
 		}
-		// All images:
-		if( includeImgLinks ) {
-			for( Element link : doc.select("img[src]") ) {
-				linkset.add( normaliseLink(link.attr("abs:src")));
-			}
-		}
-		// Example of use: all PNG references...
-		//Elements pngs = doc.select("img[src$=.png]");
+		
 
-		//Element masthead = doc.select("div.masthead").first();
 		return linkset;
 	}
+	
+	   private Set<String> extractImageLinks( Document doc) throws IOException {
+	        Set<String> linkset = new HashSet<String>();	        	      	      	      
+	            for( Element link : doc.select("img[src]") ) {
+	                linkset.add( normaliseLink(link.attr("abs:src")));
+	            }	      
+	        return linkset;
+	        // Example of use: all PNG references...
+	        //Elements pngs = doc.select("img[src$=.png]");
+
+	        //Element masthead = doc.select("div.masthead").first();
+	   }
+	
 
     /**
      * Normalises links if the parser has been configured to do so.

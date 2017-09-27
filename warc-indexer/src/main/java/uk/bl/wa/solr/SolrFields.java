@@ -36,6 +36,7 @@ public interface SolrFields {
 	public static final String SOLR_URL = "url";
 	public static final String SOURCE_FILE = "source_file";
 	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
+	public static final String SOURCE_FILE_PATH = "source_file_path";
 	// Intended for building links-graphs. Normalised the same way as SOLR_LINKS
 	public static final String SOLR_URL_NORMALISED = "url_norm";
 	public static final String SOLR_URL_PATH = "url_path";
@@ -65,6 +66,7 @@ public interface SolrFields {
 	public static final String SOLR_COLLECTION = "collection"; // Top-level collection
 	public static final String SOLR_COLLECTIONS = "collections"; // All collections.
 	
+	public static final String SOLR_LINKS_IMAGES = "links_images";
 	public static final String SOLR_LINKS = "links";
 	public static final String SOLR_LINKS_HOSTS = "links_hosts";
     public static final String SOLR_LINKS_HOSTS_SURTS = "links_hosts_surts";
@@ -79,7 +81,7 @@ public interface SolrFields {
 	public static final String FULL_CONTENT_TYPE = "content_type_full";
 	public static final String CONTENT_TYPE_TIKA = "content_type_tika";
 	public static final String CONTENT_TYPE_DROID = "content_type_droid";
-	public static final String CONTENT_TYPE_DROID_B = "content_type_droid_b";
+	public static final String CONTENT_TYPE_DROID_B = "content_type_droid_b";	
 	public static final String CONTENT_TYPE_SERVED = "content_type_served";
 	public static final String CONTENT_TYPE_EXT = "content_type_ext";
 	public static final String SOLR_NORMALISED_CONTENT_TYPE = "content_type_norm";
@@ -94,6 +96,10 @@ public interface SolrFields {
 	public static final String PDFA_ERRORS = "pdf_pdfa_errors";
 	
 	public static final String SOLR_RECORD_TYPE = "record_type";
+	
+	//WARC header information
+	public static final String WARC_KEY_ID = "warc_key_id";
+	public static final String WARC_IP = "warc_ip";
 	
 	public static final String CONTENT_LENGTH = "content_length";
 	public static final String SOLR_TIMESTAMP = "timestamp";
@@ -111,6 +117,10 @@ public interface SolrFields {
 	public static final String PUBLICATION_YEAR = "publication_year";
 	public static final String LAST_MODIFIED = "last_modified";
 	public static final String LAST_MODIFIED_YEAR = "last_modified_year";
+		
+	//Image Exif metadata
+	public static final String EXIF_VERSION = "exif_version";
+	public static final String EXIF_LOCATION = "exif_location";	 
 	
 	public static final String POSTCODE = "postcode";
 	public static final String POSTCODE_DISTRICT = "postcode_district";

@@ -38,7 +38,7 @@ public class WARCPayloadAnalysersTest extends TestCase {
     public void testConfig() {
         ARCNameAnalyser ana = getAnalyser();
         assertEquals("The expected number of rules should be created",
-                     7, ana.getRules().size());
+                     12, ana.getRules().size());
         assertEquals("The number of templates for the first rule should be correct",
                      2, ana.getRules().get(0).templates.size());
     }
@@ -99,6 +99,12 @@ public class WARCPayloadAnalysersTest extends TestCase {
                         + "arc_name:ksjvksjfvsk, "
                         + "arc_full:ksjvksjfvsk",
                         "ksjvksjfvsk"
+                },
+                {
+                        "arc_orig:kb, arc_harvesttime:2017-06-22T19:31:08.196Z, arc_job:276809, arc_harvest:272, "
+                        + "arc_name:276809-272-20170622193108196-00004-kb-prod-har-001.kb.dk.warc.gz, "
+                        + "arc_full:/netarkiv/0116/filedir/276809-272-20170622193108196-00004-kb-prod-har-001.kb.dk.warc.gz",
+                        "/netarkiv/0116/filedir/276809-272-20170622193108196-00004-kb-prod-har-001.kb.dk.warc.gz"
                 }
         }) {
             SolrRecord solr = new SolrRecord();

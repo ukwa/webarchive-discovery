@@ -27,8 +27,11 @@
 * Use a single-valued primary `hash` field and move option of multiple values to `hashes` field [#95](https://github.com/ukwa/webarchive-discovery/issues/95)
 * Extend annotations mechanism to allow source file prefix as a scope [#96](https://github.com/ukwa/webarchive-discovery/pull/96)
 * And various minor bugfixes. See the [3.0.0 Release Milestone](https://github.com/ukwa/webarchive-discovery/milestone/6) for further details.
-
-
+* Source_file_path field added. (full path to warc-file)
+* Images (optional) Exif gps,version extraction and height/width  of images indexed. 
+* Images links exctrated to new field 
+* new solr field: index_time
+* Two new fields from warc-header: warc_key_id, warc_ip
 
 2.1.0
 -----

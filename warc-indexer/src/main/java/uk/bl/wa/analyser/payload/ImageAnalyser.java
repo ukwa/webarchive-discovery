@@ -27,6 +27,10 @@ package uk.bl.wa.analyser.payload;
 
 import java.io.InputStream;
 
+import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
@@ -89,13 +93,16 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 		if( header.getLength() > max_size_bytes ) {
 			return;
 		}
+		
+		
+		
 		// Only attempt to analyse a random sub-set of the data:
 		// (prefixing with static test of a final value to allow JIT to fully
 		// optimise out the "OR Math.random()" bit)
 		if (sampleRate >= 1.0 || Math.random() < sampleRate) {
 			// Increment number of images sampled:
 			sampleCount++;
-
+						
 			// Attempt to extract faces etc.:
 			if (this.extractFaces || this.extractDominantColours) {
                 final long deepStart = System.nanoTime();
@@ -138,8 +145,37 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 				}
                 Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                    "ImageAnalyzer.analyze#facesanddominant", deepStart);
-			}
-
+			} else { //images are enabled, we still want to extract image/height (fast)
+                //This method takes 0.2ms for a large image. I can be done even faster if needed(but more complicated)).
+			    //see https://stackoverflow.com/questions/672916/how-to-get-image-height-and-width-using-java
+			  
+			  ImageInputStream input=null;
+			  ImageReader reader = null;
+			  try{
+			    input = ImageIO.createImageInputStream(tikainput);
+			    reader = ImageIO.getImageReaders(input).next();
+			    reader.setInput(input);
+	             // Get dimensions of first image in the stream, without decoding pixel values
+	             int width = reader.getWidth(0);
+	             int height = reader.getHeight(0);
+			    
+			   // Store basic image data:
+              solr.addField(SolrFields.IMAGE_HEIGHT, ""+height);
+              solr.addField(SolrFields.IMAGE_WIDTH,""+width);
+              solr.addField(SolrFields.IMAGE_SIZE,""+(height*width));			  			  
+			  }
+			  catch(Exception e){
+			    //it is known that (most) .ico and (all) .svg are not supported by java. Do not log, since it will spam.
+			   // log.warn("Unable to extract image height/width/size for url:"+header.getUrl(),e);
+			    
+			  }
+			  finally {
+	             if (reader != null){
+	               reader.dispose();
+	             }
+	         }
+			  
+			  }
 		}
 	}
 
