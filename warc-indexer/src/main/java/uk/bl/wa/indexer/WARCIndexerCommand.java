@@ -113,7 +113,7 @@ public class WARCIndexerCommand {
 		options.addOption("o", "output", true,
 				"The directory to contain the output XML files");
 		options.addOption("s", "solr", true,
-				"The URL of the required Solr Instance");
+                "The URL of the Solr instance the document should be sent to");
 		options.addOption("t", "text", false,
 				"Include text in XML in output files");
 		options.addOption("r", "slash", false,
@@ -232,7 +232,13 @@ public class WARCIndexerCommand {
 		Config conf = ConfigFactory.load();
 		if (configFile != null) {
 			log.info("Loading config from log file: " + configFile);
-			conf = ConfigFactory.parseFile(new File(configFile));
+			File configFilePath = new File(configFile);
+			if (!configFilePath.exists()){
+			  log.error("Config file not found:"+configFile);
+	          System.exit( 0 );            			  
+			}
+			
+			conf = ConfigFactory.parseFile(configFilePath);
 			// ConfigPrinter.print(conf);
 			// conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
 			log.info("Loaded warc config.");
@@ -300,6 +306,10 @@ public class WARCIndexerCommand {
                 ArchiveRecord rec = ir.next();
                 SolrRecord doc = new SolrRecord(inFile.getName(),
                                                 rec.getHeader());
+                log.debug("Processing record for url "
+                        + rec.getHeader().getUrl()
+                        + " from " + inFile.getName() + " @"
+                        + rec.getHeader().getOffset());
                 try {
                     doc = windex.extract(inFile.getName(), rec, isTextRequired);
                 } catch (Exception e) {
@@ -380,7 +390,7 @@ public class WARCIndexerCommand {
 	 */
 	private static void checkSubmission(SolrWebServer solr,
 			List<SolrInputDocument> docs, int limit, boolean force) {
-		if (docs.size() > 0 && docs.size() >= limit || force) {
+        if (docs.size() > 0 && (docs.size() >= limit || force)) {
 			try {
 				final long start = System.nanoTime();
 				if (log.isTraceEnabled() || debugMode) {

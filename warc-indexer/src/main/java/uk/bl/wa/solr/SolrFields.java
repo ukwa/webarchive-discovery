@@ -36,6 +36,7 @@ public interface SolrFields {
 	public static final String SOLR_URL = "url";
 	public static final String SOURCE_FILE = "source_file";
 	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
+	public static final String SOURCE_FILE_PATH = "source_file_path";
 	// Intended for building links-graphs. Normalised the same way as SOLR_LINKS
 	public static final String SOLR_URL_NORMALISED = "url_norm";
 	public static final String SOLR_URL_PATH = "url_path";

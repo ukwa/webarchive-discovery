@@ -98,6 +98,7 @@
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
+        <field name="source_file_path" type="string" indexed="true" docValues="true" />
         <field name="source_file_offset" type="tlong" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
         <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
