@@ -3,6 +3,7 @@
 
 **NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
 
+* Updated performance instrumentation, with break down of time used on common file types
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
 * Switched to separate fields for the source file and offset references, and dropped the _s suffix.
 * No docValues for crawl_dates due to an apparent bug in Solr [#64](https://github.com/ukwa/webarchive-discovery/issues/64)
