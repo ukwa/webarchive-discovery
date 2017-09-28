@@ -167,6 +167,9 @@ public class WARCPayloadAnalysers {
 				// Run Droid:
 				MediaType mt = dd.detect( tikainput, metadata );
 				solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
+				Instrument.timeRel("WARCPayloadAnalyzers.analyze#droid",
+								   "WARCPayloadAnalyzers.analyze#droid_type=" + mt.toString(),
+								   droidStart);
 			} catch( Exception i ) {
 				// Note that DROID complains about some URLs with an IllegalArgumentException.
 				log.error(i + ": " + i.getMessage() + ";dd; " + header.getUrl()
@@ -174,6 +177,7 @@ public class WARCPayloadAnalysers {
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                "WARCPayloadAnalyzers.analyze#droid", droidStart);
+
 		}
 
      

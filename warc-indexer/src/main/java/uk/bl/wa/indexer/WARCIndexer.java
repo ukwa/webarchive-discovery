@@ -229,6 +229,9 @@ public class WARCIndexer {
 		this.txa = new TextAnalysers(conf);
 		this.arcname = new ARCNameAnalyser(conf);
 		
+		// We want stats for the 20 resource types that we spend the most time processing
+		Instrument.createSortedStat("WARCIndexer#content_types", Instrument.SORT.time, 20);
+
 		// Log so it's clear this completed ok:
 		log.info("Initialisation of WARCIndexer complete.");
 	}
@@ -346,7 +349,10 @@ public class WARCIndexer {
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
             solr.setField(SolrFields.SOLR_URL, header.getUrl());
             if (addNormalisedURL) {
-                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(targetUrl) );
+            	// TODO: This is very messy. All the URL-normalising should be moved to a helper class
+				String normURL = urlNormaliser.canonicalize(
+						targetUrl.startsWith("https://") ? "http://" + targetUrl.substring(8) : targetUrl);
+                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(normURL) );
             }
 
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
@@ -580,8 +586,13 @@ public class WARCIndexer {
 				}
 			}
 		}
-        Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
-                           "WARCIndexer.extract#total", start);
+		Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
+                     "WARCIndexer.extract#total", start);
+		String servedType = solr.getField(SolrFields.CONTENT_TYPE_SERVED).toString();
+		Instrument.timeRel("WARCIndexer#content_types",
+                     "WARCIndexer#" + (servedType.contains(";") ? servedType.split(";")[0] : servedType),
+						   start);
+		Instrument.timeRel("WARCIndexer#content_types", start);
         return solr;
 	}
 

@@ -24,10 +24,6 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -44,6 +40,7 @@ import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.util.ArchiveUtils;
+import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
@@ -53,6 +50,8 @@ import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+
+import static org.junit.Assert.*;
 
 public class WARCIndexerTest {
 
@@ -77,6 +76,15 @@ public class WARCIndexerTest {
         assertEquals("2000-09-20T00:05:45Z", WARCIndexer.parseCrawlDate(TIMESTAMP_17));
     }
 
+    @Test
+    public void testHTTPSNormalising() {
+        final String HTTPS = "https://example.com";
+        AggressiveUrlCanonicalizer urlNormaliser = new AggressiveUrlCanonicalizer();
+        assertNotSame("The AggressiveUrlCanonicalizer's behaviour should be not to collapse https into http",
+                     "http://example.com", urlNormaliser.canonicalize(HTTPS));
+        assertEquals("Home-brewed https -> http collapsing should work",
+                     "http://example.com", HTTPS.startsWith("https://") ? "http://" + HTTPS.substring(8) : HTTPS);
+    }
 
     /**
      * Check URL and extension parsing is robust enough.
