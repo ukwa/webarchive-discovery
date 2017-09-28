@@ -512,40 +512,16 @@ public class WARCIndexer {
 	            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
 	                               "WARCPayloadAnalyzers.analyze#arcname", nameStart);
 	        }		
-			// If this is a revisit record, we should just return an update to the crawl_dates:
-			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase(
-					(String) header.getHeaderValue(HEADER_KEY_TYPE))) {
-			  if (false){
-			  
-				if( currentCrawlDates.contains(crawlDate) ) {
-					return null;
-				}
-				//Make new record with a few custom fields
-				SolrRecord revisited = new SolrRecord();
-				revisited.setField( SolrFields.ID, id );
-				// Store crawl-date appropriately depending on whether records
-				// are collapsing on (hash+url) or not:
-				if (hashUrlId) {
-					revisited.mergeField(SolrFields.CRAWL_DATES,
-							crawlDateString);
-					revisited.mergeField(SolrFields.CRAWL_YEARS,
-							extractYear(header.getDate()));
-				} else {
-					revisited.setField(SolrFields.CRAWL_DATE, crawlDateString);
-					revisited.setField(SolrFields.CRAWL_YEAR,
-						extractYear(header.getDate()));
-				}
-				revisited.setField(SolrFields.SOLR_URL, targetUrl);
-			    return revisited;
-			  }
-			  else{ //use full revisit data 				
+			// If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
+			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
+			    if( currentCrawlDates.contains(crawlDate) ) {  
+			      return null;
+                }			     				
 			    solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
 			    //Copy content_type_served to content_type (no tika/droid for revisits)
 			    solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));			    
 			    processContentType(solr, header, content_length,true);//The value set above is used here for content_type_norm			    
-			    return solr;  
-			  }
-			
+			    return solr;  			  
 			}
 			
 			// -----------------------------------------------------
