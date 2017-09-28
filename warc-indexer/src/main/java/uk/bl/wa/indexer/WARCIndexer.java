@@ -588,10 +588,9 @@ public class WARCIndexer {
 		}
 		Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
                      "WARCIndexer.extract#total", start);
-		String servedType = solr.getField(SolrFields.CONTENT_TYPE_SERVED).toString();
+		String servedType = "" + solr.getField(SolrFields.CONTENT_TYPE_SERVED);
 		Instrument.timeRel("WARCIndexer#content_types",
-                     "WARCIndexer#" + (servedType.contains(";") ? servedType.split(";")[0] : servedType),
-						   start);
+                     "WARCIndexer#" + (servedType.contains(";") ? servedType.split(";")[0] : servedType),start);
 		Instrument.timeRel("WARCIndexer#content_types", start);
         return solr;
 	}
