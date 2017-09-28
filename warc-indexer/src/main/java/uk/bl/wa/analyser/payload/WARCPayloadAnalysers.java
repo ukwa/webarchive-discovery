@@ -108,6 +108,7 @@ public class WARCPayloadAnalysers {
 		if (this.extractImageFeatures) {
 			image = new ImageAnalyser(conf);
 		}
+        Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid", Instrument.SORT.avgtime, 5);
 	}
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
