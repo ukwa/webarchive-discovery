@@ -33,6 +33,7 @@
 * Images links exctrated to new field 
 * new solr field: index_time
 * Two new fields from warc-header: warc_key_id, warc_ip
+* More field values extracted for revisit records.
 
 2.1.0
 -----

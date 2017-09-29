@@ -102,7 +102,7 @@ public interface SolrFields {
 	public static final String WARC_IP = "warc_ip";
 	
 	public static final String CONTENT_LENGTH = "content_length";
-	public static final String SOLR_TIMESTAMP = "timestamp";
+	public static final String SOLR_TIMESTAMP = "timestamp"; //TEG: This field does not seem be used.
 	public static final String SOLR_REFERRER_URI = "referrer_url";
 	public static final String SOLR_EXTRACTED_TEXT = "content";
 	public static final String SOLR_EXTRACTED_TEXT_NOT_STORED = "text";
