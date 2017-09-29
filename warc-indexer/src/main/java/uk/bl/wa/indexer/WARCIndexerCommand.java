@@ -59,11 +59,14 @@ import org.apache.solr.common.SolrInputDocument;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.util.SurtPrefixSet;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 
+import uk.bl.wa.annotation.Annotations;
+import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
@@ -104,6 +107,7 @@ public class WARCIndexerCommand {
 		boolean isTextRequired = false;
 		boolean slashPages = false;
 		int batchSize = -1; // No explicit batch size (defaults to 1 if not stated in the conf-file)
+		String annotationsFile = null;
         boolean disableCommit;
 		
 		Options options = new Options();
@@ -117,6 +121,8 @@ public class WARCIndexerCommand {
 				"Include text in XML in output files");
 		options.addOption("r", "slash", false,
 				"Only process slash (root) pages.");
+		options.addOption("a", "annotations", true,
+				"A JSON file containing the annotations to apply during indexing.");
 		options.addOption("b", "batch", true, "Batch size for submissions.");
 		options.addOption("c", "config", true, "Configuration to use.");
 		options.addOption("d", "disable_commit", false,
@@ -190,11 +196,16 @@ public class WARCIndexerCommand {
 		   		System.exit( 0 );
 		   	}
 
+			// Pick up any annotations specified:
+			if (line.hasOption("a")) {
+				annotationsFile = line.getOptionValue("a");
+			}
+
             // Check for commit disabling
             disableCommit = line.hasOption("d");
 
 			parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
-                           isTextRequired, slashPages, batchSize, disableCommit);
+                           isTextRequired, slashPages, batchSize, annotationsFile, disableCommit);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -214,7 +225,8 @@ public class WARCIndexerCommand {
 	 */
 	public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
 			String solrUrl, String[] args, boolean isTextRequired,
-			boolean slashPages, int batchSize, boolean disableCommit)
+			boolean slashPages, int batchSize, String annotationsFile,
+            boolean disableCommit)
 			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
@@ -255,6 +267,14 @@ public class WARCIndexerCommand {
 
 		// Also pass config down:
 		WARCIndexer windex = new WARCIndexer(conf);
+
+		// Add in annotations, if set:
+		if (annotationsFile != null) {
+			Annotations ann = Annotations.fromJsonFile(annotationsFile);
+            SurtPrefixSet oaSurts = Annotator
+                    .loadSurtPrefix("openAccessSurts.txt");
+            windex.setAnnotations(ann, oaSurts);
+		}
 		
 
 		// To be indexed:
