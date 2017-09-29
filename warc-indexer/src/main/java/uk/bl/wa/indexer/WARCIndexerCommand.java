@@ -109,7 +109,7 @@ public class WARCIndexerCommand {
 		Options options = new Options();
 		options.addOption("o", "output", true,
 				"The directory to contain the output XML files");
-		options.addOption("z", "output", false,
+		options.addOption("z", "gzip", false,
 				"Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
 		options.addOption("s", "solr", true,
                 "The URL of the Solr instance the document should be sent to");
@@ -352,12 +352,7 @@ public class WARCIndexerCommand {
         }
 
 		// Submit any remaining docs:
-		if (docs.size() > 0) {
-			final long updateStart = System.nanoTime();
-			checkSubmission(solrWeb, docs, batchSize, true);
-			Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
-                      "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
-		}
+		checkSubmission(solrWeb, docs, batchSize, true);
         if (!disableCommit) {
             // Commit the updates:
             commit(solrWeb);
@@ -416,7 +411,7 @@ public class WARCIndexerCommand {
 				}
 				Instrument.timeRel(
 						"WARCIndexerCommand.parseWarcFiles#docdelivery",
-						"WARCIndexerCommanc.checkSubmission#solradd", start);
+						"WARCIndexerCommanc.checkSubmission#solrSendBatch", start);
 				docs.clear();
 			} catch (SolrServerException s) {
 				log.warn("SolrServerException: ", s);
