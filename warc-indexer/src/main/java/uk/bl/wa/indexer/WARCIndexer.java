@@ -227,8 +227,24 @@ public class WARCIndexer {
 		log.info("Setting up analysers...");
 		this.wpa = new WARCPayloadAnalysers(conf);
 		this.txa = new TextAnalysers(conf);
+
+
+		// Set up annotator
+		if (conf.hasPath("warc.index.extract.content.annotations.enabled") && conf.getBoolean("warc.index.extract.content.annotations.enabled")) {
+			String annotationsFile = conf.getString("warc.index.extract.content.annotations.file");
+			String openAccessSurtsFile = conf.getString("warc.index.extract.content.annotations.surt_prefix_file");
+			try {
+				Annotations ann = Annotations.fromJsonFile(annotationsFile);
+				SurtPrefixSet oaSurts = Annotator.loadSurtPrefix(openAccessSurtsFile);
+				this.ant = new Annotator(ann, oaSurts);
+			} catch (IOException e) {
+				log.error("Failed to load annotations files.");
+				throw new RuntimeException("Annotations failed with IOException when loading files " + annotationsFile + ", " + openAccessSurtsFile);
+			}
+		}
+
 		this.arcname = new ARCNameAnalyser(conf);
-		
+	
 		// We want stats for the 20 resource types that we spend the most time processing
 		Instrument.createSortedStat("WARCIndexer#content_types", Instrument.SORT.time, 20);
 

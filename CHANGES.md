@@ -34,6 +34,7 @@
 * new solr field: index_time
 * Two new fields from warc-header: warc_key_id, warc_ip
 * More field values extracted for revisit records.
+* Usage of annotations from config file [#113](https://github.com/ukwa/webarchive-discovery/issues/113)
 
 2.1.0
 -----
