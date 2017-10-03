@@ -316,7 +316,13 @@ public class WARCIndexerCommand {
             // Iterate though each record in the WARC file
             while (ir.hasNext()) {
                 final long recordStart = System.nanoTime();
-                ArchiveRecord rec = ir.next();
+                ArchiveRecord rec = null;
+                try {
+                    rec = ir.next();
+                } catch (RuntimeException e) {
+                    log.warn("Exception on record after rec " + recordCount + " from " + inFile.getName(), e);
+                    continue;
+                }
                 SolrRecord doc = new SolrRecord(inFile.getName(),
                                                 rec.getHeader());
                 log.debug("Processing record for url "
