@@ -88,6 +88,10 @@ public class WARCIndexerCommand {
 	private static final String CLI_FOOTER = "";
 	
 	private static boolean debugMode = false;
+	
+	public static String institution;
+	public static String collection_name;
+	public static String collection_number;
 
 	/**
 	 * 
@@ -127,6 +131,9 @@ public class WARCIndexerCommand {
 		options.addOption("c", "config", true, "Configuration to use.");
 		options.addOption("d", "disable_commit", false,
                           "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
+    options.addOption("i", "institution", true, "Institution.");
+    options.addOption("n", "collection_name", true, "Collection name.");
+    options.addOption("u", "collection_number", true, "Collection number.");
 
 		try {
 		    // parse the command line arguments
@@ -200,12 +207,25 @@ public class WARCIndexerCommand {
 			if (line.hasOption("a")) {
 				annotationsFile = line.getOptionValue("a");
 			}
+			
+			if (line.hasOption("i")) {
+			  institution = line.getOptionValue("i");
+			}
+			
+			if (line.hasOption("n")) {
+			  collection_name = line.getOptionValue("n");
+			}
+			
+			if (line.hasOption("u")) {
+			  collection_number = line.getOptionValue("u");
+			}
 
             // Check for commit disabling
             disableCommit = line.hasOption("d");
 
 			parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
-                           isTextRequired, slashPages, batchSize, annotationsFile, disableCommit);
+                           isTextRequired, slashPages, batchSize, annotationsFile,
+                           disableCommit, institution, collection_name, collection_number);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -226,7 +246,8 @@ public class WARCIndexerCommand {
 	public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
 			String solrUrl, String[] args, boolean isTextRequired,
 			boolean slashPages, int batchSize, String annotationsFile,
-            boolean disableCommit)
+            boolean disableCommit, String institution, String collection_name,
+            String collection_number)
 			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {

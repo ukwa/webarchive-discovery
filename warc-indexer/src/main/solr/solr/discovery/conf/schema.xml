@@ -168,7 +168,13 @@
         <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
         <!--:BL UKWA -->
-
+        
+        <!-- User supplied Archive-It fields: -->
+        <field name="institution" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <field name="collection_name" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <field name="collection_number" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <!--:User supplied Archive-It fields -->
+        
         <dynamicField name="*_ws" type="text_ws"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en_split" type="text_en_splitting"  indexed="true"  stored="true"/>
