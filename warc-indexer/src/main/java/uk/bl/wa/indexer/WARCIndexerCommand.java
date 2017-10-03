@@ -319,7 +319,7 @@ public class WARCIndexerCommand {
                 ArchiveRecord rec = null;
                 try {
                     rec = ir.next();
-                } catch (Exception e) {
+                } catch (RuntimeException e) {
                     log.warn("Exception on record after rec " + recordCount + " from " + inFile.getName(), e);
                     continue;
                 }
