@@ -23,13 +23,15 @@ import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.Charset;
+import java.util.regex.Pattern;
 
 /**
  * String- and URL-normalisation helper class.
+ *
+ * TODO: It seems that https://github.com/iipc/urlcanon is a much better base for normalisation.
+ * That should be incorporated here instead of the AggressiveUrlCanonicalizer and the custom code.
  */
 public class Normalisation {
-    private static Log log = LogFactory.getLog(Normalisation.class);
-
     private static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
@@ -38,29 +40,56 @@ public class Normalisation {
     }
 
     /**
-     * The canonicalisation of URLs is intended for
-     * @param url
-     * @return
+     * Default and very aggressive normaliser. Shorthand for {@code canonicaliseURL(url, true, true)}.
      */
-    public static String canonicaliseURL(String url, boolean produceValidURL) {
+    public static String canonicaliseURL(String url) {
+        return canonicaliseURL(url, true, true);
+    }
+
+    /**
+     * Multi-step URL canonicalization. Besides using the {@link AggressiveUrlCanonicalizer} from wayback.org it
+     * normalises https → http,
+     * removes trailing slashes (except when the url is to domain-level),
+     * fixed %-escape errors
+     * Optionally normalises %-escapes.
+     * @param allowHighOrder if true, high-order Unicode (> code point 127) are represented without escaping.
+     *                       This is technically problematic as URLs should be plain ASCII, but most tools handles
+     *                       them fine and they are easier to read.
+     * @param createUnambiguous if true, all non-essential %-escapes are normalised to their escaping character.
+     *                          e.g. http://example.com/%2A.html → http://example.com/*.html
+     *                          If false, valid %-escapes are kept as-is.
+     */
+    public static String canonicaliseURL(String url, boolean allowHighOrder, boolean createUnambiguous) {
         // Basic normalisation, as shared with Heritrix, Wayback et al
         url = canon.canonicalize(url);
 
         // Protocol: https → http
         url = url.startsWith("https://") ? "http://" + url.substring(8) : url;
 
+        // TODO: Consider if this should only be done if createUnambiguous == true
         // Trailing slashes: http://example.com/foo/ → http://example.com/foo
-        while (!produceValidURL && url.endsWith("/")) { // Trailing slash affects the URL semantics
+        while (url.endsWith("/")) { // Trailing slash affects the URL semantics
             url = url.substring(0, url.length() - 1);
         }
+
+        // If the link is domain-only (http://example.com), is _must_ end with slash
+        if (DOMAIN_ONLY.matcher(url).matches()) {
+            url += "/";
+        }
+
+        // Create temporary url with %-fixing and high-order characters represented directly
+        byte[] urlBytes = fixEscapeErrorsAndUnescapeHighOrderUTF8(url);
+        // Normalise
+
 
         // Hex escapes, including faulty hex escape handling:
         // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20rosé%2010%25.html or
         // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20ros%C3%A9%2010%25.html if produceValidURL
-        url = escapeUTF8(fixEscapeErrorsAndUnescapeHighOrderUTF8(url), produceValidURL, !produceValidURL);
+        url = escapeUTF8(urlBytes, !allowHighOrder, createUnambiguous);
 
         return url;
     }
+    private static Pattern DOMAIN_ONLY = Pattern.compile("https?://[^/]+");
 
     // Normalisation to UTF-8 form
     private static byte[] fixEscapeErrorsAndUnescapeHighOrderUTF8(final String url) {
@@ -138,7 +167,6 @@ public class Normalisation {
         } catch (UnsupportedEncodingException e) {
             throw new IllegalStateException("Internal error: UTF-8 must be supported by the JVM", e);
         }
-
     }
 
     private static void hexEscape(int codePoint, ByteArrayOutputStream sb) {
@@ -146,25 +174,13 @@ public class Normalisation {
         sb.write(HEX[codePoint >> 4]);
         sb.write(HEX[codePoint & 0xF]);
     }
-    private final static byte[] HEX = "0123456789abcdef".getBytes(UTF8_CHARSET);
+    private final static byte[] HEX = "0123456789abcdef".getBytes(UTF8_CHARSET); // Assuming lowercase
 
+    // Some low-order characters must always be escaped
     private static boolean mustEscape(int codePoint) {
-        return codePoint == ' ';
+        return codePoint == ' ' || codePoint == '%';
     }
 
-
-    // Hex escapes:
-    // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20rosé%2010%25.html or
-    // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20ros%C3%A9%2010%25.html if produceValidURL
-    //
-    // - Space is escaped to %20
-    // - High-order UTF-8 characters are kept as-is, unless produceValidURL is true in which case they are escaped
-    // - Faulty hex escapes (%.html) are handled by escaping the percent (%25.html)
-    //
-    // If a canonicalised URL is to be used for requests to an external web-service, it must either be constructed
-    // with produceValidURL or the calling client must handle escaping. e.g. curl's --data-urlencode.
-    //
-    // Note: The normalisation is less strong if produceValidURL is true, e.g. %2A and * are treated as different
     private static boolean isHex(byte b) {
         return (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
     }

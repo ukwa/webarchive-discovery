@@ -60,7 +60,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private boolean extractLinks;
 	private boolean extractElementsUsed;
     private boolean extractImageLinks;
-	
+    private boolean normaliseLinks;
+
 	public HTMLAnalyser( Config conf ) {
 	    this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
 		log.info("HTML - Extract resource links " + this.extractLinks);
@@ -72,6 +73,10 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		log.info("HTML - Extract elements used " + this.extractElementsUsed);
         this.extractImageLinks = conf.getBoolean( "warc.index.extract.linked.images" );
 	    log.info("HTML - Extract image links " + this.extractElementsUsed);
+		normaliseLinks = conf.hasPath(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
+               conf.getBoolean(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) :
+				uk.bl.wa.parsers.HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
+
         hfp = new HtmlFeatureParser(conf);
 	}
 	/**
@@ -109,7 +114,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
           String[] imageLinks = metadata.getValues( HtmlFeatureParser.IMAGE_LINKS );
           if (imageLinks != null){            
             for( String link : imageLinks ) { 
-              String urlNorm  = Normalisation.canonicaliseURL(link);
+              String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
               solr.addField( SolrFields.SOLR_LINKS_IMAGES, urlNorm);
             }
           }                
@@ -134,7 +139,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 				}
 				// Also store actual resource-level links:
 				if( this.extractLinks ){
-				    String urlNorm  = Normalisation.canonicaliseURL(link);
+					String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
 					solr.addField( SolrFields.SOLR_LINKS, urlNorm );
 				}
 			}
