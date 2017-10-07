@@ -172,7 +172,7 @@
         <!-- User supplied Archive-It fields: -->
         <field name="institution" type="string" indexed="true" multiValued="false" docValues="true"/>
         <field name="collection_name" type="string" indexed="true" multiValued="false" docValues="true"/>
-        <field name="collection_number" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <field name="collection_id" type="string" indexed="true" multiValued="false" docValues="true"/>
         <!--:User supplied Archive-It fields -->
         
         <dynamicField name="*_ws" type="text_ws"  indexed="true"  stored="true"/>

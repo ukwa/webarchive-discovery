@@ -354,7 +354,7 @@ public class WARCIndexer {
 			// -----------------------------------------------------
 			solr.setField( SolrFields.INSTITUTION, WARCIndexerCommand.institution );
 			solr.setField( SolrFields.COLLECTION_NAME, WARCIndexerCommand.collection_name );
-			solr.setField( SolrFields.COLLECTION_NUMBER, WARCIndexerCommand.collection_number );
+			solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.collection_id );
 
 			// --- Basic headers ---
 

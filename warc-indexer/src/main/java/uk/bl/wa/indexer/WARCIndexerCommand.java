@@ -91,7 +91,7 @@ public class WARCIndexerCommand {
 	
 	public static String institution;
 	public static String collection_name;
-	public static String collection_number;
+	public static String collection_id;
 
 	/**
 	 * 
@@ -133,7 +133,7 @@ public class WARCIndexerCommand {
                           "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
     options.addOption("i", "institution", true, "Institution.");
     options.addOption("n", "collection_name", true, "Collection name.");
-    options.addOption("u", "collection_number", true, "Collection number.");
+    options.addOption("u", "collection_id", true, "Collection ID.");
 
 		try {
 		    // parse the command line arguments
@@ -217,7 +217,7 @@ public class WARCIndexerCommand {
 			}
 			
 			if (line.hasOption("u")) {
-			  collection_number = line.getOptionValue("u");
+			  collection_id = line.getOptionValue("u");
 			}
 
             // Check for commit disabling
@@ -225,7 +225,7 @@ public class WARCIndexerCommand {
 
 			parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
                            isTextRequired, slashPages, batchSize, annotationsFile,
-                           disableCommit, institution, collection_name, collection_number);
+                           disableCommit, institution, collection_name, collection_id);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -247,7 +247,7 @@ public class WARCIndexerCommand {
 			String solrUrl, String[] args, boolean isTextRequired,
 			boolean slashPages, int batchSize, String annotationsFile,
             boolean disableCommit, String institution, String collection_name,
-            String collection_number)
+            String collection_id)
 			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,
 			IOException {
