@@ -24,7 +24,11 @@ package uk.bl.wa.extract;
 
 import static org.junit.Assert.assertEquals;
 
+import org.apache.commons.httpclient.URIException;
+import org.archive.url.UsableURI;
+import org.archive.url.UsableURIFactory;
 import org.junit.Test;
+import uk.bl.wa.util.Normalisation;
 
 public class LinkExtractorTest {
 
@@ -50,6 +54,29 @@ public class LinkExtractorTest {
         System.err.println("domain " + domain + " from " + host);
         assertEquals(expectedResult, domain);
 
+    }
+
+    // What is a domain? Answer: It depends. Not just on country-level (the uk-system), but also on individual services.
+    @Test
+    public void testExtractDomainFromFullURL() throws URIException {
+        final String[][] TESTS = new String[][]{
+                // url, host, domain
+                {"http://fourth.whatever.example.com/",    "fourth.whatever.example.com",    "example.com"},
+                {"http://fourth.whatever.googleapis.com/", "fourth.whatever.googleapis.com", "whatever.googleapis.com"},
+                {"http://fourth.whatever.cloudfront.net",  "fourth.whatever.cloudfront.net", "whatever.cloudfront.net"},
+                {"http://fourth.whatever.blogspot.dk/",    "fourth.whatever.blogspot.dk",    "whatever.blogspot.dk"}
+        };
+
+        for (String[] test: TESTS) {
+            UsableURI url = UsableURIFactory.getInstance(test[0]);
+
+            String host = url.getHost();
+            String canonHost = Normalisation.canonicaliseHost(host);
+            assertEquals("The URL '" + test[0] + "' should have the correct host extracted", test[1], canonHost);
+            
+            final String domain = LinkExtractor.extractPrivateSuffixFromHost(canonHost);
+            assertEquals("The URL '" + test[0] + "' should have the correct domain extracted", test[2], domain);
+        }
     }
 
 }
