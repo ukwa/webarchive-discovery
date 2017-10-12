@@ -90,7 +90,7 @@ public class WARCIndexerCommand {
 	private static boolean debugMode = false;
 	
 	public static String institution;
-	public static String collection_name;
+	public static String collection;
 	public static String collection_id;
 
 	/**
@@ -132,7 +132,7 @@ public class WARCIndexerCommand {
 		options.addOption("d", "disable_commit", false,
                           "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
     options.addOption("i", "institution", true, "Institution.");
-    options.addOption("n", "collection_name", true, "Collection name.");
+    options.addOption("n", "collection", true, "Collection.");
     options.addOption("u", "collection_id", true, "Collection ID.");
 
 		try {
@@ -213,7 +213,7 @@ public class WARCIndexerCommand {
 			}
 			
 			if (line.hasOption("n")) {
-			  collection_name = line.getOptionValue("n");
+			  collection = line.getOptionValue("n");
 			}
 			
 			if (line.hasOption("u")) {
@@ -225,7 +225,7 @@ public class WARCIndexerCommand {
 
 			parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
                            isTextRequired, slashPages, batchSize, annotationsFile,
-                           disableCommit, institution, collection_name, collection_id);
+                           disableCommit, institution, collection, collection_id);
 		
 		} catch (org.apache.commons.cli.ParseException e) {
 			log.error("Parse exception when processing command line arguments: "+e);
@@ -246,7 +246,7 @@ public class WARCIndexerCommand {
 	public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
 			String solrUrl, String[] args, boolean isTextRequired,
 			boolean slashPages, int batchSize, String annotationsFile,
-            boolean disableCommit, String institution, String collection_name,
+            boolean disableCommit, String institution, String collection,
             String collection_id)
 			throws NoSuchAlgorithmException,
 			TransformerFactoryConfigurationError, TransformerException,

@@ -148,6 +148,6 @@ public interface SolrFields {
 	
 	//User supplied Archive-It fields
 	public static final String INSTITUTION = "institution";
-	public static final String COLLECTION_NAME = "collection_name";
+	public static final String COLLECTION = "collection";
 	public static final String COLLECTION_ID = "collection_id";
 }
