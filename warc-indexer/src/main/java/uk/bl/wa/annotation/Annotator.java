@@ -58,7 +58,6 @@ import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.url.UsableURIFactory;
 import org.archive.util.SurtPrefixSet;
-import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jdom.JDOMException;
 
 import uk.bl.wa.indexer.WARCIndexer;
@@ -79,8 +78,6 @@ public class Annotator {
 
     private SurtPrefixSet openAccessSurts = null;
 
-	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
-	
 
 	/**
 	 * Factory method to pull annotations from ACT.

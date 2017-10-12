@@ -386,18 +386,24 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			  String exif_latitude = metadata.get("GPS Latitude");
 	          String exif_longitude = metadata.get("GPS Longitude");	        
 	          	          
-	          if (exif_latitude != null && exif_longitude != null){
-	            try{
-	              double latitude = DMS2DG(exif_latitude);
-	              double longitude = DMS2DG( exif_longitude);                 
-                  if (latitude != 0d && longitude != 0d){ // Sometimes they are defined but both 0
-                     solr.addField(SolrFields.EXIF_LOCATION, latitude+","+longitude);
-                  }
-	            }
-	            catch(Exception e){ //Just ignore. No GPS data added to solr
-	              log.error("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
-	            }	            	          
-	          }	          	            
+				if (exif_latitude != null && exif_longitude != null){
+					double latitude = DMS2DG(exif_latitude);
+					double longitude = DMS2DG( exif_longitude);
+
+					try {
+						if (latitude != 0d && longitude != 0d){ // Sometimes they are defined but both 0
+							if (latitude <= 90 && latitude >= -90 && longitude <= 180 && longitude >= -180){
+								solr.addField(SolrFields.EXIF_LOCATION, latitude+","+longitude);
+							}
+							else{
+								log.error("invalid gsp exif information:"+exif_latitude +","+exif_longitude);
+							}
+
+						}
+					} catch(Exception e){ //Just ignore. No GPS data added to solr
+						log.error("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
+					}
+				}
 			}
 			//End image exif metadata
 			

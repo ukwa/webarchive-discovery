@@ -36,7 +36,6 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.SURT;
-import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import com.typesafe.config.Config;
 
@@ -46,6 +45,7 @@ import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author anj
@@ -60,10 +60,9 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 	private boolean extractLinks;
 	private boolean extractElementsUsed;
     private boolean extractImageLinks;
-	
-	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
+    private boolean normaliseLinks;
 
-	public HTMLAnalyser( Config conf ) {			  		 
+	public HTMLAnalyser( Config conf ) {
 	    this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
 		log.info("HTML - Extract resource links " + this.extractLinks);
 		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
@@ -74,6 +73,10 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		log.info("HTML - Extract elements used " + this.extractElementsUsed);
         this.extractImageLinks = conf.getBoolean( "warc.index.extract.linked.images" );
 	    log.info("HTML - Extract image links " + this.extractElementsUsed);
+		normaliseLinks = conf.hasPath(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
+               conf.getBoolean(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) :
+				uk.bl.wa.parsers.HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
+
         hfp = new HtmlFeatureParser(conf);
 	}
 	/**
@@ -111,7 +114,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
           String[] imageLinks = metadata.getValues( HtmlFeatureParser.IMAGE_LINKS );
           if (imageLinks != null){            
             for( String link : imageLinks ) { 
-              String urlNorm  = canon.canonicalize(link); 
+              String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
               solr.addField( SolrFields.SOLR_LINKS_IMAGES, urlNorm);
             }
           }                
@@ -136,7 +139,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 				}
 				// Also store actual resource-level links:
 				if( this.extractLinks ){
-				    String urlNorm  = canon.canonicalize(link); 
+					String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
 					solr.addField( SolrFields.SOLR_LINKS, urlNorm );
 				}
 			}
@@ -148,7 +151,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 					String cHost = host;
 					if (WARCIndexer.CANONICALISE_HOST) {
 						try {
-							cHost = canon.urlStringToKey(host).replace("/", "");
+							cHost = Normalisation.canonicaliseHost(host);
 						} catch (URIException e) {
 							log.error("Failed to canonicalise host: " + host
 									+ ": " + e);
