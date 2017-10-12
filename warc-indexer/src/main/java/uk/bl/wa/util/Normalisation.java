@@ -1,24 +1,32 @@
 package uk.bl.wa.util;
+
 /*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2017 The UK Web Archive
+ * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
  */
 
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
@@ -32,6 +40,8 @@ import java.util.regex.Pattern;
  * That should be incorporated here instead of the AggressiveUrlCanonicalizer and the custom code.
  */
 public class Normalisation {
+    private static Log log = LogFactory.getLog( Normalisation.class );
+
     private static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
@@ -44,6 +54,13 @@ public class Normalisation {
      */
     public static String canonicaliseURL(String url) {
         return canonicaliseURL(url, true, true);
+    }
+
+    /**
+     * Corrects errors in URLs. Currently only handles faulty escapes, such as "...wine 12% proof...".
+     */
+    public static String fixURLErrors(String url) {
+        return canonicaliseURL(url, false, false);
     }
 
     /**
@@ -124,7 +141,7 @@ public class Normalisation {
         ByteArrayOutputStream sb = new ByteArrayOutputStream(utf8.length*2);
         int i = 0;
         while (i < utf8.length) {
-            int c = utf8[i];
+            int c = 0xFF & utf8[i];
             if (c == '%') {
                 int codePoint = Integer.parseInt("" + (char) utf8[i + 1] + (char) utf8[i + 2], 16);
                 if (mustEscape(codePoint) || !normaliseLowOrder) { // Pass on unmodified
@@ -139,8 +156,12 @@ public class Normalisation {
                 } else {
                     sb.write(0xFF & c);
                 }
+            } else if ((0b11000000 & c) == 0b10000000) { // Non-first UTF-8 byte as first byte
+                hexEscape(c, sb);
             } else if ((0b11100000 & c) == 0b11000000) { // 2 byte UTF-8
-                if (escapeHighOrder) {
+                if (i >= utf8.length-1 || (0b11000000 & utf8[i+1]) != 0b10000000) { // No or wrong byte follows
+                    hexEscape(c, sb);
+                } else if (escapeHighOrder) {
                     hexEscape(0xff & utf8[i++], sb);
                     hexEscape(0xff & utf8[i], sb);
                 } else {
@@ -148,17 +169,29 @@ public class Normalisation {
                     sb.write(utf8[i]);
                 }
             } else if ((0b11110000 & utf8[i]) == 0b11100000) { // 3 byte UTF-8
-                hexEscape(0xff & utf8[i++], sb);
-                hexEscape(0xff & utf8[i++], sb);
-                hexEscape(0xff & utf8[i], sb);
+                if (i >= utf8.length-2 || (0b11000000 & utf8[i+1]) != 0b10000000 ||
+                    (0b11000000 & utf8[i+2]) != 0b10000000) { // Too few or wrong bytes follows
+                    hexEscape(c, sb);
+                } else {
+                    hexEscape(0xff & utf8[i++], sb);
+                    hexEscape(0xff & utf8[i++], sb);
+                    hexEscape(0xff & utf8[i], sb);
+                }
             } else if ((0b11111000 & utf8[i]) == 0b11110000) { // 4 byte UTF-8
-                hexEscape(0xff & utf8[i++], sb);
-                hexEscape(0xff & utf8[i++], sb);
-                hexEscape(0xff & utf8[i++], sb);
-                hexEscape(0xff & utf8[i], sb);
-            } else {
-                // TODO: Make a hex-dump of the first x bytes for a better error message
-                throw new IllegalArgumentException("The input byte-array did not translate to supported UTF-8");
+                if (i >= utf8.length-3 || (0b11000000 & utf8[i+1]) != 0b10000000 || // Too few or wrong bytes follows
+                    (0b11000000 & utf8[i+2]) != 0b10000000 || (0b11000000 & utf8[i+3]) != 0b10000000) {
+                    hexEscape(c, sb);
+                } else {
+                    hexEscape(0xff & utf8[i++], sb);
+                    hexEscape(0xff & utf8[i++], sb);
+                    hexEscape(0xff & utf8[i++], sb);
+                    hexEscape(0xff & utf8[i], sb);
+                }
+            } else {  // Illegal first byte for UTF-8
+                hexEscape(c, sb);
+                log.debug("Sanity check: Unexpected code path encountered.: The input byte-array did not translate" +
+                          " to supported UTF-8 with invalid first-byte for UTF-8 codepoint '0b" +
+                          Integer.toBinaryString(c) + "'. Writing escape code for byte " + c);
             }
             i++;
         }
