@@ -153,8 +153,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 						try {
 							cHost = Normalisation.canonicaliseHost(host);
 						} catch (URIException e) {
-							log.error("Failed to canonicalise host: " + host
-									+ ": " + e);
+							log.error("Failed to canonicalise host: '" + host
+									+ "': " + e);
 							cHost = host;
 						}
 					}

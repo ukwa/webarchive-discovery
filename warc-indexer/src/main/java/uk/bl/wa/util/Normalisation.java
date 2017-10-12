@@ -46,7 +46,7 @@ public class Normalisation {
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
     public static String canonicaliseHost(String host) throws URIException {
-        return canon.urlStringToKey(host).replace("/", "");
+        return canon.urlStringToKey(host.trim()).replace("/", "");
     }
 
     /**

@@ -23,6 +23,8 @@ package uk.bl.wa.util;
  */
 
 import static org.junit.Assert.assertEquals;
+
+import org.apache.commons.httpclient.URIException;
 import org.junit.Test;
 
 public class NormalisationTest {
@@ -114,6 +116,23 @@ public class NormalisationTest {
         for (String[] test: TESTS) {
             assertEquals("The input '" + test[0] + "' should be normalised and error-corrected as expected",
                          test[1], Normalisation.canonicaliseURL(test[0]));
+        }
+    }
+
+    @Test
+    public void testCanonicaliseHost() throws URIException {
+        final String[][] TESTS = new String[][]{
+                {"http://example.com/",  "example.com"},
+                {"http://example.com",   "example.com"},
+                {"http://example.com ",  "example.com"},
+
+                {"https://example.com/", "example.com"},
+                {"https://example.com",  "example.com"},
+                {"https://example.com ", "example.com"},
+        };
+        for (String[] test: TESTS) {
+            assertEquals("The input '" + test[0] + "' should be reduced to the expected host",
+                         test[1], Normalisation.canonicaliseHost(test[0]));
         }
     }
 }
