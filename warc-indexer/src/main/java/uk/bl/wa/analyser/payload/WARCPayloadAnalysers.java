@@ -44,6 +44,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.TikaExtractor;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
 
 
@@ -160,7 +161,7 @@ public class WARCPayloadAnalysers {
 				// Pass the URL in so DROID can fall back on that:
 				Metadata metadata = new Metadata();
 				if( passUriToFormatTools ) {
-					UsableURI uuri = UsableURIFactory.getInstance( header.getUrl() );
+					UsableURI uuri = UsableURIFactory.getInstance(Normalisation.fixURLErrors(header.getUrl()) );
 					// Droid seems unhappy about spaces in filenames, so hack to avoid:
 					String cleanUrl = uuri.getName().replace( " ", "+" );
 					metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );

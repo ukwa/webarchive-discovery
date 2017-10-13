@@ -87,14 +87,14 @@ public class HtmlFeatureParserTest {
         final String[][] TESTS = new String[][] { // Expected, input
 //                {"http://example.org", "http://www.example.org"},
                 {"http://example.org/foo", "http://www.example.org/foo"},
-                {"http://example.org", "http://example.org"},
-                {"http://example.org", "http://example.org?"},
+                {"http://example.org/", "http://example.org"},
+                {"http://example.org/", "http://example.org?"},
                 //{"http://example.org", "https://example.org?"},
-                {"http://example.org", "http://user@example.org"},
+                {"http://example.org/", "http://user@example.org"},
                 {"http://example.org/foo", "http://user@www.example.org/foo"},
 //                {"http://example.org", "http://user@www.example.org"},
-                {"http://example.org", "http://eXample.org"},
-                {"http://example.org", "http://example.ORG"},
+                {"http://example.org/", "http://eXample.org"},
+                {"http://example.org/", "http://example.ORG"},
 //                {"http://example.org", "http://example.org/"},
 //                {"http://example.org", "http://example.org/index.html"}
         };

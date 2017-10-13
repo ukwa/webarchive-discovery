@@ -1,21 +1,30 @@
 package uk.bl.wa.util;
+
 /*
+ * #%L
+ * warc-indexer
+ * %%
+ * Copyright (C) 2013 - 2017 The UK Web Archive
+ * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
  */
 
 import static org.junit.Assert.assertEquals;
+
+import org.apache.commons.httpclient.URIException;
 import org.junit.Test;
 
 public class NormalisationTest {
@@ -64,6 +73,37 @@ public class NormalisationTest {
     }
 
     @Test
+    public void testNonUTF8Escapes() {
+        final String[][] TESTS = new String[][]{
+                {"http://example.com/%C3%86blegr%C3%B8d", "http://example.com/Æblegrød"},     // UTF-8 escapes
+                {"http://example.com/%C3%86blegr%C3",     "http://example.com/Æblegr%c3"},    // Half UTF-8 2-byte escape
+                {"http://example.com/Æblegrød",           "http://example.com/æblegrød"},     // Direct unicode
+                {"http://example.com/%C6blegr%F8d",       "http://example.com/%c6blegr%f8d"}, // ISO-8859-1
+        };
+
+        for (String[] test: TESTS) {
+            assertEquals("The input '" + test[0] + "' should be normalised as expected",
+                         test[1], Normalisation.canonicaliseURL(test[0]));
+        }
+    }
+
+    @Test
+    public void testEscapeFix() {
+        final String[][] TESTS = new String[][]{
+                {"http://example.com/%",         "http://example.com/%25"},
+                {"http://example.com/%%25",      "http://example.com/%25%25"},
+                {"http://example.com/10% proof", "http://example.com/10%25%20proof"},
+                {"http://example.com/%a%2A",     "http://example.com/%25a%2a"},
+                {"http://example.com/%g1%2A",    "http://example.com/%25g1%2a"},
+        };
+
+        for (String[] test: TESTS) {
+            assertEquals("The input '" + test[0] + "' should be error corrected as expected",
+                         test[1], Normalisation.fixURLErrors(test[0]));
+        }
+    }
+
+    @Test
     public void testFaultyHARDURLNormalisation() {
         final String[][] TESTS = new String[][]{
                 {"http://example.com/%",         "http://example.com/%25"},
@@ -76,6 +116,23 @@ public class NormalisationTest {
         for (String[] test: TESTS) {
             assertEquals("The input '" + test[0] + "' should be normalised and error-corrected as expected",
                          test[1], Normalisation.canonicaliseURL(test[0]));
+        }
+    }
+
+    @Test
+    public void testCanonicaliseHost() throws URIException {
+        final String[][] TESTS = new String[][]{
+                {"http://example.com/",  "example.com"},
+                {"http://example.com",   "example.com"},
+                {"http://example.com ",  "example.com"},
+
+                {"https://example.com/", "example.com"},
+                {"https://example.com",  "example.com"},
+                {"https://example.com ", "example.com"},
+        };
+        for (String[] test: TESTS) {
+            assertEquals("The input '" + test[0] + "' should be reduced to the expected host",
+                         test[1], Normalisation.canonicaliseHost(test[0]));
         }
     }
 }
