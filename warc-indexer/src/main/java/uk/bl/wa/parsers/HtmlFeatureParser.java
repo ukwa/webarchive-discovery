@@ -43,7 +43,6 @@ import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
-import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -53,6 +52,7 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 public class HtmlFeatureParser extends AbstractParser {
 
@@ -276,9 +276,8 @@ public class HtmlFeatureParser extends AbstractParser {
      * @return the link in normalised form or the unchanged link if normalisation has not been enabled.
      */
     public String normaliseLink(String link) {
-        return normaliseLinks ? linkNormaliser.canonicalize(link) : link;
+        return normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
     }
-    private final AggressiveUrlCanonicalizer linkNormaliser = new AggressiveUrlCanonicalizer();
 
     public static Metadata extractMetadata( InputStream in, String url ) {
 		HtmlFeatureParser hfp = new HtmlFeatureParser();

@@ -73,7 +73,6 @@ import org.archive.util.SurtPrefixSet;
 import org.archive.wayback.accesscontrol.staticmap.StaticMapExclusionFilterFactory;
 import org.archive.wayback.core.CaptureSearchResult;
 import org.archive.wayback.resourceindex.filters.ExclusionFilter;
-import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -95,6 +94,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * 
@@ -114,7 +114,6 @@ public class WARCIndexer {
 	private List<String> record_type_includes;
 
 	private MessageDigest md5 = null;
-	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
 	/** */
 	private boolean extractText;
@@ -144,7 +143,6 @@ public class WARCIndexer {
 
     // Paired with HtmlFeatureParsers links-extractor
     private final boolean addNormalisedURL;
-    private final AggressiveUrlCanonicalizer urlNormaliser = new AggressiveUrlCanonicalizer();
 
 	// Also canonicalise the HOST field (e.g. drop "www.")
 	public static final boolean CANONICALISE_HOST = true;
@@ -372,10 +370,7 @@ public class WARCIndexer {
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
             solr.setField(SolrFields.SOLR_URL, header.getUrl());
             if (addNormalisedURL) {
-            	// TODO: This is very messy. All the URL-normalising should be moved to a helper class
-				String normURL = urlNormaliser.canonicalize(
-						targetUrl.startsWith("https://") ? "http://" + targetUrl.substring(8) : targetUrl);
-                solr.setField( SolrFields.SOLR_URL_NORMALISED, urlNormaliser.canonicalize(normURL) );
+                solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
             }
 
 			// Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
@@ -648,7 +643,7 @@ public class WARCIndexer {
         // and the public suffix:
         String host = url.getHost();
         if (CANONICALISE_HOST)
-            host = canon.urlStringToKey(host).replace("/", "");
+            host = Normalisation.canonicaliseHost(host);
         solr.setField(SolrFields.SOLR_HOST, host);
 
         // Add the SURT host
@@ -674,10 +669,6 @@ public class WARCIndexer {
 
     }
 
-	/**
-	 * @param firstDate
-	 * @return
-	 */
 	private synchronized String getYearFromDate(Date date) {
 		calendar.setTime(date);
 		return Integer.toString(calendar.get(Calendar.YEAR));
@@ -738,11 +729,6 @@ public class WARCIndexer {
 		return null;
 	}
 
-	/**
-	 * 
-	 * @param fullUrl
-	 * @return
-	 */
 	protected static String parseExtension(String path) {
 		if (path != null && path.indexOf(".") != -1) {
 			String ext = path.substring(path.lastIndexOf("."));

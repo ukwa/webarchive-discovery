@@ -43,7 +43,6 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.common.util.Base64;
-import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.codehaus.jackson.JsonNode;
 import org.codehaus.jackson.JsonParseException;
 import org.codehaus.jackson.JsonParser;
@@ -76,8 +75,6 @@ public class AnnotationsFromAct {
 
 	private static Log LOG = LogFactory.getLog( AnnotationsFromAct.class );
 	
-	private AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
-
 	private String cookie;
 	private String csrf;
 
