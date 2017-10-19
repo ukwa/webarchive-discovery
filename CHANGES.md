@@ -12,7 +12,7 @@
 * Added and filled resource_name field.
 * Made first_bytes shingler optional.
 * Non-existant elements crop up in elements_used for plain text [#35](https://github.com/ukwa/webarchive-discovery/issues/35)
-* Date-based partial updates not working [#64](https://github.com/ukwa/webarchive-discovery/issues/64) 
+* Date-based partial updates not working [#64](https://github.com/ukwa/webarchive-discovery/issues/64)
 * Added Map-Reduce tools to generate 'MDX' (Metadata inDeX) sequence files, for resolving revisits and generating datasets of samples and stats. See [#65](https://github.com/ukwa/webarchive-discovery/issues/65) and [#16](https://github.com/ukwa/webarchive-discovery/issues/16).
 * Fix generator extraction [#58](https://github.com/ukwa/webarchive-discovery/issues/58)
 * In MDX, extract audio/video metadata for analysis. [#67](https://github.com/ukwa/webarchive-discovery/issues/67)
@@ -30,12 +30,13 @@
 * Extend annotations mechanism to allow source file prefix as a scope [#96](https://github.com/ukwa/webarchive-discovery/pull/96)
 * And various minor bugfixes. See the [3.0.0 Release Milestone](https://github.com/ukwa/webarchive-discovery/milestone/6) for further details.
 * Source_file_path field added. (full path to warc-file)
-* Images (optional) Exif gps,version extraction and height/width  of images indexed. 
-* Images links exctrated to new field 
+* Images (optional) Exif gps,version extraction and height/width  of images indexed.
+* Images links exctrated to new field
 * new solr field: index_time
 * Two new fields from warc-header: warc_key_id, warc_ip
 * More field values extracted for revisit records.
 * Usage of annotations from config file [#113](https://github.com/ukwa/webarchive-discovery/issues/113)
+* Add user supplied Archive-It Solr fields (collection, collection_id, institution) [#129](https://github.com/ukwa/webarchive-discovery/pull/129)
 
 2.1.0
 -----
@@ -51,7 +52,7 @@
   * The Tika language detection speed improvement [Tika #29](https://github.com/apache/tika/pull/29) has been temporarily copied in order to benefit from the speed without having to use the yet-unreleased Tika 1.8.
   * Some trivial speed-improvements were added by replacing String.replaceAll with precompiled Patterns.
   * Extraction of meta-data from the ARC path has been added: ARCNameAnalyser. The unit test demonstrates how job-names and other data can be extracted.
-  * Optional link and URL normalisation [yika #60](https://github.com/ukwa/webarchive-discovery/pull/60) 
+  * Optional link and URL normalisation [yika #60](https://github.com/ukwa/webarchive-discovery/pull/60)
 
 2.0.0
 -----
