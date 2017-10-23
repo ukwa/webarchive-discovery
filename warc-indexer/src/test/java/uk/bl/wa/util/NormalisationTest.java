@@ -103,6 +103,25 @@ public class NormalisationTest {
         }
     }
 
+    /* In the URL-path, there can be space and plus. These will be distinct when normalised.
+     * In the URL-arguments, space is often translated to plus so both space and plus will be normalised to plus */
+    @Test
+    public void testSpace() {
+// TODO: What about escaped question marks?    {"http://example.com/%3fpath?q=%3f", "http://example.com/%3fpath?q=%3f"},
+        final String[][] TESTS = new String[][]{
+                {"http://example.com/%20 +path",           "http://example.com/%20%20+path"},
+                {"http://example.com/+%20 path",           "http://example.com/+%20%20path"},
+                {"http://example.com/path?foo=%20 +",      "http://example.com/path?foo=+++"},
+                {"http://example.com/%20 +path?foo=%20 +", "http://example.com/%20%20+path?foo=+++"},
+                {"http://example.com/+%20 path?foo=+%20 ", "http://example.com/+%20%20path?foo=+++"},
+        };
+
+        for (String[] test: TESTS) {
+            assertEquals("The input '" + test[0] + "' should be normalised as expected",
+                         test[1], Normalisation.canonicaliseURL(test[0]));
+        }
+    }
+
     @Test
     public void testFaultyHARDURLNormalisation() {
         final String[][] TESTS = new String[][]{
