@@ -130,6 +130,7 @@ public class NormalisationTest {
                 {"http://example.com/10% proof", "http://example.com/10%25%20proof"},
                 {"http://example.com/%a%2A",     "http://example.com/%25a*"},
                 {"http://example.com/%g1%2A",    "http://example.com/%25g1*"},
+                {"http://example.com/hash#%23",  "http://example.com/hash#%23"},
         };
 
         for (String[] test: TESTS) {

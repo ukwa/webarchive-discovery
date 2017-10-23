@@ -150,7 +150,7 @@ public class Normalisation {
                 int codePoint = Integer.parseInt("" + (char) utf8[i + 1] + (char) utf8[i + 2], 16);
                 if (paramSection && codePoint == ' ') { // In parameters, space becomes plus
                     sb.write(0xFF & '+');
-                } else if (mustEscape(codePoint) || !normaliseLowOrder) { // Pass on unmodified
+                } else if (mustEscape(codePoint) || keepEscape(codePoint) || !normaliseLowOrder) { // Pass on unmodified
                     hexEscape(codePoint, sb);
                 } else { // Normalise to ASCII
                     sb.write(0xFF & codePoint);
@@ -218,6 +218,11 @@ public class Normalisation {
     // Some low-order characters must always be escaped
     private static boolean mustEscape(int codePoint) {
         return codePoint == ' ' || codePoint == '%';
+    }
+
+    // If the codePoint is already escaped, keep the escaping
+    private static boolean keepEscape(int codePoint) {
+        return codePoint == '#';
     }
 
     private static boolean isHex(byte b) {
