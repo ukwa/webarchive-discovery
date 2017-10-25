@@ -145,5 +145,9 @@ public interface SolrFields {
 	public static final String IMAGE_FACES_COUNT = "image_faces_count";
 	public static final String IMAGE_COLOURS = "image_colours";
 	public static final String IMAGE_DOMINANT_COLOUR = "image_dominant_colour";
-
+	
+	//User supplied Archive-It fields
+	public static final String INSTITUTION = "institution";
+	public static final String COLLECTION = "collection";
+	public static final String COLLECTION_ID = "collection_id";
 }

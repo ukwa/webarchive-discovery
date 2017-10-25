@@ -346,6 +346,13 @@ public class WARCIndexer {
 				return null;
 			if( this.checkExclusionFilter( targetUrl ) == false )
 				return null;
+				
+			// -----------------------------------------------------
+			// Add user supplied Archive-It Solr fields and values:
+			// -----------------------------------------------------
+			solr.setField( SolrFields.INSTITUTION, WARCIndexerCommand.institution );
+			solr.setField( SolrFields.COLLECTION, WARCIndexerCommand.collection );
+			solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.collection_id );
 
 			// --- Basic headers ---
 
