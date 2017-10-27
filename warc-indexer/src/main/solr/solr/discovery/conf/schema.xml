@@ -94,7 +94,7 @@
         <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-        <field name="resourcename" type="text_general" indexed="true" stored="true"/>
+        <field name="resourcename" type="path" indexed="true" stored="true"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -107,6 +107,7 @@
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
         <field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="url_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="url_search" type="path" indexed="true" stored="false" docValues="false"/> <!-- search only to save space-->
         <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_type" type="text_general" indexed="true" stored="true"/>
@@ -168,7 +169,12 @@
         <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
         <!--:BL UKWA -->
-
+        
+        <!-- User supplied Archive-It fields: -->
+        <field name="institution" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <field name="collection_id" type="string" indexed="true" multiValued="false" docValues="true"/>
+        <!--:User supplied Archive-It fields -->
+        
         <dynamicField name="*_ws" type="text_ws"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en_split" type="text_en_splitting"  indexed="true"  stored="true"/>
@@ -184,6 +190,8 @@
   
         <uniqueKey>id</uniqueKey>
 
+        <!-- TODO: Remove all copyFields where the source is indexed as text and adjust solrconfig.xml
+             to also search in those fields (edismax parser qf) -->
         <copyField source="title" dest="text"/>
         <copyField source="author" dest="text"/>
         <copyField source="keywords" dest="text"/>
@@ -192,6 +200,7 @@
         <copyField source="wct_description" dest="text"/>
         <copyField source="url" dest="text"/>
         <copyField source="content" dest="text"/>
+        <copyField source="url_norm" dest="url_search"/>
    
   <types>
         <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
@@ -224,6 +233,22 @@
         <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
                 <analyzer>
                         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
+                </analyzer>
+        </fieldType>
+
+        <!-- Used for parsing file paths, so that ["MOO BOO/FooBar_zoo.baz"] becomes ["moo", "boo", "foo", "bar", "zoo", "baz"] -->
+        <fieldType name="path" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+                <analyzer type="index">
+                        <tokenizer class="solr.StandardTokenizerFactory"/>
+                        <filter class="solr.WordDelimiterFilterFactory" preserveOriginal="0"/>
+                        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_path.txt"/>
+                        <filter class="solr.LowerCaseFilterFactory"/>
+                </analyzer>
+                <analyzer type="query">
+                        <tokenizer class="solr.StandardTokenizerFactory"/>
+                        <filter class="solr.WordDelimiterFilterFactory" preserveOriginal="0"/>
+                        <filter class="solr.StopFilterFactory" ignoreCase="true" words="stopwords_path.txt"/>
+                        <filter class="solr.LowerCaseFilterFactory"/>
                 </analyzer>
         </fieldType>
 
