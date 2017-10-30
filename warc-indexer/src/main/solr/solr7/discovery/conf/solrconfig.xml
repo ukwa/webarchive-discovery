@@ -236,8 +236,9 @@
          performed.  The ConcurrentMergeScheduler (Lucene 2.3 default)
          can perform merges in the background using separate threads.
          The SerialMergeScheduler (Lucene 2.2 default) does not.
-     -->
-        <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
+    -->
+    <!-- Not present in default solrconfig.xml for Solr 7 -->
+<!--        <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>-->
  
     <!-- LockFactory 
 
@@ -393,9 +394,9 @@
          but does not ensure that data is synced to disk.  This is
          faster and more near-realtime friendly than a hard commit.
       -->
-    <!-- Re-open each 100 minutes. This can be very heavy if the index
-         is queries while indexing (or warmup is used with facets),
-         so we want this to be conservative.
+    <!-- Re-open each 100 minutes. Softcommits can be very heavy if the index
+         is queried while indexing (or warmup is used with facets), so we want
+         this to be conservative.
          https://github.com/ukwa/webarchive-discovery/issues/130 -->
      <autoSoftCommit> 
        <maxTime>${solr.autoSoftCommit.maxTime:6000000}</maxTime> 
@@ -658,6 +659,12 @@
       -->
     <listener event="newSearcher" class="solr.QuerySenderListener">
       <arr name="queries">
+        <!-- We don't put anything here as default in order to make softCommits
+             as cheap as possible (indexing-optimization). When used for
+             searching (or a combined index/search setup), there should be
+             representative queries here: Remember to state requests involving
+             all facets, groupings & sorts that are used -->
+        
         <!--
            <lst><str name="q">solr</str><str name="sort">price asc</str></lst>
            <lst><str name="q">rocks</str><str name="sort">weight asc</str></lst>
@@ -690,7 +697,7 @@
          Recommend values of 1-2 for read-only slaves, higher for
          masters w/o cache warming.
       -->
-    <maxWarmingSearchers>2</maxWarmingSearchers>
+    <maxWarmingSearchers>1</maxWarmingSearchers>
 
   </query>
 
@@ -842,7 +849,40 @@
        <str name="echoParams">explicit</str>
        <int name="rows">10</int>
        <str name="df">text</str>
+       <str name="defType">edismax</str>
+       <str name="q.op">AND</str>
+       <str name="mm">100%</str>
+       <str name="qf">
+         <!-- TODO: These should definitely be different -->
+         title
+         author
+         description
+         url         
+         content     
+         text                                            
+       </str>
+       <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
+       <str name="pf">
+         <!-- Maybe also resourcename and url_search? -->
+         text
+       </str>     
+       <str name="fl">*,score</str>
+       <str name="facet">false</str>
+       <str name="facet.mincount">1</str>
+       <str name="facet.limit">10</str>
+       
+       <!-- Although we don't show facets per default, we want easy enabling of the common ones when
+            turning on faceting in the query -->
+       <str name="facet.field">domain</str>
+       <str name="facet.field">crawl_year</str>
+       <str name="facet.field">public_suffix</str>
+       <str name="facet.field">content_type_norm</str>
+       <str name="facet.field">host</str>   
+
+
+       <!-- TODO: Do something similar to faceting for highlighting: Not turned on, but with sensible setup -->
      </lst>
+     
     <!-- In addition to defaults, "appends" params can be specified
          to identify values which should be appended to the list of
          multi-val params from the query (or the existing "defaults").
