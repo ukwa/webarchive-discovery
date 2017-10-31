@@ -26,11 +26,8 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -209,8 +206,13 @@ public class HtmlFeatureParser extends AbstractParser {
 		// Grab the list of distinct elements used in the page:
 		Set<String> de = new HashSet<String>();
 		for( Element e : doc.select("*") ) {
-			if( !"#root".equals(e.tag().getName()) )
-				de.add(StringUtils.left(e.tag().getName(), 100));
+			// ELEMENT_NAME matching to weed out the worst false positives caused by JavaScript
+			// This handles cases such as '<script> if (3<a) console.log('something');' where 'a' would have been
+			// seen as a tag, but does not handle cases such as '<script> if ( 3<a ) console.log('something');' where
+			// the a is still seen as a tag because it is followed by a space
+			if( !"#root".equals(e.tag().getName()) && ELEMENT_NAME.matcher(e.tag().getName()).matches() ) {
+				de.add(StringUtils.left(e.tag().getName().toLowerCase(Locale.ENGLISH), 100));
+			}
 		}
 		// For some elements, dig deeper and record attributes too:
 		for (Element e : doc.select("link")) {
@@ -232,7 +234,9 @@ public class HtmlFeatureParser extends AbstractParser {
 		}
         Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#featureextract", nonJsoupStart);
 	}
-	
+
+	// https://www.w3.org/TR/html/syntax.html#tag-name
+	private final Pattern ELEMENT_NAME = Pattern.compile("[a-zA-Z0-9]+");
 
 	/**
 	 * Use a tolerant parser to extract all of the absolute a href links from a document.
