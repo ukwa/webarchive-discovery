@@ -16,9 +16,13 @@
  limitations under the License.
 -->
 
+<!-- 
+This schema is for Solr 7+ and will not work under Solr 6.
+-->
+
 <schema name="ukwa" version="1.6">
   <fields>
-        <field name="id" type="string" indexed="true" stored="false" required="true" multiValued="false" docValues="true"/>
+        <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true"/>
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
@@ -26,7 +30,6 @@
          <!--Not defined in SolrFields. Schema only defintion -->
         <field name="index_time" type="date" indexed="true" stored="false" docValues="true" default="NOW" /> 
 
-        <!-- BL UKWA: additional -->
         <field name="access_terms" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="author" type="string" indexed="true" docValues="true"/>
         <field name="category" type="text_general" indexed="true" stored="true"/>
@@ -37,21 +40,21 @@
         <field name="content_ffb" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_first_bytes" type="hex_text_shingle" indexed="true" stored="true" multiValued="false"/>
         <field name="content_language" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="content_length" type="tint" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="content_length" type="int" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="content_metadata_ss" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="content_metadata" type="text_general" indexed="true" stored="true" multiValued="false"/>
-        <field name="content_text_length" type="tint" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="content_text_length" type="int" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="content_type_droid" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_ext" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_full" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
         <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>       
-        <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
+        <field name="content" type="text_general" indexed="false" stored="true" multiValued="false"/>
         <field name="content_type_tika" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="content_type_version" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="crawl_dates" type="tdate" indexed="true" stored="true" multiValued="true"/>
-        <field name="crawl_date" type="tdate" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="crawl_dates" type="date" indexed="true" stored="true" multiValued="true"/>
+        <field name="crawl_date" type="date" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="crawl_year_month_day" type="int" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_year_month" type="int" indexed="true" docValues="true" multiValued="false"/>
         <field name="crawl_years" type="int" indexed="true" docValues="true" multiValued="true"/>
@@ -67,13 +70,13 @@
         <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
         <field name="image_colours" type="string" indexed="true" stored="true" multiValued="true"/>
         <field name="image_dominant_colour" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_faces_count" type="tint" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_faces_count" type="int" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces" type="string" indexed="false" stored="true" multiValued="true"/>
-        <field name="image_height" type="tlong" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_size" type="tlong" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_width" type="tlong" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_height" type="long" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_size" type="long" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_width" type="long" indexed="true" stored="true" multiValued="false"/>
         <field name="keywords" type="text_general" indexed="true" stored="true"/>
-        <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
+        <field name="last_modified" type="date" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
@@ -89,17 +92,17 @@
         <field name="pdf_pdfa_is_valid" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="postcode_district" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="postcode" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+        <field name="publication_date" type="date" indexed="true" stored="true" multiValued="false"/>
         <field name="publication_year" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-        <field name="resourcename" type="path" indexed="true" stored="true"/>
+        <field name="resourcename" type="path" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="source_file_path" type="string" indexed="true" docValues="true" />
-        <field name="source_file_offset" type="tlong" indexed="true" stored="true" />
+        <field name="source_file_path" type="string" indexed="true" multiValued="false" docValues="true" />
+        <field name="source_file_offset" type="long" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
         <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
@@ -107,8 +110,8 @@
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
         <field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="url_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
-        <field name="url_search" type="path" indexed="true" stored="false" docValues="false"/> <!-- search only to save space-->
-        <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="url_search" type="path" indexed="true" stored="false" multiValued="false" docValues="false"/> <!-- search only to save space-->
+        <field name="url_path" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="url" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_type" type="text_general" indexed="true" stored="true"/>
         <field name="wayback_date" type="long" indexed="false" stored="true" docValues="false" multiValued="false"/>
@@ -123,11 +126,17 @@
         <field name="warc_key_id" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="warc_ip" type="string" indexed="true" docValues="true" multiValued="false"/>
         <!--:BL UKWA -->
-
-
+        
         <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->        
         <!-- arc_full is required for solrwayback. Will only be used if defined in the config file--> 
-        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/> 
+        <!-- SB arc-name fields  start -->
+        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="arc_name" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="arc_orig" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+        <field name="arc_job" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>      
+        <field name="arc_harvest" type="string" indexed="true" stored="true" multiValued="false"/>   
+        <field name="arc_harvesttime" type="string" indexed="true" stored="true" multiValued="false"/>
+         
 
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
         <dynamicField name="*_is" type="ints"    indexed="true"  stored="true"/>
@@ -143,20 +152,20 @@
         <dynamicField name="*_fs" type="floats"  indexed="true"  stored="true"/>
         <dynamicField name="*_d"  type="double" indexed="true"  stored="true"/>
         <dynamicField name="*_ds" type="doubles" indexed="true"  stored="true"/>
-        <dynamicField name="*_coordinate"  type="tdouble" indexed="true"  stored="false" />
+        <dynamicField name="*_coordinate"  type="double" indexed="true"  stored="false" />
         <dynamicField name="*_dt"  type="date"    indexed="true"  stored="true"/>
         <dynamicField name="*_dts" type="date"    indexed="true"  stored="true" multiValued="true"/>
         <dynamicField name="*_p"  type="location" indexed="true" stored="true"/>
-        <dynamicField name="*_ti" type="tint"    indexed="true"  stored="true"/>
-        <dynamicField name="*_tis" type="tints"    indexed="true"  stored="true"/>
-        <dynamicField name="*_tl" type="tlong"   indexed="true"  stored="true"/>
-        <dynamicField name="*_tls" type="tlongs"   indexed="true"  stored="true"/>
-        <dynamicField name="*_tf" type="tfloat"  indexed="true"  stored="true"/>
-        <dynamicField name="*_tfs" type="tfloats"  indexed="true"  stored="true"/>
-        <dynamicField name="*_td" type="tdouble" indexed="true"  stored="true"/>
-        <dynamicField name="*_tds" type="tdoubles" indexed="true"  stored="true"/>
-        <dynamicField name="*_tdt" type="tdate"  indexed="true"  stored="true"/>
-        <dynamicField name="*_tdts" type="tdates"  indexed="true"  stored="true"/>
+        <dynamicField name="*_ti" type="int"    indexed="true"  stored="true"/>
+        <dynamicField name="*_tis" type="ints"    indexed="true"  stored="true"/>
+        <dynamicField name="*_tl" type="long"   indexed="true"  stored="true"/>
+        <dynamicField name="*_tls" type="longs"   indexed="true"  stored="true"/>
+        <dynamicField name="*_tf" type="float"  indexed="true"  stored="true"/>
+        <dynamicField name="*_tfs" type="floats"  indexed="true"  stored="true"/>
+        <dynamicField name="*_td" type="double" indexed="true"  stored="true"/>
+        <dynamicField name="*_tds" type="doubles" indexed="true"  stored="true"/>
+        <dynamicField name="*_tdt" type="date"  indexed="true"  stored="true"/>
+        <dynamicField name="*_tdts" type="dates"  indexed="true"  stored="true"/>
         <dynamicField name="ignored_*" type="ignored" multiValued="true"/>
         <dynamicField name="attr_*" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <dynamicField name="random_*" type="random" />
@@ -207,26 +216,16 @@
         <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true" docValues="true" />
         <fieldType name="boolean" class="solr.BoolField" sortMissingLast="true"/>
         <fieldType name="booleans" class="solr.BoolField" sortMissingLast="true" multiValued="true"/>
-        <fieldType name="int" class="solr.TrieIntField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
-        <fieldType name="float" class="solr.TrieFloatField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
-        <fieldType name="long" class="solr.TrieLongField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
-        <fieldType name="double" class="solr.TrieDoubleField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
-        <fieldType name="ints" class="solr.TrieIntField" docValues="true" precisionStep="0" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="floats" class="solr.TrieFloatField" docValues="true" precisionStep="0" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="longs" class="solr.TrieLongField" docValues="true" precisionStep="0" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="doubles" class="solr.TrieDoubleField" docValues="true" precisionStep="0" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="tint" class="solr.TrieIntField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
-        <fieldType name="tfloat" class="solr.TrieFloatField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
-        <fieldType name="tlong" class="solr.TrieLongField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
-        <fieldType name="tdouble" class="solr.TrieDoubleField" docValues="true" precisionStep="8" positionIncrementGap="0"/>
-        <fieldType name="tints" class="solr.TrieIntField" docValues="true" precisionStep="8" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="tfloats" class="solr.TrieFloatField" docValues="true" precisionStep="8" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="tlongs" class="solr.TrieLongField" docValues="true" precisionStep="8" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="tdoubles" class="solr.TrieDoubleField" docValues="true" precisionStep="8" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="date" class="solr.TrieDateField" docValues="true" precisionStep="0" positionIncrementGap="0"/>
-        <fieldType name="dates" class="solr.TrieDateField" docValues="true" precisionStep="0" positionIncrementGap="0" multiValued="true"/>
-        <fieldType name="tdate" class="solr.TrieDateField" docValues="true" precisionStep="6" positionIncrementGap="0"/>
-        <fieldType name="tdates" class="solr.TrieDateField" docValues="true" precisionStep="6" positionIncrementGap="0" multiValued="true"/>
+        <fieldType name="int" class="solr.IntPointField" docValues="true"/>
+        <fieldType name="ints" class="solr.IntPointField" docValues="true"  multiValued="true"/>
+        <fieldType name="float" class="solr.FloatPointField" docValues="true"/>
+        <fieldType name="floats" class="solr.FloatPointField" docValues="true" multiValued="true"/>
+        <fieldType name="long" class="solr.LongPointField" docValues="true"/>
+        <fieldType name="longs" class="solr.LongPointField" docValues="true" multiValued="true"/>
+        <fieldType name="double" class="solr.DoublePointField" docValues="true"/>        
+        <fieldType name="doubles" class="solr.DoublePointField" docValues="true" multiValued="true"/>
+        <fieldType name="date" class="solr.DatePointField" docValues="true"/>
+        <fieldType name="dates" class="solr.DatePointField" docValues="true" multiValued="true"/>
         <fieldType name="binary" class="solr.BinaryField"/>
         <fieldType name="random" class="solr.RandomSortField" indexed="true" />
   
@@ -237,7 +236,7 @@
         </fieldType>
 
         <!-- Used for parsing file paths, so that ["MOO BOO/FooBar_zoo.baz"] becomes ["moo", "boo", "foo", "bar", "zoo", "baz"] -->
-        <fieldType name="path" class="solr.TextField" positionIncrementGap="100" multiValued="true">
+        <fieldType name="path" class="solr.TextField" positionIncrementGap="100" multiValued="false">
                 <analyzer type="index">
                         <tokenizer class="solr.StandardTokenizerFactory"/>
                         <filter class="solr.WordDelimiterFilterFactory" preserveOriginal="0"/>
@@ -356,11 +355,8 @@
 
         <fieldType name="ignored" stored="false" indexed="false" docValues="false" multiValued="true" class="solr.StrField" />
         <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
-        <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate" docValues="false"/>
-        <!-- For Solr 6 use this instead: 
-        <fieldType name="location" class="solr.LatLonPointSpatialField" docValues="true"/>
-         -->
-
+        <fieldType name="location" class="solr.LatLonPointSpatialField" stored="true" docValues="true"/>
+        
         <fieldType name="text_ga" class="solr.TextField" positionIncrementGap="100">
                 <analyzer> 
                         <tokenizer class="solr.StandardTokenizerFactory"/>
