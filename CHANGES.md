@@ -41,6 +41,8 @@
 * More field values extracted for revisit records.
 * Usage of annotations from config file [#113](https://github.com/ukwa/webarchive-discovery/issues/113)
 * Add user supplied Archive-It Solr fields (collection, collection_id, institution) [#129](https://github.com/ukwa/webarchive-discovery/pull/129)
+* Ensure time-zones are applied correctly based on UTC crawl timestamp [#142](https://github.com/ukwa/webarchive-discovery/issues/142)
+* Pruning of invalid tag names extracted by JSoup [#143](https://github.com/ukwa/webarchive-discovery/issues/143)
 
 2.1.0
 -----
