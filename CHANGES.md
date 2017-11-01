@@ -6,6 +6,7 @@
 * Solr 7: highlight component added on field content.
 * Solr 7: solrconfig.xml Improved ranking and search in a few more fields with boost.
 * Solr 7: Tweaking of merge/memory parameters etc. to improve performance. (most on index time).
+* Solr 7: A few fields with docVal are now stored="false" since they will still be retrieved by a query. (saving index space)
 * Refactored and extended URL-normalisation [#115](https://github.com/ukwa/webarchive-discovery/issues/115) and [#119](https://github.com/ukwa/webarchive-discovery/issues/119)
 * Updated performance instrumentation, with break down of time used on common file types
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
