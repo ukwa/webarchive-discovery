@@ -2,7 +2,10 @@
 -----
 
 **NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
-
+* New folder with  Solr 7 schema.xml and solrconfig. All fieldtypes converted to Solr 7. Field content changed to single valued (only in this folder)
+* Solr 7: highlight component added on field content.
+* Solr 7: solrconfig.xml Improved ranking and search in a few more fields with boost.
+* Solr 7: Tweaking of merge/memory parameters etc. to improve performance. (most on index time).
 * Refactored and extended URL-normalisation [#115](https://github.com/ukwa/webarchive-discovery/issues/115) and [#119](https://github.com/ukwa/webarchive-discovery/issues/119)
 * Updated performance instrumentation, with break down of time used on common file types
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
