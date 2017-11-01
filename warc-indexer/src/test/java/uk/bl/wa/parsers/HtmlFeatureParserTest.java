@@ -61,7 +61,9 @@ public class HtmlFeatureParserTest {
 
 	@Test
 	public void JSoupElementsAddedTest() throws Exception {
-		String testHtml = "<b>test<p></b>";
+		// Browsers handle JavaScript with less than signs well, when it is inside script-tags.
+		// Tika treats the content of script-elements as HTML and treats all containing '<something' as tags
+		String testHtml = "<b>test<p></b><script> if (3<a) console.log('something');</script>";
 		String baseUri = "http://example.com/dummy.html";
 		//
 		ByteArrayInputStream stream = new ByteArrayInputStream(
@@ -79,7 +81,7 @@ public class HtmlFeatureParserTest {
 
 		// Also run in through the handler class:
 		stream.reset();
-		innerBasicParseTest(stream, baseUri, 2);
+		innerBasicParseTest(stream, baseUri, 3);
 	}
 
     @Test
