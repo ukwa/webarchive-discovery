@@ -72,11 +72,11 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="image_dominant_colour" type="string" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces_count" type="int" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces" type="string" indexed="false" stored="true" multiValued="true"/>
-        <field name="image_height" type="long" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_size" type="long" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_width" type="long" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_height" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="image_size" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="image_width" type="long" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="keywords" type="text_general" indexed="true" stored="true"/>
-        <field name="last_modified" type="date" indexed="true" stored="true" docValues="true"/>
+        <field name="last_modified" type="date" indexed="true" stored="false" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
@@ -95,8 +95,8 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="publication_date" type="date" indexed="true" stored="true" multiValued="false"/>
         <field name="publication_year" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-        <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
+        <field name="record_type" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="referrer_url" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="resourcename" type="path" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
@@ -104,7 +104,7 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="source_file_path" type="string" indexed="true" multiValued="false" docValues="true" />
         <field name="source_file_offset" type="long" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
-        <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
+        <field name="status_code" type="int" indexed="true" stored="false" docValues="true" />
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
