@@ -203,43 +203,20 @@
          If both ramBufferSizeMB and maxBufferedDocs is set, then
          Lucene will flush based on whichever limit is hit first.
          The default is 100 MB.  -->
-    <!-- <ramBufferSizeMB>500</ramBufferSizeMB> -->
+     <ramBufferSizeMB>500</ramBufferSizeMB>
      <maxBufferedDocs>1000</maxBufferedDocs>
 
-    <!-- Expert: Merge Policy 
-         The Merge Policy in Lucene controls how merging of segments is done.
-         The default since Solr/Lucene 3.3 is TieredMergePolicy.
-         The default since Lucene 2.3 was the LogByteSizeMergePolicy,
-         Even older versions of Lucene used LogDocMergePolicy.
-      -->
-    <!--
-        <mergePolicy class="org.apache.lucene.index.TieredMergePolicy">
-          <int name="maxMergeAtOnce">10</int>
-          <int name="segmentsPerTier">10</int>
-        </mergePolicy>
-      -->
-       
-    <!-- Merge Factor
-         The merge factor controls how many segments will get merged at a time.
-         For TieredMergePolicy, mergeFactor is a convenience parameter which
-         will set both MaxMergeAtOnce and SegmentsPerTier at once.
-         For LogByteSizeMergePolicy, mergeFactor decides how many new segments
-         will be allowed before they are merged into one.
-         Default is 10 for both merge policies.
-      -->
-    <!-- 
-    <mergeFactor>10</mergeFactor>
-      -->
 
-    <!-- Expert: Merge Scheduler
-         The Merge Scheduler in Lucene controls how merges are
-         performed.  The ConcurrentMergeScheduler (Lucene 2.3 default)
-         can perform merges in the background using separate threads.
-         The SerialMergeScheduler (Lucene 2.2 default) does not.
-    -->
-    <!-- Not present in default solrconfig.xml for Solr 7 -->
-<!--        <mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>-->
- 
+
+<mergeScheduler class="org.apache.lucene.index.ConcurrentMergeScheduler"/>
+
+<mergePolicyFactory class="org.apache.solr.index.TieredMergePolicyFactory">
+  <int name="maxMergeAtOnce">10</int>
+  <int name="segmentsPerTier">10</int>
+</mergePolicyFactory>
+
+
+
     <!-- LockFactory 
 
          This option specifies which Lucene LockFactory implementation
@@ -538,8 +515,8 @@
          (DocList) based on a query, a sort, and the range of documents requested.  
       -->
     <queryResultCache class="solr.LRUCache"
-                     size="256"
-                     initialSize="256"
+                     size="512"
+                     initialSize="512"
                      autowarmCount="0"/>
    
     <!-- Document Cache
@@ -847,28 +824,28 @@
      <lst name="defaults">
        <str name="wt">json</str> <!--  -->
        <str name="echoParams">explicit</str>
-       <int name="rows">10</int>
-       <str name="df">text</str>
+       <int name="rows">10</int>       
        <str name="defType">edismax</str>
        <str name="q.op">AND</str>
-       <str name="tie">0.5</str>       
+       <str name="tie">0.1</str>       
+       
        <!-- Do not set mm, as this breaks OR-queries: https://issues.apache.org/jira/browse/SOLR-8812  -->
        <!--   <str name="mm">100%</str>            -->
                     
        <str name="qf">
-         <!-- TODO: These should definitely be different -->
-         title
-         author
-         description
-         url         
-         content     
-         text                                            
+         text
+         author^5.0
+         title^2.0
+         description^2.0                                                                                   
+         url_search^0.5              
        </str>
-       <!--Phrase fields, read SOLR book page 154. Performance can be improved by shingling common-grams -->
        <str name="pf">
-         <!-- Maybe also resourcename and url_search? -->
          text
        </str>     
+        <!--  We really want http 200 first. 404 will be boosted too much if url/title match-->
+       <str name="bq">
+         status_code:200^100
+       </str>
        <str name="fl">*,score</str>
        <str name="facet">false</str>
        <str name="facet.mincount">1</str>
@@ -880,11 +857,21 @@
        <str name="facet.field">crawl_year</str>
        <str name="facet.field">public_suffix</str>
        <str name="facet.field">content_type_norm</str>
-       <str name="facet.field">host</str>   
-
-
+       <str name="facet.field">status_code</str>   
+       <str name="facet.field">host</str>
+          
+       <str name="hl">on</str>
+       <str name="hl.encoder">html</str>
+       <str name="f.content.hl.preserveMulti">true</str>        
+       <str name="hl.fl">
+         content
+       </str>    
+          
        <!-- TODO: Do something similar to faceting for highlighting: Not turned on, but with sensible setup -->
      </lst>
+      <arr name="last-components">
+      <str>highlight</str>
+   </arr>
      
     </requestHandler>
 

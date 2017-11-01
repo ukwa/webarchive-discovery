@@ -127,16 +127,16 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="warc_ip" type="string" indexed="true" docValues="true" multiValued="false"/>
         <!--:BL UKWA -->
         
-        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->        
-        <!-- arc_full is required for solrwayback. Will only be used if defined in the config file--> 
+        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->         
         <!-- SB arc-name fields  start -->
+        <!-- 
         <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/>
-        <field name="arc_name" type="string" indexed="true" stored="true" multiValued="false"/>
+        <field name="arc_name" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="arc_orig" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="arc_job" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>      
-        <field name="arc_harvest" type="string" indexed="true" stored="true" multiValued="false"/>   
+        <field name="arc_harvest" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>   
         <field name="arc_harvesttime" type="string" indexed="true" stored="true" multiValued="false"/>
-         
+         -->
 
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
         <dynamicField name="*_is" type="ints"    indexed="true"  stored="true"/>
@@ -201,13 +201,10 @@ This schema is for Solr 7+ and will not work under Solr 6.
 
         <!-- TODO: Remove all copyFields where the source is indexed as text and adjust solrconfig.xml
              to also search in those fields (edismax parser qf) -->
-        <copyField source="title" dest="text"/>
         <copyField source="author" dest="text"/>
         <copyField source="keywords" dest="text"/>
-        <copyField source="description" dest="text"/>
         <copyField source="wct_title" dest="text"/>
-        <copyField source="wct_description" dest="text"/>
-        <copyField source="url" dest="text"/>
+        <copyField source="wct_description" dest="text"/>       
         <copyField source="content" dest="text"/>
         <copyField source="url_norm" dest="url_search"/>
    
