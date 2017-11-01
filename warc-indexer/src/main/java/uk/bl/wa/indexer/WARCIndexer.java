@@ -1,5 +1,8 @@
 package uk.bl.wa.indexer;
 
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_ID;
+import static org.archive.format.warc.WARCConstants.HEADER_KEY_IP;
+
 /*
  * #%L
  * warc-indexer
@@ -25,8 +28,6 @@ package uk.bl.wa.indexer;
  */
 
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_ID;
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_IP;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -673,7 +674,9 @@ public class WARCIndexer {
 		calendar.setTime(date);
 		return Integer.toString(calendar.get(Calendar.YEAR));
 	}
-    private final Calendar calendar = Calendar.getInstance();
+
+    private final Calendar calendar = Calendar
+            .getInstance(TimeZone.getTimeZone("UTC"));
 
 	/* ----------------------------------- */
 
