@@ -106,6 +106,7 @@
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
         <field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
+        <field name="redirect_to_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_search" type="path" indexed="true" stored="false" docValues="false"/> <!-- search only to save space-->
         <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>

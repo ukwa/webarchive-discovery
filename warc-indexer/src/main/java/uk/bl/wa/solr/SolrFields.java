@@ -38,6 +38,7 @@ public interface SolrFields {
 	public static final String SOURCE_FILE_OFFSET = "source_file_offset";
 	public static final String SOURCE_FILE_PATH = "source_file_path";
 	// Intended for building links-graphs. Normalised the same way as SOLR_LINKS
+	public static final String REDIRECT_TO_NORM = "redirect_to_norm"; //for HTTP 3XX codes.
 	public static final String SOLR_URL_NORMALISED = "url_norm";
 	public static final String SOLR_URL_PATH = "url_path";
     public static final String SOLR_STATUS_CODE = "status_code";
