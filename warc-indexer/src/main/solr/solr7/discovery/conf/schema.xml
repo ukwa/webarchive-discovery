@@ -22,9 +22,10 @@ This schema is for Solr 7+ and will not work under Solr 6.
 
 <schema name="ukwa" version="1.6">
     <fields>
-        <field name="id" type="string" stored="true" required="true" />
-        <field name="_version_" type="long" />
-        <field name="_root_" type="string" />
+        <!-- Special purpose meta-fields has explicit attributes to be sure they are set correctly -->
+        <field name="id" type="string" indexed="true" stored="true" docValues="true" required="true" />
+        <field name="_version_" type="long" indexed="true" stored="true" docValues="true" />
+        <field name="_root_" type="string" indexed="true" stored="true" docValues="true"/>
         <field name="_text_" type="text_general" multiValued="true" /> <!-- Isn't this only used for schema-less? -->
 
         <!--Not defined in SolrFields. Schema only defintion -->
