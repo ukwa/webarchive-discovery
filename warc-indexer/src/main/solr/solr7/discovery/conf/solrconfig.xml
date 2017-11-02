@@ -861,13 +861,11 @@
        <str name="facet.field">host</str>
           
        <str name="hl">on</str>
+       <str name="hl.requireFieldMatch">false</str>
        <str name="hl.encoder">html</str>
        <str name="f.content.hl.preserveMulti">true</str>        
-       <str name="hl.fl">
-         content
-       </str>    
+       <str name="hl.fl">content</str>     
           
-       <!-- TODO: Do something similar to faceting for highlighting: Not turned on, but with sensible setup -->
      </lst>
       <arr name="last-components">
       <str>highlight</str>
