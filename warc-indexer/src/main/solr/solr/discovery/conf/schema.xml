@@ -95,6 +95,7 @@
         <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="resourcename" type="path" indexed="true" stored="true"/>
+        <field name="resourcename_facet" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -202,6 +203,7 @@
         <copyField source="url" dest="text"/>
         <copyField source="content" dest="text"/>
         <copyField source="url_norm" dest="url_search"/>
+        <copyField source="resourcename" dest="resourcename_facet"/>
    
   <types>
         <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
