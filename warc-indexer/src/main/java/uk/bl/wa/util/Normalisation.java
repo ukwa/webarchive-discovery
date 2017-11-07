@@ -31,6 +31,7 @@ import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
@@ -67,6 +68,18 @@ public class Normalisation {
     /**
      * Resolved one URL relative to another, e.g.
      * 'foo/bar.html' relative to 'http://example.com/zoo/' is 'http://example.com/zoo/foo/bar.html'.
+     * Always normalises the result. Use {@link #resolveRelative(String, String, boolean)} to choose otherwise.
+     * @param url       base URL.
+     * @param relative  resolved relative to url.
+     * @return the fully resolved version of the relative URL.
+     * @throws IllegalArgumentException if an unrecoverable unvalid URL was encountered,
+     */
+    public static String resolveRelative(String url, String relative) throws IllegalArgumentException {
+        return resolveRelative(url, relative, true);
+    }
+    /**
+     * Resolved one URL relative to another, e.g.
+     * 'foo/bar.html' relative to 'http://example.com/zoo/' is 'http://example.com/zoo/foo/bar.html'.
      * @param url       base URL.
      * @param relative  resolved relative to url.
      * @param normalise if true the resulting URL is also normalised.
@@ -75,8 +88,8 @@ public class Normalisation {
      */
     public static String resolveRelative(String url, String relative, boolean normalise) throws IllegalArgumentException {
         try {
-            URI uri = new URI(fixURLErrors(url));
-            String resolved = uri.resolve(new URI(fixURLErrors(relative))).toString();
+            URL rurl = new URL(url);
+            String resolved = new URL(rurl, relative).toString();
             return normalise ? canonicaliseURL(resolved) : resolved;
         } catch (Exception e) {
             throw new IllegalArgumentException(String.format(

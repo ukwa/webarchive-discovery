@@ -33,13 +33,18 @@ public class NormalisationTest {
     @Test
     public void restResolveRelative() {
         String[][] TESTS = new String[][]{
-                {"http://example.com/",        "foo.html",      "http://example.com/foo.html", "true"},
-                {"http://example.com/bar/",    "zoo/baz.html",  "http://example.com/bar/zoo/baz.html", "true"},
-                {"http://example.com/bar",     "/zoo/baz.html", "http://example.com/zoo/baz.html", "true"},
-                {"http://example.com/bar/zoo", "/",             "http://example.com/", "true"},
-                {"http://example.com/", "", "http://example.com/", "true"},
-                {"http://example.com/", "", "http://example.com/", "true"},
-                {"http://example.com/foo|bar.html", "/top/", "http://example.com/top/", "false"}
+                {"http://example.com/",             "foo.html",      "http://example.com/foo.html", "true"},
+                {"http://example.com/bar/",         "zoo/baz.html",  "http://example.com/bar/zoo/baz.html", "true"},
+                {"http://example.com/bar",          "/zoo/baz.html", "http://example.com/zoo/baz.html", "true"},
+                {"http://example.com/bar/zoo",      "/",             "http://example.com/", "true"},
+                {"http://example.com/",             "http://other.example.com", "http://other.example.com/", "true"},
+                {"http://example.com/",             "", "http://example.com/", "true"},
+                {"http://example.com/",             "", "http://example.com/", "true"},
+                {"http://example.com/foo|bar.html", "/top/", "http://example.com/top/", "false"},
+                {"http://example.com/foo | bar/",   "sub/", "http://example.com/foo%20|%20bar/sub", "true"},
+                {"http://example.com/foo | bar/",   "sub/", "http://example.com/foo | bar/sub/", "false"},
+                {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%25g/sub", "true"},
+                {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%g/sub", "false"},
         };
         for (String[] test: TESTS) {
             assertEquals("rel('" + test[0] + "', '" + test[1] + "', " + test[3] + ") should give the expected result",
