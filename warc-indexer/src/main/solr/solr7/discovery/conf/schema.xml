@@ -47,7 +47,7 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="content_first_bytes"  type="hex_text_shingle" />
         <field name="content_language"     type="string" />
         <field name="content_length"       type="int" />
-        <field name="content_metadata_ss"  type="string" multiValued="true" />
+<!--        <field name="content_metadata_ss"  type="string" multiValued="true" />--> <!-- Not used for anything -->
         <field name="content_metadata"     type="text_general" />
         <field name="content_text_length"  type="int" />
         <field name="content_type_droid"   type="string" />
@@ -68,8 +68,9 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="wayback_date"         type="long" indexed="false" stored="true" docValues="false" />
         <field name="crawl_dates"          type="date" stored="true" docValues="false" multiValued="true" />
         <field name="crawl_date"           type="date" />
-        <field name="crawl_year_month_day" type="int" />
-        <field name="crawl_year_month"     type="int" />
+        <!-- month_day & day not used for anything -->
+<!--        <field name="crawl_year_month_day" type="int" />
+        <field name="crawl_year_month"     type="int" />-->
         <field name="crawl_years"          type="int" multiValued="true" />
         <field name="crawl_year"           type="int" />
         <field name="last_modified"        type="date" />
@@ -98,7 +99,8 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="links_domains"        type="string" multiValued="true" />
         <field name="links_hosts"          type="string" multiValued="true" />
         <field name="links_hosts_surts"    type="string" multiValued="true" />
-        <field name="links_norm"           type="string" multiValued="true" />
+        <!-- Might be used in the future but will take up a lot of space (same as 'links') -->
+<!--        <field name="links_norm"           type="string" multiValued="true" />-->
         <field name="links_public_suffixes" type="string" multiValued="true" />
         <field name="links"                type="string" multiValued="true" />
 
@@ -124,7 +126,8 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="source_file_offset"   type="long" /> <!-- docValues as it will probably be used for streaming export -->
         <field name="source_file"          type="string" />
 
-        <field name="subject"              type="text_general" multiValued="true" />
+        <!-- Not used for anything -->
+<!--        <field name="subject"              type="text_general" multiValued="true" />-->
         <field name="text"                 type="text_general" stored="false" multiValued="true" /> <!-- Catch-all -->
         <field name="title"                type="text_general" />
         <field name="type"                 type="string" />
