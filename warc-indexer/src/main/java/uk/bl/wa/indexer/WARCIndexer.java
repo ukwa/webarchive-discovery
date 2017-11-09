@@ -315,7 +315,6 @@ public class WARCIndexer {
 				solr.setField(SolrFields.WARC_KEY_ID, (String) header.getHeaderValue(HEADER_KEY_ID));
                 solr.setField(SolrFields.WARC_IP, (String) header.getHeaderValue(HEADER_KEY_IP));
 				
-				
 			} else {
 				// else we're processing ARCs so nothing to filter and no
 				// revisits
@@ -362,8 +361,6 @@ public class WARCIndexer {
 			solr.setField(SolrFields.SOURCE_FILE_OFFSET,"" + header.getOffset());
 			solr.setField(SolrFields.SOURCE_FILE_PATH, header.getReaderIdentifier()); //Full path of file
 			
-			
-			
             byte[] url_md5digest = md5
                     .digest(header.getUrl().getBytes("UTF-8"));
 			// String url_base64 =
@@ -403,7 +400,7 @@ public class WARCIndexer {
 						if( firstLine.length > 1 ) {
 							statusCode = firstLine[ 1 ].trim();
 							try {
-								this.processHeaders( solr, statusCode, HttpParser.parseHeaders( record, "UTF-8" ) );
+								this.processHeaders( solr, statusCode, HttpParser.parseHeaders( record, "UTF-8" ), targetUrl );
 							} catch( ProtocolException p ) {
 								log.error( "ProtocolException [" + statusCode + "]: " + header.getHeaderValue( WARCConstants.HEADER_KEY_FILENAME ) + "@" + header.getHeaderValue( WARCConstants.ABSOLUTE_OFFSET_KEY ), p );
 							}
@@ -419,7 +416,7 @@ public class WARCIndexer {
 				} else if( record instanceof ARCRecord ) {
 					ARCRecord arcr = ( ARCRecord ) record;
 					statusCode = "" + arcr.getStatusCode();
-					this.processHeaders( solr, statusCode, arcr.getHttpHeaders() );
+					this.processHeaders( solr, statusCode, arcr.getHttpHeaders() , targetUrl);
 					arcr.skipHttpHeader();
 					tikainput = arcr;
 				} else {
@@ -680,7 +677,7 @@ public class WARCIndexer {
 
 	/* ----------------------------------- */
 
-	private void processHeaders( SolrRecord solr, String statusCode, Header[] httpHeaders ) {
+	private void processHeaders( SolrRecord solr, String statusCode, Header[] httpHeaders , String targetUrl) {
 		try {
 			// This is a simple test that the status code setting worked:
 			int statusCodeInt = Integer.parseInt( statusCode );
@@ -702,6 +699,13 @@ public class WARCIndexer {
 					solr.addField( SolrFields.SERVER, h.getValue() );
 				if (h.getName().equalsIgnoreCase(HttpHeaders.SERVER))
 					solr.addField( SolrFields.SERVER, h.getValue() );
+				if (h.getName().equalsIgnoreCase(HttpHeaders.LOCATION)){
+				    String location = h.getValue(); //This can be relative and must be resolved full				  
+	                URI uri = new URI(targetUrl);
+	                URI relative = uri.resolve(new URI(location));	 
+   				    solr.addField(SolrFields.REDIRECT_TO_NORM,  Normalisation.canonicaliseURL(relative.toString()));
+				}
+				  				 			
 			}
 		} catch( NumberFormatException e ) {
 			log.error( "Exception when parsing status code: " + statusCode + ": " + e );
