@@ -703,7 +703,7 @@ public class WARCIndexer {
 				    String location = h.getValue(); //This can be relative and must be resolved full				  
 	                URI uri = new URI(targetUrl);
 	                URI relative = uri.resolve(new URI(location));	 
-   				    solr.addField(SolrFields.REDIRECT_TO_NORM,  Normalisation.canonicaliseURL(relative.toString()));
+   				    solr.setField(SolrFields.REDIRECT_TO_NORM,  Normalisation.canonicaliseURL(relative.toString()));
 				}
 				  				 			
 			}
