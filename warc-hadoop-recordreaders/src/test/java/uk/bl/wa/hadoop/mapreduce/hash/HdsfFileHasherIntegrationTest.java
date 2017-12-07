@@ -42,7 +42,7 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
 		
 		// Set up arguments for the job:
 		// FIXME The input file could be written by this test.
-        String[] args = { "src/test/resources/test-input-dir.txt",
+        String[] args = { "-i", "src/test/resources/test-input-dir.txt", "-o",
                 this.output.getName() };
 		
 		// run job

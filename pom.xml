@@ -132,6 +132,10 @@
                <groupId>org.netpreserve.commons</groupId>
             </exclusion>
             <exclusion>
+                 <artifactId>webarchive-commons</artifactId>
+                 <groupId>org.netpreserve.commons</groupId>
+            </exclusion>
+            <exclusion>
                <artifactId>je</artifactId>
                <groupId>com.sleepycat</groupId>
             </exclusion>
