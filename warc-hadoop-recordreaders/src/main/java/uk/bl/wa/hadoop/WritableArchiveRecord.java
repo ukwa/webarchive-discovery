@@ -28,7 +28,10 @@ import org.archive.io.warc.WARCRecord;
  *
  */
 public class WritableArchiveRecord implements Writable {
-	public static int SIZE_LIMIT = 1024 * 1024 * 20; // 20MB - only applies if you try to 'getPayload' or 'write' it, otherwise streaming is used.
+    public static int BUFFER_SIZE = 1024 * 1024 * 2; // 2MB - only applies if
+                                                     // you try to 'getPayload'
+                                                     // or 'write' it, otherwise
+                                                     // streaming is used.
 	
 	private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
 	private ArchiveRecord record = null;
@@ -48,15 +51,25 @@ public class WritableArchiveRecord implements Writable {
 		return record;
 	}
 
-	public byte[] getPayload( int max_buffer_size ) throws IOException {
+    public byte[] getPayload(int max_size) throws IOException {
 		log.debug( "Calling getPayload( int )..." );
 		BufferedInputStream input = new BufferedInputStream( record );
-		ByteArrayOutputStream output = new ByteArrayOutputStream();
+        ByteArrayOutputStream output = new ByteArrayOutputStream(
+                max_size);
 		int ch;
-		byte[] buffer = new byte[ SIZE_LIMIT ];
+        int buffer_size = BUFFER_SIZE;
+        if (buffer_size > max_size) {
+            buffer_size = max_size;
+        }
+        byte[] buffer = new byte[buffer_size];
+        int written = 0;
 		try {
 			while( ( ch = input.read( buffer ) ) >= 0 ) {
-				output.write( buffer, 0, ch );
+                output.write(buffer, 0, ch);
+                written += ch;
+                if (written >= max_size) {
+                    break;
+                }
 			}
 		} catch( IndexOutOfBoundsException i ) {
 			// Invalid Content-Length throws this.
@@ -80,7 +93,7 @@ public class WritableArchiveRecord implements Writable {
 		log.debug( "Calling write( DataOutput )..." );
 		if( record != null ) {
 			int ch;
-			byte[] buffer = new byte[ SIZE_LIMIT ];
+			byte[] buffer = new byte[ BUFFER_SIZE ];
 			while( ( ch = record.read( buffer ) ) >= 0 ) {
 				output.write( buffer, 0, ch );
 			}
