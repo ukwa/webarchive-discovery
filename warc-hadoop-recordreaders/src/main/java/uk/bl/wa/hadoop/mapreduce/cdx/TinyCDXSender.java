@@ -57,6 +57,7 @@ public class TinyCDXSender {
 
     private void send_batch() {
         boolean retry = true;
+        int failures = 0;
         while (retry) {
             try {
                 // POST to the endpoint:
@@ -90,9 +91,25 @@ public class TinyCDXSender {
                     retry = false;
                 } else {
                     log.warn("Got response code: " + conn.getResponseCode());
+                    failures += 1;
+                    log.warn("Sleeping for 30s before retrying...");
+                    Thread.sleep(1000 * 30);
                 }
             } catch (Exception e) {
                 log.warn("POSTing failed with ", e);
+                failures += 1;
+                log.warn("Sleeping for 30s before retrying...");
+                try {
+                    Thread.sleep(1000 * 30);
+                } catch (InterruptedException e1) {
+                    log.error("Sleep interrupted.");
+                }
+            }
+            // Crash out if 10 attempts all failed (CDX Server it likely down):
+            if (failures > 10) {
+                throw new RuntimeException(
+                        "Failed to post data to CDX server after " + failures
+                                + " attempts!");
             }
         }
     }
