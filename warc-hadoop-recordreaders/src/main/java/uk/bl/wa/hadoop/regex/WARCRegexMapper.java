@@ -54,7 +54,8 @@ public class WARCRegexMapper extends MapReduceBase implements Mapper<Text, Writa
 		// Generate the key:
 		String newKey = "0/unknown";			
 		if( !header.getHeaderFields().isEmpty() ) {
-			newKey = header.getDate() + "/" + header.getUrl();
+            newKey = (header.getDate().replaceAll("[^0-9]", "")) + "/"
+                    + header.getUrl();
 			// Reduce this to just the year and the host:
 			//String year = extractYear(header.getDate());
 			//String host = extractHost(header.getUrl());
