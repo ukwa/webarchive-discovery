@@ -66,6 +66,10 @@ public class WARCRegexIndexer extends Configured implements Tool {
 		// Default mapred.user.jobconf.limit=5242880 (5M), bump to 100 megabytes = 104857600 bytes.
 		conf.set("mapred.user.jobconf.limit", "104857600");
 		
+        // Set timeout to 15mins to avoid problems from the occasional very
+        // large files:
+        conf.set("mapred.task.timeout", "900000");
+
 		// Manually set a large number of reducers:
 		conf.setNumReduceTasks(50);
 		

@@ -123,7 +123,4 @@
 		   <version>${slf4j.version.override}</version>
 		</dependency>
 	</dependencies>
-	<properties>
-	   <slf4j.version.override>1.5.11</slf4j.version.override>
-	</properties>
 </project>
