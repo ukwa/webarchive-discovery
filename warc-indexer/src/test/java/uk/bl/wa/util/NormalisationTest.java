@@ -24,10 +24,33 @@ package uk.bl.wa.util;
 
 import static org.junit.Assert.assertEquals;
 
+import com.mchange.util.AssertException;
 import org.apache.commons.httpclient.URIException;
 import org.junit.Test;
 
 public class NormalisationTest {
+
+    @Test
+    public void restResolveRelative() {
+        String[][] TESTS = new String[][]{
+                {"http://example.com/",             "foo.html",      "http://example.com/foo.html", "true"},
+                {"http://example.com/bar/",         "zoo/baz.html",  "http://example.com/bar/zoo/baz.html", "true"},
+                {"http://example.com/bar",          "/zoo/baz.html", "http://example.com/zoo/baz.html", "true"},
+                {"http://example.com/bar/zoo",      "/",             "http://example.com/", "true"},
+                {"http://example.com/",             "http://other.example.com", "http://other.example.com/", "true"},
+                {"http://example.com/",             "", "http://example.com/", "true"},
+                {"http://example.com/",             "", "http://example.com/", "true"},
+                {"http://example.com/foo|bar.html", "/top/", "http://example.com/top/", "false"},
+                {"http://example.com/foo | bar/",   "sub/", "http://example.com/foo%20|%20bar/sub", "true"},
+                {"http://example.com/foo | bar/",   "sub/", "http://example.com/foo | bar/sub/", "false"},
+                {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%25g/sub", "true"},
+                {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%g/sub", "false"},
+        };
+        for (String[] test: TESTS) {
+            assertEquals("rel('" + test[0] + "', '" + test[1] + "', " + test[3] + ") should give the expected result",
+                         test[2], Normalisation.resolveRelative(test[0], test[1], Boolean.parseBoolean(test[3])));
+        }
+    }
 
     @Test
     public void testURLNormalisation() {
@@ -95,6 +118,7 @@ public class NormalisationTest {
                 {"http://example.com/10% proof", "http://example.com/10%25%20proof"},
                 {"http://example.com/%a%2A",     "http://example.com/%25a%2a"},
                 {"http://example.com/%g1%2A",    "http://example.com/%25g1%2a"},
+                {"http://example.com/foo|bar",   "http://example.com/foo|bar"},
         };
 
         for (String[] test: TESTS) {
