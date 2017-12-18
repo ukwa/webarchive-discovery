@@ -701,7 +701,7 @@ public class WARCIndexer {
 					solr.addField( SolrFields.SERVER, h.getValue() );
 				if (h.getName().equalsIgnoreCase(HttpHeaders.LOCATION)){
 				    String location = h.getValue(); //This can be relative and must be resolved full				  
-   				    solr.addField(SolrFields.REDIRECT_TO_NORM,  Normalisation.resolveRelative(targetUrl, location));
+   				    solr.setField(SolrFields.REDIRECT_TO_NORM,  Normalisation.resolveRelative(targetUrl, location));
 				}
 				  				 			
 			}
