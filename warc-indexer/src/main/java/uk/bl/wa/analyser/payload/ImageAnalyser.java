@@ -42,6 +42,7 @@ import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
 import uk.bl.wa.util.Instrument;
 
 import com.typesafe.config.Config;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * @author anj
@@ -106,14 +107,9 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
 			// Attempt to extract faces etc.:
 			if (this.extractFaces || this.extractDominantColours) {
                 final long deepStart = System.nanoTime();
-				ParseRunner parser = new ParseRunner(fdp, tikainput, metadata,
-						solr);
-				Thread thread = new Thread(parser, Long.toString(System
-						.currentTimeMillis()));
+				ParseRunner parser = new ParseRunner(fdp, tikainput, metadata, solr);
 				try {
-					thread.start();
-					thread.join(30000L);
-					thread.interrupt();
+					TimeLimiter.run(parser, 30000L, false);
 				} catch (Exception e) {
 					log.error("WritableSolrRecord.extract(): " + e.getMessage());
 					solr.addParseException("when scanning for faces", e);

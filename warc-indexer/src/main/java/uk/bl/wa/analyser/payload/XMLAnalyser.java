@@ -38,6 +38,7 @@ import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * @author anj
@@ -64,11 +65,8 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
 		// Also attempt to grab the XML Root NS:
 		if( this.extractXMLRootNamespace ) {
 			ParseRunner parser = new ParseRunner( xrns, tikainput, metadata, solr );
-			Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 			try {
-				thread.start();
-				thread.join( 30000L );
-				thread.interrupt();
+				TimeLimiter.run(parser, 30000L, false);
 			} catch( Exception e ) {
 				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 				solr.addParseException("when parsing for XML Root Namespace", e);

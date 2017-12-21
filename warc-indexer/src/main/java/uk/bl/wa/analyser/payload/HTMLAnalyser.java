@@ -46,6 +46,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * @author anj
@@ -97,11 +98,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		// JSoup NEEDS the URL to function:
 		metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
 		ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
-		Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 		try {
-			thread.start();
-			thread.join( 30000L );
-			thread.interrupt();
+			TimeLimiter.run(parser, 30000L, false);
 		} catch( Exception e ) {
 			log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
 			solr.addParseException("when parsing as HTML", e);
