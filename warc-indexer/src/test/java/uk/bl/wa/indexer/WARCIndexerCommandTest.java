@@ -63,6 +63,7 @@ public class WARCIndexerCommandTest {
     private void testWARC(String config, String warc) throws NoSuchAlgorithmException, TransformerException, IOException {
         if (new File(warc).exists()) {
             log.info("The WARC file '" + warc + "' could not be located. Skipping test");
+            return;
         }
 
         final String TMP = System.getProperty("java.io.tmpdir") + "/";
