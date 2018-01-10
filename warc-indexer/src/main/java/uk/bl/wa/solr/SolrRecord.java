@@ -72,7 +72,7 @@ public class SolrRecord implements Serializable {
 		ClientUtils.writeXML( doc, writer );
 	}
 
-	private static final int MAX_FIELD_LEN = 200;
+    private static final int MAX_FIELD_LEN = 4096;
 	
 	public SolrRecord() {
 	}
