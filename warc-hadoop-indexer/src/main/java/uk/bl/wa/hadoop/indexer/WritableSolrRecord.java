@@ -10,6 +10,7 @@ import org.apache.hadoop.io.Writable;
 import org.apache.solr.common.SolrInputDocument;
 
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 
 /**
  * Writable wrapper for SolrRecord.
@@ -32,6 +33,9 @@ public class WritableSolrRecord  implements Writable, Serializable {
 		int length = input.readInt();
 		byte[] bytes = new byte[ length ];
 		input.readFully( bytes );
+		if( this.sr == null) {
+            this.sr = SolrRecordFactory.createFactory(null).createRecord();
+		}
 		this.sr.setSolrDocument( ( SolrInputDocument ) SerializationUtils.deserialize( bytes ) );
 	}
 
