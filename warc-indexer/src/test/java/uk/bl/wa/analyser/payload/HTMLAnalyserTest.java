@@ -44,6 +44,7 @@ import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 
 /**
  * @author Toke Eskildsen <te@statsbiblioteket.dk>
@@ -74,7 +75,7 @@ public class HTMLAnalyserTest {
         core.put("absolute-offset", "0");
         core.put("origin", "");
         ArchiveRecordHeader header = new ARCRecordMetaData("invalid", core);
-        SolrRecord solr = new SolrRecord();
+        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
         InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());
         in.mark((int) SAMPLE.length());
         ha.analyse(header, in, solr);

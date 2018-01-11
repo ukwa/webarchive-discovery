@@ -92,6 +92,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.Instrument;
@@ -148,6 +149,8 @@ public class WARCIndexer {
 	// Also canonicalise the HOST field (e.g. drop "www.")
 	public static final boolean CANONICALISE_HOST = true;
 
+	private final SolrRecordFactory solrFactory;
+
 	/* ------------------------------------------------------------ */
 
 	/**
@@ -169,7 +172,7 @@ public class WARCIndexer {
 		} catch (IOException e1) {
 			log.error("Failed to load log4j config from properties file.");
 		}
-
+		solrFactory = SolrRecordFactory.createFactory(conf);
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		log.info("Extract text = " + extractText);
@@ -298,7 +301,7 @@ public class WARCIndexer {
 	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {      
 	  final long start = System.nanoTime();
 		ArchiveRecordHeader header = record.getHeader();
-		SolrRecord solr = new SolrRecord(archiveName, header);
+		SolrRecord solr = solrFactory.createRecord(archiveName, header);
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
@@ -701,7 +704,7 @@ public class WARCIndexer {
 					solr.addField( SolrFields.SERVER, h.getValue() );
 				if (h.getName().equalsIgnoreCase(HttpHeaders.LOCATION)){
 				    String location = h.getValue(); //This can be relative and must be resolved full				  
-   				    solr.addField(SolrFields.REDIRECT_TO_NORM,  Normalisation.resolveRelative(targetUrl, location));
+   				    solr.setField(SolrFields.REDIRECT_TO_NORM,  Normalisation.resolveRelative(targetUrl, location));
 				}
 				  				 			
 			}

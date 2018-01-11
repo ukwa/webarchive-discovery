@@ -69,6 +69,7 @@ import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.Instrument;
 
@@ -270,6 +271,7 @@ public class WARCIndexerCommand {
 			log.info("Loaded warc config.");
 			log.info(conf.getString("warc.title"));
 		}
+		final SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(conf);
 		if(solrUrl != null) {
 			conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
 		}
@@ -344,8 +346,7 @@ public class WARCIndexerCommand {
                     log.warn("Exception on record after rec " + recordCount + " from " + inFile.getName(), e);
                     continue;
                 }
-                SolrRecord doc = new SolrRecord(inFile.getName(),
-                                                rec.getHeader());
+                SolrRecord doc = solrFactory.createRecord(inFile.getName(), rec.getHeader());
                 log.debug("Processing record for url "
                         + rec.getHeader().getUrl()
                         + " from " + inFile.getName() + " @"

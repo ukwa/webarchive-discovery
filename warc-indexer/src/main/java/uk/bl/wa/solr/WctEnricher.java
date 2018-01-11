@@ -44,7 +44,7 @@ public class WctEnricher {
 
 	public WctEnricher( String archiveName ) {
 		String wctID = this.getWctTi( archiveName );
-		solr = new SolrRecord();
+		solr = SolrRecordFactory.createFactory(null).createRecord(); // Never reduces field length size
 		solr.setField( WctFields.WCT_INSTANCE_ID, wctID );
 		getWctMetadata( solr );
 	}

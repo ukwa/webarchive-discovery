@@ -28,6 +28,7 @@ import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 
 @SuppressWarnings( { "deprecation" } )
@@ -48,6 +49,8 @@ public class WARCIndexerMapper extends MapReduceBase implements
 	private int numShards = 1;
     private int numReducers = 10;
 	private Config config;
+
+	private SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(null); // Overridden by innerConfigure
 
 	public WARCIndexerMapper() {
 		try {
@@ -105,7 +108,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
             } catch (NumberFormatException n) {
                 numReducers = 10;
             }
-
+			solrFactory = SolrRecordFactory.createFactory(config);
 		} catch( NoSuchAlgorithmException e ) {
 			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
 		} catch (JsonParseException e) {
@@ -126,7 +129,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		noRecords++;
 
 		ArchiveRecord rec = value.getRecord();
-		SolrRecord solr = new SolrRecord(key.toString(), rec.getHeader());
+		SolrRecord solr = solrFactory.createRecord(key.toString(), rec.getHeader());
 		try {
 			if (!header.getHeaderFields().isEmpty()) {
 				// Do the indexing:

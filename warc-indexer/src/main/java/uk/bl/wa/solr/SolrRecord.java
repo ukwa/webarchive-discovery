@@ -37,6 +37,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -56,9 +57,25 @@ public class SolrRecord implements Serializable {
 
 	// private static Log log = LogFactory.getLog(SolrRecord.class);
 
-	private static final long serialVersionUID = -4556484652176976470L;
+	private static final long serialVersionUID = -4556484652176976472L;
 	
 	private SolrInputDocument doc = new SolrInputDocument();
+
+	private final int defaultMax;
+    private final HashMap<String, Integer> maxLengths; // Explicit HashMap as it is Serializable
+
+	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths) {
+		this.defaultMax = defaultMaxFieldLength;
+		this.maxLengths = maxFieldLengths;
+	}
+
+	/**
+	 * @deprecated use {@link SolrRecordFactory#createRecord()} instead.
+	 */
+	@Deprecated
+	public SolrRecord() {
+		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>());
+	}
 
 	public String toXml() {
 		return ClientUtils.toXML( doc );
@@ -74,16 +91,23 @@ public class SolrRecord implements Serializable {
 
     private static final int MAX_FIELD_LEN = 4096;
 	
-	public SolrRecord() {
-	}
-
-	public SolrRecord(String filename, ArchiveRecordHeader header) {
+	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths,
+					  String filename, ArchiveRecordHeader header) {
+		defaultMax = defaultMaxFieldLength;
+		maxLengths = maxFieldLengths;
 		setField(SolrFields.ID,
                 "exception-at-" + filename + "@" + header.getOffset());
         setField(SolrFields.SOURCE_FILE, filename);
         setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
         setField(SolrFields.SOLR_URL, header.getUrl());
         setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
+	}
+
+	/**
+	 * @deprecated use {@link SolrRecordFactory#createRecord(String, ArchiveRecordHeader)} instead.
+	 */
+	public SolrRecord(String filename, ArchiveRecordHeader header) {
+		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>(), filename, header);
 	}
 
 	/**
@@ -147,8 +171,7 @@ public class SolrRecord implements Serializable {
      * Also shorten to avoid bad data filling 'small' fields with 'big' data.
      * 
      * @param value
-     * @param length
-     *            to truncate to (-1 means don't truncate)
+     * @param truncateToLength to truncate to (-1 means don't truncate)
      * @return
      */
     private String sanitizeString(String value, int truncateToLength) {
@@ -170,18 +193,22 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
     public void addField(String solr_property, String value) {
-        addFieldTruncated(solr_property, value, -1);
+        addFieldTruncated(solr_property, value, getMaxLength(solr_property));
     }
 
-    /**
+	private int getMaxLength(String solrField) {
+		Integer max = maxLengths.get(solrField);
+		return max == null ? defaultMax : max;
+	}
+
+	/**
      * Add the field, truncating the value if it's larger than the given limit.
      * 
      * @param solr_property
      * @param value
      * @param truncateTo
      */
-    public void addFieldTruncated(String solr_property, String value,
-            int truncateTo) {
+    public void addFieldTruncated(String solr_property, String value, int truncateTo) {
         value = sanitizeString(value, truncateTo);
         if (value != null && !value.isEmpty())
 			doc.addField( solr_property, value );
@@ -194,7 +221,7 @@ public class SolrRecord implements Serializable {
 	 * @param value
 	 */
     public void setField(String solr_property, String value) {
-        setFieldTruncated(solr_property, value, -1);
+        setFieldTruncated(solr_property, value, getMaxLength(solr_property));
     }
 
     /**
@@ -204,8 +231,7 @@ public class SolrRecord implements Serializable {
      * @param value
      * @param truncateTo
      */
-    public void setFieldTruncated(String solr_property, String value,
-            int truncateTo) {
+    public void setFieldTruncated(String solr_property, String value, int truncateTo) {
         value = sanitizeString(value, truncateTo);
         if (value != null && !value.isEmpty())
             doc.setField(solr_property, value);
