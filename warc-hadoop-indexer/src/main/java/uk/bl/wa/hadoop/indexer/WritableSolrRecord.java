@@ -17,7 +17,7 @@ import uk.bl.wa.solr.SolrRecord;
 public class WritableSolrRecord  implements Writable, Serializable {
 	private static final long serialVersionUID = -3409886058494054406L;
 	
-	private SolrRecord sr = new SolrRecord();
+	private SolrRecord sr;
 
 	private int partition;
 

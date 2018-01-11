@@ -50,6 +50,7 @@ import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 
 import static org.junit.Assert.*;
 
@@ -343,7 +344,7 @@ public class WARCIndexerTest {
                 "http://www.bbc.co.uk/news/business/market_data/chart?chart_primary_ticker=MISCAM:GOLDAM&chart_time_period=1_month&canvas_co",
                 "http://www.bbc.co.uk/news/business/market_data/chart?chart_primary_ticker=FX^GBP:ILS&chart_time_period=1_month&canvas_colour" };
         for (String urlString : testUrls) {
-            SolrRecord solr = new SolrRecord();
+            SolrRecord solr =  SolrRecordFactory.createFactory(null).createRecord();
             URI test1 = windex.parseURL(solr, urlString);
             assertEquals(1,
                     solr.getField(SolrFields.PUBLIC_SUFFIX).getValueCount());
