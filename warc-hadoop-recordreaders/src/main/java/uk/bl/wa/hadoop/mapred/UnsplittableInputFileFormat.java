@@ -22,11 +22,12 @@ import org.apache.hadoop.mapred.Reporter;
 public class UnsplittableInputFileFormat
         extends FileInputFormat<Path, BytesWritable> {
 
-    private boolean autoDecompress = true;
-
     @Override
     public RecordReader<Path, BytesWritable> getRecordReader(InputSplit inputSplit,
             JobConf conf, Reporter reporter) throws IOException {
+        boolean autoDecompress = conf.getBoolean(
+                "mapreduce.unsplittableinputfileformat.autodecompress",
+                false);
         return new ByteBlockRecordReader(inputSplit, conf, autoDecompress);
     }
 
