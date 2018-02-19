@@ -25,7 +25,7 @@ import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
+import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 
 /**
  * @author Andrew.Jackson@bl.uk

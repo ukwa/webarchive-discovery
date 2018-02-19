@@ -6,6 +6,7 @@ package uk.bl.wa.hadoop.mapred;
 import java.io.IOException;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
@@ -21,6 +22,8 @@ import org.apache.hadoop.mapred.RecordReader;
 /**
  * 
  * Streaming-API compatible version of the binary unsplittable file reader.
+ * Implemented using the older API in order to be compatible with Hadoop
+ * Streaming.
  * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
@@ -35,7 +38,6 @@ public class ByteBlockRecordReader
     private Path path;
     private long bytes_read = 0;
     private long file_length = 0;
-    private int buf_size = 1000 * 1000;
 
     private CompressionCodecFactory compressionCodecs;
 
@@ -45,8 +47,7 @@ public class ByteBlockRecordReader
      * @param conf
      * @throws IOException
      */
-    public ByteBlockRecordReader(InputSplit inputSplit, JobConf conf,
-            boolean autoDecompress)
+    public ByteBlockRecordReader(InputSplit inputSplit, JobConf conf)
             throws IOException {
         if (inputSplit instanceof FileSplit) {
             FileSplit fs = (FileSplit) inputSplit;
@@ -56,12 +57,18 @@ public class ByteBlockRecordReader
             fsdis = fSys.open(path);
 
             // Support auto-decompression of compressed files:
+            boolean autoDecompress = conf.getBoolean(
+                    "mapreduce.unsplittableinputfileformat.autodecompress",
+                    false);
             if (autoDecompress) {
+                log.warn("Enabling auto-decompression of this file.");
                 compressionCodecs = new CompressionCodecFactory(conf);
                 final CompressionCodec codec = compressionCodecs.getCodec(path);
                 if (codec != null) {
                     fsdis = codec.createInputStream(fsdis);
                 }
+            } else {
+                log.info("Auto-decompression is not enabled.");
             }
         } else {
             log.error("Only FileSplit supported!");
@@ -114,18 +121,33 @@ public class ByteBlockRecordReader
      */
     @Override
     public boolean next(Path path, BytesWritable buf) throws IOException {
+        int buf_size;
+        long remaining = file_length - bytes_read;
+        if (remaining < Integer.MAX_VALUE) {
+            buf_size = (int) remaining;
+        } else {
+            buf_size = Integer.MAX_VALUE;
+        }
         byte[] bytes = new byte[buf_size];
-        // Attempt to read a chunk:
-        int count = fsdis.read(bytes);
+
+        // Attempt to read a big chunk (n.b. using a single .read() can require
+        // multiple reads):
+        int count = IOUtils.read(fsdis, bytes);
+
         // If we're out of bytes, report that:
         if (count == -1) {
-            buf = null;
+            log.info("Read " + count + " bytes into RAM, total read: "
+                    + bytes_read);
+            buf.set(new byte[] {}, 0, 0);
             return false;
+        } else {
+            log.info("Read " + count + " bytes into RAM, total read: "
+                    + bytes_read);
+            bytes_read += count;
+            // Otherwise, push the new bytes into the BytesWritable:
+            buf.set(bytes, 0, count);
+            return true;
         }
-        bytes_read += count;
-        // Otherwise, push the new bytes into the BytesWritable:
-        buf.set(bytes, 0, count);
-        return true;
     }
 
 }

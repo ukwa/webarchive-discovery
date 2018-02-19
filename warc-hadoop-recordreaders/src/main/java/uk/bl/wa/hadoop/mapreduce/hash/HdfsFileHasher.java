@@ -31,7 +31,13 @@ import org.apache.hadoop.util.ToolRunner;
 
 import uk.bl.wa.hadoop.mapreduce.lib.input.UnsplittableInputFileFormat;
 
-/**
+/*
+ * Compute full file hashes at scale.
+ * 
+ * Works by using a special reader that breaks each file into a sequence of binary records but without
+ * 'splitting' the file (in the Hadoop sense).  The chunks are read in sequence for each file, by key,
+ * so the total hash computation works fine.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
