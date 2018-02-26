@@ -537,17 +537,6 @@ public class WARCIndexer {
 	            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
 	                               "WARCPayloadAnalyzers.analyze#arcname", nameStart);
 	        }		
-			// If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
-			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
-			    if( currentCrawlDates.contains(crawlDate) ) {  
-			      return null;
-                }			     				
-			    solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
-			    //Copy content_type_served to content_type (no tika/droid for revisits)
-			    solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));			    
-			    processContentType(solr, header, content_length,true);//The value set above is used here for content_type_norm			    
-			    return solr;  			  
-			}
 			
 			// -----------------------------------------------------
 			// Apply any annotations:
@@ -560,6 +549,18 @@ public class WARCIndexer {
 					e.printStackTrace();
 					log.error("Failed to annotate " + saneURI + " : " + e);
 				}
+			}
+
+			// If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
+			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
+				if (currentCrawlDates.contains(crawlDate)) {
+					return null;
+				}
+				solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
+				//Copy content_type_served to content_type (no tika/droid for revisits)
+				solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
+				processContentType(solr, header, content_length, true);//The value set above is used here for content_type_norm			    
+				return solr;
 			}
 
 			// -----------------------------------------------------
