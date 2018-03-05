@@ -65,7 +65,7 @@ public class WARCStatsTool extends Configured implements Tool {
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
-		conf.setInputFormat( ArchiveFileInputFormat.class );
+        conf.setInputFormat(ArchiveFileInputFormat.class);
 		conf.setMapperClass( WARCStatsMapper.class );
 		conf.setReducerClass( FrequencyCountingReducer.class );
 		conf.setOutputFormat( TextOutputFormat.class );
