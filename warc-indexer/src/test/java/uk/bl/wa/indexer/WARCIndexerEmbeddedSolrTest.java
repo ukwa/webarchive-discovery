@@ -60,6 +60,7 @@ import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.AnnotationsTest;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -164,9 +165,8 @@ public class WARCIndexerEmbeddedSolrTest {
 				//break;
 				docs.add(doc.getSolrDocument());
 			} else {
-				System.out.println("Got a NULL document for "
-						+ rec.getHeader().getMimetype() + ": "
-						+ rec.getHeader().getUrl());
+				System.out.println("Got a NULL document for " + rec.getHeader().getMimetype() + ": "
+								   + Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl()));
 			}
 			//System.out.println(" ---- ---- ");
 		}

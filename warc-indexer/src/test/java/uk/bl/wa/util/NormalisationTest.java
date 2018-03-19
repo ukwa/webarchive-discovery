@@ -31,8 +31,27 @@ import org.junit.Test;
 public class NormalisationTest {
 
     @Test
+    public void testWARCHeaderValueSanitise() {
+        String[][] TESTS = new String[][]{
+                // input, expected
+                {"foo bar", "foo bar"},
+                {"<foo bar", "<foo bar"},
+                {"foo bar>", "foo bar>"},
+                {"<foo bar>", "foo bar"},
+                {"foo< >bar", "foo< >bar"},
+                {"<foo< >bar>", "foo< >bar"}
+        };
+        for (String[] test: TESTS) {
+            assertEquals("WARC-header value should be sanitised as expected for input '" + test[0] + "'",
+                         test[1], Normalisation.sanitiseWARCHeaderValue(test[0]));
+        }
+
+    }
+
+    @Test
     public void restResolveRelative() {
         String[][] TESTS = new String[][]{
+                // root, relative, expected
                 {"http://example.com/",             "foo.html",      "http://example.com/foo.html", "true"},
                 {"http://example.com/bar/",         "zoo/baz.html",  "http://example.com/bar/zoo/baz.html", "true"},
                 {"http://example.com/bar",          "/zoo/baz.html", "http://example.com/zoo/baz.html", "true"},

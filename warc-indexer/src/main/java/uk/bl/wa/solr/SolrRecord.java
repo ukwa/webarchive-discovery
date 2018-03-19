@@ -48,6 +48,7 @@ import org.apache.solr.common.SolrInputField;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -99,7 +100,7 @@ public class SolrRecord implements Serializable {
                 "exception-at-" + filename + "@" + header.getOffset());
         setField(SolrFields.SOURCE_FILE, filename);
         setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
-        setField(SolrFields.SOLR_URL, header.getUrl());
+        setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
 	}
 
