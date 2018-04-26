@@ -113,18 +113,19 @@ public class WARCPayloadAnalysers {
 	}
 	
 	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
-		log.debug("Analysing "+header.getUrl());
+		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+		log.debug("Analysing " + url);
 
         final long start = System.nanoTime();
 		// Analyse with tika:
 		try {
 			if( passUriToFormatTools ) {
-				solr = tika.extract( solr, tikainput, header.getUrl() );
+				solr = tika.extract( solr, tikainput, url );
 			} else {
 				solr = tika.extract( solr, tikainput, null );
 			}
 		} catch( Exception i ) {
-			log.error( i + ": " + i.getMessage() + ";tika; " + header.getUrl() + "@" + header.getOffset() );
+			log.error( i + ": " + i.getMessage() + ";tika; " + url + "@" + header.getOffset() );
 		}
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                            "WARCPayloadAnalyzers.analyze#tikasolrextract", start);
@@ -148,7 +149,7 @@ public class WARCPayloadAnalysers {
 				}
 			}
 		} catch( Exception i ) {
-			log.error( i + ": " + i.getMessage() + ";ffb; " + header.getUrl() + "@" + header.getOffset() );
+			log.error( i + ": " + i.getMessage() + ";ffb; " + url + "@" + header.getOffset() );
 		}
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                            "WARCPayloadAnalyzers.analyze#firstbytes", firstBytesStart);
@@ -161,7 +162,7 @@ public class WARCPayloadAnalysers {
 				// Pass the URL in so DROID can fall back on that:
 				Metadata metadata = new Metadata();
 				if( passUriToFormatTools ) {
-					UsableURI uuri = UsableURIFactory.getInstance(Normalisation.fixURLErrors(header.getUrl()) );
+					UsableURI uuri = UsableURIFactory.getInstance(Normalisation.fixURLErrors(url) );
 					// Droid seems unhappy about spaces in filenames, so hack to avoid:
 					String cleanUrl = uuri.getName().replace( " ", "+" );
 					metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );
@@ -174,8 +175,7 @@ public class WARCPayloadAnalysers {
 								   droidStart);
 			} catch( Exception i ) {
 				// Note that DROID complains about some URLs with an IllegalArgumentException.
-				log.error(i + ": " + i.getMessage() + ";dd; " + header.getUrl()
-						+ " @" + header.getOffset(), i);
+				log.error(i + ": " + i.getMessage() + ";dd; " + url + " @" + header.getOffset(), i);
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                "WARCPayloadAnalyzers.analyze#droid", droidStart);
@@ -206,7 +206,7 @@ public class WARCPayloadAnalysers {
 				log.debug("No specific additional parser for: "+mime);
 			}
 		} catch( Exception i ) {
-            log.error(i + ": " + i.getMessage() + ";x; " + header.getUrl() + "@"
+            log.error(i + ": " + i.getMessage() + ";x; " + url + "@"
                     + header.getOffset(), i);
 		}
         Instrument.timeRel("WARCIndexer.extract#analyzetikainput",

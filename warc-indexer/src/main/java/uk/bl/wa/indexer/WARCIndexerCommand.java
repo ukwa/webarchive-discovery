@@ -72,6 +72,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -346,22 +347,18 @@ public class WARCIndexerCommand {
                     log.warn("Exception on record after rec " + recordCount + " from " + inFile.getName(), e);
                     continue;
                 }
+                final String url = Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl());
                 SolrRecord doc = solrFactory.createRecord(inFile.getName(), rec.getHeader());
-                log.debug("Processing record for url "
-                        + rec.getHeader().getUrl()
-                        + " from " + inFile.getName() + " @"
+                log.debug("Processing record for url " + url + " from " + inFile.getName() + " @"
                         + rec.getHeader().getOffset());
                 try {
                     doc = windex.extract(inFile.getName(), rec, isTextRequired);
                 } catch (Exception e) {
-                    log.warn("Exception on record " + rec.getHeader().getUrl() + " from " + inFile.getName(), e);
+                    log.warn("Exception on record " + url + " from " + inFile.getName(), e);
                     doc.addParseException(e);
                     continue;
                 } catch (OutOfMemoryError e) {
-                    log.warn(
-                            "OutOfMemoryError on record "
-                            + rec.getHeader().getUrl() + " from "
-                            + inFile.getName(), e);
+                    log.warn("OutOfMemoryError on record " + url + " from " + inFile.getName(), e);
                     doc.addParseException(e);
                 }
 

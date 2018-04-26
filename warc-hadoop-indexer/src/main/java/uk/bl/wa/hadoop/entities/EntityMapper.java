@@ -21,6 +21,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.parsers.HtmlFeatureParser;
+import uk.bl.wa.util.Normalisation;
 
 @SuppressWarnings( { "deprecation" } )
 public class EntityMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
@@ -68,7 +69,7 @@ public class EntityMapper extends MapReduceBase implements Mapper<Text, Writable
 		}
 		
 		// Collect the linkages
-		String base_url = value.getRecord().getHeader().getUrl();
+		String base_url = Normalisation.sanitiseWARCHeaderValue(value.getRecord().getHeader().getUrl());
 		String sourceSuffix = LinkExtractor.extractPublicSuffix( base_url );
 		if( sourceSuffix == null ) sourceSuffix = "null";
 		Set<String> destSuffixes = null;

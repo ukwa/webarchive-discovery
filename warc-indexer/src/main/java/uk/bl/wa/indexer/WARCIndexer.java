@@ -328,7 +328,7 @@ public class WARCIndexer {
 				return null;
 
             // Get the URL:
-			String targetUrl = header.getUrl();
+			String targetUrl = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
 
             // Strip down very long URLs to avoid
             // "org.apache.commons.httpclient.URIException: Created (escaped)
@@ -365,11 +365,11 @@ public class WARCIndexer {
 			solr.setField(SolrFields.SOURCE_FILE_PATH, header.getReaderIdentifier()); //Full path of file
 			
             byte[] url_md5digest = md5
-                    .digest(header.getUrl().getBytes("UTF-8"));
+                    .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
 			// String url_base64 =
 			// Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
-            solr.setField(SolrFields.SOLR_URL, header.getUrl());
+            solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
             if (addNormalisedURL) {
                 solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
             }
@@ -430,10 +430,12 @@ public class WARCIndexer {
 				solr.setField(SolrFields.SOLR_STATUS_CODE, statusCode);
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
-				if( this.checkResponseCode( statusCode ) == false ) {
-					log.debug( "Skipping this record based on status code " + statusCode + ": " + header.getUrl() );
+				if(!checkResponseCode(statusCode)) {
+					log.debug( "Skipping this record based on status code " + statusCode + ": " + targetUrl );
 					return null;
 				}
+			} else {
+				log.info("Skipping header parsing as URL does not start with 'http'");
 			}
 			
 			// Update the content_length based on what's available:

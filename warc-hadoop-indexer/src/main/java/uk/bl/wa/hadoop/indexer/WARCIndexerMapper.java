@@ -30,6 +30,7 @@ import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.util.Normalisation;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements
@@ -130,6 +131,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		ArchiveRecord rec = value.getRecord();
 		SolrRecord solr = solrFactory.createRecord(key.toString(), rec.getHeader());
+		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
 		try {
 			if (!header.getHeaderFields().isEmpty()) {
 				// Do the indexing:
@@ -138,8 +140,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 				// If there is no result, report it
 				if (solr == null) {
-					LOG.debug("WARCIndexer returned NULL for: "
-							+ header.getUrl());
+					LOG.debug("WARCIndexer returned NULL for: " + url);
 					reporter.incrCounter(MyCounters.NUM_NULLS, 1);
 					return null;
 				}
@@ -155,7 +156,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
 		} catch (Exception e) {
 			LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; "
-					+ header.getUrl() + "; " + header.getOffset(), e);
+					+ url + "; " + header.getOffset(), e);
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 			// Store it:
@@ -164,7 +165,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
 		} catch (OutOfMemoryError e) {
 			// Allow processing to continue if a record causes OOME:
 			LOG.error("OOME " + e.getClass().getName() + ": " + e.getMessage()
-					+ "; " + header.getUrl() + "; " + header.getOffset());
+					+ "; " + url + "; " + header.getOffset());
 			// Increment error counter
 			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
 			// Store it:
