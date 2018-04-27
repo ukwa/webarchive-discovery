@@ -16,12 +16,15 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
+public class MessageDigestMapper extends Mapper<Path, BytesWritable, Text, Text> {
 
-    private static final Log log = LogFactory.getLog(ShaSumMapper.class);
+    private static final Log log = LogFactory.getLog(MessageDigestMapper.class);
+
+    public static final String CONFIG_DIGEST_ALGORITHM = "message.digest.algorithm";
 
     private Path current = null;
     private MessageDigest md;
@@ -55,9 +58,12 @@ public class ShaSumMapper extends Mapper<Path, BytesWritable, Text, Text> {
             Mapper<Path, BytesWritable, Text, Text>.Context context)
                     throws IOException, InterruptedException {
         super.setup(context);
+        // Get the digest algorithm, defaulting to SHA-512:
+        String algorithm = context.getConfiguration()
+                .get(CONFIG_DIGEST_ALGORITHM, "SHA-512");
         //
         try {
-            md = MessageDigest.getInstance("SHA-512");
+            md = MessageDigest.getInstance(algorithm);
         } catch (NoSuchAlgorithmException e) {
             e.printStackTrace();
         }

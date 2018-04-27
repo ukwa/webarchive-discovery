@@ -78,14 +78,34 @@
       </dependency>
       <dependency>
          <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>${slf4j.version.override}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
          <artifactId>slf4j-simple</artifactId>
-         <version>1.6.1</version>
+         <version>${slf4j.version.override}</version>
          <scope>test</scope>
       </dependency>
       <dependency>
          <groupId>org.codehaus.jackson</groupId>
          <artifactId>jackson-mapper-asl</artifactId>
          <version>1.9.4</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.solr</groupId>
+         <artifactId>solr-solrj</artifactId>
+         <version>${solr.version}</version>
+         <exclusions>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>slf4j-api</artifactId>
+            </exclusion>
+            <exclusion>
+               <groupId>org.slf4j</groupId>
+               <artifactId>jcl-over-slf4j</artifactId>
+            </exclusion>
+         </exclusions>
       </dependency>
    </dependencies>
 </project>

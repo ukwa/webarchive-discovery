@@ -30,6 +30,8 @@ import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
+import java.net.URI;
+import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.regex.Pattern;
 
@@ -44,6 +46,29 @@ public class Normalisation {
 
     private static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
+
+    /**
+     * Ensures that a value read from a WARC-header is usable. This means checking whether the value is
+     * encapsulated in {@code <} or {@code >} and if so, removing these signs.
+     * See <a href="https://github.com/ukwa/webarchive-discovery/issues/159">webarchive-discovery issues 159</a>.
+     * A warning is logged if there is exactly 1 of either leading {@code <} or trailing {@code >}.
+     * @param value the second part of a WARC-header key-value pair.
+     * @return the value not encapsulated in {@code <>}.
+     */
+    public static String sanitiseWARCHeaderValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        if (value.startsWith("<")) {
+            if (value.endsWith(">")) {
+                return value.substring(1, value.length()-1);
+            }
+            log.warn("sanitiseWARCHeaderValue: The value started with '<' but did not end in '>': '" + value + "'");
+        } else if (value.endsWith(">")) {
+            log.warn("sanitiseWARCHeaderValue: The value ended with '>' but did not start with '<': '" + value + "'");
+        }
+        return value;
+    }
 
     public static String canonicaliseHost(String host) throws URIException {
         return canon.urlStringToKey(host.trim()).replace("/", "");
@@ -61,6 +86,38 @@ public class Normalisation {
      */
     public static String fixURLErrors(String url) {
         return canonicaliseURL(url, false, false);
+    }
+
+    /**
+     * Resolved one URL relative to another, e.g.
+     * 'foo/bar.html' relative to 'http://example.com/zoo/' is 'http://example.com/zoo/foo/bar.html'.
+     * Always normalises the result. Use {@link #resolveRelative(String, String, boolean)} to choose otherwise.
+     * @param url       base URL.
+     * @param relative  resolved relative to url.
+     * @return the fully resolved version of the relative URL.
+     * @throws IllegalArgumentException if an unrecoverable unvalid URL was encountered,
+     */
+    public static String resolveRelative(String url, String relative) throws IllegalArgumentException {
+        return resolveRelative(url, relative, true);
+    }
+    /**
+     * Resolved one URL relative to another, e.g.
+     * 'foo/bar.html' relative to 'http://example.com/zoo/' is 'http://example.com/zoo/foo/bar.html'.
+     * @param url       base URL.
+     * @param relative  resolved relative to url.
+     * @param normalise if true the resulting URL is also normalised.
+     * @return the fully resolved version of the relative URL.
+     * @throws IllegalArgumentException if an unrecoverable unvalid URL was encountered,
+     */
+    public static String resolveRelative(String url, String relative, boolean normalise) throws IllegalArgumentException {
+        try {
+            URL rurl = new URL(url);
+            String resolved = new URL(rurl, relative).toString();
+            return normalise ? canonicaliseURL(resolved) : resolved;
+        } catch (Exception e) {
+            throw new IllegalArgumentException(String.format(
+                    "Unable to resolve '%s' relative to '%s'", relative, url), e);
+        }
     }
 
     /**

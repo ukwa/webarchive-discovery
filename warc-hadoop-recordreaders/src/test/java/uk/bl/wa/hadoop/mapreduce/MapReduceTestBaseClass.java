@@ -14,26 +14,37 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.junit.After;
-import org.junit.Before;
+import org.apache.hadoop.mapred.OutputLogFilter;
+import org.junit.AfterClass;
+import org.junit.Assert;
+import org.junit.BeforeClass;
+import org.junit.Test;
 
+/**
+ * This shared base class sets up a mini DFS/MR Hadoop cluster for testing, and
+ * populates it with some test data.
+ * 
+ * @author Andrew Jackson <Andrew.Jackson@bl.uk>
+ *
+ */
 public abstract class MapReduceTestBaseClass {
 
     private static final Log log = LogFactory
             .getLog(MapReduceTestBaseClass.class);
 
     // Test cluster:
-    protected MiniDFSCluster dfsCluster = null;
-    protected MiniMRCluster mrCluster = null;
+    protected static MiniDFSCluster dfsCluster = null;
+    protected static MiniMRCluster mrCluster = null;
 
     // Input files:
     // 1. The variations.warc.gz example is rather large, and there are
     // mysterious problems parsing the statusCode.
     // 2. System can't cope with uncompressed inputs right now.
-    protected final String[] testWarcs = new String[] {
+    protected static final String[] testWarcs = new String[] {
             // "BL-20161016184836943-00270-28590~crawler03~8446.warc.gz",
             // "variations.warc.gz",
             // "IAH-20080430204825-00000-blackbook-truncated.arc",
@@ -41,12 +52,12 @@ public abstract class MapReduceTestBaseClass {
             // "IAH-20080430204825-00000-blackbook-truncated.warc",
             "IAH-20080430204825-00000-blackbook-truncated.warc.gz" };
 
-    protected final Path input = new Path("inputs");
-    protected final Path output = new Path("outputs");
+    protected static final Path input = new Path("inputs");
+    protected static final Path output = new Path("outputs");
 
-    @Before
-    public void setUp() throws Exception {
-        // Print out the full config for debugging purposes:
+    @BeforeClass
+    public static void setUp() throws Exception {
+        // static Print out the full config for debugging purposes:
         // Config index_conf = ConfigFactory.load();
         // LOG.debug(index_conf.root().render());
 
@@ -76,18 +87,19 @@ public abstract class MapReduceTestBaseClass {
         log.warn("Spun up test cluster.");
     }
 
-    protected FileSystem getFileSystem() throws IOException {
+    protected static FileSystem getFileSystem() throws IOException {
         return dfsCluster.getFileSystem();
     }
 
-    protected void createTextInputFile() throws IOException {
+    protected static void createTextInputFile() throws IOException {
         OutputStream os = getFileSystem().create(new Path(input, "wordcount"));
         Writer wr = new OutputStreamWriter(os);
         wr.write("b a a\n");
         wr.close();
     }
 
-    protected void copyFileToTestCluster(String filename, String localPrefix)
+    protected static void copyFileToTestCluster(String filename,
+            String localPrefix)
             throws IOException {
         Path targetPath = new Path(input, filename);
         File sourceFile = new File(localPrefix + filename);
@@ -101,8 +113,8 @@ public abstract class MapReduceTestBaseClass {
         log.info("Copy completed.");
     }
 
-    @After
-    public void tearDown() throws Exception {
+    @AfterClass
+    public static void tearDown() throws Exception {
         log.warn("Tearing down test cluster...");
         if (dfsCluster != null) {
             dfsCluster.shutdown();
@@ -113,6 +125,20 @@ public abstract class MapReduceTestBaseClass {
             mrCluster = null;
         }
         log.warn("Torn down test cluster.");
+    }
+
+    /**
+     * A simple test to check the setup worked:
+     * 
+     * @throws IOException
+     */
+    @Test
+    public void testSetupWorked() throws IOException {
+        log.info("Checking input file(s) is/are present...");
+        // Check that the input file is present:
+        Path[] inputFiles = FileUtil.stat2Paths(
+                getFileSystem().listStatus(input, new OutputLogFilter()));
+        Assert.assertEquals(testWarcs.length, inputFiles.length);
     }
 
 }

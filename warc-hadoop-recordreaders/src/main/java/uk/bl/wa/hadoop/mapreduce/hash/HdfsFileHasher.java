@@ -6,6 +6,11 @@ package uk.bl.wa.hadoop.mapreduce.hash;
 import java.io.BufferedReader;
 import java.io.FileReader;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -20,12 +25,19 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
+import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 import uk.bl.wa.hadoop.mapreduce.lib.input.UnsplittableInputFileFormat;
 
-/**
+/*
+ * Compute full file hashes at scale.
+ * 
+ * Works by using a special reader that breaks each file into a sequence of binary records but without
+ * 'splitting' the file (in the Hadoop sense).  The chunks are read in sequence for each file, by key,
+ * so the total hash computation works fine.
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
@@ -33,26 +45,61 @@ public class HdfsFileHasher extends Configured implements Tool {
 
     private static final Log log = LogFactory.getLog(HdfsFileHasher.class);
 
+    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-m] [Use MD5 instead of SHA-512.]";
+    private static final String CLI_HEADER = "MapReduce job for calculating checksums of files on HDFS.";
+
     /* (non-Javadoc)
      * @see org.apache.hadoop.util.Tool#run(java.lang.String[])
      */
     @Override
     public int run(String[] args) throws Exception {
+        // Options:
+        String[] otherArgs = new GenericOptionsParser(args)
+                .getRemainingArgs();
 
-        // When implementing tool
+        // Process remaining args list this:
+        Options options = new Options();
+        options.addOption("i", true,
+                "a local file containing a list of HDFS paths to process");
+        options.addOption("o", true, "output directory");
+        options.addOption("m", false, "use MD5 rather than SHA-512");
+        options.addOption("r", true, "number of reducers (defaults to 1)");
+
+        CommandLineParser parser = new PosixParser();
+        CommandLine cmd = parser.parse(options, otherArgs);
+        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
+            HelpFormatter helpFormatter = new HelpFormatter();
+            helpFormatter.setWidth(80);
+            helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, "");
+            System.exit(1);
+        }
+        String input_file = cmd.getOptionValue("i");
+        String output_path = cmd.getOptionValue("o");
+        String algorithm = null;
+        int numReducers = 1;
+        if (cmd.hasOption("m")) {
+            algorithm = "MD5";
+        }
+        if (cmd.hasOption("r")) {
+            numReducers = Integer.parseInt(cmd.getOptionValue("r"));
+        }
+
+        // When implementing tool, choose algorithm:
         Configuration conf = this.getConf();
+        if (algorithm != null)
+            conf.set(MessageDigestMapper.CONFIG_DIGEST_ALGORITHM, algorithm);
 
         // Create job
-        Job job = new Job(conf, "HDFS File Checksummer (SHA-512)");
+        Job job = new Job(conf, "HDFS File Checksummer");
         job.setJarByClass(HdfsFileHasher.class);
 
         // Setup MapReduce job
         // Do not specify the number of Reducer
-        job.setMapperClass(ShaSumMapper.class);
+        job.setMapperClass(MessageDigestMapper.class);
         job.setReducerClass(Reducer.class);
 
         // Just one output file:
-        job.setNumReduceTasks(1);
+        job.setNumReduceTasks(numReducers);
 
         // Specify key / value
         job.setOutputKeyClass(Text.class);
@@ -62,7 +109,7 @@ public class HdfsFileHasher extends Configured implements Tool {
         log.info("Reading input files...");
         String line = null;
         long line_count = 0;
-        BufferedReader br = new BufferedReader(new FileReader(args[0]));
+        BufferedReader br = new BufferedReader(new FileReader(input_file));
         while ((line = br.readLine()) != null) {
             if (StringUtils.isEmpty(line))
                 continue;
@@ -91,7 +138,7 @@ public class HdfsFileHasher extends Configured implements Tool {
         job.setInputFormatClass(UnsplittableInputFileFormat.class);
 
         // Output
-        FileOutputFormat.setOutputPath(job, new Path(args[1]));
+        FileOutputFormat.setOutputPath(job, new Path(output_path));
         job.setOutputFormatClass(TextOutputFormat.class);
 
         // Execute job and return status

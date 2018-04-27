@@ -24,7 +24,7 @@ import org.apache.hadoop.util.*;
  */
 
 @SuppressWarnings( "deprecation" )
-public class TextOutputFormat<K, V> extends FileOutputFormat<K, V> {
+public class KeylessTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
 	protected static class LineRecordWriter<K, V> implements RecordWriter<K, V> {
 		private static final String utf8 = "UTF-8";

@@ -65,11 +65,12 @@ public class TinyCDXServerReducer
         for (Text t : arg1) {
             tcs.add(t);
         }
-        // Also pass to reducers for cross-checking.
-        // Record progress:
+        // If we're running in produciton context:
         if (context != null) {
+            // Record progress:
             context.setStatus("Seen " + tcs.getTotalRecords()
                     + " records, sent " + tcs.getTotalSentRecords() + "...");
+            // TODO Also pass to reducer output for cross-checking?
         }
     }
 
