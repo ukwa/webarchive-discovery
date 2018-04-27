@@ -63,6 +63,7 @@ import com.typesafe.config.ConfigFactory;
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
 import uk.bl.wa.extract.Times;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * c.f. uk.bl.wap.tika.TikaDeepIdentifier
@@ -204,12 +205,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         final long detectStart = System.nanoTime();
 		StringBuilder detected = new StringBuilder();
 		try {
-			DetectRunner detect = new DetectRunner(tika, tikainput, detected,
-					metadata);
-			Thread detectThread = new Thread( detect, Long.toString( System.currentTimeMillis() ) );
-			detectThread.start();
-			detectThread.join( 10000L );
-			detectThread.interrupt();
+			DetectRunner detect = new DetectRunner(tika, tikainput, detected, metadata);
+			TimeLimiter.run(detect, 10000L, false);
 		} catch( NoSuchFieldError e ) {
 			// TODO Is this an Apache POI version issue?
 			log.error( "Tika.detect(): " + e.getMessage() );
@@ -243,12 +240,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		try {
             final long parseStart = System.nanoTime();
 			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
-			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
 			try {
-				parseThread.start();
-				parseThread.join( this.parseTimeout );
-				parseThread.interrupt();
-				parseThread.join(this.parseTimeout);
+				TimeLimiter.run(runner, parseTimeout, true);
 			} catch( OutOfMemoryError o ) {
 				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() );
 				addExceptionMetadata(metadata, new Exception("OutOfMemoryError"));

@@ -131,7 +131,10 @@ public class TikaDeepIdentifier {
 			InputStream tikainput = TikaInputStream.get( payload, md );
 			ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
+			parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
+
 			try {
+				// TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
 				parseThread.start();
 				parseThread.join( this.parseTimeout );
 				parseThread.interrupt();
@@ -211,7 +214,9 @@ public class TikaDeepIdentifier {
 			InputStream tikainput = TikaInputStream.get( payload );
 			ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
 			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
+			parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
 			try {
+				// TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
 				parseThread.start();
 				parseThread.join( this.parseTimeout );
 				parseThread.interrupt();
