@@ -32,7 +32,7 @@ import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.TextOutputFormat;
+import uk.bl.wa.hadoop.KeylessTextOutputFormat;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
@@ -135,7 +135,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
 		conf.setInputFormat(ArchiveFileInputFormat.class);
 		conf.setMapperClass(WARCIndexerMapper.class);
 		conf.setReducerClass(WARCIndexerReducer.class);
-		conf.setOutputFormat(TextOutputFormat.class);
+        conf.setOutputFormat(KeylessTextOutputFormat.class);
 		conf.set("map.output.key.field.separator", "");
 		// Compress the output from the maps, to cut down temp space
 		// requirements between map and reduce.

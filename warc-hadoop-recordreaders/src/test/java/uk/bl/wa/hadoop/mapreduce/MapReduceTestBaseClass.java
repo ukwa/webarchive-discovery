@@ -56,7 +56,7 @@ public abstract class MapReduceTestBaseClass {
     protected static final Path output = new Path("outputs");
 
     @BeforeClass
-    public void setUp() throws Exception {
+    public static void setUp() throws Exception {
         // static Print out the full config for debugging purposes:
         // Config index_conf = ConfigFactory.load();
         // LOG.debug(index_conf.root().render());

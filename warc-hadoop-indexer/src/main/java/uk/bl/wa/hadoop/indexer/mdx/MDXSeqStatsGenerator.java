@@ -33,7 +33,7 @@ import org.apache.zookeeper.KeeperException;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import uk.bl.wa.hadoop.TextOutputFormat;
+import uk.bl.wa.hadoop.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.solr.SolrFields;
@@ -97,7 +97,7 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		conf.setInputFormat(SequenceFileInputFormat.class);
 		conf.setMapperClass(MDXSeqStatsMapper.class);
 		conf.setReducerClass(FrequencyCountingReducer.class);
-		conf.setOutputFormat(TextOutputFormat.class);
+        conf.setOutputFormat(KeylessTextOutputFormat.class);
 		conf.setOutputKeyClass(Text.class);
 		conf.setOutputValueClass(Text.class);
 		conf.setMapOutputKeyClass(Text.class);
@@ -105,16 +105,16 @@ public class MDXSeqStatsGenerator extends Configured implements Tool {
 		conf.setNumReduceTasks(numReducers);
 		
 		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_SUMMARY_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
+                KeylessTextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
+                KeylessTextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
+                KeylessTextOutputFormat.class, Text.class, Text.class);
 		MultipleOutputs.addMultiNamedOutput(conf, GEO_SUMMARY_NAME,
-				TextOutputFormat.class, Text.class, Text.class);
+                KeylessTextOutputFormat.class, Text.class, Text.class);
 
-		TextOutputFormat.setCompressOutput(conf, true);
-		TextOutputFormat.setOutputCompressorClass(conf, GzipCodec.class);
+        KeylessTextOutputFormat.setCompressOutput(conf, true);
+        KeylessTextOutputFormat.setOutputCompressorClass(conf, GzipCodec.class);
 	}
 
 	/**
