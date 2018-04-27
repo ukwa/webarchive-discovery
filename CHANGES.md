@@ -2,6 +2,7 @@
 -----
 
 **NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
+* Time-limiting for processing using Threads now allows the JVM to exit upon overall completion #149
 * New solr field 'redirect_to_norm'. Will only be used for redirect HTTP 3xx status codes and empty for other statuses. So no change unless you index HTTP 3xx codes. 
 * Refactored and extended URL-normalisation [#115](https://github.com/ukwa/webarchive-discovery/issues/115) and [#119](https://github.com/ukwa/webarchive-discovery/issues/119)
 * Updated performance instrumentation, with break down of time used on common file types
