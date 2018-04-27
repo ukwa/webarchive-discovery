@@ -92,6 +92,7 @@ import uk.bl.wa.extract.LinkExtractor;
 import uk.bl.wa.parsers.HtmlFeatureParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
 import uk.bl.wa.util.Instrument;
@@ -148,6 +149,8 @@ public class WARCIndexer {
 	// Also canonicalise the HOST field (e.g. drop "www.")
 	public static final boolean CANONICALISE_HOST = true;
 
+	private final SolrRecordFactory solrFactory;
+
 	/* ------------------------------------------------------------ */
 
 	/**
@@ -169,7 +172,7 @@ public class WARCIndexer {
 		} catch (IOException e1) {
 			log.error("Failed to load log4j config from properties file.");
 		}
-
+		solrFactory = SolrRecordFactory.createFactory(conf);
 		// Optional configurations:
 		this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
 		log.info("Extract text = " + extractText);
@@ -298,7 +301,7 @@ public class WARCIndexer {
 	public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {      
 	  final long start = System.nanoTime();
 		ArchiveRecordHeader header = record.getHeader();
-		SolrRecord solr = new SolrRecord(archiveName, header);
+		SolrRecord solr = solrFactory.createRecord(archiveName, header);
 		
 		if( !header.getHeaderFields().isEmpty() ) {
 			if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
@@ -325,7 +328,7 @@ public class WARCIndexer {
 				return null;
 
             // Get the URL:
-			String targetUrl = header.getUrl();
+			String targetUrl = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
 
             // Strip down very long URLs to avoid
             // "org.apache.commons.httpclient.URIException: Created (escaped)
@@ -362,11 +365,11 @@ public class WARCIndexer {
 			solr.setField(SolrFields.SOURCE_FILE_PATH, header.getReaderIdentifier()); //Full path of file
 			
             byte[] url_md5digest = md5
-                    .digest(header.getUrl().getBytes("UTF-8"));
+                    .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
 			// String url_base64 =
 			// Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
 			String url_md5hex = Base64.encodeBase64String(url_md5digest);
-            solr.setField(SolrFields.SOLR_URL, header.getUrl());
+            solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
             if (addNormalisedURL) {
                 solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
             }
@@ -427,10 +430,12 @@ public class WARCIndexer {
 				solr.setField(SolrFields.SOLR_STATUS_CODE, statusCode);
 
 				// Skip recording non-content URLs (i.e. 2xx responses only please):
-				if( this.checkResponseCode( statusCode ) == false ) {
-					log.debug( "Skipping this record based on status code " + statusCode + ": " + header.getUrl() );
+				if(!checkResponseCode(statusCode)) {
+					log.debug( "Skipping this record based on status code " + statusCode + ": " + targetUrl );
 					return null;
 				}
+			} else {
+				log.info("Skipping header parsing as URL does not start with 'http'");
 			}
 			
 			// Update the content_length based on what's available:
@@ -534,17 +539,6 @@ public class WARCIndexer {
 	            Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
 	                               "WARCPayloadAnalyzers.analyze#arcname", nameStart);
 	        }		
-			// If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
-			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
-			    if( currentCrawlDates.contains(crawlDate) ) {  
-			      return null;
-                }			     				
-			    solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
-			    //Copy content_type_served to content_type (no tika/droid for revisits)
-			    solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));			    
-			    processContentType(solr, header, content_length,true);//The value set above is used here for content_type_norm			    
-			    return solr;  			  
-			}
 			
 			// -----------------------------------------------------
 			// Apply any annotations:
@@ -557,6 +551,18 @@ public class WARCIndexer {
 					e.printStackTrace();
 					log.error("Failed to annotate " + saneURI + " : " + e);
 				}
+			}
+
+			// If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
+			if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
+				if (currentCrawlDates.contains(crawlDate)) {
+					return null;
+				}
+				solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics			     			   			    			    			    
+				//Copy content_type_served to content_type (no tika/droid for revisits)
+				solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
+				processContentType(solr, header, content_length, true);//The value set above is used here for content_type_norm			    
+				return solr;
 			}
 
 			// -----------------------------------------------------

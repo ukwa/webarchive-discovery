@@ -31,6 +31,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.net.URL;
 
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -39,6 +41,7 @@ import org.junit.Test;
  *
  */
 public class TikaExtractorTest {
+	private static Log log = LogFactory.getLog(TikaExtractorTest.class);
 
 	private TikaExtractor tika;
 
@@ -52,10 +55,13 @@ public class TikaExtractorTest {
 
 	@Test
 	public void testMonaLisa() throws Exception {
-		File ml = new File(
-				"src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
+		File ml = new File("src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
+		if (!ml.exists()) {
+			log.error("The Mona Lisa test file '" + ml + "' does not exist");
+			return;
+		}
 		URL url = ml.toURI().toURL();
-		SolrRecord solr = new SolrRecord();
+		SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
 		tika.extract(solr, url.openStream(), url.toString());
 		System.out.println("SOLR " + solr.getSolrDocument().toString());
 		String text = (String) solr.getField(SolrFields.SOLR_EXTRACTED_TEXT)

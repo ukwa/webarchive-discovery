@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.mapreduce;
+package uk.bl.wa.hadoop.mapred;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -13,6 +13,8 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.log4j.Logger;
+
+import uk.bl.wa.hadoop.mapreduce.MutableInt;
 
 
 @SuppressWarnings( { "deprecation" } )
