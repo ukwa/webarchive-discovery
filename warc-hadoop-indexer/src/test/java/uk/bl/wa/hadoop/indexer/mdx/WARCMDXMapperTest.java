@@ -31,6 +31,7 @@ import com.typesafe.config.ConfigRenderOptions;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
+import uk.bl.wa.util.Normalisation;
 
 public class WARCMDXMapperTest {
 
@@ -93,8 +94,8 @@ public class WARCMDXMapperTest {
 				LOG.info("RESULT MDX: " + mdx);
 
 				// Perform a specific check for one of the items:
-				if ("http://data.gov.uk/".equals(record.getHeader().getUrl())
-						&& record.getHeader().getMimetype()
+				if ("http://data.gov.uk/".equals(Normalisation.sanitiseWARCHeaderValue(record.getHeader().getUrl()))
+												 && record.getHeader().getMimetype()
 								.contains("response")) {
 					Text testKey = new Text(
 							"sha1:SKAVWVVB6HYPSTY3YNQJVM2C4FZRWBSG");

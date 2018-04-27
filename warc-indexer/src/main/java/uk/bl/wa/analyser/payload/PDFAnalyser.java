@@ -39,6 +39,7 @@ import uk.bl.wa.solr.SolrRecord;
 
 import com.typesafe.config.Config;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author anj
@@ -61,7 +62,7 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
 			SolrRecord solr) {
         final long start = System.nanoTime();
 		Metadata metadata = new Metadata();
-		metadata.set(Metadata.RESOURCE_NAME_KEY, header.getUrl());
+		metadata.set(Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
 		ParseRunner parser = new ParseRunner(app, tikainput, metadata, solr);
 		Thread thread = new Thread(parser, Long.toString(System
 				.currentTimeMillis()));

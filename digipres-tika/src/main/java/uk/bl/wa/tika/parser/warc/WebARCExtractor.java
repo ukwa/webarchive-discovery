@@ -92,6 +92,7 @@ public class WebARCExtractor {
 					String statusCode = firstLine[1].trim();
 					Header[] headers = HttpParser.parseHeaders(is, "UTF-8");
 				}
+				// As this is ARC (as opposed to WARC), the URL should be directly usable
 				String name = entry.getHeader().getUrl();
 				name = entry.getHeader().getHeaderValue(WARCRecord.HEADER_KEY_TYPE)+":"+name;
 				// Now parse it...

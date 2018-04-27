@@ -47,6 +47,9 @@ public class WARCRawStatsMapper extends MapReduceBase
         ArchiveRecord record = value.getRecord();
         ArchiveRecordHeader header = record.getHeader();
 
+        // The header.url() might be encapsulated in '<>', which normally gives problems as they are passed back
+        // when using header.getUrl(), but this code looks like stats extraction, so we leave them be.
+
         // Logging for debug info:
         log.debug("Processing @" + header.getOffset() + "+" + record.available()
                 + "," + header.getLength() + ": " + header.getUrl());

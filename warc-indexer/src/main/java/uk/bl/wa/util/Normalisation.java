@@ -47,6 +47,29 @@ public class Normalisation {
     private static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();
 
+    /**
+     * Ensures that a value read from a WARC-header is usable. This means checking whether the value is
+     * encapsulated in {@code <} or {@code >} and if so, removing these signs.
+     * See <a href="https://github.com/ukwa/webarchive-discovery/issues/159">webarchive-discovery issues 159</a>.
+     * A warning is logged if there is exactly 1 of either leading {@code <} or trailing {@code >}.
+     * @param value the second part of a WARC-header key-value pair.
+     * @return the value not encapsulated in {@code <>}.
+     */
+    public static String sanitiseWARCHeaderValue(String value) {
+        if (value == null) {
+            return null;
+        }
+        if (value.startsWith("<")) {
+            if (value.endsWith(">")) {
+                return value.substring(1, value.length()-1);
+            }
+            log.warn("sanitiseWARCHeaderValue: The value started with '<' but did not end in '>': '" + value + "'");
+        } else if (value.endsWith(">")) {
+            log.warn("sanitiseWARCHeaderValue: The value ended with '>' but did not start with '<': '" + value + "'");
+        }
+        return value;
+    }
+
     public static String canonicaliseHost(String host) throws URIException {
         return canon.urlStringToKey(host.trim()).replace("/", "");
     }

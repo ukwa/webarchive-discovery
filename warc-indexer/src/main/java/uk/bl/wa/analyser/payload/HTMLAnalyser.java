@@ -95,7 +95,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 		Set<String> domains = new HashSet<String>();
 		
 		// JSoup NEEDS the URL to function:
-		metadata.set( Metadata.RESOURCE_NAME_KEY, header.getUrl() );
+		metadata.set( Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()) );
 		ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
 		Thread thread = new Thread( parser, Long.toString( System.currentTimeMillis() ) );
 		try {
