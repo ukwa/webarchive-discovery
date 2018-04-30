@@ -16,6 +16,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
 
 /**
+ * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */

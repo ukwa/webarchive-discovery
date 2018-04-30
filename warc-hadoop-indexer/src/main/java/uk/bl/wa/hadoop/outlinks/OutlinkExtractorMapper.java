@@ -18,6 +18,7 @@ import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.parsers.HtmlFeatureParser;
+import uk.bl.wa.util.Normalisation;
 
 @SuppressWarnings( "deprecation" )
 public class OutlinkExtractorMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
@@ -39,7 +40,7 @@ public class OutlinkExtractorMapper extends MapReduceBase implements Mapper<Text
 			   !header.getHeaderValue( HEADER_KEY_TYPE ).equals( WARCRecordType.response.toString() ) ) {
 				return;
 			}
-			resourceUrl = value.getRecord().getHeader().getUrl();
+			resourceUrl = Normalisation.sanitiseWARCHeaderValue(value.getRecord().getHeader().getUrl());
 			// ..or if this isn't a HTTP record...
 			if( !resourceUrl.startsWith( "http" ) ) {
 				return;

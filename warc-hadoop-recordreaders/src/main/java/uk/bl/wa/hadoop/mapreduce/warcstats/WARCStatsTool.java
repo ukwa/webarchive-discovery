@@ -24,8 +24,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.TextOutputFormat;
-import uk.bl.wa.hadoop.mapreduce.FrequencyCountingReducer;
+import uk.bl.wa.hadoop.KeylessTextOutputFormat;
+import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 
 /**
  * @author Andrew.Jackson@bl.uk
@@ -65,10 +65,10 @@ public class WARCStatsTool extends Configured implements Tool {
 		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 
 		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
-		conf.setInputFormat( ArchiveFileInputFormat.class );
+        conf.setInputFormat(ArchiveFileInputFormat.class);
 		conf.setMapperClass( WARCStatsMapper.class );
 		conf.setReducerClass( FrequencyCountingReducer.class );
-		conf.setOutputFormat( TextOutputFormat.class );
+        conf.setOutputFormat(KeylessTextOutputFormat.class);
 		conf.set( "map.output.key.field.separator", "" );
 
 		conf.setOutputKeyClass( Text.class );

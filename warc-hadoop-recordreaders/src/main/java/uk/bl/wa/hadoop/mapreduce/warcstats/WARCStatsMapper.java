@@ -65,7 +65,8 @@ public class WARCStatsMapper extends MapReduceBase implements Mapper<Text, Writa
 		} else {
 			output.collect( new Text("malformed-date"), new Text("MALFORMED-DATE") );			
 		}
-		
+
+		// TODO: Consider calling Normalisation.sanitiseWARCHeaderValue on the header.getUrl to guard against '<>'-encapsulation
 		// URL:
 		String uri = header.getUrl();
 		if( uri != null ){ 

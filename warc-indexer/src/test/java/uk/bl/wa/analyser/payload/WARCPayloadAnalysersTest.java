@@ -28,6 +28,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
 
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +48,7 @@ public class WARCPayloadAnalysersTest extends TestCase {
         ARCNameAnalyser ana = getAnalyser();
 
         ArchiveRecordHeader header = new FakeHeader("whatever/localrun-job87-20150219-133227.warc");
-        SolrRecord solr = new SolrRecord();
+        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
         ana.analyse(header, null, solr);
         assertEquals("The solr documents should have the right content for field harvest_job",
                      "job87", (solr.getFieldValue("harvest_job").toString()));
@@ -107,7 +108,7 @@ public class WARCPayloadAnalysersTest extends TestCase {
                         "/netarkiv/0116/filedir/276809-272-20170622193108196-00004-kb-prod-har-001.kb.dk.warc.gz"
                 }
         }) {
-            SolrRecord solr = new SolrRecord();
+            SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
             ana.analyse(new FakeHeader(test[1]), null, solr);
 
             for (String expectedPair:test[0].split(" *, *")) {

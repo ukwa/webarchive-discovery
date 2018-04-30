@@ -8,6 +8,8 @@
 * Solr 7: Tweaking of merge/memory parameters etc. to improve performance. (most on index time).
 * Solr 7: A few fields with docVal are now stored="false" since they will still be retrieved by a query. (saving index space)
 * New solr field 'redirect_to_norm'. Will only be used for redirect HTTP 3xx status codes and empty for other statuses. So no change unless you index HTTP 3xx codes. 
+* Time-limiting for processing using Threads now allows the JVM to exit upon overall completion #149
+* New solr field 'redirect_to_norm'. Will only be used for redirect HTTP 3xx status codes and empty for other statuses. So no change unless you index HTTP 3xx codes.
 * Refactored and extended URL-normalisation [#115](https://github.com/ukwa/webarchive-discovery/issues/115) and [#119](https://github.com/ukwa/webarchive-discovery/issues/119)
 * Updated performance instrumentation, with break down of time used on common file types
 * Switched to docValues for most fields [#51](https://github.com/ukwa/webarchive-discovery/issues/51)
@@ -44,6 +46,7 @@
 * Add user supplied Archive-It Solr fields (collection, collection_id, institution) [#129](https://github.com/ukwa/webarchive-discovery/pull/129)
 * Ensure time-zones are applied correctly based on UTC crawl timestamp [#142](https://github.com/ukwa/webarchive-discovery/issues/142)
 * Pruning of invalid tag names extracted by JSoup [#143](https://github.com/ukwa/webarchive-discovery/issues/143)
+* Add `resourcename_facet` to Solr schema to allow for faceting on resourcename.
 
 2.1.0
 -----

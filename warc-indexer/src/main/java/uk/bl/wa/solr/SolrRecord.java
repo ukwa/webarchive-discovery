@@ -37,6 +37,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -47,6 +48,7 @@ import org.apache.solr.common.SolrInputField;
 import org.archive.io.ArchiveRecordHeader;
 
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -56,9 +58,25 @@ public class SolrRecord implements Serializable {
 
 	// private static Log log = LogFactory.getLog(SolrRecord.class);
 
-	private static final long serialVersionUID = -4556484652176976470L;
+	private static final long serialVersionUID = -4556484652176976472L;
 	
 	private SolrInputDocument doc = new SolrInputDocument();
+
+	private final int defaultMax;
+    private final HashMap<String, Integer> maxLengths; // Explicit HashMap as it is Serializable
+
+	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths) {
+		this.defaultMax = defaultMaxFieldLength;
+		this.maxLengths = maxFieldLengths;
+	}
+
+	/**
+	 * @deprecated use {@link SolrRecordFactory#createRecord()} instead.
+	 */
+	@Deprecated
+	public SolrRecord() {
+		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>());
+	}
 
 	public String toXml() {
 		return ClientUtils.toXML( doc );
@@ -72,18 +90,25 @@ public class SolrRecord implements Serializable {
 		ClientUtils.writeXML( doc, writer );
 	}
 
-	private static final int MAX_FIELD_LEN = 200;
+    private static final int MAX_FIELD_LEN = 4096;
 	
-	public SolrRecord() {
+	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths,
+					  String filename, ArchiveRecordHeader header) {
+		defaultMax = defaultMaxFieldLength;
+		maxLengths = maxFieldLengths;
+		setField(SolrFields.ID,
+                "exception-at-" + filename + "@" + header.getOffset());
+        setField(SolrFields.SOURCE_FILE, filename);
+        setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
+        setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
+        setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
 	}
 
+	/**
+	 * @deprecated use {@link SolrRecordFactory#createRecord(String, ArchiveRecordHeader)} instead.
+	 */
 	public SolrRecord(String filename, ArchiveRecordHeader header) {
-		setField(SolrFields.ID,
-				"exception-at-" + filename + "@" + header.getOffset());
-		setField(SolrFields.SOURCE_FILE, filename);
-		setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
-		setField(SolrFields.SOLR_URL, header.getUrl());
-		setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
+		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>(), filename, header);
 	}
 
 	/**
@@ -144,15 +169,19 @@ public class SolrRecord implements Serializable {
 
 
 	/**
-	 * Also shorten to avoid bad data filling 'small' fields with 'big' data.
-	 * 
-	 * @param value
-	 * @return
-	 */
-	private String sanitizeString( String solr_property, String value ) {
-		if( ! solr_property.equals( SolrFields.SOLR_EXTRACTED_TEXT ) ) {
-			if( value.length() > MAX_FIELD_LEN ) {
-				value = value.substring(0, MAX_FIELD_LEN);
+     * Also shorten to avoid bad data filling 'small' fields with 'big' data.
+     * 
+     * @param value
+     * @param truncateToLength to truncate to (-1 means don't truncate)
+     * @return
+     */
+    private String sanitizeString(String value, int truncateToLength) {
+        if (value == null) {
+            return null;
+        }
+        if (truncateToLength > 0) {
+            if (value.length() > truncateToLength) {
+                value = value.substring(0, truncateToLength);
 			}
 		}
 		return removeControlCharacters(value);
@@ -164,8 +193,25 @@ public class SolrRecord implements Serializable {
 	 * @param solr_property
 	 * @param value
 	 */
-	public void addField( String solr_property, String value ) {
-		if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
+    public void addField(String solr_property, String value) {
+        addFieldTruncated(solr_property, value, getMaxLength(solr_property));
+    }
+
+	private int getMaxLength(String solrField) {
+		Integer max = maxLengths.get(solrField);
+		return max == null ? defaultMax : max;
+	}
+
+	/**
+     * Add the field, truncating the value if it's larger than the given limit.
+     * 
+     * @param solr_property
+     * @param value
+     * @param truncateTo
+     */
+    public void addFieldTruncated(String solr_property, String value, int truncateTo) {
+        value = sanitizeString(value, truncateTo);
+        if (value != null && !value.isEmpty())
 			doc.addField( solr_property, value );
 	}
 
@@ -175,9 +221,21 @@ public class SolrRecord implements Serializable {
 	 * @param solr_property
 	 * @param value
 	 */
-	public void setField( String solr_property, String value ) {
-        if( value != null && !(value = sanitizeString(solr_property, value)).isEmpty())
-			doc.setField( solr_property, value );
+    public void setField(String solr_property, String value) {
+        setFieldTruncated(solr_property, value, getMaxLength(solr_property));
+    }
+
+    /**
+     * Set the field, truncating the value if it's larger than the given limit.
+     * 
+     * @param solr_property
+     * @param value
+     * @param truncateTo
+     */
+    public void setFieldTruncated(String solr_property, String value, int truncateTo) {
+        value = sanitizeString(value, truncateTo);
+        if (value != null && !value.isEmpty())
+            doc.setField(solr_property, value);
 	}
 	
 	/**
@@ -246,7 +304,7 @@ public class SolrRecord implements Serializable {
 	 */
 	public void addParseException(Throwable e) {
 		addField(SolrFields.PARSE_ERROR,
-				e.getClass().getName() + ": " + e.getMessage());
+                e.getClass().getName() + ": " + e.getMessage());
 	}
 
 	/**
@@ -256,7 +314,7 @@ public class SolrRecord implements Serializable {
 	 */
 	public void addParseException(String hint, Throwable e) {
 		addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
-				+ ": " + e.getMessage());
+                + ": " + e.getMessage());
 	}
 
 	/**
