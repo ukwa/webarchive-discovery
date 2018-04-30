@@ -65,15 +65,16 @@
         <field name="host" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="host_surt" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="id_long" type="long" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_colours" type="string" indexed="true" stored="true" multiValued="true"/>
+        <!-- Both stored and docValues as Solr 4 cannot return multiValued docValues as part of the search result -->
+        <field name="image_colours" type="string" indexed="true" docValues="true" stored="true" multiValued="true"/>
         <field name="image_dominant_colour" type="string" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces_count" type="tint" indexed="true" stored="true" multiValued="false"/>
         <field name="image_faces" type="string" indexed="false" stored="true" multiValued="true"/>
-        <field name="image_height" type="tlong" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_size" type="tlong" indexed="true" stored="true" multiValued="false"/>
-        <field name="image_width" type="tlong" indexed="true" stored="true" multiValued="false"/>
+        <field name="image_height" type="tlong" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="image_size" type="tlong" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="image_width" type="tlong" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="keywords" type="text_general" indexed="true" stored="true"/>
-        <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
+        <field name="last_modified" type="tdate" indexed="true" stored="false" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
@@ -89,28 +90,28 @@
         <field name="pdf_pdfa_is_valid" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="postcode_district" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="postcode" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="publication_date" type="tdate" indexed="true" stored="true" multiValued="false"/>
+        <field name="publication_date" type="date" indexed="true" stored="true" multiValued="false"/>
         <field name="publication_year" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="public_suffix" type="string" indexed="true" docValues="true" multiValued="false"/>
-        <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-        <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
-        <field name="resourcename" type="path" indexed="true" stored="true"/>
-        <field name="resourcename_facet" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="record_type" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="referrer_url" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
+        <field name="resourcename" type="path" indexed="true" stored="true" multiValued="false"/>
+        <field name="resourcename_facet" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="source_file_path" type="string" indexed="true" docValues="true" />
+        <field name="source_file_path" type="string" indexed="true" multiValued="false" docValues="true" />
         <field name="source_file_offset" type="tlong" indexed="true" stored="true" />
         <field name="source_file" type="string" indexed="true" docValues="true" />
-        <field name="status_code" type="int" indexed="true" stored="true" docValues="true" />
+        <field name="status_code" type="int" indexed="true" stored="false" docValues="true" />
         <field name="subject" type="text_general" indexed="true" stored="true" multiValued="true"/>
         <field name="text" type="text_general" indexed="true" stored="false" multiValued="true"/>
         <field name="title" type="text_general" indexed="true" stored="true" multiValued="false"/>
         <field name="type" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="redirect_to_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_norm" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
-        <field name="url_search" type="path" indexed="true" stored="false" docValues="false"/> <!-- search only to save space-->
-        <field name="url_path" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
+        <field name="url_search" type="path" indexed="true" stored="false" multiValued="false" docValues="false"/> <!-- search only to save space-->
+        <field name="url_path" type="string" indexed="true" stored="false" multiValued="false" docValues="true"/>
         <field name="url" type="string" indexed="true" stored="false" docValues="true" multiValued="false"/>
         <field name="url_type" type="text_general" indexed="true" stored="true"/>
         <field name="wayback_date" type="long" indexed="false" stored="true" docValues="false" multiValued="false"/>
