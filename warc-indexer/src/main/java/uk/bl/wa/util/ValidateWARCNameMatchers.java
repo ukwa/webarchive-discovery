@@ -65,6 +65,9 @@ import java.util.zip.GZIPOutputStream;
 /**
  * Takes a list of WARC-names and performs matching on them, given af warc-indexer configuration file.
  *
+ * Usage:
+ * java -cp warc-indexer/target/warc-indexer-3.0.0-SNAPSHOT-jar-with-dependencies.jar
+ *   uk.bl.wa.util.ValidateWARCNameMatchers -c /warc-indexer/src/test/resources/arcnameanalyser.conf -l warclist.dat
  */
 public class ValidateWARCNameMatchers {
 	
