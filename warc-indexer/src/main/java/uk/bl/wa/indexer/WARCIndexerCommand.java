@@ -350,6 +350,7 @@ public class WARCIndexerCommand {
                         lastFailedRecord = recordCount;
                         continue;
                     }
+                    log.error("Failed to reach next record, last record already on error - skipping the rest of the records");
                     break;
                 }
                 final String url = Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl());
