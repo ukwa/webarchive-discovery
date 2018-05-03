@@ -336,6 +336,7 @@ public class WARCIndexerCommand {
             ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
             Iterator<ArchiveRecord> ir = reader.iterator();
             int recordCount = 1;
+            int lastFailedRecord = 0;
 
             // Iterate though each record in the WARC file
             while (ir.hasNext()) {
@@ -345,7 +346,12 @@ public class WARCIndexerCommand {
                     rec = ir.next();
                 } catch (RuntimeException e) {
                     log.warn("Exception on record after rec " + recordCount + " from " + inFile.getName(), e);
-                    continue;
+                    if (lastFailedRecord != recordCount) {
+                        lastFailedRecord = recordCount;
+                        continue;
+                    }
+                    log.error("Failed to reach next record, last record already on error - skipping the rest of the records");
+                    break;
                 }
                 final String url = Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl());
                 SolrRecord doc = solrFactory.createRecord(inFile.getName(), rec.getHeader());
