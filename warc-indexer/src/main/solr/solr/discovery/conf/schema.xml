@@ -22,9 +22,9 @@
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>
-         
+
          <!--Not defined in SolrFields. Schema only defintion -->
-        <field name="index_time" type="date" indexed="true" stored="false" docValues="true" default="NOW" /> 
+        <field name="index_time" type="date" indexed="true" stored="false" docValues="true" default="NOW" />
 
         <!-- BL UKWA: additional -->
         <field name="access_terms" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -45,7 +45,7 @@
         <field name="content_type_ext" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_full" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type_norm" type="string" indexed="true" docValues="true" multiValued="false" default="other"/>
-        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>       
+        <field name="content_type_served" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content" type="text_general" indexed="false" stored="true" multiValued="true"/>
         <field name="content_type_tika" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="content_type" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -76,7 +76,7 @@
         <field name="last_modified" type="tdate" indexed="true" stored="true" docValues="true"/>
         <field name="last_modified_year" type="string" indexed="true" docValues="true"/>
         <field name="license_url" type="string" indexed="true" docValues="true" multiValued="true"/>
-        <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/> 
+        <field name="links_images" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_domains" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts" type="string" indexed="true" docValues="true" multiValued="true"/>
         <field name="links_hosts_surts" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -95,7 +95,7 @@
         <field name="record_type" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="referrer_url" type="string" indexed="true" stored="true" multiValued="false" docValues="true"/>
         <field name="resourcename" type="path" indexed="true" stored="true"/>
-        <field name="resourcename_facet" type="string" indexed="false" stored="false" docValues="true" multiValued="false"/>
+        <field name="resourcename_facet" type="string" indexed="true" multiValued="false" docValues="true"/>
         <field name="sentiment_score" type="float" indexed="true" stored="true" multiValued="false"/>
         <field name="sentiment" type="string" indexed="true" docValues="true" multiValued="false"/>
         <field name="server" type="string" indexed="true" docValues="true" multiValued="true"/>
@@ -127,9 +127,9 @@
         <!--:BL UKWA -->
 
 
-        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->        
-        <!-- arc_full is required for solrwayback. Will only be used if defined in the config file--> 
-        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/> 
+        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->
+        <!-- arc_full is required for solrwayback. Will only be used if defined in the config file-->
+        <field name="arc_full" type="string" indexed="true" stored="true" multiValued="false"/>
 
         <dynamicField name="*_i"  type="int"    indexed="true"  stored="true"/>
         <dynamicField name="*_is" type="ints"    indexed="true"  stored="true"/>
@@ -164,19 +164,19 @@
         <dynamicField name="random_*" type="random" />
 
         <!--:IMAGE EXIF-->
-        <field name="exif_location" type="location" indexed="true" stored="true" multiValued="false"/>          
-        <field name="exif_version" type="string" indexed="true" stored="true" multiValued="false"/> 
-        
+        <field name="exif_location" type="location" indexed="true" stored="true" multiValued="false"/>
+        <field name="exif_version" type="string" indexed="true" stored="true" multiValued="false"/>
+
         <!-- BL UKWA: additional -->
         <dynamicField name="ssdeep_hash_bs_*" type="string" indexed="true" stored="true" multiValued="false"/>
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" indexed="true" stored="true" multiValued="false"/>
         <!--:BL UKWA -->
-        
+
         <!-- User supplied Archive-It fields: -->
         <field name="institution" type="string" indexed="true" multiValued="false" docValues="true"/>
         <field name="collection_id" type="string" indexed="true" multiValued="false" docValues="true"/>
         <!--:User supplied Archive-It fields -->
-        
+
         <dynamicField name="*_ws" type="text_ws"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en" type="text_en"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_en_split" type="text_en_splitting"  indexed="true"  stored="true"/>
@@ -189,7 +189,7 @@
         <dynamicField name="*_point" type="point"  indexed="true"  stored="true"/>
         <dynamicField name="*_txt_ga" type="text_ga"  indexed="true"  stored="true"/>
   </fields>
-  
+
         <uniqueKey>id</uniqueKey>
 
         <!-- TODO: Remove all copyFields where the source is indexed as text and adjust solrconfig.xml
@@ -204,7 +204,7 @@
         <copyField source="content" dest="text"/>
         <copyField source="url_norm" dest="url_search"/>
         <copyField source="resourcename" dest="resourcename_facet"/>
-   
+
   <types>
         <fieldType name="string" class="solr.StrField" sortMissingLast="true" />
         <fieldType name="strings" class="solr.StrField" sortMissingLast="true" multiValued="true" docValues="true" />
@@ -232,7 +232,7 @@
         <fieldType name="tdates" class="solr.TrieDateField" docValues="true" precisionStep="6" positionIncrementGap="0" multiValued="true"/>
         <fieldType name="binary" class="solr.BinaryField"/>
         <fieldType name="random" class="solr.RandomSortField" indexed="true" />
-  
+
         <fieldType name="text_ws" class="solr.TextField" positionIncrementGap="100">
                 <analyzer>
                         <tokenizer class="solr.WhitespaceTokenizerFactory"/>
@@ -360,12 +360,12 @@
         <fieldType name="ignored" stored="false" indexed="false" docValues="false" multiValued="true" class="solr.StrField" />
         <fieldType name="point" class="solr.PointType" dimension="2" subFieldSuffix="_d"/>
         <fieldType name="location" class="solr.LatLonType" subFieldSuffix="_coordinate" docValues="false"/>
-        <!-- For Solr 6 use this instead: 
+        <!-- For Solr 6 use this instead:
         <fieldType name="location" class="solr.LatLonPointSpatialField" docValues="true"/>
          -->
 
         <fieldType name="text_ga" class="solr.TextField" positionIncrementGap="100">
-                <analyzer> 
+                <analyzer>
                         <tokenizer class="solr.StandardTokenizerFactory"/>
                         <filter class="solr.ElisionFilterFactory" ignoreCase="true" articles="lang/contractions_ga.txt"/>
                         <filter class="solr.StopFilterFactory" ignoreCase="true" words="lang/hyphenations_ga.txt"/>
