@@ -62,7 +62,7 @@ public class TikaExtractorTest {
 		}
 		URL url = ml.toURI().toURL();
 		SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
-		tika.extract(solr, url.openStream(), url.toString());
+		tika.extract(ml.getPath(), solr, url.openStream(), url.toString());
 		System.out.println("SOLR " + solr.getSolrDocument().toString());
 		String text = (String) solr.getField(SolrFields.SOLR_EXTRACTED_TEXT)
 				.getValue();
