@@ -5,13 +5,3 @@ jdk:
   - openjdk7
   - openjdk8
 
-before_script:
- - "echo $JAVA_OPTS"
- - "export JAVA_OPTS=-Xmx2048m"
- - "echo $JAVA_OPTS"
- - "ulimit -a"
- - "ulimit -u 2048"
- - "ulimit -a"
- - "umask 022"
- - "mkdir inputs"
-
