@@ -9,6 +9,8 @@ jdk:
   - openjdk7
   - openjdk8
 
+install: travis_wait mvn install
+
 before_script:
  - "echo $JAVA_OPTS"
  - "export JAVA_OPTS=-Xmx2048m"
