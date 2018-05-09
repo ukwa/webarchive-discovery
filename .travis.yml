@@ -1,15 +1,9 @@
 language: java
 
-dist: trusty
-
-sudo: required
-
 jdk:
   - oraclejdk8
   - openjdk7
   - openjdk8
-
-install: travis_wait mvn install
 
 before_script:
  - "echo $JAVA_OPTS"
@@ -21,8 +15,3 @@ before_script:
  - "umask 022"
  - "mkdir inputs"
 
-notifications:
-  slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk
-
-after_success:
-  - bash <(curl -s https://codecov.io/bash)
