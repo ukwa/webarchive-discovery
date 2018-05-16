@@ -22,111 +22,275 @@ This schema is for Solr 7+ and will not work under Solr 6.
 
 <schema name="ukwa" version="1.6">
     <fields>
-        <!-- Special purpose meta-fields has explicit attributes to be sure they are set correctly -->
+        <!-- Solr special purpose meta-fields. Explicit attributes to be sure they are set correctly -->
         <field name="id" type="string" indexed="true" stored="true" docValues="true" required="true" />
         <field name="_version_" type="long" indexed="true" stored="true" docValues="true" />
         <field name="_root_" type="string" indexed="true" stored="true" docValues="true"/>
         <field name="_text_" type="text_general" multiValued="true" /> <!-- Isn't this only used for schema-less? -->
 
-        <!--Not defined in SolrFields. Schema only defintion -->
+        <!-- The time of document indexing. Set automatically by Solr.
+             Sample use: Freezing a query result even when new documents are added to the index:
+                         q=foo&fq=index_time:[* TO 2018-05-16T10:33:00Z]
+             Sample use: Discover new documents added since last check for new documents:
+                         q=*:*&fq=index_time:[2018-05-16T10:33:00Z TO *] -->
         <field name="index_time" type="date" default="NOW" />
 
+        <!-- BL UKWA: Access flag (i.e. Open Access or not) -->
         <field name="access_terms"         type="string" multiValued="true" />
+
+        <!-- Author extracted from HTML meta-fields, Word documents meta data, image EXIF etc.
+             Search directly in the author-field is verbatim and thus not very usable for user-defines queries.
+             Sample use: Faceting with facet=true&facet.field=author -->
         <field name="author"               type="string" />
+
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="category"             type="text_general" />
+
+        <!-- Institution-specific collection names. Can be specified when calling the indexer -->
         <field name="collection"           type="string" multiValued="true" /> <!-- Why is this multi-valued? -->
         <field name="collections"          type="string" multiValued="true" />
+
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="comments"             type="text_general" multiValued="true" />
+
+        <!-- Dublin Core description tag from HTML pages -->
         <field name="description"          type="text_general" />
+
+        <!-- hashtags and other keywords -->
         <field name="keywords"             type="text_general" multiValued="true" />
+
+        <!-- Licence URL as specified on HTML pages using links with rel=license -->
         <field name="license_url"          type="string" multiValued="true" />
 
+        <!-- The core content of the resource (all text with tags stripped from HTML pages, the text in a Word document)
+             Note: This field not searchable. Use 'text' for search.
+             Sample use: Highlighting with q=floodgate&hl=true&hl.field=content -->
         <field name="content"              type="text_general" indexed="false" />
+
+        <!-- The original encoding of the content (UTF-8/ISO-8859-1/Windows-1250...)
+             Note: Irregardless of the original encoding, content is always converted to UTF-8 in the Solr document -->
         <field name="content_encoding"     type="string" />
+
+        <!-- The first 4 bytes of the content, represented as lower-case hex with no space -->
         <field name="content_ffb"          type="string" />
+
+        <!-- The first 32 bytes of the content, represented as shingled space-separated lower-case hex.
+             Sample use: Locate sub-sequences of bytes within the first 32 bytes (signature search):
+             content_first_bytes:"89 50 4e 47" locates content which is probably PNG -->
         <field name="content_first_bytes"  type="hex_text_shingle" />
+
+        <!-- Language as detected by Tika.
+             Sample use: Faceting on language with facet=true&facet.field=content_language -->
         <field name="content_language"     type="string" />
+
+        <!-- The content length measured in bytes.
+             Sample use: Sort by content size with sort=content_length desc
+             Sample use: Size statistics for the full result set: stats=true&stats.field=content_length -->
         <field name="content_length"       type="int" />
 <!--        <field name="content_metadata_ss"  type="string" multiValued="true" />--> <!-- Not used for anything -->
+
+        <!-- If warc.index.tika.extract_all_metadata was enabled during indexing, Tika metadata is added here. -->
         <field name="content_metadata"     type="text_general" />
+
+        <!-- The content length measured in characters. Mostly relevant for text-based formats (html, doc, pdf...).
+             Sample use: Sort by text length with sort=content_text_length desc
+             Sample use: Size statistics for the full result set: stats=true&stats.field=content_text_length -->
         <field name="content_text_length"  type="int" />
+
+        <!-- The MIME content type as determined by DROID -->
         <field name="content_type_droid"   type="string" />
+        <!-- The file extension: my.sample.png will yield 'png' -->
         <field name="content_type_ext"     type="string" />
+        <!-- Best-guess MIME-type for the content, based on droid, Tika, WARC-header, HTTP-header and
+             webarchive-discovery processing -->
         <field name="content_type_full"    type="string" />
+        <!-- Content type represented as low-cardinality human-readable text: image, video, text etc. -->
         <field name="content_type_norm"    type="string" default="other" />
+        <!-- The MIME content type as specified by the web server the resource was harvested from -->
         <field name="content_type_served"  type="string" />
+        <!-- The MIME content type as determined by Tika -->
         <field name="content_type_tika"    type="string" />
+        <!-- Not clear what this is. TODO: Determine what it is -->
         <field name="content_type"         type="string" /> <!-- Used to be multi-valued -->
+        <!-- The version for the MIME type, if available -->
         <field name="content_type_version" type="string" />
 
+        <!-- The HTML elements used if the resource is a HTML page -->
         <field name="elements_used"        type="string" multiValued="true" />
+        <!-- Hash of the content (SHA1) -->
         <field name="hash"                 type="string" />
+
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="hashes"               type="string" multiValued="true" />
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="id_long"              type="long" />
 
-        <!-- What is this used for? Why is it a long instead of a date? -->
+        <!-- The date represented as a long in the form of YYYYmmddHHMMSS, which is compatible with Wayback.
+             The field is not searchable. Use crawl_date for search and general processing -->
         <field name="wayback_date"         type="long" indexed="false" stored="true" docValues="false" />
+        <!-- If webarchive-discovery runs in update-mode, multiple harvests of the same URL will be collapsed to
+             a single document and the dates from the different harvests will be added to this field -->
         <field name="crawl_dates"          type="date" stored="true" docValues="false" multiValued="true" />
+        <!-- The crawl-date as specified in the WARC.
+             Sample use: Faceting by date with
+               facet=true&facet.range=crawl_date&facet.range.start=2010-01-01T00:00:00Z&facet.range.end=2019-01-01T00:00:00Z&facet.range.gap=+1MONTH&facet.range.method=dv
+             Sample use: Sorting newest material first: sort=crawl_date desc
+              -->
         <field name="crawl_date"           type="date" />
         <!-- month_day & day not used for anything -->
 <!--        <field name="crawl_year_month_day" type="int" />
         <field name="crawl_year_month"     type="int" />-->
+        <!-- If webarchive-discovery runs in update-mode, multiple harvests of the same URL will be collapsed to
+             a single document and the years from the dates from the different harvests will be added to this field -->
         <field name="crawl_years"          type="int" multiValued="true" />
+        <!-- The year extracted from crawl_date. Faster than crawl_date if used for faceting.
+             Sample use: Faceting by year with facet.field=crawl_year&facet.sort=index&facet=true -->
         <field name="crawl_year"           type="int" />
+        <!-- Last modified timestamp extracted from the resource. Sources such as JPEG images, PDF files and Word
+             document often has this.
+             Note: This is not a very reliable timestamp for most formats. JPEGs tend to work quite well.
+             Sample use: Sorting by age as stated in the format sort=last_modified asc -->
         <field name="last_modified"        type="date" />
+        <!-- The year from last_modified -->
         <field name="last_modified_year"   type="string" /> <!-- Why is this a string? -->
 
+        <!-- Heavily normalised URL: http/https is collepsed to http, everything is lowercased, trailing / are removed
+             for all URLs, except those pointing to root, e.g. "http://example.com/". There is more processing than
+             that. If the field is to be queried with a user-provided URL, it is highly recommended to use the method
+             Normalisation.canonicaliseURL() from webarchive-discovery to ensure match.
+             This field matches normalisation with the links-field, making it possible to perform graph traversals-->
         <field name="url_norm"             type="string"  />
+        <!-- Variation of url_norm intended for search for partial URLs.
+             Sample use: Search for large images with q=url_search:"images/large" -->
         <field name="url_search"           type="path" stored="false" /> <!-- search only to save space-->
+        <!-- Path-only for the URL: http://example.com/foo/bar.png becomes /foo/bar.png -->
         <field name="url_path"             type="string" />
+        <!-- Original URL, as specified in the WARC header. Not analysed and thus likely to give false negatives
+             if searched directly with user-input. Consider using url_norm for searching -->
         <field name="url"                  type="string" />
+        <!-- Possible values: normal, robots.txt and slashpage (root page for the domain).
+             Sample use: Search only for root pages with q=url_type:slashpage -->
         <field name="url_type"             type="string" />
+        <!-- The domain from the URL. The domain is the short name, registered by the domain owner.
+             This can be coupled with the links_domains field for building graphs.
+             Sample use: Faceting to show most popular domains with facet=true&facet.field=domain -->
         <field name="domain"               type="string" />
+        <!-- The host from the URL. The ending of the host is always the same as the domain, with optional prefix,
+             e.g. a host can be foo.bar.zoo.example.com or just example.com for the domain example.com.
+             Sample use: Faceting to show most popular hosts with facet=true&facet.field=host -->
         <field name="host"                 type="string" />
+        <!-- The host from the URL in SURT'ed form: http://webarchivingbucket.com/techblog/?p=48
+             e.g. foo.bar.dk becomes the three values ["(dk,", "(dk,bar,", "(dk,bar,foo"]. -->
         <field name="host_surt"            type="string" multiValued="true" />
+        <!-- The part below the domain in the URL. For all dk-domains it will be dk. For domains such
+             as myname.blogspot.com and mycompany.co.uk it will be blogspot.com and co.uk. -->
         <field name="public_suffix"        type="string" />
+        <!-- The last part of the URL, typically a filename, e.g. giant_rabbitFoot.png. The field is analysed with an
+             aggressive tokenizer, so that giant_rabbitFoot.png is split into [giant, rabbit, foot, png] and searches
+             are not dependent on knowing file extensions etc.
+             See resourcename_facet for sorting, grouping and faceting.
+             Sample use: Search for images of kittens: q=resourcename:kittens&fq=content_type_norm:image -->
         <field name="resourcename"         type="path" />
-        <!-- We keep this indexed as we want direct lookups if a facet is selected
-             While 'resourcename' is also indexed, it is analyzed, which means ambiguous lookups -->
+        <!-- Mirror of resourcename intended for sorting, grouping and faceting.
+             Important note: This is a high-cardinality field. Faceting on a web archive with billions of records
+             will likely lead to memory problems. This problem is being worked on by Toke Eskildsen - toes@kb.dk -->
         <field name="resourcename_facet"   type="string" />
-         
+
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="image_colours"        type="string" multiValued="true" />
+        <!-- If warc.index.extract.content.images.dominantColours was true during indexing, this field will contain
+            the dominant colour if the resource is an image. The colour is a human readable name, e.g. crimson,
+            icory or goldenrod, as defined by https://www.w3.org/TR/SVG/types.html#ColorKeywords -->
         <field name="image_dominant_colour" type="string" />
+        <!-- If warc.index.extract.content.images.detectFaces was true during indexing, this will contain the number
+             of faces detected if the resource is an image.
+             Note: Face recognition is heavy and it is recommended not to enable it unless the need is high -->
         <field name="image_faces_count"    type="int" />
+        <!-- If warc.index.extract.content.images.detectFaces was true during indexing, this will contain the faces
+             detected if the resource is an image. A face is represented by a bounding box relative to the original
+             image.
+             Note: Face recognition is heavy and it is recommended not to enable it unless the need is high -->
         <field name="image_faces"          type="string" indexed="false" stored="true" docValues="false" multiValued="true" />
+        <!-- Image height in pixels.
+             Sample use: Get statistics for image height with stats=true&stats.field=image_height -->
         <field name="image_height"         type="long" />
+        <!-- Image size in pixels (width*height).
+             Sample use: Get statistics for image size with stats=true&stats.field=image_size
+             Sample use: Locate largest images with sort=image_size desc -->
         <field name="image_size"           type="long" />
+        <!-- Image width in pixels.
+             Sample use: Get statistics for image width with stats=true&stats.field=image_width -->
         <field name="image_width"          type="long" />
 
+        <!-- Links to images shown on a given web page (aka embedded images).
+             Normalised the same way as url_norm -->
         <field name="links_images"         type="string" multiValued="true" />
+        <!-- domains from outgoing links for a HTML page -->
         <field name="links_domains"        type="string" multiValued="true" />
+        <!-- hosts from outgoing links for a HTML page -->
         <field name="links_hosts"          type="string" multiValued="true" />
+        <!-- SORT'ed form of hosts (see the host_surt field) from outgoing links for a HTML page -->
         <field name="links_hosts_surts"    type="string" multiValued="true" />
         <!-- Might be used in the future but will take up a lot of space (same as 'links') -->
 <!--        <field name="links_norm"           type="string" multiValued="true" />-->
+        <!-- public suffixes (see public_suffix field) from outgoing links for a HTML page -->
         <field name="links_public_suffixes" type="string" multiValued="true" />
+        <!-- Links to external (i.e. not images and other embedded content).
+             Normalised the same way as url_norm -->
         <field name="links"                type="string" multiValued="true" />
 
+        <!-- geo-coordinates, primarily extracted from image EXIF data.
+             Sample use: Find images taken within a given radius from a given geo location with
+             TODO: Make a sample geo-search here -->
         <field name="locations"            type="location" multiValued="true" />
+
+        <!-- Non-fatal errors during mete data extraction as part of indexing -->
         <field name="parse_error"          type="string" multiValued="true" />
+        <!-- If warc.index.extract.content.extractApachePreflightErrors is true during indexing, this field will
+             contain errors encountered during PDF/A-validation -->
         <field name="pdf_pdfa_errors"      type="string" multiValued="true" />
+        <!-- If warc.index.extract.content.extractApachePreflightErrors is true during indexing, this field will
+             be true id the resource was a PDF and a valid PDF/A.
+             Note: PDF validation is heavy and it is recommended not to enable it unless the need is high-->
         <field name="pdf_pdfa_is_valid"    type="string" />
+        <!-- UK postcodes only, as they are easily recognizable -->
         <field name="postcode_district"    type="string" multiValued="true" />
+        <!-- UK postcodes only, as they are easily recognizable -->
         <field name="postcode"             type="string" multiValued="true" />
+        
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="publication_date"     type="date" />
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="publication_year"     type="string" />
+        <!-- The source format. Currently arc or warc. This might be extended in the future -->
         <field name="record_type"          type="string" />
+        <!-- If warc.index.extract.content.text_sentimentj was true during indexing, this field will contain a
+        numeric score for the sentiment, with 0.0 being "very negative" and high values being "very positive" -->
         <field name="sentiment_score"      type="float" />
+        <!-- If warc.index.extract.content.text_sentimentj was true during indexing, this field will contain a
+        human readable assessment of the sentiment, from "very negative" to "very positive" -->
         <field name="sentiment"            type="string" />
 
+        <!-- The HTTP server as stated in the HTTP-headers -->
         <field name="server"               type="string" multiValued="true" />
+        <!-- Status-code for the resource, as stated in the HTTP-headers from the originating web server -->
         <field name="status_code"          type="int" />
+        <!-- The generator for the resource, e.g. Wordpress or Photoshop -->
         <field name="generator"            type="string" multiValued="true" />
+        <!-- Does not seem to be used as of 20180516 -->
         <field name="referrer_url"         type="string" />
+        <!-- If the resource is returned with a 3xx HTTP response code, it is a redirection. This field contains
+             the URL that the resource redirects to, normalised like url_norm -->
         <field name="redirect_to_norm"     type="string" />
 
+        <!-- The file name of the origin container for the harvested resource, e.g.
+             /harvests/full/2018-05/myharvest_20180516_1706.warc.gz -->
         <field name="source_file_path"     type="string" />
+        <!-- The offset for the resource within the source_file.
+             Sample use: Delivery of the raw resource by seeking to the source_file_offset in source_file and
+             reading the resource bytes (the size of the resource is stated in the headers in the source_file) -->
         <field name="source_file_offset"   type="long" /> <!-- docValues as it will probably be used for streaming export -->
+        <!-- The file name of the origin container for the harvested resource, e.g. myharvest_20180516_1706.warc.gz -->
         <field name="source_file"          type="string" />
 
         <!-- Not used for anything -->
