@@ -38,7 +38,7 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <!-- BL UKWA: Access flag (i.e. Open Access or not) -->
         <field name="access_terms"         type="string" multiValued="true" />
 
-        <!-- Author extracted from HTML meta-fields, Word documents meta data, image EXIF etc.
+        <!-- Author extracted from HTML meta-fields, Word documents meta data, image Exif etc.
              Search directly in the author-field is verbatim and thus not very usable for user-defines queries.
              Sample use: Faceting with facet=true&facet.field=author -->
         <field name="author"               type="string" />
@@ -239,9 +239,12 @@ This schema is for Solr 7+ and will not work under Solr 6.
              Normalised the same way as url_norm -->
         <field name="links"                type="string" multiValued="true" />
 
-        <!-- geo-coordinates, primarily extracted from image EXIF data.
-             Sample use: Find images taken within a given radius from a given geo location with
-             TODO: Make a sample geo-search here -->
+        <!-- Geographical coordinates, extracted from postcodes.
+             Sample use: Find images taken within a given radius for from a given geo location with Solr geodist search
+             q=({!geofilt sfield=exif_location}) AND *:*&pt=56.17,10.20&d=0.8
+             where the coordinates can be retrieved from e.g. Google Maps, where they are shown at the bottom of
+             the map when a location is clicked. d is distance in kilometers.
+             See https://lucene.apache.org/solr/guide/7_3/spatial-search.html for details -->
         <field name="locations"            type="location" multiValued="true" />
 
         <!-- Non-fatal errors during mete data extraction as part of indexing -->
@@ -283,22 +286,29 @@ This schema is for Solr 7+ and will not work under Solr 6.
              the URL that the resource redirects to, normalised like url_norm -->
         <field name="redirect_to_norm"     type="string" />
 
-        <!-- The file name of the origin container for the harvested resource, e.g.
-             /harvests/full/2018-05/myharvest_20180516_1706.warc.gz -->
+        <!-- The full path of the origin container (typically WARC) for the harvested resource, e.g.
+             /harvests/full/2018-05/myharvest_20180516_1706.warc.gz
+             Sample use: Delivery of the raw resource by seeking to the source_file_offset in source_file and
+             reading the resource bytes (the size of the resource is stated in the headers in the source_file) -->
         <field name="source_file_path"     type="string" />
-        <!-- The offset for the resource within the source_file.
+        <!-- The offset for the resource within the source_file (aka WARC).
              Sample use: Delivery of the raw resource by seeking to the source_file_offset in source_file and
              reading the resource bytes (the size of the resource is stated in the headers in the source_file) -->
         <field name="source_file_offset"   type="long" /> <!-- docValues as it will probably be used for streaming export -->
-        <!-- The file name of the origin container for the harvested resource, e.g. myharvest_20180516_1706.warc.gz -->
+        <!-- The file name of the origin container (typically WARC) for the harvested resource, e.g.
+             myharvest_20180516_1706.warc.gz
+             Sample use: Delivery of the raw resource by seeking to the source_file_offset in source_file and
+             reading the resource bytes (the size of the resource is stated in the headers in the source_file) -->
         <field name="source_file"          type="string" />
 
-        <!-- Not used for anything -->
-<!--        <field name="subject"              type="text_general" multiValued="true" />-->
+        <!-- Catch-all search field. All text content is copied here. -->
         <field name="text"                 type="text_general" stored="false" multiValued="true" /> <!-- Catch-all -->
+        <!-- HTML page <title>, Word document title, Dublic Core title, etc -->
         <field name="title"                type="text_general" />
+        <!-- Variant of content_type_norm with human readable designations for the content type -->
         <field name="type"                 type="string" />
 
+        <!-- Meta data from Web Curator Tool -->
         <field name="wct_agency"           type="string" />
         <field name="wct_collections"      type="string" multiValued="true" />
         <field name="wct_description"      type="text_general" />
@@ -306,26 +316,39 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="wct_subjects"         type="string" multiValued="true" />
         <field name="wct_target_id"        type="string" />
         <field name="wct_title"            type="string" />
+
+        <!-- Root namespace for XML files.
+             Sample use: Facet to get most popular XML formats with facet=true&facet.field=xml_root_ns -->
         <field name="xml_root_ns"          type="string" />
+        <!-- WARC-Record-ID if available -->
         <field name="warc_key_id"          type="string" />
+        <!-- WARC-IP-Address if available -->
         <field name="warc_ip"              type="string" />
 
-        <!--:IMAGE EXIF-->
+        <!-- Geographical coordinates, extracted from image Exif data.
+             Sample use: Find images taken within a given radius from a given geo location with Solr geodist search
+             q=({!geofilt sfield=exif_location}) AND *:*&pt=56.17,10.20&d=0.8
+             where the coordinates can be retrieved from e.g. Google Maps, where they are shown at the bottom of
+             the map when a location is clicked. d is distance in kilometers.
+             See https://lucene.apache.org/solr/guide/7_3/spatial-search.html for details -->
         <field name="exif_location"        type="location" />
+        <!-- The Exif version (Exchangeable image file format) -->
         <field name="exif_version"         type="string" stored="true" docValues="false" />
 
-        <!-- BL UKWA: additional -->
+        <!-- Fuzzy matching on text for similarity search.
+             If warc.index.extract.content.text_fuzzy_hash is true during indexing, fields for SSDeep hashes will
+             be created. See https://ssdeep-project.github.io/ssdeep/ for details -->
         <dynamicField name="ssdeep_hash_bs_*" type="string" stored="true" docValues="false" />
+        <!-- Does not seem to be used as of 20180517 -->
         <dynamicField name="ssdeep_hash_ngram_bs_*" type="literal_ngram" stored="true" />
-        <!--:BL UKWA -->
 
         <!-- User supplied Archive-It fields: -->
         <field name="institution"          type="string" />
         <field name="collection_id"        type="string" />
         <!--:User supplied Archive-It fields -->
 
-        <!-- Custom field names can be defined from warcfile name.  Regexp-rules defined in the warc-indexer config file-->
-        <!-- :Royal Danish Library: additional -->
+        <!-- Harvest meta-data derived from WARC file names using regexp-rules defined in the warc-indexer config file.
+             Primarily used by the Royal Danish Library -->
         <field name="arc_full"             type="string" stored="true" docValues="false" />
         <field name="arc_name"             type="string" />
         <field name="arc_orig"             type="string" />
@@ -333,6 +356,9 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <field name="arc_harvest"          type="string" />
         <field name="arc_harvesttime"      type="string" />
 
+        <!-- Dynamic fields intended for intstitution-specific fields without changing the schema.
+             (yes, the arc_*-fields above should have been dynamic fields instead of hardcoded)
+              TODO: Add DocValues-enabled variants (take care not to change existing definitions) -->
         <dynamicField name="*_i"       type="int"    indexed="true"  stored="true" />
         <dynamicField name="*_is"      type="int"    indexed="true"  stored="true" multiValued="true" />
         <dynamicField name="*_s"       type="string"  indexed="true"  stored="true" />
@@ -393,8 +419,11 @@ This schema is for Solr 7+ and will not work under Solr 6.
     <types>
         <!-- Guiding principles:
 
-             Atomic types are single-valued indexed & docValues, but not stored
-             Text types are single-valued indexed & stored, but not docValued (DV is not currently possible for Text)
+             Atomic types are single-valued indexed & docValues, but not stored. This allows for low-cost faceting,
+             grouping and sorting. The downside is a performance penalty on document retrieval where a full document
+             takes longer to retrieve. Enabling stored speeds up retrieval at the cost of increased index size.
+
+             Text types are single-valued indexed & stored, but not docValued (DV is not currently possible for Text).
 
              Deviations are normally handled by overriding for the specific fields
              -->
