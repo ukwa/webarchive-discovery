@@ -158,7 +158,10 @@ This schema is for Solr 7+ and will not work under Solr 6.
              for all URLs, except those pointing to root, e.g. "http://example.com/". There is more processing than
              that. If the field is to be queried with a user-provided URL, it is highly recommended to use the method
              Normalisation.canonicaliseURL() from webarchive-discovery to ensure match.
-             This field matches normalisation with the links-field, making it possible to perform graph traversals-->
+             This field matches normalisation with the links-field, making it possible to perform graph traversals.
+             Note: This field has very high cardinality (a little less than the number of documents in the index).
+             Faceting should be done with care and is likely to fail with an OutOfMemoryException on a large index
+             using stock Solr. This problem is being worked on by Toke Eskildsen - toes@kb.dk -->
         <field name="url_norm"             type="string"  />
         <!-- Variation of url_norm intended for search for partial URLs.
              Sample use: Search for large images with q=url_search:"images/large" -->
@@ -166,7 +169,10 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <!-- Path-only for the URL: http://example.com/foo/bar.png becomes /foo/bar.png -->
         <field name="url_path"             type="string" />
         <!-- Original URL, as specified in the WARC header. Not analysed and thus likely to give false negatives
-             if searched directly with user-input. Consider using url_norm for searching -->
+             if searched directly with user-input. Consider using url_norm for searching.
+             Note: This field has very high cardinality (a little less than the number of documents in the index).
+             Faceting should be done with care and is likely to fail with an OutOfMemoryException on a large index
+             using stock Solr. This problem is being worked on by Toke Eskildsen - toes@kb.dk -->
         <field name="url"                  type="string" />
         <!-- Possible values: normal, robots.txt and slashpage (root page for the domain).
              Sample use: Search only for root pages with q=url_type:slashpage -->
@@ -236,7 +242,10 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <!-- public suffixes (see public_suffix field) from outgoing links for a HTML page -->
         <field name="links_public_suffixes" type="string" multiValued="true" />
         <!-- Links to external (i.e. not images and other embedded content).
-             Normalised the same way as url_norm -->
+             Normalised the same way as url_norm
+             Note: This field has extremely high cardinality (10 times the number of documents in the index).
+             Faceting should be done with care and is highly likely to fail with an OutOfMemoryException even on a
+             medium sized index using stock Solr. This problem is being worked on by Toke Eskildsen - toes@kb.dk -->
         <field name="links"                type="string" multiValued="true" />
 
         <!-- Geographical coordinates, extracted from postcodes.
