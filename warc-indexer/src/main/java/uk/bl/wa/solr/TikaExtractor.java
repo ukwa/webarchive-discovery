@@ -371,9 +371,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			if (exifVersion != null){
 			  solr.addField(SolrFields.EXIF_VERSION, exifVersion);
 			  String exif_artist = metadata.get("Artist");
-               if (exif_artist != null){ // This is a better value for the author field.
-                 solr.removeField(SolrFields.SOLR_AUTHOR); //Clear old value if any. Not multi valued
-                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);                    
+               if (exif_artist != null){ // This is a better value for the author field
+				 // This potentially results in multiple author, which is valid
+                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);
                }
 			  	          
 			  String exif_latitude = metadata.get("GPS Latitude");
