@@ -64,11 +64,22 @@ public class NormalisationTest {
                 {"http://example.com/foo | bar/",   "sub/", "http://example.com/foo | bar/sub/", "false"},
                 {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%25g/sub", "true"},
                 {"http://example.com/faulty%g/gg",  "sub", "http://example.com/faulty%g/sub", "false"},
+                {"http://www.example.com/faulty%g/gg",  "sub", "http://example.com/faulty%25g/sub", "true"},
+                {"http://www.example.com/faulty%g/gg",  "sub", "http://www.example.com/faulty%g/sub", "false"},
         };
         for (String[] test: TESTS) {
             assertEquals("rel('" + test[0] + "', '" + test[1] + "', " + test[3] + ") should give the expected result",
                          test[2], Normalisation.resolveRelative(test[0], test[1], Boolean.parseBoolean(test[3])));
         }
+    }
+
+    // The canonicalizer from archive.org removes www if the URL has a path part and not if it is domain only
+    @Test
+    public void testWWWRemoveOnNormalisation() {
+        String SOURCE =   "http://www.example.com/";
+        String EXPECTED = "http://example.com/";
+        assertEquals("The input '" + SOURCE + "' should be normalised unambiguously as expected",
+                     EXPECTED, Normalisation.canonicaliseURL(SOURCE, true, true));
     }
 
     @Test
@@ -79,6 +90,10 @@ public class NormalisationTest {
                 {"http://example.com/", "http://example.com/", "http://example.com/"},
                 {"https://example.com", "http://example.com/", "http://example.com/"},
                 {"https://example.com", "http://example.com/", "http://example.com/"},
+                {"http://www.example.com",  "http://www.example.com/", "http://example.com/"},
+                {"https://www.example.com", "http://www.example.com/", "http://example.com/"},
+                {"https://ww2.example.com", "http://ww2.example.com/", "http://example.com/"},
+                {"http://ww2.example.com",  "http://ww2.example.com/", "http://example.com/"},
                 {"/foo",                "/foo",                "/foo"},
                 {"/foo/",               "/foo",                "/foo"},
                 {"/%2A",                "/%2a",                "/*"},
@@ -121,6 +136,7 @@ public class NormalisationTest {
                 {"http://example.com/%C3%86blegr%C3",     "http://example.com/Æblegr%c3"},    // Half UTF-8 2-byte escape
                 {"http://example.com/Æblegrød",           "http://example.com/æblegrød"},     // Direct unicode
                 {"http://example.com/%C6blegr%F8d",       "http://example.com/%c6blegr%f8d"}, // ISO-8859-1
+                {"http://www.example.com/%C6blegr%F8d",   "http://example.com/%c6blegr%f8d"}, // ISO-8859-1
         };
 
         for (String[] test: TESTS) {
@@ -138,6 +154,7 @@ public class NormalisationTest {
                 {"http://example.com/%a%2A",     "http://example.com/%25a%2a"},
                 {"http://example.com/%g1%2A",    "http://example.com/%25g1%2a"},
                 {"http://example.com/foo|bar",   "http://example.com/foo|bar"},
+                {"http://www.example.com/foo|bar", "http://example.com/foo|bar"},
         };
 
         for (String[] test: TESTS) {

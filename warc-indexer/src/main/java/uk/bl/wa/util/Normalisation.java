@@ -33,6 +33,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -140,6 +141,14 @@ public class Normalisation {
         // Protocol: https → http
         url = url.startsWith("https://") ? "http://" + url.substring(8) : url;
 
+        // www. prefix
+        if (createUnambiguous) {
+            Matcher wwwMatcher = WWW_PREFIX.matcher(url);
+            if (wwwMatcher.matches()) {
+                url = wwwMatcher.group(1) + wwwMatcher.group(2);
+            }
+        }
+
         // TODO: Consider if this should only be done if createUnambiguous == true
         // Trailing slashes: http://example.com/foo/ → http://example.com/foo
         while (url.endsWith("/")) { // Trailing slash affects the URL semantics
@@ -164,6 +173,7 @@ public class Normalisation {
         return url;
     }
     private static Pattern DOMAIN_ONLY = Pattern.compile("https?://[^/]+");
+    private static Pattern WWW_PREFIX = Pattern.compile("([a-z]+://)(?:www|ww2|www2|ww)[.](.+)");
 
     // Normalisation to UTF-8 form
     private static byte[] fixEscapeErrorsAndUnescapeHighOrderUTF8(final String url) {
