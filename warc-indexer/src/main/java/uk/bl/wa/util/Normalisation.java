@@ -149,6 +149,16 @@ public class Normalisation {
             }
         }
 
+        // Create temporary url with %-fixing and high-order characters represented directly
+        byte[] urlBytes = fixEscapeErrorsAndUnescapeHighOrderUTF8(url);
+        // Normalise
+
+
+        // Hex escapes, including faulty hex escape handling:
+        // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20rosé%2010%25.html or
+        // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20ros%C3%A9%2010%25.html if produceValidURL
+        url = escapeUTF8(urlBytes, !allowHighOrder, createUnambiguous);
+
         // TODO: Consider if this should only be done if createUnambiguous == true
         // Trailing slashes: http://example.com/foo/ → http://example.com/foo
         while (url.endsWith("/")) { // Trailing slash affects the URL semantics
@@ -159,16 +169,6 @@ public class Normalisation {
         if (DOMAIN_ONLY.matcher(url).matches()) {
             url += "/";
         }
-
-        // Create temporary url with %-fixing and high-order characters represented directly
-        byte[] urlBytes = fixEscapeErrorsAndUnescapeHighOrderUTF8(url);
-        // Normalise
-
-
-        // Hex escapes, including faulty hex escape handling:
-        // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20rosé%2010%25.html or
-        // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20ros%C3%A9%2010%25.html if produceValidURL
-        url = escapeUTF8(urlBytes, !allowHighOrder, createUnambiguous);
 
         return url;
     }

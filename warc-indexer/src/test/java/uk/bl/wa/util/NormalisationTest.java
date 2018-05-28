@@ -49,6 +49,24 @@ public class NormalisationTest {
     }
 
     @Test
+    public void testEncodedTrailingSlash() {
+        String[][] TESTS = new String[][]{
+                {
+                        "https://www.example.com/foo?param=https://www.example.com/other/",
+                        "http://example.com/foo?param=https://www.example.com/other"
+                },
+                {
+                        "https://www.example.com/foo?param=https:%2F%2Fwww.example.com%2Fother%2F",
+                        "http://example.com/foo?param=https://www.example.com/other"
+                }
+        };
+        for (String[] test: TESTS) {
+            assertEquals("Default normalisation should yield the expected result for " + test[0],
+                         test[1], Normalisation.canonicaliseURL(test[0]));
+        }
+    }
+
+    @Test
     public void restResolveRelative() {
         String[][] TESTS = new String[][]{
                 // root, relative, expected
