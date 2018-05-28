@@ -111,6 +111,7 @@ public class NormalisationTest {
                 {"http://www.example.com",  "http://www.example.com/", "http://example.com/"},
                 {"https://www.example.com", "http://www.example.com/", "http://example.com/"},
                 {"https://ww2.example.com", "http://ww2.example.com/", "http://example.com/"},
+                {"https://www8.example.com", "http://www8.example.com/", "http://example.com/"},
                 {"http://ww2.example.com",  "http://ww2.example.com/", "http://example.com/"},
                 {"/foo",                "/foo",                "/foo"},
                 {"/foo/",               "/foo",                "/foo"},

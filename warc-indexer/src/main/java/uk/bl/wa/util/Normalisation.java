@@ -173,7 +173,7 @@ public class Normalisation {
         return url;
     }
     private static Pattern DOMAIN_ONLY = Pattern.compile("https?://[^/]+");
-    private static Pattern WWW_PREFIX = Pattern.compile("([a-z]+://)(?:www|ww2|www2|ww)[.](.+)");
+    private static Pattern WWW_PREFIX = Pattern.compile("([a-z]+://)(?:www[0-9]*|ww2|ww)[.](.+)");
 
     // Normalisation to UTF-8 form
     private static byte[] fixEscapeErrorsAndUnescapeHighOrderUTF8(final String url) {
