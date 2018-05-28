@@ -121,7 +121,9 @@ public class NormalisationTest {
                 {"%C3%A6blegr%C3%B8d",  "æblegrød",            "æblegrød"},
                 {"/æblegrød og øl",     "/æblegrød%20og%20øl", "/æblegrød%20og%20øl"},
                 {"Red, Rosé 14%",       "red,%20rosé%2014%25", "red,%20rosé%2014%25"},
-                {"Red%2C%20Ros%C3%A9 14%25", "red%2c%20rosé%2014%25",  "red,%20rosé%2014%25"}
+                {"Red%2C%20Ros%C3%A9 14%25", "red%2c%20rosé%2014%25",  "red,%20rosé%2014%25"},
+                {"/backslash\\",        "/backslash%5c",       "/backslash%5c"},
+                {"/backslash%5C",       "/backslash%5c",       "/backslash%5c"},
         };
 
         for (String[] test: TESTS) {

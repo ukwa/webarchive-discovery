@@ -283,8 +283,9 @@ public class Normalisation {
     private final static byte[] HEX = "0123456789abcdef".getBytes(UTF8_CHARSET); // Assuming lowercase
 
     // Some low-order characters must always be escaped
+    // TODO: Consider adding all unwise characters from https://www.ietf.org/rfc/rfc2396.txt : {|}\^[]`
     private static boolean mustEscape(int codePoint) {
-        return codePoint == ' ' || codePoint == '%';
+        return codePoint == ' ' || codePoint == '%' || codePoint == '\\';
     }
 
     // If the codePoint is already escaped, keep the escaping
