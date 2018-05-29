@@ -43,6 +43,7 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Properties;
 import java.util.TimeZone;
 
@@ -487,8 +488,7 @@ public class WARCIndexer {
 						if (results.getResults().size() > 0) {
 							SolrDocument fr = results.getResults().get(0);
 							if (fr.containsKey(SolrFields.CRAWL_DATES)) {
-								for (Object cds : fr
-										.getFieldValues(SolrFields.CRAWL_DATES)) {
+								for (Object cds : fr.getFieldValues(SolrFields.CRAWL_DATES)) {
 									currentCrawlDates.add((Date) cds);
 								}
 							}
@@ -525,8 +525,9 @@ public class WARCIndexer {
 			dateList.add(crawlDate);
 			Collections.sort(dateList);
 			Date firstDate = dateList.get(0);
-			solr.setField(SolrFields.CRAWL_DATE,
-					formatter.format(firstDate));
+			solr.setField(SolrFields.CRAWL_DATE, formatter.format(firstDate));
+			solr.setField(SolrFields.CRAWL_WEEKDAY, formatter_weekday.format(firstDate));
+			solr.setField(SolrFields.CRAWL_TIME_OF_DAY, formatter_time_of_day.format(firstDate));
 			solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
 			
 			// Use the current value as the waybackDate:
@@ -755,12 +756,15 @@ public class WARCIndexer {
 
 	/**
 	 * Timestamp parsing, for the Crawl Date.
+	 * Note: DateFormatters are not Thread safe
 	 */
 
-	public static SimpleDateFormat formatter = new SimpleDateFormat(
-			"yyyy-MM-dd'T'HH:mm:ss'Z'");
+	public static SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'");
+	public static SimpleDateFormat formatter_weekday = new SimpleDateFormat("EEEE", Locale.ENGLISH);
+	public static SimpleDateFormat formatter_time_of_day = new SimpleDateFormat("'0001-01-01T'HH:mm:ss'Z'");
 	static {
 		formatter.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
+		formatter_weekday.setTimeZone( TimeZone.getTimeZone( "GMT" ) );
 	}
 
 	/**
