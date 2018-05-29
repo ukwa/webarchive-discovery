@@ -350,8 +350,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 					// edate);
 					solr.setField(SolrFields.LAST_MODIFIED, iso_df.print(edate));
 					solr.setField(SolrFields.LAST_MODIFIED_TIME_OF_DAY,
-								  ISODateTimeFormat.basicTimeNoMillis().withZoneUTC().print(edate));
-					solr.setField(SolrFields.LAST_MODIFIED_TIME_OF_DAY, edate.dayOfWeek().getAsText(Locale.ENGLISH));
+								  "0001-01-01T" + ISODateTimeFormat.hourMinuteSecond().withZoneUTC().print(edate));
+					solr.setField(SolrFields.LAST_MODIFIED_WEEKDAY, edate.dayOfWeek().getAsText(Locale.ENGLISH));
 				}
 			}
 			
