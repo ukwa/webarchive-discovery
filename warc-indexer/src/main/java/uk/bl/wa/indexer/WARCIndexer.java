@@ -465,7 +465,7 @@ public class WARCIndexer {
 			if( hashUrlId ) {
 				id = hash + "/" + url_md5hex;
 			} else {
-				id = url_md5hex + "/" + waybackDate;
+                id = waybackDate + "/" + url_md5hex;
 			}
 			// Set these last:
 			solr.setField( SolrFields.ID, id );
