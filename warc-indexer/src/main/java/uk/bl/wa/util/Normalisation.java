@@ -33,6 +33,7 @@ import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
@@ -140,15 +141,12 @@ public class Normalisation {
         // Protocol: https → http
         url = url.startsWith("https://") ? "http://" + url.substring(8) : url;
 
-        // TODO: Consider if this should only be done if createUnambiguous == true
-        // Trailing slashes: http://example.com/foo/ → http://example.com/foo
-        while (url.endsWith("/")) { // Trailing slash affects the URL semantics
-            url = url.substring(0, url.length() - 1);
-        }
-
-        // If the link is domain-only (http://example.com), is _must_ end with slash
-        if (DOMAIN_ONLY.matcher(url).matches()) {
-            url += "/";
+        // www. prefix
+        if (createUnambiguous) {
+            Matcher wwwMatcher = WWW_PREFIX.matcher(url);
+            if (wwwMatcher.matches()) {
+                url = wwwMatcher.group(1) + wwwMatcher.group(2);
+            }
         }
 
         // Create temporary url with %-fixing and high-order characters represented directly
@@ -161,9 +159,21 @@ public class Normalisation {
         // http://example.com/all%2A rosé 10%.html → http://example.com/all*%20ros%C3%A9%2010%25.html if produceValidURL
         url = escapeUTF8(urlBytes, !allowHighOrder, createUnambiguous);
 
+        // TODO: Consider if this should only be done if createUnambiguous == true
+        // Trailing slashes: http://example.com/foo/ → http://example.com/foo
+        while (url.endsWith("/")) { // Trailing slash affects the URL semantics
+            url = url.substring(0, url.length() - 1);
+        }
+
+        // If the link is domain-only (http://example.com), is _must_ end with slash
+        if (DOMAIN_ONLY.matcher(url).matches()) {
+            url += "/";
+        }
+
         return url;
     }
     private static Pattern DOMAIN_ONLY = Pattern.compile("https?://[^/]+");
+    private static Pattern WWW_PREFIX = Pattern.compile("([a-z]+://)(?:www[0-9]*|ww2|ww)[.](.+)");
 
     // Normalisation to UTF-8 form
     private static byte[] fixEscapeErrorsAndUnescapeHighOrderUTF8(final String url) {
@@ -273,8 +283,9 @@ public class Normalisation {
     private final static byte[] HEX = "0123456789abcdef".getBytes(UTF8_CHARSET); // Assuming lowercase
 
     // Some low-order characters must always be escaped
+    // TODO: Consider adding all unwise characters from https://www.ietf.org/rfc/rfc2396.txt : {|}\^[]`
     private static boolean mustEscape(int codePoint) {
-        return codePoint == ' ' || codePoint == '%';
+        return codePoint == ' ' || codePoint == '%' || codePoint == '\\';
     }
 
     // If the codePoint is already escaped, keep the escaping
