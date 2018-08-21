@@ -574,7 +574,7 @@ public class WARCIndexer {
 			tikainput.mark( ( int ) content_length );
 			
 			// Pass on to other extractors as required, resetting the stream before each:
-			this.wpa.analyse(header, tikainput, solr);
+			this.wpa.analyse(archiveName, header, tikainput, solr);
             Instrument.timeRel("WARCIndexer.extract#total", "WARCIndexer.extract#analyzetikainput", analyzeStart);
 
 
