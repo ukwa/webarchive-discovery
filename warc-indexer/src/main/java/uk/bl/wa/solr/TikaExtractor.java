@@ -179,15 +179,15 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	private int maxBytesToParser = -1;
 	
 	/**
-	 * 
-	 * @param solr
-	 * @param is
-	 * @param url
+	 * @param source the source of the input stream - typically a WARC file. Used for error logging.
+	 * @param solr  
+	 * @param is  content to analyse.
+	 * @param url optional URL for the bytes in is.
 	 * @return
 	 * @throws IOException
 	 */
 	@SuppressWarnings( "deprecation" )
-	public SolrRecord extract( SolrRecord solr, InputStream is, String url ) throws IOException {
+	public SolrRecord extract( String source, SolrRecord solr, InputStream is, String url ) throws IOException {
 
 		// Set up the TikaInputStream:
 		TikaInputStream tikainput = null;
@@ -205,14 +205,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         final long detectStart = System.nanoTime();
 		StringBuilder detected = new StringBuilder();
 		try {
-			DetectRunner detect = new DetectRunner(tika, tikainput, detected, metadata);
+			DetectRunner detect = new DetectRunner(source, tika, tikainput, detected, metadata);
 			TimeLimiter.run(detect, 10000L, false);
 		} catch( NoSuchFieldError e ) {
 			// TODO Is this an Apache POI version issue?
-			log.error( "Tika.detect(): " + e.getMessage() );
+			log.error( "Tika.detect(): " + e.getMessage() + " for " + url + " in " + source );
 			addExceptionMetadata(metadata, new Exception("detect threw "+e.getClass().getCanonicalName()) );
 		} catch( Exception e ) {
-			log.error( "Tika.detect(): " + e.getMessage() );
+			log.error( "Tika.detect(): " + e.getMessage() + " for " + url + " in " + source);
 			addExceptionMetadata(metadata, e);
 		}
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract", "TikaExtractor.extract#detect", detectStart);
@@ -239,14 +239,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		
 		try {
             final long parseStart = System.nanoTime();
-			ParseRunner runner = new ParseRunner( tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
+			ParseRunner runner = new ParseRunner( source, tika.getParser(), tikainput, this.getHandler( content ), metadata, context );
 			try {
 				TimeLimiter.run(runner, parseTimeout, true);
 			} catch( OutOfMemoryError o ) {
-				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() );
+				log.error( "TikaExtractor.parse() - OutOfMemoryError: " + o.getMessage() + " for " + url + " in " + source );
 				addExceptionMetadata(metadata, new Exception("OutOfMemoryError"));
 			} catch( RuntimeException r ) {
-				log.error( "TikaExtractor.parse() - RuntimeException: " + r.getMessage() );
+				log.error( "TikaExtractor.parse() - RuntimeException: " + r.getMessage() + " for " + url + " in " + source );
 				addExceptionMetadata(metadata, r);
 			}
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#tikasolrextract",
@@ -267,7 +267,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				if( output.length() > this.max_text_length ) {
 					output = output.substring(0, this.max_text_length);
 				}
-				log.debug("Extracted text from: " + url);
+				log.debug("Extracted text from: " + url + " in " + source);
 				log.debug("Extracted text: " + StringUtils.left(output, 300));
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT, output );
 				solr.setField( SolrFields.SOLR_EXTRACTED_TEXT_LENGTH, Integer.toString( output.length() ) );
@@ -335,7 +335,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				try {
 					edate = df.parseDateTime(date);
 				} catch( IllegalArgumentException e ) {
-					log.error( "Could not parse: "+ date );
+					log.error( "Could not parse date: "+ date + " from URL " + url + " in " + source);
 				}
 				if( edate == null ) {
 					Date javadate = Times.extractDate(date);
@@ -371,9 +371,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 			if (exifVersion != null){
 			  solr.addField(SolrFields.EXIF_VERSION, exifVersion);
 			  String exif_artist = metadata.get("Artist");
-               if (exif_artist != null){ // This is a better value for the author field.
-                 solr.removeField(SolrFields.SOLR_AUTHOR); //Clear old value if any. Not multi valued
-                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);                    
+               if (exif_artist != null){ // This is a better value for the author field
+				 // This potentially results in multiple author, which is valid
+                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);
                }
 			  	          
 			  String exif_latitude = metadata.get("GPS Latitude");
@@ -389,12 +389,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 								solr.addField(SolrFields.EXIF_LOCATION, latitude+","+longitude);
 							}
 							else{
-								log.error("invalid gsp exif information:"+exif_latitude +","+exif_longitude);
+								log.warn("invalid gsp exif information:"+exif_latitude +","+exif_longitude);
 							}
 
 						}
 					} catch(Exception e){ //Just ignore. No GPS data added to solr
-						log.error("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
+						log.warn("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
 					}
 				}
 			}
@@ -423,7 +423,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                                "TikaExtractor.extract#extract", extractStart);
 
 		} catch( Exception e ) {
-			log.error( "TikaExtractor.extract(): " + e.getMessage() );
+			log.error( "TikaExtractor.extract(): " + e.getMessage() + " for URL " + url + " in " + source);
 		}
 
         // TODO: This should probably be wrapped in a method-spanning try-finally to guarantee close
@@ -431,7 +431,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             try {
                 tikainput.close();
             } catch (IOException e) {
-                log.warn("Exception closing TikaInputStream. This leaves tmp-files: " +  e.getMessage());
+                log.warn("Exception closing TikaInputStream. This leaves tmp-files: " +  e.getMessage() +
+						 " for " + url + " in " + source);
             }
         }
 
@@ -439,6 +440,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	private class ParseRunner implements Runnable {
+		private final String source;
 		private Parser parser;
 		private InputStream tikainput;
 		private ContentHandler handler;
@@ -446,7 +448,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 		private ParseContext context;
 		private boolean complete;
 
-		public ParseRunner( Parser parser, InputStream tikainput, ContentHandler handler, Metadata metadata, ParseContext context ) {
+		public ParseRunner( String source, Parser parser, InputStream tikainput, ContentHandler handler,
+							Metadata metadata, ParseContext context ) {
+			this.source = source;
 			this.parser = parser;
 			this.tikainput = tikainput;
 			this.handler = handler;
@@ -463,11 +467,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				this.complete = true;
 			} catch( InterruptedIOException i ) {
 				this.complete = false;
-				log.error( "ParseRunner.run() Interrupted: " + i.getMessage() );
+				log.error("ParseRunner.run() Interrupted: " + i.getMessage() +
+						  " for URL " + metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
 				addExceptionMetadata(metadata, i);
 			} catch( Exception e ) {
 				this.complete = false;
-				log.error( "ParseRunner.run() Exception: " + ExceptionUtils.getRootCauseMessage(e));
+				log.error( "ParseRunner.run() Exception: " + ExceptionUtils.getRootCauseMessage(e) +
+						   " for URL " + metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
 				addExceptionMetadata(metadata, e);
 			} finally {
 			}
@@ -476,13 +482,15 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 	}
 
 	private class DetectRunner implements Runnable {
+		private final String source;
 		private Tika tika;
 		private InputStream input;
 		private StringBuilder mime;
 		private Metadata metadata;
 
-		public DetectRunner(Tika tika, InputStream input, StringBuilder mime,
+		public DetectRunner(String source, Tika tika, InputStream input, StringBuilder mime,
 				Metadata metadata) {
+			this.source = source;
 			this.tika = tika;
 			this.input = input;
 			this.mime = mime;
@@ -495,10 +503,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 				mime.append( this.tika.detect( this.input ) );
 			} catch( NoSuchFieldError e ) {
 				// Apache POI version issue?
-				log.error("Tika.detect(): " + e.getMessage());
+				log.error("Tika.detect(): " + e.getMessage() + " for URL " +
+						  metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
 				addExceptionMetadata(metadata, new Exception(e));
 			} catch( Exception e ) {
-				log.error( "Tika.detect(): " + e.getMessage() );
+				log.error( "Tika.detect(): " + e.getMessage() + " for URL " +
+						   metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
 				addExceptionMetadata(metadata, e);
 			}
 		}

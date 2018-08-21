@@ -112,7 +112,7 @@ public class WARCPayloadAnalysers {
         Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid", Instrument.SORT.avgtime, 5);
 	}
 	
-	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+	public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
 		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
 		log.debug("Analysing " + url);
 
@@ -120,9 +120,9 @@ public class WARCPayloadAnalysers {
 		// Analyse with tika:
 		try {
 			if( passUriToFormatTools ) {
-				solr = tika.extract( solr, tikainput, url );
+				solr = tika.extract(source, solr, tikainput, url );
 			} else {
-				solr = tika.extract( solr, tikainput, null );
+				solr = tika.extract(source, solr, tikainput, null );
 			}
 		} catch( Exception i ) {
 			log.error( i + ": " + i.getMessage() + ";tika; " + url + "@" + header.getOffset() );

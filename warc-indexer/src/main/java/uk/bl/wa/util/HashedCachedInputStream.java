@@ -27,7 +27,6 @@ package uk.bl.wa.util;
 
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
-import static uk.bl.wa.util.Normalisation.sanitiseWARCHeaderValue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -71,7 +70,9 @@ public class HashedCachedInputStream {
 	private boolean inMemory;
 	
 	private File cacheFile;
-	
+	private RandomAccessFile RAFcache;
+	private String url;
+
 	private byte[] cacheBytes;
 	
 	private boolean truncated = false;
@@ -111,7 +112,7 @@ public class HashedCachedInputStream {
 	 * @param length
 	 */
 	private void init(ArchiveRecordHeader header, InputStream in, long length) {
-		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+		url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
 		try {
 			digest =  MessageDigest.getInstance( MessageDigestAlgorithms.SHA_1);
 		} catch (NoSuchAlgorithmException e) {
@@ -190,8 +191,9 @@ public class HashedCachedInputStream {
 	}
 	
 	/**
-	 * 
-	 * @return
+	 * This returns the content. {@link #cleanup()} should be called after use as this avoids a build-up of
+	 * temporary files.
+	 * @return a {@link InputStream#mark(int)}-capable InputStream with the content given in the constructor.
 	 */
 	public InputStream getInputStream() {
 		if( inMemory ) {
@@ -202,7 +204,6 @@ public class HashedCachedInputStream {
 				return new ByteArrayInputStream( new byte[] {} );
 			}
 		} else {
-			RandomAccessFile RAFcache;
 			try {
 				RAFcache = new RandomAccessFile(cacheFile, "r");
 			} catch (FileNotFoundException e) {
@@ -222,11 +223,29 @@ public class HashedCachedInputStream {
 	}
 	
 	/**
+	 * Closes all references to the cache file (if any) and deletes the file.
 	 * 
+	 * Failure to call this method after use of the content will lead to a build-up of temporary files for as
+	 * long as the JVM is running.
 	 */
 	public void cleanup() {
-		if( this.cacheFile != null )
-			this.cacheFile.delete();
+		if (RAFcache != null) {
+			try {
+				RAFcache.close();
+			} catch (Exception e) {
+				log.warn("Exception closing RandomAccessFile cache for " + cacheFile + " for " + url, e);
+			}
+		}
+
+		if( this.cacheFile != null && cacheFile.exists() ) {
+			try {
+				if (!this.cacheFile.delete()) {
+					log.warn("Unable to delete " + cacheFile + " for " + url);
+				}
+			} catch (Exception e) {
+				log.warn("Exception deleting " + cacheFile + " for " + url, e);
+			}
+		}
 	}
 
 }
