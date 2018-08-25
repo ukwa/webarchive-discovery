@@ -4,8 +4,6 @@
 package uk.bl.wa.tika.parser.imagefeatures;
 
 import java.awt.Color;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
@@ -32,6 +30,7 @@ import org.openimaj.image.pixel.statistics.HistogramModel;
 import org.openimaj.image.processing.face.detection.DetectedFace;
 import org.openimaj.image.processing.face.detection.FaceDetector;
 import org.openimaj.image.processing.face.detection.HaarCascadeDetector;
+import org.openimaj.image.processing.face.detection.HaarCascadeDetector.BuiltInCascade;
 import org.openimaj.image.processing.face.detection.keypoints.FKEFaceDetector;
 import org.openimaj.image.processing.face.detection.keypoints.KEDetectedFace;
 import org.openimaj.math.geometry.shape.Rectangle;
@@ -39,7 +38,6 @@ import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -55,7 +53,8 @@ public class FaceDetectionParser extends AbstractParser {
 			Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
 					MediaType.image("jpg"))));
 
-	public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
+    public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
+    public static final String CAT_FACE_FRAGMENT_ID = "DETECTED_CAT_FACES";
 	public static final String DOM_COL = "DOMCOL";
 	public static final String DOM_COLS = "DOMCOLS";
 	public static final Property IMAGE_HEIGHT = Property.externalInteger("IMAGE_HEIGHT");
@@ -67,6 +66,9 @@ public class FaceDetectionParser extends AbstractParser {
 
 	private boolean useFKEFaceAlgorithm = false;
 
+    private FaceDetector<DetectedFace, FImage> fd;
+
+    private FaceDetector<DetectedFace, FImage> catfd;
 	/** */
 	private boolean extractDominantColours;
 
@@ -86,6 +88,14 @@ public class FaceDetectionParser extends AbstractParser {
 		if( this.detectFaces ) log.info("Face detection enabled.");
 		this.extractDominantColours = conf.getBoolean("warc.index.extract.content.images.dominantColours");
 		if( this.extractDominantColours ) log.info("Dominant colour extraction enabled.");
+        // Setup human face detector:
+        fd = new HaarCascadeDetector(
+                BuiltInCascade.frontalface_alt.classFile(),
+                20);
+        // Also setup a cat-face detector:
+        catfd = new HaarCascadeDetector(
+                "/opencv/haarcascades/haarcascade_frontalcatface.xml", 20);
+
 	}
 
 	/* (non-Javadoc)
@@ -136,7 +146,7 @@ public class FaceDetectionParser extends AbstractParser {
 			//	kp.position.translate(face.getBounds().getTopLeft());
 			//image.drawPoint(kp.position, RGBColour.GRAY, 3);
 			//}
-			this.addFaceRectangle(face.getBounds(), metadata);
+            this.addFaceRectangle(face.getBounds(), metadata, FACE_FRAGMENT_ID);
 			//image.drawShape(b, RGBColour.RED);
 			//image.drawShape(b, ArrayUtils.toObject(dc.getColorComponents(null)) );
 			// Output in standard form: http://www.w3.org/2008/WebVideo/Fragments/WD-media-fragments-spec/#naming-space
@@ -145,18 +155,24 @@ public class FaceDetectionParser extends AbstractParser {
 	}
 
 	private void useHaarCascadeDetector( MBFImage image, Metadata metadata ) {
-		FaceDetector<DetectedFace,FImage> fd = new HaarCascadeDetector(20);
 		FImage fim = Transforms.calculateIntensity( image );
+        // Detect human faces:
 		List<DetectedFace> faces = fd.detectFaces( fim );
 		for( DetectedFace face : faces ) {
-			this.addFaceRectangle(face.getBounds(), metadata);
+            this.addFaceRectangle(face.getBounds(), metadata, FACE_FRAGMENT_ID);
 		}
+        // Detect cat faces:
+        faces = catfd.detectFaces(fim);
+        for (DetectedFace face : faces) {
+            this.addFaceRectangle(face.getBounds(), metadata,
+                    CAT_FACE_FRAGMENT_ID);
+        }
 	}
 
 	// Output in standard form: http://www.w3.org/2008/WebVideo/Fragments/WD-media-fragments-spec/#naming-space
-	private void addFaceRectangle( Rectangle b, Metadata metadata ) {
+    private void addFaceRectangle(Rectangle b, Metadata metadata, String kind) {
 		String xywh="xywh="+(int)b.x+","+(int)b.y+","+(int)b.width+","+(int)b.height;
-		metadata.add(FACE_FRAGMENT_ID, xywh);
+        metadata.add(kind, xywh);
 	}
 
 	/**
@@ -227,33 +243,6 @@ public class FaceDetectionParser extends AbstractParser {
 		float[] hsv = new float[3];
 		Color.RGBtoHSB(c.getRed(), c.getGreen(), c.getBlue(), hsv);
 		return new Color(Color.HSBtoRGB(hsv[0], hsv[1], 1.0f));
-	}
-
-	private void processImage( String source ) throws FileNotFoundException, IOException, SAXException, TikaException {
-		System.out.println("Processing " + source );
-		Metadata md = new Metadata();
-		parse(new FileInputStream( source ), null, md, null);
-		for( String face : md.getValues(FACE_FRAGMENT_ID) ) {
-			System.out.println("#" + face);			
-		}
-	}
-	/**
-	 * @param args
-	 * @throws TikaException 
-	 * @throws SAXException 
-	 * @throws IOException 
-	 * @throws FileNotFoundException 
-	 */
-	public static void main(String[] args) throws FileNotFoundException, IOException, SAXException, TikaException {
-		FaceDetectionParser p = new FaceDetectionParser(ConfigFactory.load());
-		//
-		// http://www.flickr.com/photos/usnationalarchives/8161390041/sizes/z/in/set-72157631944278536/
-		//
-		p.processImage("src/test/resources/faces/8161390041_1113e4e63d_z.jpg");
-		p.processImage("src/test/resources/faces/4185781866_0e3a5f0479_o.gif");
-		//p.processImage("src/test/resources/faces/out2.png");
-		//p.processImage("src/test/resources/faces/out3.png");
-		p.processImage("src/test/resources/faces/7496390584_f5b79f293a_n.jpg");
 	}
 
 }
