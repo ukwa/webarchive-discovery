@@ -1,5 +1,10 @@
 package uk.bl.wa.indexer;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotSame;
+import static org.junit.Assert.assertTrue;
+
 /*
  * #%L
  * warc-indexer
@@ -51,8 +56,6 @@ import com.typesafe.config.ConfigValueFactory;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
-
-import static org.junit.Assert.*;
 
 public class WARCIndexerTest {
 
@@ -237,7 +240,7 @@ public class WARCIndexerTest {
     @Test
     public void testFields() throws NoSuchAlgorithmException, IOException {
         // ID of WARC record to use in test
-        final String recordId = "jbKtN3dWzLJzaIQxTyPCiA==/20131021215312";
+        final String recordId = "20131021215312/jbKtN3dWzLJzaIQxTyPCiA==";
         boolean foundRecord = false;
 
         WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
