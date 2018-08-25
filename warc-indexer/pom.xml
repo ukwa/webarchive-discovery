@@ -55,11 +55,6 @@
 					<descriptorRefs>
 						<descriptorRef>jar-with-dependencies</descriptorRef>
 					</descriptorRefs>
-					<archive>
-						<manifest>
-							<mainClass>uk.bl.wa.indexer.WARCIndexerCommand</mainClass>
-						</manifest>
-					</archive>
 				</configuration>
 				<executions>
 					<execution>
