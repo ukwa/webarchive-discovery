@@ -19,7 +19,7 @@
 <schema name="ukwa" version="1.6">
   <fields>
         <!-- id, _version_, _root_ and _text_ are used internally by Solr. id is also used externally -->
-        <field name="id" type="string" indexed="true" stored="false" required="true" multiValued="false" docValues="true"/>
+        <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" docValues="true"/>
         <field name="_version_" type="long" indexed="true" docValues="true"/>
         <field name="_root_" type="string" indexed="true" docValues="true" />
         <field name="_text_" type="text_general" indexed="true" stored="false" multiValued="true"/>

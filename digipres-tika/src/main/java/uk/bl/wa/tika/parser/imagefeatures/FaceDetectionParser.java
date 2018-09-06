@@ -54,7 +54,6 @@ public class FaceDetectionParser extends AbstractParser {
 					MediaType.image("jpg"))));
 
     public static final String FACE_FRAGMENT_ID = "DETECTED_FACES";
-    public static final String CAT_FACE_FRAGMENT_ID = "DETECTED_CAT_FACES";
 	public static final String DOM_COL = "DOMCOL";
 	public static final String DOM_COLS = "DOMCOLS";
 	public static final Property IMAGE_HEIGHT = Property.externalInteger("IMAGE_HEIGHT");
@@ -146,7 +145,7 @@ public class FaceDetectionParser extends AbstractParser {
 			//	kp.position.translate(face.getBounds().getTopLeft());
 			//image.drawPoint(kp.position, RGBColour.GRAY, 3);
 			//}
-            this.addFaceRectangle(face.getBounds(), metadata, FACE_FRAGMENT_ID);
+            this.addFaceRectangle(face.getBounds(), metadata, "human");
 			//image.drawShape(b, RGBColour.RED);
 			//image.drawShape(b, ArrayUtils.toObject(dc.getColorComponents(null)) );
 			// Output in standard form: http://www.w3.org/2008/WebVideo/Fragments/WD-media-fragments-spec/#naming-space
@@ -159,20 +158,21 @@ public class FaceDetectionParser extends AbstractParser {
         // Detect human faces:
 		List<DetectedFace> faces = fd.detectFaces( fim );
 		for( DetectedFace face : faces ) {
-            this.addFaceRectangle(face.getBounds(), metadata, FACE_FRAGMENT_ID);
+            this.addFaceRectangle(face.getBounds(), metadata, "human");
 		}
         // Detect cat faces:
         faces = catfd.detectFaces(fim);
         for (DetectedFace face : faces) {
             this.addFaceRectangle(face.getBounds(), metadata,
-                    CAT_FACE_FRAGMENT_ID);
+                    "cat");
         }
 	}
 
 	// Output in standard form: http://www.w3.org/2008/WebVideo/Fragments/WD-media-fragments-spec/#naming-space
     private void addFaceRectangle(Rectangle b, Metadata metadata, String kind) {
-		String xywh="xywh="+(int)b.x+","+(int)b.y+","+(int)b.width+","+(int)b.height;
-        metadata.add(kind, xywh);
+        String xywh = kind + "@xywh=" + (int) b.x + "," + (int) b.y + ","
+                + (int) b.width + "," + (int) b.height;
+        metadata.add(FACE_FRAGMENT_ID, xywh);
 	}
 
 	/**

@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
@@ -60,17 +62,20 @@ public class FaceDetectionParserTest {
         p.parse(new FileInputStream(source), null, md, null);
         // Look for human faces:
         String[] faces = md.getValues(FaceDetectionParser.FACE_FRAGMENT_ID);
-        // for (String face : faces) {
-        // System.out.println("Human face at #" + face);
-        // }
+        List<String> human_faces = new ArrayList<String>();
+        List<String> cat_faces = new ArrayList<String>();
+        for (String face : faces) {
+            // System.out.println("Face: " + face);
+            if (face.startsWith("cat")) {
+                cat_faces.add(face);
+            } else {
+                human_faces.add(face);
+            }
+        }
         assertEquals("Did not match expected number of human faces.", humans,
-                faces.length);
+                human_faces.size());
         // Look for cat faces:
-        faces = md.getValues(FaceDetectionParser.CAT_FACE_FRAGMENT_ID);
-        // for (String face : faces) {
-        // System.out.println("Cat face at #" + face);
-        // }
         assertEquals("Did not match expected number of cat faces.", cats,
-                faces.length);
+                cat_faces.size());
     }
 }
