@@ -211,6 +211,10 @@
                <artifactId>guava</artifactId>
                <groupId>com.google.guava</groupId>
             </exclusion>
+            <exclusion>
+               <groupId>org.openimaj</groupId>
+               <artifactId>xuggle-video</artifactId>
+            </exclusion>
          </exclusions>
       </dependency>
       <!-- <dependency> <groupId>org.apache.commons</groupId> <artifactId>commons-imaging</artifactId> 
