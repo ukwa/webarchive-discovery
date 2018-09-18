@@ -140,6 +140,20 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <!-- month_day & day not used for anything -->
 <!--        <field name="crawl_year_month_day" type="int" />
         <field name="crawl_year_month"     type="int" />-->
+        <!-- The weekday extracted from crawl_date (Monday, Tuesday, Wednesday...).
+             Sample use: Limiting searches to crawls done between Friday evening and Saturday morning:
+             fq=(crawl_weekday:Friday AND crawl_time_of_day:[0001-01-01T19:00:00Z TO *]) OR (crawl_weekday:Saturday AND crawl_time_of_day:[* TO 0001-01-01T6:00:00Z])
+             Note: This makes little sense for standard web resources as the crawl-time does not reflect when the
+             resource was created.
+        -->
+        <field name="crawl_weekday"        type="string" />
+        <!-- The time of the day extracted from crawl_date, represented by fixing the date to 0001-01-01.
+             Sample use: Limiting searches to data harvested around noon:
+             fq=crawl_time_of_day:[0001-01-01T11:00:00Z TO 0001-01-01T14:00:00Z]
+             Note: This makes little sense for standard web resources as the crawl-time does not reflect when the
+             resource was created.
+        -->
+        <field name="crawl_time_of_day"    type="date" />
         <!-- If webarchive-discovery runs in update-mode, multiple harvests of the same URL will be collapsed to
              a single document and the years from the dates from the different harvests will be added to this field -->
         <field name="crawl_years"          type="int" multiValued="true" />
@@ -151,10 +165,22 @@ This schema is for Solr 7+ and will not work under Solr 6.
              Note: This is not a very reliable timestamp for most formats. JPEGs tend to work quite well.
              Sample use: Sorting by age as stated in the format sort=last_modified asc -->
         <field name="last_modified"        type="date" />
+        <!-- The weekday extracted from last_modified (Monday, Tuesday, Wednesday...).
+             Sample use: Limiting searches to resources from Friday evening and Saturday morning:
+             fq=(crawl_weekday:Friday AND crawl_time_of_day:[0001-01-01T19:00:00Z TO *]) OR (crawl_weekday:Saturday AND crawl_time_of_day:[* TO 0001-01-01T6:00:00Z])
+             Note: This works very well for resources where the timestamp is valid, such as Twitter & Jodel posts.
+        -->
+        <field name="las_modified_weekday" type="string" />
+        <!-- The time of the day extracted from last_modified, represented by fixing the date to 0001-01-01.
+             Sample use: Limiting searches to resources created/updated around noon:
+             fq=last_modified_time_of_day:[0001-01-01T11:00:00Z TO 0001-01-01T14:00:00Z]
+             Note: This works very well for resources where the timestamp is valid, such as Twitter & Jodel posts.
+        -->
+        <field name="last_modified_time_of_day" type="date" />
         <!-- The year from last_modified -->
         <field name="last_modified_year"   type="string" /> <!-- Why is this a string? -->
 
-        <!-- Heavily normalised URL: http/https is collepsed to http, everything is lowercased, trailing / are removed
+        <!-- Heavily normalised URL: http/https is collapsed to http, everything is lowercased, trailing / are removed
              for all URLs, except those pointing to root, e.g. "http://example.com/". There is more processing than
              that. If the field is to be queried with a user-provided URL, it is highly recommended to use the method
              Normalisation.canonicaliseURL() from webarchive-discovery to ensure match.

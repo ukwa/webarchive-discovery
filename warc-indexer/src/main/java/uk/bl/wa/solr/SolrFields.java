@@ -112,11 +112,15 @@ public interface SolrFields {
 	public static final String WAYBACK_DATE = "wayback_date";
 	public static final String CRAWL_DATE = "crawl_date";
 	public static final String CRAWL_DATES = "crawl_dates";
+	public static final String CRAWL_WEEKDAY = "crawl_weekday";
+	public static final String CRAWL_TIME_OF_DAY = "crawl_time_of_day";
 	public static final String CRAWL_YEAR = "crawl_year";
 	public static final String CRAWL_YEARS = "crawl_years";
 	public static final String PUBLICATION_DATE = "publication_date"; // Does not seem to be used
 	public static final String PUBLICATION_YEAR = "publication_year"; // Does not seem to be used
 	public static final String LAST_MODIFIED = "last_modified";
+	public static final String LAST_MODIFIED_WEEKDAY = "last_modified_weekday";
+	public static final String LAST_MODIFIED_TIME_OF_DAY = "last_modified_time_of_day";
 	public static final String LAST_MODIFIED_YEAR = "last_modified_year";
 		
 	//Image Exif metadata

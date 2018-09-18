@@ -32,6 +32,7 @@ import java.io.StringWriter;
 import java.io.Writer;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang.StringUtils;
@@ -348,6 +349,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 					// solr.getSolrDocument().setField(SolrFields.LAST_MODIFIED,
 					// edate);
 					solr.setField(SolrFields.LAST_MODIFIED, iso_df.print(edate));
+					solr.setField(SolrFields.LAST_MODIFIED_TIME_OF_DAY,
+								  "0001-01-01T" + ISODateTimeFormat.hourMinuteSecond().withZoneUTC().print(edate));
+					solr.setField(SolrFields.LAST_MODIFIED_WEEKDAY, edate.dayOfWeek().getAsText(Locale.ENGLISH));
 				}
 			}
 			
