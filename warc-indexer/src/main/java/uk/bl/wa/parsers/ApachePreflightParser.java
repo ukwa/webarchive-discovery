@@ -9,7 +9,7 @@ package uk.bl.wa.parsers;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2014 The UK Web Archive
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as

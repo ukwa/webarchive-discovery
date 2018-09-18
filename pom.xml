@@ -10,8 +10,8 @@
    <version>3.0.0-SNAPSHOT</version>
    <packaging>pom</packaging>
    <organization>
-      <name>The UK Web Archive</name>
-      <url>http://www.webarchive.org.uk/</url>
+      <name>The webarchive-discovery project contributors</name>
+      <url>https://github.com/ukwa/webarchive-discovery/graphs/contributors</url>
    </organization>
    <inceptionYear>2013</inceptionYear>
    <modules>
@@ -117,6 +117,29 @@
                         <include>**/*IntegrationTests.java</include>
                      </includes>
                   </configuration>
+               </execution>
+            </executions>
+         </plugin>
+         <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <version>1.16</version>
+            <configuration>
+               <licenseName>gpl_v2</licenseName>
+               <verbose>false</verbose>
+               <canUpdateCopyright>true</canUpdateCopyright>
+               <roots>
+                  <root>src/main/java</root>
+                  <root>src/test/java</root>
+               </roots>
+            </configuration>
+            <executions>
+               <execution>
+                  <id>first</id>
+                  <goals>
+                     <goal>update-file-header</goal>
+                  </goals>
+                  <phase>process-sources</phase>
                </execution>
             </executions>
          </plugin>
