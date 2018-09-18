@@ -56,74 +56,74 @@ import uk.bl.wa.util.Normalisation;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements
-		Mapper<Text, WritableArchiveRecord, IntWritable, WritableSolrRecord> {
-	private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
+        Mapper<Text, WritableArchiveRecord, IntWritable, WritableSolrRecord> {
+    private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
 
-	static enum MyCounters {
-		NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS
-	}
+    static enum MyCounters {
+        NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS
+    }
 
-	private String mapTaskId;
-	private String inputFile;
-	private int noRecords = 0;
+    private String mapTaskId;
+    private String inputFile;
+    private int noRecords = 0;
 
-	private WARCIndexer windex;
+    private WARCIndexer windex;
 
-	private int numShards = 1;
+    private int numShards = 1;
     private int numReducers = 10;
-	private Config config;
+    private Config config;
 
-	private SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(null); // Overridden by innerConfigure
+    private SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(null); // Overridden by innerConfigure
 
-	public WARCIndexerMapper() {
-		try {
-			// Re-configure logging:
-			Properties props = new Properties();
-			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (IOException e1) {
-			LOG.error("Failed to load log4j config from properties file.");
-		}
-	}
+    public WARCIndexerMapper() {
+        try {
+            // Re-configure logging:
+            Properties props = new Properties();
+            props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+            PropertyConfigurator.configure(props);
+        } catch (IOException e1) {
+            LOG.error("Failed to load log4j config from properties file.");
+        }
+    }
 
-	@Override
-	public void configure( JobConf job ) {
-		if (this.config == null) {
-			innerConfigure(ConfigFactory.parseString(job
-				.get(WARCIndexerRunner.CONFIG_PROPERTIES)));
-		}
+    @Override
+    public void configure( JobConf job ) {
+        if (this.config == null) {
+            innerConfigure(ConfigFactory.parseString(job
+                .get(WARCIndexerRunner.CONFIG_PROPERTIES)));
+        }
 
-		// Other properties:
-		mapTaskId = job.get("mapred.task.id");
-		inputFile = job.get("map.input.file");
-		LOG.info("Got task.id " + mapTaskId + " and input.file " + inputFile);
+        // Other properties:
+        mapTaskId = job.get("mapred.task.id");
+        inputFile = job.get("map.input.file");
+        LOG.info("Got task.id " + mapTaskId + " and input.file " + inputFile);
 
-	}
+    }
 
-	public void innerConfigure(Config jobConfig) {
-		try {
-			// Get config from job property:
-			config = jobConfig;
-			// Initialise indexer:
-			this.windex = new WARCIndexer( config );
-			// Decide whether to try to apply annotations:
-			boolean applyAnnotations = false;
-			if( config.hasPath(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS)) {
-				applyAnnotations = config
-						.getBoolean(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS);
-			}
-			if (applyAnnotations) {
-				LOG.info("Attempting to load annotations from 'annotations.json'...");
-				Annotations ann = Annotations.fromJsonFile("annotations.json");
+    public void innerConfigure(Config jobConfig) {
+        try {
+            // Get config from job property:
+            config = jobConfig;
+            // Initialise indexer:
+            this.windex = new WARCIndexer( config );
+            // Decide whether to try to apply annotations:
+            boolean applyAnnotations = false;
+            if( config.hasPath(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS)) {
+                applyAnnotations = config
+                        .getBoolean(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS);
+            }
+            if (applyAnnotations) {
+                LOG.info("Attempting to load annotations from 'annotations.json'...");
+                Annotations ann = Annotations.fromJsonFile("annotations.json");
                 LOG.info(
                         "Attempting to load OA SURTS from 'openAccessSurts.txt'...");
                 SurtPrefixSet oaSurts = Annotator
                         .loadSurtPrefix("openAccessSurts.txt");
                 windex.setAnnotations(ann, oaSurts);
-			}
+            }
 
-			// Set up sharding:
-			numShards = config.getInt(SolrWebServer.NUM_SHARDS);
+            // Set up sharding:
+            numShards = config.getInt(SolrWebServer.NUM_SHARDS);
 
             // Get the number of reducers:
             try {
@@ -131,92 +131,92 @@ public class WARCIndexerMapper extends MapReduceBase implements
             } catch (NumberFormatException n) {
                 numReducers = 10;
             }
-			solrFactory = SolrRecordFactory.createFactory(config);
-		} catch( NoSuchAlgorithmException e ) {
-			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-		} catch (JsonParseException e) {
-			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-		} catch (JsonMappingException e) {
-			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-		} catch (IOException e) {
-			LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-		}
-	}
+            solrFactory = SolrRecordFactory.createFactory(config);
+        } catch( NoSuchAlgorithmException e ) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        } catch (JsonParseException e) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        } catch (JsonMappingException e) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        } catch (IOException e) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        }
+    }
 
-	public WritableSolrRecord innerMap(Text key,
-			WritableArchiveRecord value,
-			Reporter reporter) throws IOException {
+    public WritableSolrRecord innerMap(Text key,
+            WritableArchiveRecord value,
+            Reporter reporter) throws IOException {
 
-		ArchiveRecordHeader header = value.getRecord().getHeader();
+        ArchiveRecordHeader header = value.getRecord().getHeader();
 
-		noRecords++;
+        noRecords++;
 
-		ArchiveRecord rec = value.getRecord();
-		SolrRecord solr = solrFactory.createRecord(key.toString(), rec.getHeader());
-		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
-		try {
-			if (!header.getHeaderFields().isEmpty()) {
-				// Do the indexing:
-				solr = windex.extract(key.toString(),
-						value.getRecord());
+        ArchiveRecord rec = value.getRecord();
+        SolrRecord solr = solrFactory.createRecord(key.toString(), rec.getHeader());
+        final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+        try {
+            if (!header.getHeaderFields().isEmpty()) {
+                // Do the indexing:
+                solr = windex.extract(key.toString(),
+                        value.getRecord());
 
-				// If there is no result, report it
-				if (solr == null) {
-					LOG.debug("WARCIndexer returned NULL for: " + url);
-					reporter.incrCounter(MyCounters.NUM_NULLS, 1);
-					return null;
-				}
+                // If there is no result, report it
+                if (solr == null) {
+                    LOG.debug("WARCIndexer returned NULL for: " + url);
+                    reporter.incrCounter(MyCounters.NUM_NULLS, 1);
+                    return null;
+                }
 
-				// Increment record counter:
-				reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
+                // Increment record counter:
+                reporter.incrCounter(MyCounters.NUM_RECORDS, 1);
 
-			} else {
-				// Report headerless records:
-				reporter.incrCounter(MyCounters.NUM_EMPTY_HEADERS, 1);
+            } else {
+                // Report headerless records:
+                reporter.incrCounter(MyCounters.NUM_EMPTY_HEADERS, 1);
 
-			}
+            }
 
-		} catch (Exception e) {
-			LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; "
-					+ url + "; " + header.getOffset(), e);
-			// Increment error counter
-			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
-			// Store it:
-			solr.addParseException(e);
+        } catch (Exception e) {
+            LOG.error(e.getClass().getName() + ": " + e.getMessage() + "; "
+                    + url + "; " + header.getOffset(), e);
+            // Increment error counter
+            reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+            // Store it:
+            solr.addParseException(e);
 
-		} catch (OutOfMemoryError e) {
-			// Allow processing to continue if a record causes OOME:
-			LOG.error("OOME " + e.getClass().getName() + ": " + e.getMessage()
-					+ "; " + url + "; " + header.getOffset());
-			// Increment error counter
-			reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
-			// Store it:
-			solr.addParseException(e);
-		}
+        } catch (OutOfMemoryError e) {
+            // Allow processing to continue if a record causes OOME:
+            LOG.error("OOME " + e.getClass().getName() + ": " + e.getMessage()
+                    + "; " + url + "; " + header.getOffset());
+            // Increment error counter
+            reporter.incrCounter(MyCounters.NUM_ERRORS, 1);
+            // Store it:
+            solr.addParseException(e);
+        }
 
-		// Wrap up and collect the result:
-		WritableSolrRecord wsolr = new WritableSolrRecord(solr);
+        // Wrap up and collect the result:
+        WritableSolrRecord wsolr = new WritableSolrRecord(solr);
 
-		// Occasionally update application-level status
-		if ((noRecords % 1000) == 0) {
-			reporter.setStatus(noRecords + " processed from " + inputFile);
-			// Also assure framework that we are making progress:
-			reporter.progress();
-		}
+        // Occasionally update application-level status
+        if ((noRecords % 1000) == 0) {
+            reporter.setStatus(noRecords + " processed from " + inputFile);
+            // Also assure framework that we are making progress:
+            reporter.progress();
+        }
 
-		return wsolr;
+        return wsolr;
 
-	}
+    }
 
-	@Override
-	public void map(Text key, WritableArchiveRecord value,
-			OutputCollector<IntWritable, WritableSolrRecord> output,
-			Reporter reporter) throws IOException {
+    @Override
+    public void map(Text key, WritableArchiveRecord value,
+            OutputCollector<IntWritable, WritableSolrRecord> output,
+            Reporter reporter) throws IOException {
 
-		WritableSolrRecord wsolr = this.innerMap(key, value, reporter);
+        WritableSolrRecord wsolr = this.innerMap(key, value, reporter);
 
-		// Pass to reduce stage if successful:
-		if (wsolr != null) {
+        // Pass to reduce stage if successful:
+        if (wsolr != null) {
 
             // Use a random assignment per shard:
             // int iKey = (int) (Math.round(Math.random() * numShards));
@@ -224,10 +224,10 @@ public class WARCIndexerMapper extends MapReduceBase implements
             int iKey = (int) (Math.round(Math.random() * numReducers));
 
             IntWritable oKey = new IntWritable(iKey);
-			output.collect(oKey, wsolr);
+            output.collect(oKey, wsolr);
 
-		}
-	}
+        }
+    }
 
 
 }

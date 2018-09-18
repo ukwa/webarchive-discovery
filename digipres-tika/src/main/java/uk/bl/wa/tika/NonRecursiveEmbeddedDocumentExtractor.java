@@ -36,39 +36,39 @@ import org.apache.tika.parser.ParseContext;
  * 
  */
 public class NonRecursiveEmbeddedDocumentExtractor extends
-		ParsingEmbeddedDocumentExtractor {
+        ParsingEmbeddedDocumentExtractor {
 
-	/** Parse embedded documents? Defaults to TRUE */
-	private boolean parseEmbedded = true;
+    /** Parse embedded documents? Defaults to TRUE */
+    private boolean parseEmbedded = true;
 
-	public NonRecursiveEmbeddedDocumentExtractor(ParseContext context) {
-		super(context);
-	}
+    public NonRecursiveEmbeddedDocumentExtractor(ParseContext context) {
+        super(context);
+    }
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor#
-	 * shouldParseEmbedded(org.apache.tika.metadata.Metadata)
-	 */
-	@Override
-	public boolean shouldParseEmbedded(Metadata metadata) {
-		return this.parseEmbedded;
-	}
+    /*
+     * (non-Javadoc)
+     * 
+     * @see org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor#
+     * shouldParseEmbedded(org.apache.tika.metadata.Metadata)
+     */
+    @Override
+    public boolean shouldParseEmbedded(Metadata metadata) {
+        return this.parseEmbedded;
+    }
 
-	/**
-	 * @return the parseEmbedded
-	 */
-	public boolean isParseEmbedded() {
-		return parseEmbedded;
-	}
+    /**
+     * @return the parseEmbedded
+     */
+    public boolean isParseEmbedded() {
+        return parseEmbedded;
+    }
 
-	/**
-	 * @param parseEmbedded
-	 *            the parseEmbedded to set
-	 */
-	public void setParseEmbedded(boolean parseEmbedded) {
-		this.parseEmbedded = parseEmbedded;
-	}
+    /**
+     * @param parseEmbedded
+     *            the parseEmbedded to set
+     */
+    public void setParseEmbedded(boolean parseEmbedded) {
+        this.parseEmbedded = parseEmbedded;
+    }
 
 }

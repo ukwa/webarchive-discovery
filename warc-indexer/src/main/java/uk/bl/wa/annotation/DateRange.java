@@ -38,27 +38,27 @@ import org.codehaus.jackson.annotate.JsonProperty;
  */
 public class DateRange {
 
-	@JsonProperty
-	protected Date start;
+    @JsonProperty
+    protected Date start;
 
-	@JsonProperty
-	protected Date end;
+    @JsonProperty
+    protected Date end;
 
-	protected DateRange() {
-	}
+    protected DateRange() {
+    }
 
-	public DateRange(String start, String end) {
-		if (start != null)
-			this.start = new Date(Long.parseLong(start) * 1000L);
-		else
-			this.start = new Date(0L);
+    public DateRange(String start, String end) {
+        if (start != null)
+            this.start = new Date(Long.parseLong(start) * 1000L);
+        else
+            this.start = new Date(0L);
 
-		if (end != null)
-			this.end = new Date(Long.parseLong(end) * 1000L);
-		else {
-			this.end = getDistantFutureDate();
-		}
-	}
+        if (end != null)
+            this.end = new Date(Long.parseLong(end) * 1000L);
+        else {
+            this.end = getDistantFutureDate();
+        }
+    }
 
     public Date getStart() {
         if (this.start == null) {
@@ -76,26 +76,26 @@ public class DateRange {
         }
     }
 
-	public boolean isInDateRange(Date date) {
+    public boolean isInDateRange(Date date) {
         // System.err.println("isInDateRange "
         // + (date.after(getStart()) && date.before(getEnd())));
         return (date.after(getStart()) && date.before(getEnd()));
-	}
+    }
 
-	public String toString() {
-		return "[" + start + "," + end + "]";
-	}
+    public String toString() {
+        return "[" + start + "," + end + "]";
+    }
 
-	private Date getDistantFutureDate() {
-		Calendar calendar = Calendar.getInstance();
-		calendar.set(Calendar.YEAR, 9999);
-		calendar.set(Calendar.MONTH, Calendar.DECEMBER);
-		calendar.set(Calendar.DAY_OF_MONTH, 30);
-		calendar.set(Calendar.HOUR_OF_DAY, 23);
-		calendar.set(Calendar.MINUTE, 59);
-		calendar.set(Calendar.SECOND, 59);
-		calendar.set(Calendar.MILLISECOND, 999);
-		calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
-		return calendar.getTime();
-	}
+    private Date getDistantFutureDate() {
+        Calendar calendar = Calendar.getInstance();
+        calendar.set(Calendar.YEAR, 9999);
+        calendar.set(Calendar.MONTH, Calendar.DECEMBER);
+        calendar.set(Calendar.DAY_OF_MONTH, 30);
+        calendar.set(Calendar.HOUR_OF_DAY, 23);
+        calendar.set(Calendar.MINUTE, 59);
+        calendar.set(Calendar.SECOND, 59);
+        calendar.set(Calendar.MILLISECOND, 999);
+        calendar.setTimeZone(TimeZone.getTimeZone("UTC"));
+        return calendar.getTime();
+    }
 }

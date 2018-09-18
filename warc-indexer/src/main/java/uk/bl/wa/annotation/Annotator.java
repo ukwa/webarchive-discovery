@@ -72,24 +72,24 @@ import uk.bl.wa.solr.SolrFields;
  * 
  */
 public class Annotator {
-	private static Log LOG = LogFactory.getLog( Annotator.class );
-	
-	private Annotations annotations;
+    private static Log LOG = LogFactory.getLog( Annotator.class );
+    
+    private Annotations annotations;
 
     private SurtPrefixSet openAccessSurts = null;
 
 
-	/**
-	 * Factory method to pull annotations from ACT.
-	 * 
-	 * @throws IOException
-	 * @throws JDOMException
-	 */
-	public static Annotator annotationsFromAct() throws IOException,
-			JDOMException {
-		AnnotationsFromAct act = new AnnotationsFromAct();
+    /**
+     * Factory method to pull annotations from ACT.
+     * 
+     * @throws IOException
+     * @throws JDOMException
+     */
+    public static Annotator annotationsFromAct() throws IOException,
+            JDOMException {
+        AnnotationsFromAct act = new AnnotationsFromAct();
         return new Annotator(act.getAnnotations(), null);
-	}
+    }
 
     /**
      * 
@@ -115,39 +115,39 @@ public class Annotator {
         this.openAccessSurts = oaSurts;
     }
 
-	/**
-	 * Runs through the 3 possible scopes, determining the appropriate part
-	 * of the URI to match.
-	 * 
-	 * @param uri
-	 * @param solr
-	 * @throws URISyntaxException
-	 * @throws URIException
-	 */
+    /**
+     * Runs through the 3 possible scopes, determining the appropriate part
+     * of the URI to match.
+     * 
+     * @param uri
+     * @param solr
+     * @throws URISyntaxException
+     * @throws URIException
+     */
     public void applyAnnotations(URI uri, SolrInputDocument solr)
-			throws URISyntaxException, URIException {
-		LOG.debug("Updating collections for "
-				+ solr.getField(SolrFields.SOLR_URL));
+            throws URISyntaxException, URIException {
+        LOG.debug("Updating collections for "
+                + solr.getField(SolrFields.SOLR_URL));
 
-		// Trac #2243; This should only happen if the record's timestamp is
-		// within the range set by the Collection.
-		// So get all the dates:
-		// Get all the dates:
-		Set<String> crawl_dates = new HashSet<String>();
-		crawl_dates.add((String) solr.getField(SolrFields.CRAWL_DATE)
-				.getValue());
-		if (solr.getField(SolrFields.CRAWL_DATES) != null) {
-			for (Object d : solr.getField(SolrFields.CRAWL_DATES).getValues()) {
-				@SuppressWarnings("unchecked")
-				HashMap<String, String> dhm = (HashMap<String, String>) d;
-				crawl_dates.addAll(dhm.values());
-			}
-		}
+        // Trac #2243; This should only happen if the record's timestamp is
+        // within the range set by the Collection.
+        // So get all the dates:
+        // Get all the dates:
+        Set<String> crawl_dates = new HashSet<String>();
+        crawl_dates.add((String) solr.getField(SolrFields.CRAWL_DATE)
+                .getValue());
+        if (solr.getField(SolrFields.CRAWL_DATES) != null) {
+            for (Object d : solr.getField(SolrFields.CRAWL_DATES).getValues()) {
+                @SuppressWarnings("unchecked")
+                HashMap<String, String> dhm = (HashMap<String, String>) d;
+                crawl_dates.addAll(dhm.values());
+            }
+        }
 
-		// "Just this URL"
-		// String normd = canon.urlStringToKey(uri.toString());
-		String normd = uri.toString();
-		LOG.debug("Comparing with " + normd);
+        // "Just this URL"
+        // String normd = canon.urlStringToKey(uri.toString());
+        String normd = uri.toString();
+        LOG.debug("Comparing with " + normd);
         if (this.annotations.getCollections().containsKey("resource")) {
             if (this.annotations.getCollections().get("resource").keySet()
                     .contains(normd)) {
@@ -156,7 +156,7 @@ public class Annotator {
                         .get("resource").get(normd), solr, crawl_dates);
             }
         }
-		// "All URLs that start like this".
+        // "All URLs that start like this".
         if (this.annotations.getCollections().containsKey("root")) {
             if (this.annotations.getCollections().get("root").keySet()
                     .contains(normd)) {
@@ -165,7 +165,7 @@ public class Annotator {
                         .get(normd), solr, crawl_dates);
             }
         }
-		// "All URLs that match match this host or any subdomains".
+        // "All URLs that match match this host or any subdomains".
         if (this.annotations.getCollections().containsKey("subdomains")) {
             String host;
             String domain = uri.getHost().replaceAll("^www\\.", "");
@@ -182,7 +182,7 @@ public class Annotator {
                 }
             }
         }
-		// "All source_file that match this source_file_matches"
+        // "All source_file that match this source_file_matches"
         if (this.annotations.getCollections()
                 .containsKey("source_file_matches")) {
             Pattern pattern;
@@ -223,69 +223,69 @@ public class Annotator {
                 setUpdateField(solr, SolrFields.ACCESS_TERMS, "RRO");
             }
         }
-	}
+    }
 
-	/**
-	 * Updates a given SolrRecord with collections details from a UriCollection.
-	 * 
-	 * @param collection
-	 * @param solr
-	 */
-	private void updateCollections(UriCollection collection,
-			SolrInputDocument solr, Set<String> crawl_dates) {
+    /**
+     * Updates a given SolrRecord with collections details from a UriCollection.
+     * 
+     * @param collection
+     * @param solr
+     */
+    private void updateCollections(UriCollection collection,
+            SolrInputDocument solr, Set<String> crawl_dates) {
 
-		// Loop over all the dates:
-		for (String dateString : crawl_dates) {
-			Date date;
-			try {
-				date = WARCIndexer.formatter.parse(dateString);
-			} catch (ParseException e) {
-				LOG.error("Could not parse " + dateString);
-				continue;
-			}
+        // Loop over all the dates:
+        for (String dateString : crawl_dates) {
+            Date date;
+            try {
+                date = WARCIndexer.formatter.parse(dateString);
+            } catch (ParseException e) {
+                LOG.error("Could not parse " + dateString);
+                continue;
+            }
 
-			LOG.debug("Using collection: " + collection);
-			// Update the single, main collection
-			if (collection.collection != null
-					&& collection.collection.length() > 0) {
-				if (this.annotations.getCollectionDateRanges().containsKey(
-						collection.collection)
-						&& this.annotations.getCollectionDateRanges()
-								.get(collection.collection)
-								.isInDateRange(date)) {
-					setUpdateField(solr, SolrFields.SOLR_COLLECTION,
-							collection.collection);
-					LOG.debug("Added collection " + collection.collection
-							+ " to "
-							+ solr.getField(SolrFields.SOLR_URL));
-				}
-			}
-			// Iterate over the hierarchical collections
-			if (collection.collections != null
-					&& collection.collections.length > 0) {
-				for (String col : collection.collections) {
-					LOG.debug("Considering adding collection '" + col + "' to "
-							+ solr.getField(SolrFields.SOLR_URL));
-					if (this.annotations.getCollectionDateRanges().containsKey(
-							col)
-							&& this.annotations.getCollectionDateRanges()
-									.get(col).isInDateRange(date)) {
-						setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
-						LOG.debug("Added collection '" + col + "' to "
-								+ solr.getField(SolrFields.SOLR_URL));
-					}
-				}
-			}
-			// Iterate over the subjects
-			if (collection.subject != null && collection.subject.length > 0) {
-				for (String subject : collection.subject) {
-						setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
-						LOG.debug("Added collection '" + subject + "' to "
-								+ solr.getField(SolrFields.SOLR_URL));
-				}
-			}
-		}
-	}
+            LOG.debug("Using collection: " + collection);
+            // Update the single, main collection
+            if (collection.collection != null
+                    && collection.collection.length() > 0) {
+                if (this.annotations.getCollectionDateRanges().containsKey(
+                        collection.collection)
+                        && this.annotations.getCollectionDateRanges()
+                                .get(collection.collection)
+                                .isInDateRange(date)) {
+                    setUpdateField(solr, SolrFields.SOLR_COLLECTION,
+                            collection.collection);
+                    LOG.debug("Added collection " + collection.collection
+                            + " to "
+                            + solr.getField(SolrFields.SOLR_URL));
+                }
+            }
+            // Iterate over the hierarchical collections
+            if (collection.collections != null
+                    && collection.collections.length > 0) {
+                for (String col : collection.collections) {
+                    LOG.debug("Considering adding collection '" + col + "' to "
+                            + solr.getField(SolrFields.SOLR_URL));
+                    if (this.annotations.getCollectionDateRanges().containsKey(
+                            col)
+                            && this.annotations.getCollectionDateRanges()
+                                    .get(col).isInDateRange(date)) {
+                        setUpdateField(solr, SolrFields.SOLR_COLLECTIONS, col);
+                        LOG.debug("Added collection '" + col + "' to "
+                                + solr.getField(SolrFields.SOLR_URL));
+                    }
+                }
+            }
+            // Iterate over the subjects
+            if (collection.subject != null && collection.subject.length > 0) {
+                for (String subject : collection.subject) {
+                        setUpdateField(solr, SolrFields.SOLR_SUBJECT, subject);
+                        LOG.debug("Added collection '" + subject + "' to "
+                                + solr.getField(SolrFields.SOLR_URL));
+                }
+            }
+        }
+    }
 
     private static void setUpdateField(SolrInputDocument doc, String field,
             String value) {
@@ -297,131 +297,131 @@ public class Annotator {
 
 
     private static void setSolrUpdateField(SolrInputDocument doc, String field,
-			String value) {
-		Map<String, String> operation = new HashMap<String, String>();
-		operation.put("set", value);
-		// Check to see if this value is already in:
-		boolean newValue = true;
-		if (doc.getFieldValues(field) != null) {
-			for (Object val : doc.getFieldValues(field)) {
-				@SuppressWarnings("unchecked")
-				Map<String, String> cmap = (Map<String, String>) val;
-				if (cmap.values().contains(value))
-					newValue = false;
-			}
-		}
-		// Add it if it is a new value:
-		if (newValue) {
-			LOG.info("Adding value: " + value + " to field: " + field
-					+ " for URI " + doc.getFieldValue(SolrFields.SOLR_URL));
-			doc.addField(field, operation);
-		} else {
-			LOG.debug("Skipping addition of existing field value: " + value
-					+ " to field: " + field);
-		}
-	}
+            String value) {
+        Map<String, String> operation = new HashMap<String, String>();
+        operation.put("set", value);
+        // Check to see if this value is already in:
+        boolean newValue = true;
+        if (doc.getFieldValues(field) != null) {
+            for (Object val : doc.getFieldValues(field)) {
+                @SuppressWarnings("unchecked")
+                Map<String, String> cmap = (Map<String, String>) val;
+                if (cmap.values().contains(value))
+                    newValue = false;
+            }
+        }
+        // Add it if it is a new value:
+        if (newValue) {
+            LOG.info("Adding value: " + value + " to field: " + field
+                    + " for URI " + doc.getFieldValue(SolrFields.SOLR_URL));
+            doc.addField(field, operation);
+        } else {
+            LOG.debug("Skipping addition of existing field value: " + value
+                    + " to field: " + field);
+        }
+    }
 
-	/**
-	 * Pretty-print each solrDocument in the results to stdout
-	 * 
-	 * @param out
-	 * @param doc
-	 */
-	protected static void prettyPrint(PrintStream out, SolrInputDocument doc) {
-		List<String> sortedFieldNames = new ArrayList<String>(
-				doc.getFieldNames());
-		Collections.sort(sortedFieldNames);
-		out.println();
-		for (String field : sortedFieldNames) {
-			out.println(String.format("\t%s: %s", field,
+    /**
+     * Pretty-print each solrDocument in the results to stdout
+     * 
+     * @param out
+     * @param doc
+     */
+    protected static void prettyPrint(PrintStream out, SolrInputDocument doc) {
+        List<String> sortedFieldNames = new ArrayList<String>(
+                doc.getFieldNames());
+        Collections.sort(sortedFieldNames);
+        out.println();
+        for (String field : sortedFieldNames) {
+            out.println(String.format("\t%s: %s", field,
                     doc.getFieldValues(field)));
-		}
-		out.println();
-	}
+        }
+        out.println();
+    }
 
-	private static void searchAndApplyAnnotations(Annotator anr,
+    private static void searchAndApplyAnnotations(Annotator anr,
             SolrClient solr, SolrQuery parameters)
             throws SolrServerException,
-			URISyntaxException, IOException {
-		QueryResponse response = solr.query(parameters);
-		SolrDocumentList list = response.getResults();
-		for (SolrDocument doc : list) {
-			SolrInputDocument solrInDoc = new SolrInputDocument();
-			solrInDoc.setField(SolrFields.ID, doc.getFieldValue(SolrFields.ID));
-			solrInDoc.setField(SolrFields.CRAWL_DATE,
-					doc.getFieldValue(SolrFields.CRAWL_DATE));
-			solrInDoc.setField(SolrFields.SOLR_URL,
-					doc.getFieldValue(SolrFields.SOLR_URL));
-			String uriString = (String) solrInDoc
-					.getFieldValue(SolrFields.SOLR_URL);
-			URI uri = new URI(uriString);
-			// Update all of those records with the applicable
-			// categories etc.
-			anr.applyAnnotations(uri, solrInDoc);
-			solr.add(solrInDoc);
-		}
-	}
+            URISyntaxException, IOException {
+        QueryResponse response = solr.query(parameters);
+        SolrDocumentList list = response.getResults();
+        for (SolrDocument doc : list) {
+            SolrInputDocument solrInDoc = new SolrInputDocument();
+            solrInDoc.setField(SolrFields.ID, doc.getFieldValue(SolrFields.ID));
+            solrInDoc.setField(SolrFields.CRAWL_DATE,
+                    doc.getFieldValue(SolrFields.CRAWL_DATE));
+            solrInDoc.setField(SolrFields.SOLR_URL,
+                    doc.getFieldValue(SolrFields.SOLR_URL));
+            String uriString = (String) solrInDoc
+                    .getFieldValue(SolrFields.SOLR_URL);
+            URI uri = new URI(uriString);
+            // Update all of those records with the applicable
+            // categories etc.
+            anr.applyAnnotations(uri, solrInDoc);
+            solr.add(solrInDoc);
+        }
+    }
 
     private static void searchAndApplyAnnotations(Annotations ann,
             SurtPrefixSet oaSurts,
-			String solrServer) throws SolrServerException, URISyntaxException,
-			IOException {
-		// Connect to solr:
+            String solrServer) throws SolrServerException, URISyntaxException,
+            IOException {
+        // Connect to solr:
         SolrClient solr = new HttpSolrClient(solrServer);
 
-		// Set up annotator:
+        // Set up annotator:
         Annotator anr = new Annotator(ann, oaSurts);
 
-		// Loop over URL known to ACT:
-		for (String scope : ann.getCollections().keySet()) {
-			if ("resource".equals(scope)) {
+        // Loop over URL known to ACT:
+        for (String scope : ann.getCollections().keySet()) {
+            if ("resource".equals(scope)) {
 
-				// Search for all matching URLs in SOLR:
-				for (String uriKey : ann.getCollections().get(scope).keySet()) {
-					LOG.info("Looking for URL: " + uriKey);
-					SolrQuery parameters = new SolrQuery();
-					parameters.set("q",
-							"url:" + ClientUtils.escapeQueryChars(uriKey));
-					searchAndApplyAnnotations(anr, solr, parameters);
-				}
+                // Search for all matching URLs in SOLR:
+                for (String uriKey : ann.getCollections().get(scope).keySet()) {
+                    LOG.info("Looking for URL: " + uriKey);
+                    SolrQuery parameters = new SolrQuery();
+                    parameters.set("q",
+                            "url:" + ClientUtils.escapeQueryChars(uriKey));
+                    searchAndApplyAnnotations(anr, solr, parameters);
+                }
 
-			} else if ("root".equals(scope)) {
+            } else if ("root".equals(scope)) {
 
-				// Search for all matching URLs in SOLR:
-				for (String uriKey : ann.getCollections().get(scope).keySet()) {
-					LOG.info("Looking for URLs starting with: " + uriKey);
-					SolrQuery parameters = new SolrQuery();
-					parameters
-							.set("q",
-									"url:"
-											+ ClientUtils
-													.escapeQueryChars(uriKey)
-											+ "*");
-					searchAndApplyAnnotations(anr, solr, parameters);
-				}
+                // Search for all matching URLs in SOLR:
+                for (String uriKey : ann.getCollections().get(scope).keySet()) {
+                    LOG.info("Looking for URLs starting with: " + uriKey);
+                    SolrQuery parameters = new SolrQuery();
+                    parameters
+                            .set("q",
+                                    "url:"
+                                            + ClientUtils
+                                                    .escapeQueryChars(uriKey)
+                                            + "*");
+                    searchAndApplyAnnotations(anr, solr, parameters);
+                }
 
-			} else {
-				LOG.warn("Ignoring annotations scoped as: " + scope);
-			}
-		}
+            } else {
+                LOG.warn("Ignoring annotations scoped as: " + scope);
+            }
+        }
 
-		// And commit:
-		solr.commit();
+        // And commit:
+        solr.commit();
 
-	}
+    }
 
-	/**
-	 * @param args
-	 * @throws IOException
-	 * @throws JDOMException
-	 * @throws URISyntaxException
-	 * @throws SolrServerException
-	 */
-	public static void main(String[] args) throws IOException, JDOMException,
-			URISyntaxException, SolrServerException {
-		Annotations ann = Annotations.fromJsonFile(args[0]);
+    /**
+     * @param args
+     * @throws IOException
+     * @throws JDOMException
+     * @throws URISyntaxException
+     * @throws SolrServerException
+     */
+    public static void main(String[] args) throws IOException, JDOMException,
+            URISyntaxException, SolrServerException {
+        Annotations ann = Annotations.fromJsonFile(args[0]);
         SurtPrefixSet oaSurts = Annotator.loadSurtPrefix(args[1]);
         searchAndApplyAnnotations(ann, oaSurts, args[2]);
-	}
+    }
 
 }

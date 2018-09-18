@@ -41,36 +41,36 @@ import org.junit.Test;
  *
  */
 public class TikaExtractorTest {
-	private static Log log = LogFactory.getLog(TikaExtractorTest.class);
+    private static Log log = LogFactory.getLog(TikaExtractorTest.class);
 
-	private TikaExtractor tika;
+    private TikaExtractor tika;
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		tika = new TikaExtractor();
-	}
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        tika = new TikaExtractor();
+    }
 
-	@Test
-	public void testMonaLisa() throws Exception {
-		File ml = new File("src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
-		if (!ml.exists()) {
-			log.error("The Mona Lisa test file '" + ml + "' does not exist");
-			return;
-		}
-		URL url = ml.toURI().toURL();
-		SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
-		tika.extract(ml.getPath(), solr, url.openStream(), url.toString());
-		System.out.println("SOLR " + solr.getSolrDocument().toString());
-		String text = (String) solr.getField(SolrFields.SOLR_EXTRACTED_TEXT)
-				.getValue();
-		assertTrue("Text should contain this string!",
-				text.contains("Mona Lisa"));
-		assertFalse(
-				"Text should NOT contain this string! (implies bad newline handling)",
-				text.contains("encyclopediaMona"));
-	}
+    @Test
+    public void testMonaLisa() throws Exception {
+        File ml = new File("src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
+        if (!ml.exists()) {
+            log.error("The Mona Lisa test file '" + ml + "' does not exist");
+            return;
+        }
+        URL url = ml.toURI().toURL();
+        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
+        tika.extract(ml.getPath(), solr, url.openStream(), url.toString());
+        System.out.println("SOLR " + solr.getSolrDocument().toString());
+        String text = (String) solr.getField(SolrFields.SOLR_EXTRACTED_TEXT)
+                .getValue();
+        assertTrue("Text should contain this string!",
+                text.contains("Mona Lisa"));
+        assertFalse(
+                "Text should NOT contain this string! (implies bad newline handling)",
+                text.contains("encyclopediaMona"));
+    }
 
 }

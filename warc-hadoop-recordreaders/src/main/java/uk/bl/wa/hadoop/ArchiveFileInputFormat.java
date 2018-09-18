@@ -36,13 +36,13 @@ import org.apache.hadoop.mapred.Reporter;
 @SuppressWarnings( { "deprecation", "unchecked", "rawtypes" } )
 public class ArchiveFileInputFormat extends FileInputFormat<LongWritable, WritableArchiveRecord> {
 
-	@Override
-	public RecordReader<LongWritable, WritableArchiveRecord> getRecordReader( InputSplit split, JobConf conf, Reporter reporter ) throws IOException {
-		return new ArchiveFileRecordReader( conf, split );
-	}
+    @Override
+    public RecordReader<LongWritable, WritableArchiveRecord> getRecordReader( InputSplit split, JobConf conf, Reporter reporter ) throws IOException {
+        return new ArchiveFileRecordReader( conf, split );
+    }
 
-	@Override
-	protected boolean isSplitable( FileSystem fs, Path filename ) {
-		return false;
-	}
+    @Override
+    protected boolean isSplitable( FileSystem fs, Path filename ) {
+        return false;
+    }
 }

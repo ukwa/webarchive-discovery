@@ -40,35 +40,35 @@ import uk.bl.wa.solr.SolrRecord;
  *
  */
 public abstract class AbstractPayloadAnalyser {
-	private static Log log = LogFactory.getLog( AbstractPayloadAnalyser.class );
+    private static Log log = LogFactory.getLog( AbstractPayloadAnalyser.class );
 
-	public abstract void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr);
+    public abstract void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr);
 
-	protected class ParseRunner implements Runnable {
-		AbstractParser parser;
-		Metadata metadata;
-		InputStream input;
-		private SolrRecord solr;
+    protected class ParseRunner implements Runnable {
+        AbstractParser parser;
+        Metadata metadata;
+        InputStream input;
+        private SolrRecord solr;
 
-		public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata, SolrRecord solr ) {
-			this.parser = parser;
-			this.metadata = metadata;
-			this.input = tikainput;
-			this.solr = solr;
-		}
+        public ParseRunner( AbstractParser parser, InputStream tikainput, Metadata metadata, SolrRecord solr ) {
+            this.parser = parser;
+            this.metadata = metadata;
+            this.input = tikainput;
+            this.solr = solr;
+        }
 
-		@Override
-		public void run() {
-			try {
-				input.reset();
-				parser.parse( input, null, metadata, null );
-			} catch( Exception e ) {
-				log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
-				// Also record as a Solr PARSE_ERROR
-				solr.addParseException("when parsing with "
-						+ parser.getClass().getName(), e);
-			}
-		}
-	}
-	
+        @Override
+        public void run() {
+            try {
+                input.reset();
+                parser.parse( input, null, metadata, null );
+            } catch( Exception e ) {
+                log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
+                // Also record as a Solr PARSE_ERROR
+                solr.addParseException("when parsing with "
+                        + parser.getClass().getName(), e);
+            }
+        }
+    }
+    
 }

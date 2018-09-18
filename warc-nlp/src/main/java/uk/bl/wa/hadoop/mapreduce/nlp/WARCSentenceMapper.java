@@ -22,56 +22,56 @@ import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCSentenceMapper extends MapReduceBase implements
-		Mapper<Text, WritableArchiveRecord, Text, MDXWritable> {
+        Mapper<Text, WritableArchiveRecord, Text, MDXWritable> {
     private static final Log LOG = LogFactory.getLog(WARCSentenceMapper.class);
 
-	private WARCIndexerMapper wim;
+    private WARCIndexerMapper wim;
 
-	public WARCSentenceMapper() {
-		try {
-			// Re-configure logging:
-			Properties props = new Properties();
-			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (IOException e1) {
-			LOG.error("Failed to load log4j config from properties file.");
-		}
-	}
+    public WARCSentenceMapper() {
+        try {
+            // Re-configure logging:
+            Properties props = new Properties();
+            props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+            PropertyConfigurator.configure(props);
+        } catch (IOException e1) {
+            LOG.error("Failed to load log4j config from properties file.");
+        }
+    }
 
-	@Override
-	public void configure(JobConf job) {
-		if (wim == null) {
-			wim = new WARCIndexerMapper();
-			wim.configure(job);
-		}
-	}
+    @Override
+    public void configure(JobConf job) {
+        if (wim == null) {
+            wim = new WARCIndexerMapper();
+            wim.configure(job);
+        }
+    }
 
-	@Override
-	public void map(Text key, WritableArchiveRecord value,
-			OutputCollector<Text, MDXWritable> output,
-			Reporter reporter) throws IOException {
+    @Override
+    public void map(Text key, WritableArchiveRecord value,
+            OutputCollector<Text, MDXWritable> output,
+            Reporter reporter) throws IOException {
 
-		// Use the main indexing code:
-		WritableSolrRecord wsolr = wim.innerMap(key, value, reporter);
+        // Use the main indexing code:
+        WritableSolrRecord wsolr = wim.innerMap(key, value, reporter);
 
-		// Ignore skipped records, where wsolr will be NULL:
-		if (wsolr != null) {
-			SolrRecord solr = wsolr.getSolrRecord();
+        // Ignore skipped records, where wsolr will be NULL:
+        if (wsolr != null) {
+            SolrRecord solr = wsolr.getSolrRecord();
 
-			// Wrap up the result:
-			MDX mdx = MDX.fromWritableSolrRecord(solr);
-			// Wrap up the key:
-			Text oKey = new Text(mdx.getHash());
-			// Alternative key, based on record type + url + timestamp
-			// Text oKey = new Text(mdx.getUrl() + "\t" + mdx.getTs() + "\t"
-			// + mdx.getRecordType());
+            // Wrap up the result:
+            MDX mdx = MDX.fromWritableSolrRecord(solr);
+            // Wrap up the key:
+            Text oKey = new Text(mdx.getHash());
+            // Alternative key, based on record type + url + timestamp
+            // Text oKey = new Text(mdx.getUrl() + "\t" + mdx.getTs() + "\t"
+            // + mdx.getRecordType());
 
-			// Collect
-			MDXWritable result = new MDXWritable(mdx);
-			output.collect(oKey, result);
-		}
+            // Collect
+            MDXWritable result = new MDXWritable(mdx);
+            output.collect(oKey, result);
+        }
 
-	}
+    }
 
 
 }

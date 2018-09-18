@@ -38,43 +38,43 @@ import org.apache.hadoop.mapred.Reporter;
  * 
  */
 public class WARCRegexReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
-	
-	class MutableInt {
-		int value = 0;
-		public void inc () { ++value; }
-		public int get () { return value; }
-		
-		@Override
-		public String toString() {
-			return Integer.toString(value);
-		}
-		  
-	}
-	
-	@Override
-	public void reduce( Text key, Iterator<Text> iterator, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
-		
-		// Use a simple set to collect only distinct results for this key:
-		Map<String,MutableInt> matches = new HashMap<String,MutableInt>();
-		while( iterator.hasNext() ) {
-			String m = iterator.next().toString();
-			// Get or set up the counter:
-			MutableInt value = matches.get(m);
-			if( value == null ) {
-				value = new MutableInt();
-				matches.put(m, value);
-			}
-			// Increment the counter for this match:
-			value.inc();
-	}
-		
-		// Loop through and collect all distinct matches:
-		for( String match : matches.keySet() ) {
-			// This ignores the count:
-			output.collect( key, new Text( match ) );
-			// This also outputs the count:
-			//output.collect( key, new Text( match + "\t" + matches.get(match).get() ) );
-		}
-		
-	}
+    
+    class MutableInt {
+        int value = 0;
+        public void inc () { ++value; }
+        public int get () { return value; }
+        
+        @Override
+        public String toString() {
+            return Integer.toString(value);
+        }
+          
+    }
+    
+    @Override
+    public void reduce( Text key, Iterator<Text> iterator, OutputCollector<Text, Text> output, Reporter reporter ) throws IOException {
+        
+        // Use a simple set to collect only distinct results for this key:
+        Map<String,MutableInt> matches = new HashMap<String,MutableInt>();
+        while( iterator.hasNext() ) {
+            String m = iterator.next().toString();
+            // Get or set up the counter:
+            MutableInt value = matches.get(m);
+            if( value == null ) {
+                value = new MutableInt();
+                matches.put(m, value);
+            }
+            // Increment the counter for this match:
+            value.inc();
+    }
+        
+        // Loop through and collect all distinct matches:
+        for( String match : matches.keySet() ) {
+            // This ignores the count:
+            output.collect( key, new Text( match ) );
+            // This also outputs the count:
+            //output.collect( key, new Text( match + "\t" + matches.get(match).get() ) );
+        }
+        
+    }
 }

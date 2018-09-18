@@ -86,8 +86,8 @@ import uk.bl.wa.tika.parser.pdf.XMPSchemaPDFA;
  * the document using the empty password that's often used with PDFs.
  */
 public class PDFParser extends AbstractParser {
-	
-	private static Logger log = Logger.getLogger(PDFParser.class);
+    
+    private static Logger log = Logger.getLogger(PDFParser.class);
 
     /** Serial version UID */
     private static final long serialVersionUID = -752276948656079347L;
@@ -170,7 +170,7 @@ public class PDFParser extends AbstractParser {
                               extractAnnotationText, enableAutoSpace,
                               suppressDuplicateOverlappingText, sortByPosition);
         } catch( Exception e ) {
-        	log.error("Exception while parsing PDF: "+e);
+            log.error("Exception while parsing PDF: "+e);
         } finally {
             if (pdfDocument != null) {
                pdfDocument.close();
@@ -212,62 +212,62 @@ public class PDFParser extends AbstractParser {
           }
         }
         // ANJ Extensions:
-		//
+        //
         //
         // Add other data of interest:
-		metadata.set("pdf:version", ""+document.getDocument().getVersion());
-		metadata.set("pdf:numPages", ""+document.getNumberOfPages());
-		//metadata.set("pdf:cryptoMode", ""+getCryptoModeAsString(reader));
-		//metadata.set("pdf:openedWithFullPermissions", ""+reader.isOpenedWithFullPermissions());
-		metadata.set("pdf:encrypted", ""+document.isEncrypted());
-		//metadata.set("pdf:metadataEncrypted", ""+document.isMetadataEncrypted());
-		//metadata.set("pdf:128key", ""+reader.is128Key());
-		//metadata.set("pdf:tampered", ""+reader.isTampered());
+        metadata.set("pdf:version", ""+document.getDocument().getVersion());
+        metadata.set("pdf:numPages", ""+document.getNumberOfPages());
+        //metadata.set("pdf:cryptoMode", ""+getCryptoModeAsString(reader));
+        //metadata.set("pdf:openedWithFullPermissions", ""+reader.isOpenedWithFullPermissions());
+        metadata.set("pdf:encrypted", ""+document.isEncrypted());
+        //metadata.set("pdf:metadataEncrypted", ""+document.isMetadataEncrypted());
+        //metadata.set("pdf:128key", ""+reader.is128Key());
+        //metadata.set("pdf:tampered", ""+reader.isTampered());
         try {
-        	if( document.getDocumentCatalog().getMetadata() != null ) {
+            if( document.getDocumentCatalog().getMetadata() != null ) {
                 XMPMetadata xmp = XMPMetadata.load(document.getDocumentCatalog()
                         .getMetadata().exportXMPMetadata());
-        		// There is a special class for grabbing data in the PDF schema - not sure it will add much here:
-        		// Could parse xmp:CreatorTool and pdf:Producer etc. etc. out of here.
-        		XMPSchemaPDF pdfxmp = xmp.getPDFSchema();
-        		// Added a PDF/A schema class:
-        		xmp.addXMLNSMapping(XMPSchemaPDFA.NAMESPACE, XMPSchemaPDFA.class);
-        		XMPSchemaPDFA pdfaxmp = (XMPSchemaPDFA) xmp.getSchemaByClass(XMPSchemaPDFA.class);
-        		if( pdfaxmp != null ) {
-        			metadata.set("pdfaid:part", pdfaxmp.getPart());
-        			metadata.set("pdfaid:conformance", pdfaxmp.getConformance());
-        			String version = "A-"+pdfaxmp.getPart()+pdfaxmp.getConformance().toLowerCase();
-        			//metadata.set("pdfa:version", version );					
-        			metadata.set("pdf:version", version );					
-        		}
-        		// TODO WARN if this XMP version is inconsistent with document header version?
-        	}
-		} catch (IOException e) {
-			log.error("XMP Parsing failed: "+e);
-			metadata.set("pdf:metadata-xmp-parse-failed", ""+e);
-		}
-		
-		// Attempt to determine Adobe extension level, if present:
+                // There is a special class for grabbing data in the PDF schema - not sure it will add much here:
+                // Could parse xmp:CreatorTool and pdf:Producer etc. etc. out of here.
+                XMPSchemaPDF pdfxmp = xmp.getPDFSchema();
+                // Added a PDF/A schema class:
+                xmp.addXMLNSMapping(XMPSchemaPDFA.NAMESPACE, XMPSchemaPDFA.class);
+                XMPSchemaPDFA pdfaxmp = (XMPSchemaPDFA) xmp.getSchemaByClass(XMPSchemaPDFA.class);
+                if( pdfaxmp != null ) {
+                    metadata.set("pdfaid:part", pdfaxmp.getPart());
+                    metadata.set("pdfaid:conformance", pdfaxmp.getConformance());
+                    String version = "A-"+pdfaxmp.getPart()+pdfaxmp.getConformance().toLowerCase();
+                    //metadata.set("pdfa:version", version );                    
+                    metadata.set("pdf:version", version );                    
+                }
+                // TODO WARN if this XMP version is inconsistent with document header version?
+            }
+        } catch (IOException e) {
+            log.error("XMP Parsing failed: "+e);
+            metadata.set("pdf:metadata-xmp-parse-failed", ""+e);
+        }
+        
+        // Attempt to determine Adobe extension level, if present:
         COSDictionary root = document.getDocumentCatalog().getCOSObject();
-		COSDictionary extensions = (COSDictionary) root.getDictionaryObject(COSName.getPDFName("Extensions") );
-		if( extensions != null ) {
-			for( COSName extName : extensions.keySet() ) {
-				// If it's an Adobe one, interpret it to determine the extension level:
-				if( extName.equals( COSName.getPDFName("ADBE") )) {
-					COSDictionary adobeExt = (COSDictionary) extensions.getDictionaryObject(extName);
-					if( adobeExt != null ){
-						String baseVersion = adobeExt.getNameAsString(COSName.getPDFName("BaseVersion"));
-						int el = adobeExt.getInt(COSName.getPDFName("ExtensionLevel"));
-						metadata.set("pdf:version", baseVersion+" Adobe Extension Level "+el );
-					}
-					// TODO WARN if this embedded version is inconsistent with document header version?
-				} else {
-					// WARN that there is an Extension, but it's not Adobe's, and so is a 'new' format'.
-					metadata.set("pdf:foundNonAdobeExtensionName", extName.getName());
-				}
-			}
-		}
-		// End Of ANJ Extensions.
+        COSDictionary extensions = (COSDictionary) root.getDictionaryObject(COSName.getPDFName("Extensions") );
+        if( extensions != null ) {
+            for( COSName extName : extensions.keySet() ) {
+                // If it's an Adobe one, interpret it to determine the extension level:
+                if( extName.equals( COSName.getPDFName("ADBE") )) {
+                    COSDictionary adobeExt = (COSDictionary) extensions.getDictionaryObject(extName);
+                    if( adobeExt != null ){
+                        String baseVersion = adobeExt.getNameAsString(COSName.getPDFName("BaseVersion"));
+                        int el = adobeExt.getInt(COSName.getPDFName("ExtensionLevel"));
+                        metadata.set("pdf:version", baseVersion+" Adobe Extension Level "+el );
+                    }
+                    // TODO WARN if this embedded version is inconsistent with document header version?
+                } else {
+                    // WARN that there is an Extension, but it's not Adobe's, and so is a 'new' format'.
+                    metadata.set("pdf:foundNonAdobeExtensionName", extName.getName());
+                }
+            }
+        }
+        // End Of ANJ Extensions.
     }
 
     private void addMetadata(Metadata metadata, String name, String value) {
@@ -369,21 +369,21 @@ public class PDFParser extends AbstractParser {
         return sortByPosition;
     }
 
-	public static void main( String[] args ) {
-		try {
-			FileInputStream input = new FileInputStream( new File( "src/test/resources/jap_91055688_japredcross_ss_ue_fnl_12212011.pdf"));//simple-PDFA-1a.pdf" ) );
-			OutputStream output = System.out; //new FileOutputStream( new File( "Z:/part-00001.xml" ) );
+    public static void main( String[] args ) {
+        try {
+            FileInputStream input = new FileInputStream( new File( "src/test/resources/jap_91055688_japredcross_ss_ue_fnl_12212011.pdf"));//simple-PDFA-1a.pdf" ) );
+            OutputStream output = System.out; //new FileOutputStream( new File( "Z:/part-00001.xml" ) );
 
-			Metadata metadata = new Metadata();
-			PDFParser parser = new PDFParser();
-			parser.parse(input, new DefaultHandler() , metadata, new ParseContext() );
-			input.close();
-			
-			for( String key : metadata.names() ) {
-				output.write( (key+" : "+metadata.get(key)+"\n").getBytes( "UTF-8" ) );
-			}
-			output.close();
-		} catch( Exception e ) {
-			e.printStackTrace();
-		}
-	}}
+            Metadata metadata = new Metadata();
+            PDFParser parser = new PDFParser();
+            parser.parse(input, new DefaultHandler() , metadata, new ParseContext() );
+            input.close();
+            
+            for( String key : metadata.names() ) {
+                output.write( (key+" : "+metadata.get(key)+"\n").getBytes( "UTF-8" ) );
+            }
+            output.close();
+        } catch( Exception e ) {
+            e.printStackTrace();
+        }
+    }}

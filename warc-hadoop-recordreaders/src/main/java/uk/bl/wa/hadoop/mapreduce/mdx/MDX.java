@@ -77,7 +77,7 @@ public class MDX extends JSONObject {
         }
     }
 
-	/**
+    /**
      * @param hash
      *            the hash to set
      * @throws JSONException
@@ -103,16 +103,16 @@ public class MDX extends JSONObject {
      * @return
      * @throws JSONException
      */
-	@JsonIgnore
+    @JsonIgnore
     public String getUrlAsSURT() throws JSONException {
         String url = this.getString(URL);
-		try {
-			return SURTTokenizer.exactKey(url);
-		} catch (URIException e) {
-			// Fall back on normal URI:
-			return url;
-		}
-	}
+        try {
+            return SURTTokenizer.exactKey(url);
+        } catch (URIException e) {
+            // Fall back on normal URI:
+            return url;
+        }
+    }
 
     /**
      * @param url

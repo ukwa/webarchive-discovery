@@ -71,66 +71,66 @@ public class WARCIndexerEmbeddedSolrTest {
     private String testWarc = getClass().getClassLoader().getResource(
             "wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz")
             .getPath();
-	//private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc";
-	//private String testWarc = "src/test/resources/variations.warc.gz";
-	//private String testWarc = "src/test/resources/TEST.arc.gz";
-	
-	private EmbeddedSolrServer server;
+    //private String testWarc = "src/test/resources/wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc";
+    //private String testWarc = "src/test/resources/variations.warc.gz";
+    //private String testWarc = "src/test/resources/TEST.arc.gz";
+    
+    private EmbeddedSolrServer server;
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		
-		// Note that the following property could be set through JVM level arguments too
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        
+        // Note that the following property could be set through JVM level arguments too
         String solrXmlPath = getClass().getClassLoader()
                 .getResource("solr/solr.xml").getPath();
         System.setProperty("solr.solr.home", new File(solrXmlPath).getParent());
-		System.setProperty("solr.data.dir", "target/solr-test-home");
-		System.setProperty("solr.lock.type", "native");
-		System.out.println("Loading container...");
-		CoreContainer coreContainer = new CoreContainer();
-		coreContainer.load();
-		System.out.println("Setting up embedded server...");
-		server = new EmbeddedSolrServer(coreContainer, "discovery");
-		// Remove any items from previous executions:
-		server.deleteByQuery("*:*");
-	}
+        System.setProperty("solr.data.dir", "target/solr-test-home");
+        System.setProperty("solr.lock.type", "native");
+        System.out.println("Loading container...");
+        CoreContainer coreContainer = new CoreContainer();
+        coreContainer.load();
+        System.out.println("Setting up embedded server...");
+        server = new EmbeddedSolrServer(coreContainer, "discovery");
+        // Remove any items from previous executions:
+        server.deleteByQuery("*:*");
+    }
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@After
-	public void tearDown() throws Exception {
-		server.shutdown();
-	}
+    /**
+     * @throws java.lang.Exception
+     */
+    @After
+    public void tearDown() throws Exception {
+        server.shutdown();
+    }
 
-	/**
-	 * 
-	 * @throws SolrServerException
-	 * @throws IOException
-	 * @throws NoSuchAlgorithmException
-	 * @throws TransformerFactoryConfigurationError
-	 * @throws TransformerException
-	 * @throws ResourceNotAvailableException 
-	 */
-	@Test
-	public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, ResourceNotAvailableException {
-		// Fire up a SOLR:
-		String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
-		SolrInputDocument document = new SolrInputDocument();
+    /**
+     * 
+     * @throws SolrServerException
+     * @throws IOException
+     * @throws NoSuchAlgorithmException
+     * @throws TransformerFactoryConfigurationError
+     * @throws TransformerException
+     * @throws ResourceNotAvailableException 
+     */
+    @Test
+    public void testEmbeddedServer() throws SolrServerException, IOException, NoSuchAlgorithmException, TransformerFactoryConfigurationError, TransformerException, ResourceNotAvailableException {
+        // Fire up a SOLR:
+        String url = "http://www.lafromagerie.co.uk/cheese-room/?milk=buffalo&amp%3Bamp%3Bamp%3Bamp%3Borigin=wales&amp%3Bamp%3Bamp%3Borigin=switzerland&amp%3Bamp%3Borigin=germany&amp%3Bstyle=semi-hard&style=blue";
+        SolrInputDocument document = new SolrInputDocument();
         document.addField("id", "1");
-		document.addField("title", "my title");
+        document.addField("title", "my title");
         document.addField( "url", url );
-		document.addField("source_file", "source_file");
+        document.addField("source_file", "source_file");
 
         System.out.println("Adding document: "+document);
         server.add(document);
         server.commit();
         
         System.out.println("Querying for document...");
-		SolrParams params = new SolrQuery("title:title");
+        SolrParams params = new SolrQuery("title:title");
         QueryResponse response = server.query(params);
         assertEquals(1L, response.getResults().getNumFound());
         assertEquals("1", response.getResults().get(0).get("id"));
@@ -141,37 +141,37 @@ public class WARCIndexerEmbeddedSolrTest {
         assertEquals(url, response.getResults().get(0).get("url"));
         
         //  Now generate some Solr documents from WARCs:
-		List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
+        List<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
 
-		// Fire up the indexer:
-		WARCIndexer windex = new WARCIndexer();
+        // Fire up the indexer:
+        WARCIndexer windex = new WARCIndexer();
         // Add the annotator:
         Annotations annotations = Annotations
                 .fromJsonFile(AnnotationsTest.ML_ANNOTATIONS_PATH);
         SurtPrefixSet oaSurts = Annotator
                 .loadSurtPrefix(AnnotationsTest.ML_OASURTS_PATH);
         windex.setAnnotations(annotations, oaSurts);
-		// Prevent the indexer from attempting to query Solr:
-		windex.setCheckSolrForDuplicates(false);
-		
-		File inFile = new File(testWarc);
-		ArchiveReader reader = ArchiveReaderFactory.get(inFile);
-		Iterator<ArchiveRecord> ir = reader.iterator();
-		while( ir.hasNext() ) {
-			ArchiveRecord rec = ir.next();
-			SolrRecord doc = windex.extract(inFile.getName(), rec);
-			if( doc != null ) {
-				//System.out.println(doc.toXml());
-				//break;
-				docs.add(doc.getSolrDocument());
-			} else {
-				System.out.println("Got a NULL document for " + rec.getHeader().getMimetype() + ": "
-								   + Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl()));
-			}
-			//System.out.println(" ---- ---- ");
-		}
-		System.out.println("Added "+docs.size()+" docs.");
-		// Check the read worked:
+        // Prevent the indexer from attempting to query Solr:
+        windex.setCheckSolrForDuplicates(false);
+        
+        File inFile = new File(testWarc);
+        ArchiveReader reader = ArchiveReaderFactory.get(inFile);
+        Iterator<ArchiveRecord> ir = reader.iterator();
+        while( ir.hasNext() ) {
+            ArchiveRecord rec = ir.next();
+            SolrRecord doc = windex.extract(inFile.getName(), rec);
+            if( doc != null ) {
+                //System.out.println(doc.toXml());
+                //break;
+                docs.add(doc.getSolrDocument());
+            } else {
+                System.out.println("Got a NULL document for " + rec.getHeader().getMimetype() + ": "
+                                   + Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl()));
+            }
+            //System.out.println(" ---- ---- ");
+        }
+        System.out.println("Added "+docs.size()+" docs.");
+        // Check the read worked:
         assertEquals(39L, docs.size());
 
         server.add(docs);
@@ -182,12 +182,12 @@ public class WARCIndexerEmbeddedSolrTest {
         //params = new SolrQuery("generator:*");
         response = server.query(params);
         for( SolrDocument result : response.getResults() ) {
-        	for( String f : result.getFieldNames() ) {
-        		System.out.println(f + " -> " + result.get(f));
-        	}
+            for( String f : result.getFieldNames() ) {
+                System.out.println(f + " -> " + result.get(f));
+            }
         }
         assertEquals(21L, response.getResults().getNumFound());
 
-	}
+    }
 
 }

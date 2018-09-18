@@ -42,36 +42,36 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 @SuppressWarnings( "deprecation" )
 public class OutlinkExtractor extends Configured implements Tool {
 
-	public int run( String[] args ) throws IOException {
-		JobConf conf = new JobConf( getConf(), OutlinkExtractor.class );
+    public int run( String[] args ) throws IOException {
+        JobConf conf = new JobConf( getConf(), OutlinkExtractor.class );
 
-		String line = null;
-		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
-		while( ( line = br.readLine() ) != null ) {
-			FileInputFormat.addInputPath( conf, new Path( line ) );
-		}
-		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
+        String line = null;
+        BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
+        while( ( line = br.readLine() ) != null ) {
+            FileInputFormat.addInputPath( conf, new Path( line ) );
+        }
+        FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
 
-		conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
-		conf.setInputFormat( ArchiveFileInputFormat.class );
-		conf.setMapperClass( OutlinkExtractorMapper.class );
-		conf.setReducerClass( FrequencyCountingReducer.class );
-		conf.setOutputFormat( TextOutputFormat.class );
+        conf.setJobName( args[ 0 ] + "_" + System.currentTimeMillis() );
+        conf.setInputFormat( ArchiveFileInputFormat.class );
+        conf.setMapperClass( OutlinkExtractorMapper.class );
+        conf.setReducerClass( FrequencyCountingReducer.class );
+        conf.setOutputFormat( TextOutputFormat.class );
 
-		conf.setOutputKeyClass( Text.class );
-		conf.setOutputValueClass( Text.class );
-//		JobClient.runJob( conf );
-		new JobClient( conf ).submitJob( conf );
-		return 0;
-	}
+        conf.setOutputKeyClass( Text.class );
+        conf.setOutputValueClass( Text.class );
+//        JobClient.runJob( conf );
+        new JobClient( conf ).submitJob( conf );
+        return 0;
+    }
 
-	public static void main( String[] args ) throws Exception {
-		if( args.length != 2 ) {
-			System.out.println( "Need input file list and output dir!" );
-			System.exit( 1 );
+    public static void main( String[] args ) throws Exception {
+        if( args.length != 2 ) {
+            System.out.println( "Need input file list and output dir!" );
+            System.exit( 1 );
 
-		}
-		int ret = ToolRunner.run( new OutlinkExtractor(), args );
-		System.exit( ret );
-	}
+        }
+        int ret = ToolRunner.run( new OutlinkExtractor(), args );
+        System.exit( ret );
+    }
 }

@@ -182,13 +182,13 @@ public class WARCIndexerTest {
         this.testFilterBehaviourWithConfig(config, 32);
     }
 
-	/* ------------------------------------------------------------ */
-	
-	/*
-	 * Internal implementations of filter test core methods.
-	 */
-	
-	/* ------------------------------------------------------------ */
+    /* ------------------------------------------------------------ */
+    
+    /*
+     * Internal implementations of filter test core methods.
+     */
+    
+    /* ------------------------------------------------------------ */
 
     private void testFilterBehaviour(String path, Object newValue, int expectedNullCount) throws MalformedURLException, IOException, NoSuchAlgorithmException {
         // Override the config:

@@ -42,45 +42,45 @@ import org.json.JSONException;
  */
 public class MDXSeqIterator implements Iterator<MDX> {
 
-	private Reader reader;
-	private Text key;
-	private Text value;
-	private boolean hasNext;
+    private Reader reader;
+    private Text key;
+    private Text value;
+    private boolean hasNext;
 
-	public MDXSeqIterator(File seq) throws IOException,
-			InstantiationException, IllegalAccessException {
-		Configuration config = new Configuration();
-		Path path = new Path(seq.getAbsolutePath());
-		reader = new SequenceFile.Reader(FileSystem.get(config), path, config);
-		key = (Text) reader.getKeyClass().newInstance();
-		value = (Text) reader.getValueClass().newInstance();
-		// Queue up:
-		hasNext = reader.next(key, value);
-	}
+    public MDXSeqIterator(File seq) throws IOException,
+            InstantiationException, IllegalAccessException {
+        Configuration config = new Configuration();
+        Path path = new Path(seq.getAbsolutePath());
+        reader = new SequenceFile.Reader(FileSystem.get(config), path, config);
+        key = (Text) reader.getKeyClass().newInstance();
+        value = (Text) reader.getValueClass().newInstance();
+        // Queue up:
+        hasNext = reader.next(key, value);
+    }
 
-	@Override
-	public boolean hasNext() {
-		return hasNext;
-	}
+    @Override
+    public boolean hasNext() {
+        return hasNext;
+    }
 
-	@Override
-	public MDX next() {
+    @Override
+    public MDX next() {
         MDX mdx;
         try {
             mdx = new MDX(value.toString());
         } catch (JSONException e1) {
             mdx = null;
         }
-		try {
-			hasNext = reader.next(key, value);
-		} catch (IOException e) {
-			hasNext = false;
-		}
-		return mdx;
-	}
+        try {
+            hasNext = reader.next(key, value);
+        } catch (IOException e) {
+            hasNext = false;
+        }
+        return mdx;
+    }
 
-	@Override
-	public void remove() {
-	}
+    @Override
+    public void remove() {
+    }
 
 }

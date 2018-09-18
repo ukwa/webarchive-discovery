@@ -50,7 +50,7 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 @SuppressWarnings({ "unchecked", "deprecation" })
 public class PersistLogMapper extends MapReduceBase implements
-	Mapper<Text, WritableArchiveRecord, Text, Text> {
+    Mapper<Text, WritableArchiveRecord, Text, Text> {
     private static final Log LOGGER = LogFactory.getLog(PersistLogMapper.class);
 
     ArchiveRecordHeader responseHeader = null;
@@ -64,89 +64,89 @@ public class PersistLogMapper extends MapReduceBase implements
 
     @Override
     public void map(Text key, WritableArchiveRecord value,
-	    OutputCollector<Text, Text> output, Reporter reporter)
-	    throws IOException {
-	ArchiveRecord record = value.getRecord();
-	String type = (String) record.getHeader().getHeaderValue(
-		HEADER_KEY_TYPE);
-	try {
-	    if (type.equals(WARCRecordType.response.toString())
-		    || type.equals(WARCRecordType.revisit.toString())) {
-		responseHeader = record.getHeader();
-		latestFetch = new HashMap<String, Object>();
-		if (responseHeader.getUrl().startsWith("http")) {
-		    String statusLine = HttpParser.readLine(record, "UTF-8");
-		    if (statusLine != null && statusLine.startsWith("HTTP")) {
-			int status = Integer
-				.parseInt(statusLine.split("\\s+")[1].trim());
-			latestFetch.put(A_STATUS, status);
-		    }
-		}
-	    } else {
-		if (type.equals(WARCRecordType.metadata.toString())) {
-		    // We MUST have hit a response/revisit which matches this
-		    // metadata record.
-		    if (responseHeader == null
-			    || !record.getHeader().getUrl()
-				    .equals(responseHeader.getUrl())
-			    || latestFetch == null || latestFetch.size() == 0) {
-			LOGGER.warn("Found metadata:"
-				+ record.getHeader().getUrl()
-				+ " without response.");
-			return;
-		    }
-		    // Store the key:value pairs...
-		    map = new HashMap<String, String>();
-		    input = new BufferedReader(new InputStreamReader(
-			    value.getPayloadAsStream()));
-		    while ((line = input.readLine()) != null) {
-			data = line.split(": ", 2);
-			if (data != null && data.length == 2)
-			    map.put(data[0].toLowerCase(), data[1]);
-		    }
+        OutputCollector<Text, Text> output, Reporter reporter)
+        throws IOException {
+    ArchiveRecord record = value.getRecord();
+    String type = (String) record.getHeader().getHeaderValue(
+        HEADER_KEY_TYPE);
+    try {
+        if (type.equals(WARCRecordType.response.toString())
+            || type.equals(WARCRecordType.revisit.toString())) {
+        responseHeader = record.getHeader();
+        latestFetch = new HashMap<String, Object>();
+        if (responseHeader.getUrl().startsWith("http")) {
+            String statusLine = HttpParser.readLine(record, "UTF-8");
+            if (statusLine != null && statusLine.startsWith("HTTP")) {
+            int status = Integer
+                .parseInt(statusLine.split("\\s+")[1].trim());
+            latestFetch.put(A_STATUS, status);
+            }
+        }
+        } else {
+        if (type.equals(WARCRecordType.metadata.toString())) {
+            // We MUST have hit a response/revisit which matches this
+            // metadata record.
+            if (responseHeader == null
+                || !record.getHeader().getUrl()
+                    .equals(responseHeader.getUrl())
+                || latestFetch == null || latestFetch.size() == 0) {
+            LOGGER.warn("Found metadata:"
+                + record.getHeader().getUrl()
+                + " without response.");
+            return;
+            }
+            // Store the key:value pairs...
+            map = new HashMap<String, String>();
+            input = new BufferedReader(new InputStreamReader(
+                value.getPayloadAsStream()));
+            while ((line = input.readLine()) != null) {
+            data = line.split(": ", 2);
+            if (data != null && data.length == 2)
+                map.put(data[0].toLowerCase(), data[1]);
+            }
 
-		    UURI uuri = UURIFactory
-			    .getInstance(responseHeader.getUrl());
-		    String pathFromSeed = map.get("hopsFromSeed");
-		    UURI via = null;
-		    if (map.get("via") != null)
-			via = UURIFactory.getInstance(map.get("via"));
-		    LinkContext viaContext = LinkContext.NAVLINK_MISC;
-		    curi = new CrawlURI(uuri, pathFromSeed, via, viaContext);
+            UURI uuri = UURIFactory
+                .getInstance(responseHeader.getUrl());
+            String pathFromSeed = map.get("hopsFromSeed");
+            UURI via = null;
+            if (map.get("via") != null)
+            via = UURIFactory.getInstance(map.get("via"));
+            LinkContext viaContext = LinkContext.NAVLINK_MISC;
+            curi = new CrawlURI(uuri, pathFromSeed, via, viaContext);
 
-		    curi.addPersistentDataMapKey(A_FETCH_HISTORY);
+            curi.addPersistentDataMapKey(A_FETCH_HISTORY);
 
-		    Date date = format.parse(responseHeader.getDate());
-		    latestFetch.put(A_FETCH_BEGAN_TIME, date.getTime());
-		    latestFetch.put(A_CONTENT_DIGEST, responseHeader
-			    .getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST));
-		    latestFetch.put(A_WRITE_TAG,
-			    responseHeader.getReaderIdentifier());
-		    latestFetch.put(A_REFERENCE_LENGTH,
-			    responseHeader.getLength());
-		    if (map.get(A_ETAG_HEADER) != null)
-			latestFetch.put(A_ETAG_HEADER, map.get(A_ETAG_HEADER));
-		    if (map.get(A_LAST_MODIFIED_HEADER) != null)
-			latestFetch.put(A_LAST_MODIFIED_HEADER,
-				map.get(A_LAST_MODIFIED_HEADER));
+            Date date = format.parse(responseHeader.getDate());
+            latestFetch.put(A_FETCH_BEGAN_TIME, date.getTime());
+            latestFetch.put(A_CONTENT_DIGEST, responseHeader
+                .getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST));
+            latestFetch.put(A_WRITE_TAG,
+                responseHeader.getReaderIdentifier());
+            latestFetch.put(A_REFERENCE_LENGTH,
+                responseHeader.getLength());
+            if (map.get(A_ETAG_HEADER) != null)
+            latestFetch.put(A_ETAG_HEADER, map.get(A_ETAG_HEADER));
+            if (map.get(A_LAST_MODIFIED_HEADER) != null)
+            latestFetch.put(A_LAST_MODIFIED_HEADER,
+                map.get(A_LAST_MODIFIED_HEADER));
 
-		    HashMap<String, Object>[] history = new HashMap[] { latestFetch };
-		    curi.getData().put(A_FETCH_HISTORY, history);
+            HashMap<String, Object>[] history = new HashMap[] { latestFetch };
+            curi.getData().put(A_FETCH_HISTORY, history);
 
-		    String surt = SURT.fromURI(curi.getUURI().getEscapedURI(), true);
-		    String persist = new String(
-			    Base64.encodeBase64(SerializationUtils
-				    .serialize((Serializable) curi
-					    .getPersistentDataMap())));
-		    output.collect(new Text(surt), new Text(surt + " "
-			    + persist));
+            String surt = SURT.fromURI(curi.getUURI().getEscapedURI(), true);
+            String persist = new String(
+                Base64.encodeBase64(SerializationUtils
+                    .serialize((Serializable) curi
+                        .getPersistentDataMap())));
+            output.collect(new Text(surt), new Text(surt + " "
+                + persist));
 
-		    responseHeader = null;
-		    latestFetch = null;
-		}
-	    }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+            responseHeader = null;
+            latestFetch = null;
+        }
+        }
+    } catch (Exception e) {
+        e.printStackTrace();
+    }
     }
 }

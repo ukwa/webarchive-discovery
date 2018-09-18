@@ -61,19 +61,19 @@ import org.apache.tika.parser.ParseContext;
  *
  */
 public class OLE2Parser extends AbstractParser {
-	
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+    
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        // TODO Auto-generated method stub
+        return null;
+    }
 
 
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-	    
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        
         HWPFDocument doc = new HWPFDocument (stream);
         System.out.println("ApplicationName: "+doc.getSummaryInformation().getApplicationName());
         System.out.println("OSVersion: "+doc.getSummaryInformation().getOSVersion());
@@ -110,10 +110,10 @@ public class OLE2Parser extends AbstractParser {
         DirectoryEntry root = fs.getRoot();
         
         dump(root);
-	    
-	}
+        
+    }
 
-	
+    
     public static void parseCompObj(InputStream file) {
         Collector collector = new Collector();
         POIFSReader poifsReader = new POIFSReader();

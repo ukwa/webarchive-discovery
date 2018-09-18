@@ -53,226 +53,226 @@ import uk.bl.wa.util.Normalisation;
 
 public class HtmlFeatureParser extends AbstractParser {
 
-	/** */
-	private static final long serialVersionUID = 1631417895901342814L;
+    /** */
+    private static final long serialVersionUID = 1631417895901342814L;
 
-	private static Log log = LogFactory.getLog(HtmlFeatureParser.class);
-	
+    private static Log log = LogFactory.getLog(HtmlFeatureParser.class);
+    
     private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
-            		MediaType.text("html"),
+                    MediaType.text("html"),
                   MediaType.application("xhtml")
             )));
 
-	// The parser to use, preferring the XML variation as it does not 'fix' the
-	// mark-up.
-	private Parser parser = Parser.xmlParser();
-	// Max errors to returm:
-	private int max_errors;
+    // The parser to use, preferring the XML variation as it does not 'fix' the
+    // mark-up.
+    private Parser parser = Parser.xmlParser();
+    // Max errors to returm:
+    private int max_errors;
     private final boolean normaliseLinks;
     private boolean extractImageLinks=false;
     
-	public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
+    public static final String ORIGINAL_PUB_DATE = "OriginalPublicationDate";
     // Explicit property to get faster link handling as it allows for set with multiple values (same as LINKS?)
     public static final Property LINK_LIST = Property.internalTextBag("LinkList");
-	public static final Property LINKS = Property.internalTextBag("LINK-LIST");
-	public static final String FIRST_PARAGRAPH = "FirstParagraph";
-	public static final Property IMAGE_LINKS = Property.internalTextBag("ImageLinks");
-	public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
-	public static final Property NUM_PARSE_ERRORS = Property
-			.internalInteger("Html-Parse-Error-Count");
-	public static final int DEFAULT_MAX_PARSE_ERRORS = 1000;
+    public static final Property LINKS = Property.internalTextBag("LINK-LIST");
+    public static final String FIRST_PARAGRAPH = "FirstParagraph";
+    public static final Property IMAGE_LINKS = Property.internalTextBag("ImageLinks");
+    public static final Property DISTINCT_ELEMENTS = Property.internalTextBag("DISTINCT-ELEMENTS");
+    public static final Property NUM_PARSE_ERRORS = Property
+            .internalInteger("Html-Parse-Error-Count");
+    public static final int DEFAULT_MAX_PARSE_ERRORS = 1000;
 
     // Setting this to true also adds the field url_norm to the Solr document in WARCIndexer
     public static final String CONF_LINKS_NORMALISE = "warc.index.extract.linked.normalise";
     public static final String CONF_LINKS_EXTRACT_IMAGE_LINKS = "warc.index.extract.linked.images";
     public static final boolean DEFAULT_LINKS_NORMALISE = false;
 
-	/**
-	 * 
-	 */
+    /**
+     * 
+     */
     public HtmlFeatureParser() {
         this(ConfigFactory.empty());
-   	}
+       }
     public HtmlFeatureParser(Config conf) {
       normaliseLinks = conf.hasPath(CONF_LINKS_NORMALISE) ?
                    conf.getBoolean(CONF_LINKS_NORMALISE) :
                    DEFAULT_LINKS_NORMALISE;
-   		this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
+           this.setMaxParseErrors(DEFAULT_MAX_PARSE_ERRORS);
    
-   		
-   	   extractImageLinks = conf.hasPath(CONF_LINKS_EXTRACT_IMAGE_LINKS) ?
+           
+          extractImageLinks = conf.hasPath(CONF_LINKS_EXTRACT_IMAGE_LINKS) ?
             conf.getBoolean(CONF_LINKS_EXTRACT_IMAGE_LINKS) :
             false;
-   		
+           
     }
 
-	/**
-	 * 
-	 * @param max_errors
-	 */
-	public void setMaxParseErrors(int max_errors) {
-		this.max_errors = max_errors;
-		parser.setTrackErrors(max_errors);
-	}
+    /**
+     * 
+     * @param max_errors
+     */
+    public void setMaxParseErrors(int max_errors) {
+        this.max_errors = max_errors;
+        parser.setTrackErrors(max_errors);
+    }
 
-	/**
-	 * 
-	 * @return
-	 */
-	public int getMaxParseErrors() {
-		return this.max_errors;
-	}
-	
-	/**
-	 * 
-	 * @return
-	 */
-	public List<ParseError> getParseErrors() {
-		return this.parser.getErrors();
-	}
+    /**
+     * 
+     * @return
+     */
+    public int getMaxParseErrors() {
+        return this.max_errors;
+    }
+    
+    /**
+     * 
+     * @return
+     */
+    public List<ParseError> getParseErrors() {
+        return this.parser.getErrors();
+    }
 
-	/**
-	 * 
-	 */
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		return SUPPORTED_TYPES;
-	}
+    /**
+     * 
+     */
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
 
-	/**
-	 * 
-	 */
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
+    /**
+     * 
+     */
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
         final long start = System.nanoTime();
-		// Pick up the URL:
-		String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
-		
-		// Parse it using JSoup
-		Document doc = null;
-		try {
-			doc = Jsoup.parse(stream, null, url, parser);
-		} catch (java.nio.charset.IllegalCharsetNameException e ) {
-			log.warn("Jsoup parse had to assume UTF-8: "+e);
-			doc = Jsoup.parse(stream, "UTF-8", url );
-		} catch( Exception e ) {
-			log.error("Jsoup parse failed: "+e);
-		} finally {
-			if( doc == null ) return;
-		}
+        // Pick up the URL:
+        String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
+        
+        // Parse it using JSoup
+        Document doc = null;
+        try {
+            doc = Jsoup.parse(stream, null, url, parser);
+        } catch (java.nio.charset.IllegalCharsetNameException e ) {
+            log.warn("Jsoup parse had to assume UTF-8: "+e);
+            doc = Jsoup.parse(stream, "UTF-8", url );
+        } catch( Exception e ) {
+            log.error("Jsoup parse failed: "+e);
+        } finally {
+            if( doc == null ) return;
+        }
         Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#jsoupparse", start);
 
         final long nonJsoupStart = System.nanoTime();
-		// Record the number of errors found:
-		if (parser.getErrors() != null)
-			metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
+        // Record the number of errors found:
+        if (parser.getErrors() != null)
+            metadata.set(NUM_PARSE_ERRORS, parser.getErrors().size());
 
-		// Get the links (no image links):
-		Set<String> links = this.extractLinks(doc);
-		if( links != null && links.size() > 0 ) {
-			metadata.set(LINK_LIST, links.toArray(new String[links.size()]));
+        // Get the links (no image links):
+        Set<String> links = this.extractLinks(doc);
+        if( links != null && links.size() > 0 ) {
+            metadata.set(LINK_LIST, links.toArray(new String[links.size()]));
         }
-		
-		//get the image links
-		if (extractImageLinks){
-		  Set<String> imageLinks = this.extractImageLinks(doc);
+        
+        //get the image links
+        if (extractImageLinks){
+          Set<String> imageLinks = this.extractImageLinks(doc);
           if( imageLinks  != null && imageLinks .size() > 0 ) {
              metadata.set(IMAGE_LINKS, imageLinks.toArray(new String[imageLinks.size()]));
           }
-		}
-		
-		// Get the publication date, from BBC pages:
-		for( Element meta : doc.select("meta[name=OriginalPublicationDate]") ) {
-			metadata.set(ORIGINAL_PUB_DATE, meta.attr("content"));
-			//log.debug(ORIGINAL_PUB_DATE + ": " + meta.attr("content"));
-		}
-		
-		// Grab the first paragraph with text, and extract the text:
-		for( Element p : doc.select("p") )  {
-			String pt = p.text();
-			if( pt != null ) {
-				pt = pt.trim();
-				if( pt.length() > 0 ) {
-					metadata.set(FIRST_PARAGRAPH, p.text() );
-					//log.debug(FIRST_PARAGRAPH + ": " +p.text() );
-					break;
-				}
-			}
-		}
-		
-		// Grab the list of distinct elements used in the page:
-		Set<String> de = new HashSet<String>();
-		for( Element e : doc.select("*") ) {
-			// ELEMENT_NAME matching to weed out the worst false positives caused by JavaScript
-			// This handles cases such as '<script> if (3<a) console.log('something');' where 'a' would have been
-			// seen as a tag, but does not handle cases such as '<script> if ( 3<a ) console.log('something');' where
-			// the a is still seen as a tag because it is followed by a space
-			if( !"#root".equals(e.tag().getName()) && ELEMENT_NAME.matcher(e.tag().getName()).matches() ) {
-				de.add(StringUtils.left(e.tag().getName().toLowerCase(Locale.ENGLISH), 100));
-			}
-		}
-		// For some elements, dig deeper and record attributes too:
-		for (Element e : doc.select("link")) {
-			de.add("link/@rel=" + e.attr("rel"));
-		}
-		// Store them:
-		metadata.set(DISTINCT_ELEMENTS, de.toArray(new String[] {}));
-		
-		// Licence field, following:
-		// http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#link-type-license
-		for( Element a : doc.select("a[rel=license]") )  {
-			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
-		}
-		for( Element a : doc.select("link[rel=license]") )  {
-			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
-		}
-		for( Element a : doc.select("area[rel=license]") )  {
-			metadata.add( Metadata.LICENSE_URL, a.attr("href") );
-		}
+        }
+        
+        // Get the publication date, from BBC pages:
+        for( Element meta : doc.select("meta[name=OriginalPublicationDate]") ) {
+            metadata.set(ORIGINAL_PUB_DATE, meta.attr("content"));
+            //log.debug(ORIGINAL_PUB_DATE + ": " + meta.attr("content"));
+        }
+        
+        // Grab the first paragraph with text, and extract the text:
+        for( Element p : doc.select("p") )  {
+            String pt = p.text();
+            if( pt != null ) {
+                pt = pt.trim();
+                if( pt.length() > 0 ) {
+                    metadata.set(FIRST_PARAGRAPH, p.text() );
+                    //log.debug(FIRST_PARAGRAPH + ": " +p.text() );
+                    break;
+                }
+            }
+        }
+        
+        // Grab the list of distinct elements used in the page:
+        Set<String> de = new HashSet<String>();
+        for( Element e : doc.select("*") ) {
+            // ELEMENT_NAME matching to weed out the worst false positives caused by JavaScript
+            // This handles cases such as '<script> if (3<a) console.log('something');' where 'a' would have been
+            // seen as a tag, but does not handle cases such as '<script> if ( 3<a ) console.log('something');' where
+            // the a is still seen as a tag because it is followed by a space
+            if( !"#root".equals(e.tag().getName()) && ELEMENT_NAME.matcher(e.tag().getName()).matches() ) {
+                de.add(StringUtils.left(e.tag().getName().toLowerCase(Locale.ENGLISH), 100));
+            }
+        }
+        // For some elements, dig deeper and record attributes too:
+        for (Element e : doc.select("link")) {
+            de.add("link/@rel=" + e.attr("rel"));
+        }
+        // Store them:
+        metadata.set(DISTINCT_ELEMENTS, de.toArray(new String[] {}));
+        
+        // Licence field, following:
+        // http://www.whatwg.org/specs/web-apps/current-work/multipage/links.html#link-type-license
+        for( Element a : doc.select("a[rel=license]") )  {
+            metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+        }
+        for( Element a : doc.select("link[rel=license]") )  {
+            metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+        }
+        for( Element a : doc.select("area[rel=license]") )  {
+            metadata.add( Metadata.LICENSE_URL, a.attr("href") );
+        }
         Instrument.timeRel("HTMLAnalyzer.analyze#parser", "HtmlFeatureParser.parse#featureextract", nonJsoupStart);
-	}
+    }
 
-	// https://www.w3.org/TR/html/syntax.html#tag-name
-	private final Pattern ELEMENT_NAME = Pattern.compile("[a-zA-Z0-9]+");
+    // https://www.w3.org/TR/html/syntax.html#tag-name
+    private final Pattern ELEMENT_NAME = Pattern.compile("[a-zA-Z0-9]+");
 
-	/**
-	 * Use a tolerant parser to extract all of the absolute a href links from a document.
-	 * 
-	 * Does not extract other links, e.g. stylesheets, etc. etc. Image extracting in another field
-	 * 
-	 * @param input The InputStream
-	 * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
-	 * @param baseUri base URI for the page, for resolving relative links. e.g. "http://www.example.com/"
-	 * @return
-	 * @throws java.io.IOException
-	 */
-	private Set<String> extractLinks( Document doc) throws IOException {
-		Set<String> linkset = new HashSet<String>();
-		
-		// All a with href
-		for( Element link : doc.select("a[href]") ) {
-			linkset.add( normaliseLink(link.attr("abs:href")));
-		}
-		
+    /**
+     * Use a tolerant parser to extract all of the absolute a href links from a document.
+     * 
+     * Does not extract other links, e.g. stylesheets, etc. etc. Image extracting in another field
+     * 
+     * @param input The InputStream
+     * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
+     * @param baseUri base URI for the page, for resolving relative links. e.g. "http://www.example.com/"
+     * @return
+     * @throws java.io.IOException
+     */
+    private Set<String> extractLinks( Document doc) throws IOException {
+        Set<String> linkset = new HashSet<String>();
+        
+        // All a with href
+        for( Element link : doc.select("a[href]") ) {
+            linkset.add( normaliseLink(link.attr("abs:href")));
+        }
+        
 
-		return linkset;
-	}
-	
-	   private Set<String> extractImageLinks( Document doc) throws IOException {
-	        Set<String> linkset = new HashSet<String>();	        	      	      	      
-	            for( Element link : doc.select("img[src]") ) {
-	                linkset.add( normaliseLink(link.attr("abs:src")));
-	            }	      
-	        return linkset;
-	        // Example of use: all PNG references...
-	        //Elements pngs = doc.select("img[src$=.png]");
+        return linkset;
+    }
+    
+       private Set<String> extractImageLinks( Document doc) throws IOException {
+            Set<String> linkset = new HashSet<String>();                                          
+                for( Element link : doc.select("img[src]") ) {
+                    linkset.add( normaliseLink(link.attr("abs:src")));
+                }          
+            return linkset;
+            // Example of use: all PNG references...
+            //Elements pngs = doc.select("img[src$=.png]");
 
-	        //Element masthead = doc.select("div.masthead").first();
-	   }
-	
+            //Element masthead = doc.select("div.masthead").first();
+       }
+    
 
     /**
      * Normalises links if the parser has been configured to do so.
@@ -284,14 +284,14 @@ public class HtmlFeatureParser extends AbstractParser {
     }
 
     public static Metadata extractMetadata( InputStream in, String url ) {
-		HtmlFeatureParser hfp = new HtmlFeatureParser();
-		Metadata metadata = new Metadata();
-		metadata.set(Metadata.RESOURCE_NAME_KEY, url);
-		try {
-			hfp.parse(in, null, metadata, null);
-		} catch (Exception e) {
-			log.error("Failed to extract Metadata.");
-		}
-		return metadata;
-	}
+        HtmlFeatureParser hfp = new HtmlFeatureParser();
+        Metadata metadata = new Metadata();
+        metadata.set(Metadata.RESOURCE_NAME_KEY, url);
+        try {
+            hfp.parse(in, null, metadata, null);
+        } catch (Exception e) {
+            log.error("Failed to extract Metadata.");
+        }
+        return metadata;
+    }
 }

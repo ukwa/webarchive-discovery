@@ -43,41 +43,41 @@ import uk.bl.wa.util.Instrument;
  */
 public class FuzzyHashAnalyser extends AbstractTextAnalyser {
 
-	/**
-	 * @param conf
-	 */
-	public FuzzyHashAnalyser(Config conf) {
-	}
+    /**
+     * @param conf
+     */
+    public FuzzyHashAnalyser(Config conf) {
+    }
 
-	/* (non-Javadoc)
-	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
-	 */
-	@Override
-	public void analyse(String text, SolrRecord solr) {
+    /* (non-Javadoc)
+     * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
+     */
+    @Override
+    public void analyse(String text, SolrRecord solr) {
         final long start = System.nanoTime();
-		// Canonicalize the text - strip newlines etc.
-		Pattern whitespace = Pattern.compile( "\\s+" );
-		Matcher matcher = whitespace.matcher( text );
-		text = matcher.replaceAll( " " ).toLowerCase().trim();
+        // Canonicalize the text - strip newlines etc.
+        Pattern whitespace = Pattern.compile( "\\s+" );
+        Matcher matcher = whitespace.matcher( text );
+        text = matcher.replaceAll( " " ).toLowerCase().trim();
 
-		/* ---------------------------------------------------------- */
+        /* ---------------------------------------------------------- */
 
-		// Add SSDeep hash for the text, to spot similar texts.
-		SSDeep ssd = new SSDeep();
-		FuzzyHash tfh;
-		
-		try {
-			tfh = ssd.fuzzy_hash_buf( text.getBytes( "UTF-8" ) );
-			solr.addField( SolrFields.SSDEEP_PREFIX + tfh.getBlocksize(), tfh.getHash() );
-			solr.addField( SolrFields.SSDEEP_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
+        // Add SSDeep hash for the text, to spot similar texts.
+        SSDeep ssd = new SSDeep();
+        FuzzyHash tfh;
+        
+        try {
+            tfh = ssd.fuzzy_hash_buf( text.getBytes( "UTF-8" ) );
+            solr.addField( SolrFields.SSDEEP_PREFIX + tfh.getBlocksize(), tfh.getHash() );
+            solr.addField( SolrFields.SSDEEP_PREFIX + ( tfh.getBlocksize() * 2 ), tfh.getHash2() );
             // solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX +
             // tfh.getBlocksize(), tfh.getHash() );
             // solr.addField( SolrFields.SSDEEP_NGRAM_PREFIX + (
             // tfh.getBlocksize() * 2 ), tfh.getHash2() );
-		} catch (UnsupportedEncodingException e) {
-			e.printStackTrace();
-		}
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
         Instrument.timeRel("TextAnalyzers#total", "FuzzyHashAnalyzer", start);
-	}
+    }
 
 }

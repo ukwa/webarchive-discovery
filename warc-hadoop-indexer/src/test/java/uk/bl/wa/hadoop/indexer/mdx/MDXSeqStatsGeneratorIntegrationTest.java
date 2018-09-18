@@ -53,117 +53,117 @@ import uk.bl.wa.hadoop.indexer.mdx.MDXSeqStatsGenerator;
  */
 public class MDXSeqStatsGeneratorIntegrationTest {
 
-	private static final Log log = LogFactory
-			.getLog(MDXSeqStatsGeneratorIntegrationTest.class);
+    private static final Log log = LogFactory
+            .getLog(MDXSeqStatsGeneratorIntegrationTest.class);
 
-	// Test cluster:
-	private MiniDFSCluster dfsCluster = null;
-	private MiniMRCluster mrCluster = null;
+    // Test cluster:
+    private MiniDFSCluster dfsCluster = null;
+    private MiniMRCluster mrCluster = null;
 
-	// Input files:
-	public final static String[] testWarcs = new String[] { "mdx-seq/mdx-warc-both.seq" };
+    // Input files:
+    public final static String[] testWarcs = new String[] { "mdx-seq/mdx-warc-both.seq" };
 
-	private final Path input = new Path("inputs");
-	private final Path output = new Path("outputs");
+    private final Path input = new Path("inputs");
+    private final Path output = new Path("outputs");
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		log.warn("Spinning up test cluster...");
-		// make sure the log folder exists,
-		// otherwise the test fill fail
-		new File("target/test-logs").mkdirs();
-		//
-		System.setProperty("hadoop.log.dir", "target/test-logs");
-		System.setProperty("javax.xml.parsers.SAXParserFactory",
-				"com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        log.warn("Spinning up test cluster...");
+        // make sure the log folder exists,
+        // otherwise the test fill fail
+        new File("target/test-logs").mkdirs();
+        //
+        System.setProperty("hadoop.log.dir", "target/test-logs");
+        System.setProperty("javax.xml.parsers.SAXParserFactory",
+                "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
 
-		//
-		Configuration conf = new Configuration();
-		dfsCluster = new MiniDFSCluster(conf, 1, true, null);
-		dfsCluster.getFileSystem().makeQualified(input);
-		dfsCluster.getFileSystem().makeQualified(output);
-		//
-		mrCluster = new MiniMRCluster(1, dfsCluster.getFileSystem().getUri()
-				.toString(), 1);
+        //
+        Configuration conf = new Configuration();
+        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        dfsCluster.getFileSystem().makeQualified(input);
+        dfsCluster.getFileSystem().makeQualified(output);
+        //
+        mrCluster = new MiniMRCluster(1, dfsCluster.getFileSystem().getUri()
+                .toString(), 1);
 
-		// prepare for tests
-		for (String filename : testWarcs) {
-			WARCMDXGeneratorIntegrationTest.copyFileToTestCluster(
-					dfsCluster.getFileSystem(), input, "src/test/resources/",
-					filename);
-		}
+        // prepare for tests
+        for (String filename : testWarcs) {
+            WARCMDXGeneratorIntegrationTest.copyFileToTestCluster(
+                    dfsCluster.getFileSystem(), input, "src/test/resources/",
+                    filename);
+        }
 
-		log.warn("Spun up test cluster.");
-	}
+        log.warn("Spun up test cluster.");
+    }
 
-	@Test
-	public void testSeqStats() throws Exception {
-		log.info("Checking input file is present...");
-		// Check that the input file is present:
-		Path[] inputFiles = FileUtil
-				.stat2Paths(dfsCluster.getFileSystem().listStatus(
-						new Path(input, "mdx-seq/"), new OutputLogFilter()));
-		Assert.assertEquals(1, inputFiles.length);
+    @Test
+    public void testSeqStats() throws Exception {
+        log.info("Checking input file is present...");
+        // Check that the input file is present:
+        Path[] inputFiles = FileUtil
+                .stat2Paths(dfsCluster.getFileSystem().listStatus(
+                        new Path(input, "mdx-seq/"), new OutputLogFilter()));
+        Assert.assertEquals(1, inputFiles.length);
 
-		// Create a file of the inputs
-		File tmpInputsFile = WARCMDXGeneratorIntegrationTest
-				.writeInputFile(inputFiles);
+        // Create a file of the inputs
+        File tmpInputsFile = WARCMDXGeneratorIntegrationTest
+                .writeInputFile(inputFiles);
 
-		// Set up arguments for the job:
-		String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
-				this.output.getName() };
+        // Set up arguments for the job:
+        String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
+                this.output.getName() };
 
-		// Set up the WARCIndexerRunner
-		MDXSeqStatsGenerator wir = new MDXSeqStatsGenerator();
+        // Set up the WARCIndexerRunner
+        MDXSeqStatsGenerator wir = new MDXSeqStatsGenerator();
 
-		// run job
-		// Job configuration:
-		log.info("Setting up job config...");
-		JobConf jobConf = this.mrCluster.createJobConf();
-		wir.createJobConf(jobConf, args);
-		log.info("Running job...");
-		JobClient.runJob(jobConf);
-		log.info("Job finished, checking the results...");
+        // run job
+        // Job configuration:
+        log.info("Setting up job config...");
+        JobConf jobConf = this.mrCluster.createJobConf();
+        wir.createJobConf(jobConf, args);
+        log.info("Running job...");
+        JobClient.runJob(jobConf);
+        log.info("Job finished, checking the results...");
 
-		// check the output exists
-		Path[] outputFiles = FileUtil.stat2Paths(dfsCluster.getFileSystem()
-				.listStatus(
-				output, new OutputLogFilter()));
-		// Assert.assertEquals(1, outputFiles.length);
+        // check the output exists
+        Path[] outputFiles = FileUtil.stat2Paths(dfsCluster.getFileSystem()
+                .listStatus(
+                output, new OutputLogFilter()));
+        // Assert.assertEquals(1, outputFiles.length);
 
-		// Copy the output out:
-		for (Path output : outputFiles) {
-			FileOutputStream fout = new FileOutputStream("target/"
-					+ output.getName());
-			log.info(" --- output : " + output);
-			if (dfsCluster.getFileSystem().isFile(output)) {
-				InputStream is = dfsCluster.getFileSystem().open(output);
-				IOUtil.copy(is, fout);
-			} else {
-				log.info(" --- ...skipping directory...");
-			}
-			fout.close();
-		}
+        // Copy the output out:
+        for (Path output : outputFiles) {
+            FileOutputStream fout = new FileOutputStream("target/"
+                    + output.getName());
+            log.info(" --- output : " + output);
+            if (dfsCluster.getFileSystem().isFile(output)) {
+                InputStream is = dfsCluster.getFileSystem().open(output);
+                IOUtil.copy(is, fout);
+            } else {
+                log.info(" --- ...skipping directory...");
+            }
+            fout.close();
+        }
 
-		// Check contents of the output:
-		// TBA
-	}
+        // Check contents of the output:
+        // TBA
+    }
 
-	@After
-	public void tearDown() throws Exception {
-		log.warn("Tearing down test cluster...");
-		if (dfsCluster != null) {
-			dfsCluster.shutdown();
-			dfsCluster = null;
-		}
-		if (mrCluster != null) {
-			mrCluster.shutdown();
-			mrCluster = null;
-		}
-		log.warn("Torn down test cluster.");
-	}
+    @After
+    public void tearDown() throws Exception {
+        log.warn("Tearing down test cluster...");
+        if (dfsCluster != null) {
+            dfsCluster.shutdown();
+            dfsCluster = null;
+        }
+        if (mrCluster != null) {
+            mrCluster.shutdown();
+            mrCluster = null;
+        }
+        log.warn("Torn down test cluster.");
+    }
 
 }

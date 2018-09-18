@@ -52,37 +52,37 @@ import org.xml.sax.SAXException;
  */
 public class HtmlFeatureParserTest {
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-	}
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+    }
 
-	@Test
-	public void JSoupElementsAddedTest() throws Exception {
-		// Browsers handle JavaScript with less than signs well, when it is inside script-tags.
-		// Tika treats the content of script-elements as HTML and treats all containing '<something' as tags
-		String testHtml = "<b>test<p></b><script> if (3<a) console.log('something');</script>";
-		String baseUri = "http://example.com/dummy.html";
-		//
-		ByteArrayInputStream stream = new ByteArrayInputStream(
-				testHtml.getBytes());
-		stream.mark(100000);
-		Parser parser = Parser.xmlParser();
-		parser.setTrackErrors(1000);
-		Document doc = Jsoup.parse(stream, null, baseUri, parser);
-		System.out.println("Parsed as:\n" + doc);
-		System.out.println("Got " + parser.getErrors().size()
-				+ " under isTrackErrors = " + parser.isTrackErrors());
-		for (ParseError err : parser.getErrors()) {
-			System.out.println("Got: " + err);
-		}
+    @Test
+    public void JSoupElementsAddedTest() throws Exception {
+        // Browsers handle JavaScript with less than signs well, when it is inside script-tags.
+        // Tika treats the content of script-elements as HTML and treats all containing '<something' as tags
+        String testHtml = "<b>test<p></b><script> if (3<a) console.log('something');</script>";
+        String baseUri = "http://example.com/dummy.html";
+        //
+        ByteArrayInputStream stream = new ByteArrayInputStream(
+                testHtml.getBytes());
+        stream.mark(100000);
+        Parser parser = Parser.xmlParser();
+        parser.setTrackErrors(1000);
+        Document doc = Jsoup.parse(stream, null, baseUri, parser);
+        System.out.println("Parsed as:\n" + doc);
+        System.out.println("Got " + parser.getErrors().size()
+                + " under isTrackErrors = " + parser.isTrackErrors());
+        for (ParseError err : parser.getErrors()) {
+            System.out.println("Got: " + err);
+        }
 
-		// Also run in through the handler class:
-		stream.reset();
-		innerBasicParseTest(stream, baseUri, 3);
-	}
+        // Also run in through the handler class:
+        stream.reset();
+        innerBasicParseTest(stream, baseUri, 3);
+    }
 
     @Test
     public void testNormalise() {
@@ -115,49 +115,49 @@ public class HtmlFeatureParserTest {
         }
     }
 
-	private static void printMetadata(Metadata metadata) {
-		for (String name : metadata.names()) {
-			for (String value : metadata.getValues(name)) {
-				System.out.println(name + ": " + value);
-			}
-		}
-	}
+    private static void printMetadata(Metadata metadata) {
+        for (String name : metadata.names()) {
+            for (String value : metadata.getValues(name)) {
+                System.out.println(name + ": " + value);
+            }
+        }
+    }
 
-	private void innerBasicParseTest(InputStream stream, String uri,
-			int numElements)
-			throws IOException, SAXException, TikaException {
-		HtmlFeatureParser hfp = new HtmlFeatureParser();
-		Metadata metadata = new Metadata();
-		metadata.set(Metadata.RESOURCE_NAME_KEY, uri);
-		hfp.parse(stream, null, metadata, null);
-		printMetadata(metadata);
-		// for (ParseError err : hfp.getParseErrors()) {
-		// System.out.println("PARSE-ERROR: " + err);
-		// }
-		Assert.assertEquals("Number of distinct elements was wrong,",
-				numElements,
-				metadata.getValues(HtmlFeatureParser.DISTINCT_ELEMENTS).length );
-	}
+    private void innerBasicParseTest(InputStream stream, String uri,
+            int numElements)
+            throws IOException, SAXException, TikaException {
+        HtmlFeatureParser hfp = new HtmlFeatureParser();
+        Metadata metadata = new Metadata();
+        metadata.set(Metadata.RESOURCE_NAME_KEY, uri);
+        hfp.parse(stream, null, metadata, null);
+        printMetadata(metadata);
+        // for (ParseError err : hfp.getParseErrors()) {
+        // System.out.println("PARSE-ERROR: " + err);
+        // }
+        Assert.assertEquals("Number of distinct elements was wrong,",
+                numElements,
+                metadata.getValues(HtmlFeatureParser.DISTINCT_ELEMENTS).length );
+    }
 
-	/**
-	 * Test method for
-	 * {@link uk.bl.wa.parsers.HtmlFeatureParser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)}
-	 * .
-	 * 
-	 * @throws Exception
-	 */
-	@Test
-	public void testParseInputStreamContentHandlerMetadataParseContext()
-			throws Exception {
-		String baseUri = "http://en.wikipedia.org/wiki/Mona_Lisa";
-		File ml = new File(
-				"src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
-		URL url = ml.toURI().toURL();
-		if (!ml.exists()) {
-			System.err.println("testParseInputStreamContentHandlerMetadataParseContext: Unable to locate Mona Lisa test file. Skipping test");
-			return;
-		}
-		innerBasicParseTest(url.openStream(), baseUri, 43);
-	}
+    /**
+     * Test method for
+     * {@link uk.bl.wa.parsers.HtmlFeatureParser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)}
+     * .
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void testParseInputStreamContentHandlerMetadataParseContext()
+            throws Exception {
+        String baseUri = "http://en.wikipedia.org/wiki/Mona_Lisa";
+        File ml = new File(
+                "src/test/resources/wikipedia-mona-lisa/Mona_Lisa.html");
+        URL url = ml.toURI().toURL();
+        if (!ml.exists()) {
+            System.err.println("testParseInputStreamContentHandlerMetadataParseContext: Unable to locate Mona Lisa test file. Skipping test");
+            return;
+        }
+        innerBasicParseTest(url.openStream(), baseUri, 43);
+    }
 
 }

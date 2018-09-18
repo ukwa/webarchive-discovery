@@ -44,16 +44,16 @@ import uk.bl.wa.util.Instrument;
  *
  */
 public class LanguageAnalyser extends AbstractTextAnalyser {
-	private Log log = LogFactory.getLog(LanguageAnalyser.class);
-	
-	/** */
-	private final LanguageDetector ld;
+    private Log log = LogFactory.getLog(LanguageAnalyser.class);
+    
+    /** */
+    private final LanguageDetector ld;
 
     private final boolean enabled;
-	/**
-	 * @param conf
-	 */
-	public LanguageAnalyser(Config conf) {
+    /**
+     * @param conf
+     */
+    public LanguageAnalyser(Config conf) {
         enabled = !conf.hasPath("warc.index.extract.content.language.enabled") ||
                   conf.getBoolean("warc.index.extract.content.language.enabled");
         try {
@@ -62,14 +62,14 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
             // This should not happen, so raise the alarm:
             throw new RuntimeException(e);
         }
-		log.info("Constructed language analyzer with enabled = " + enabled);
-	}
+        log.info("Constructed language analyzer with enabled = " + enabled);
+    }
 
-	/* (non-Javadoc)
-	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
-	 */
-	@Override
-	public void analyse(String text, SolrRecord solr) {
+    /* (non-Javadoc)
+     * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
+     */
+    @Override
+    public void analyse(String text, SolrRecord solr) {
         if (!enabled) {
             return;
         }
@@ -85,6 +85,6 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
             solr.addParseException(e);
         }
         Instrument.timeRel("TextAnalyzers#total", "LanguageAnalyzer#total", start);
-	}
+    }
 
 }

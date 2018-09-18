@@ -56,99 +56,99 @@ import uk.bl.wa.util.Normalisation;
  */
 public class SolrRecord implements Serializable {
 
-	// private static Log log = LogFactory.getLog(SolrRecord.class);
+    // private static Log log = LogFactory.getLog(SolrRecord.class);
 
-	private static final long serialVersionUID = -4556484652176976472L;
-	
-	private SolrInputDocument doc = new SolrInputDocument();
+    private static final long serialVersionUID = -4556484652176976472L;
+    
+    private SolrInputDocument doc = new SolrInputDocument();
 
-	private final int defaultMax;
+    private final int defaultMax;
     private final HashMap<String, Integer> maxLengths; // Explicit HashMap as it is Serializable
 
-	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths) {
-		this.defaultMax = defaultMaxFieldLength;
-		this.maxLengths = maxFieldLengths;
-	}
+    public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths) {
+        this.defaultMax = defaultMaxFieldLength;
+        this.maxLengths = maxFieldLengths;
+    }
 
-	/**
-	 * @deprecated use {@link SolrRecordFactory#createRecord()} instead.
-	 */
-	@Deprecated
-	public SolrRecord() {
-		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>());
-	}
+    /**
+     * @deprecated use {@link SolrRecordFactory#createRecord()} instead.
+     */
+    @Deprecated
+    public SolrRecord() {
+        this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>());
+    }
 
-	public String toXml() {
-		return ClientUtils.toXML( doc );
-	}
+    public String toXml() {
+        return ClientUtils.toXML( doc );
+    }
 
-	/**
-	 * Write the SolrDocument to the provided writer, sans XML-header.
-	 * Intended for creating batches of documents.
-	 */
-	public void writeXml(Writer writer) throws IOException {
-		ClientUtils.writeXML( doc, writer );
-	}
+    /**
+     * Write the SolrDocument to the provided writer, sans XML-header.
+     * Intended for creating batches of documents.
+     */
+    public void writeXml(Writer writer) throws IOException {
+        ClientUtils.writeXML( doc, writer );
+    }
 
     private static final int MAX_FIELD_LEN = 4096;
-	
-	public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths,
-					  String filename, ArchiveRecordHeader header) {
-		defaultMax = defaultMaxFieldLength;
-		maxLengths = maxFieldLengths;
-		setField(SolrFields.ID,
+    
+    public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths,
+                      String filename, ArchiveRecordHeader header) {
+        defaultMax = defaultMaxFieldLength;
+        maxLengths = maxFieldLengths;
+        setField(SolrFields.ID,
                 "exception-at-" + filename + "@" + header.getOffset());
         setField(SolrFields.SOURCE_FILE, filename);
         setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
         setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
-	}
+    }
 
-	/**
-	 * @deprecated use {@link SolrRecordFactory#createRecord(String, ArchiveRecordHeader)} instead.
-	 */
-	public SolrRecord(String filename, ArchiveRecordHeader header) {
-		this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>(), filename, header);
-	}
+    /**
+     * @deprecated use {@link SolrRecordFactory#createRecord(String, ArchiveRecordHeader)} instead.
+     */
+    public SolrRecord(String filename, ArchiveRecordHeader header) {
+        this(SolrRecordFactory.DEFAULT_MAX_LENGTH, new HashMap<String, Integer>(), filename, header);
+    }
 
-	/**
-	 * Remove control characters, nulls etc,
-	 * 
-	 * @param value
-	 * @return
-	 */
-	private String removeControlCharacters( String value ) {
+    /**
+     * Remove control characters, nulls etc,
+     * 
+     * @param value
+     * @return
+     */
+    private String removeControlCharacters( String value ) {
         final long start = System.nanoTime();
-		try {
+        try {
             // Avoid re-compiling the regexps in each call (just a small speed-up, but a simple one)
             return CNTRL_PATTERN.matcher(
                     SPACE_PATTERN.matcher(sanitiseUTF8(value.trim())).replaceAll(" ")
             ).replaceAll("");
 //            return sanitiseUTF8(value.trim().replaceAll("\\p{Space}", " ")
-//         					.replaceAll("\\p{Cntrl}", ""));
-		} catch (CharacterCodingException e) {
-			return "";
-		} finally {
+//                             .replaceAll("\\p{Cntrl}", ""));
+        } catch (CharacterCodingException e) {
+            return "";
+        } finally {
             Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
-							   "SolrRecord.removeControlCharacters#total", start);
+                               "SolrRecord.removeControlCharacters#total", start);
         }
-	}
+    }
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");
     private static final Pattern CNTRL_PATTERN = Pattern.compile("\\p{Cntrl}");
 
-	/**
-	 * Aim to prevent "Invalid UTF-8 character 0xfffe" slipping into the text
-	 * payload.
-	 * 
-	 * The encodes and decodes a String that may not be UTF-8 compliant as
-	 * UTF-8. Any dodgy characters are replaced.
-	 * 
-	 * @param value
-	 * @return
-	 * @throws CharacterCodingException
-	 */
+    /**
+     * Aim to prevent "Invalid UTF-8 character 0xfffe" slipping into the text
+     * payload.
+     * 
+     * The encodes and decodes a String that may not be UTF-8 compliant as
+     * UTF-8. Any dodgy characters are replaced.
+     * 
+     * @param value
+     * @return
+     * @throws CharacterCodingException
+     */
     // It would be nice to re-use the encoder & decoder, but they are not Thread-safe
-	private CharSequence sanitiseUTF8(String value) throws CharacterCodingException {
+    private CharSequence sanitiseUTF8(String value) throws CharacterCodingException {
         final long start = System.nanoTime();
         try  {
             // Take a string, map it to bytes as UTF-8:
@@ -165,10 +165,10 @@ public class SolrRecord implements Serializable {
         } finally {
             Instrument.timeRel("SolrRecord.removeControlCharacters#total", "SolrRecord.sanitiseUTF8", start);
         }
-	}
+    }
 
 
-	/**
+    /**
      * Also shorten to avoid bad data filling 'small' fields with 'big' data.
      * 
      * @param value
@@ -182,27 +182,27 @@ public class SolrRecord implements Serializable {
         if (truncateToLength > 0) {
             if (value.length() > truncateToLength) {
                 value = value.substring(0, truncateToLength);
-			}
-		}
-		return removeControlCharacters(value);
-	}
+            }
+        }
+        return removeControlCharacters(value);
+    }
 
-	/**
-	 * Add any non-null string properties, stripping control characters if present.
-	 * 
-	 * @param solr_property
-	 * @param value
-	 */
+    /**
+     * Add any non-null string properties, stripping control characters if present.
+     * 
+     * @param solr_property
+     * @param value
+     */
     public void addField(String solr_property, String value) {
         addFieldTruncated(solr_property, value, getMaxLength(solr_property));
     }
 
-	private int getMaxLength(String solrField) {
-		Integer max = maxLengths.get(solrField);
-		return max == null ? defaultMax : max;
-	}
+    private int getMaxLength(String solrField) {
+        Integer max = maxLengths.get(solrField);
+        return max == null ? defaultMax : max;
+    }
 
-	/**
+    /**
      * Add the field, truncating the value if it's larger than the given limit.
      * 
      * @param solr_property
@@ -212,15 +212,15 @@ public class SolrRecord implements Serializable {
     public void addFieldTruncated(String solr_property, String value, int truncateTo) {
         value = sanitizeString(value, truncateTo);
         if (value != null && !value.isEmpty())
-			doc.addField( solr_property, value );
-	}
+            doc.addField( solr_property, value );
+    }
 
-	/**
-	 * Set instead of adding fields.
-	 * 
-	 * @param solr_property
-	 * @param value
-	 */
+    /**
+     * Set instead of adding fields.
+     * 
+     * @param solr_property
+     * @param value
+     */
     public void setField(String solr_property, String value) {
         setFieldTruncated(solr_property, value, getMaxLength(solr_property));
     }
@@ -236,108 +236,108 @@ public class SolrRecord implements Serializable {
         value = sanitizeString(value, truncateTo);
         if (value != null && !value.isEmpty())
             doc.setField(solr_property, value);
-	}
-	
-	/**
-	 * Like add, but also allows these values to merge with those in the index already.
-	 * 
-	 * @param solr_property
-	 * @param value
-	 */
-	public void mergeField( String solr_property, String value ) {
+    }
+    
+    /**
+     * Like add, but also allows these values to merge with those in the index already.
+     * 
+     * @param solr_property
+     * @param value
+     */
+    public void mergeField( String solr_property, String value ) {
         if (value == null || value.isEmpty()) {
             return;
         }
-		Map<String, String> operation = new HashMap<String, String>();
-		operation.put("add", value );
-		doc.addField(solr_property, operation);
-	}
+        Map<String, String> operation = new HashMap<String, String>();
+        operation.put("add", value );
+        doc.addField(solr_property, operation);
+    }
 
-	/**
-	 * @param fieldname
-	 * @return
-	 */
-	public Object getFieldValue(String fieldname) {
-		return doc.getFieldValue(fieldname);
-	}
+    /**
+     * @param fieldname
+     * @return
+     */
+    public Object getFieldValue(String fieldname) {
+        return doc.getFieldValue(fieldname);
+    }
 
-	/**
-	 * @return
-	 */
-	public SolrInputDocument getSolrDocument() {
-		return doc;
-	}
+    /**
+     * @return
+     */
+    public SolrInputDocument getSolrDocument() {
+        return doc;
+    }
 
-	/**
-	 * @param fieldname
-	 */
-	public void removeField(String fieldname) {
-		doc.removeField(fieldname);
-	}
+    /**
+     * @param fieldname
+     */
+    public void removeField(String fieldname) {
+        doc.removeField(fieldname);
+    }
 
-	/**
-	 * @param fieldname
-	 * @return
-	 */
-	public SolrInputField getField(String fieldname) {
-		return doc.getField(fieldname);
-	}
+    /**
+     * @param fieldname
+     * @return
+     */
+    public SolrInputField getField(String fieldname) {
+        return doc.getField(fieldname);
+    }
 
-	/**
-	 * @param fieldname
-	 * @return
-	 */
-	public boolean containsKey(String fieldname) {
-		return doc.containsKey(fieldname);
-	}
+    /**
+     * @param fieldname
+     * @return
+     */
+    public boolean containsKey(String fieldname) {
+        return doc.containsKey(fieldname);
+    }
 
-	/**
-	 * @param newdoc
-	 */
-	public void setSolrDocument(SolrInputDocument newdoc) {
-		doc = newdoc;
-	}
+    /**
+     * @param newdoc
+     */
+    public void setSolrDocument(SolrInputDocument newdoc) {
+        doc = newdoc;
+    }
 
-	/**
-	 * 
-	 * @param e
-	 */
-	public void addParseException(Throwable e) {
-		addField(SolrFields.PARSE_ERROR,
+    /**
+     * 
+     * @param e
+     */
+    public void addParseException(Throwable e) {
+        addField(SolrFields.PARSE_ERROR,
                 e.getClass().getName() + ": " + e.getMessage());
-	}
+    }
 
-	/**
-	 * 
-	 * @param hint
-	 * @param e
-	 */
-	public void addParseException(String hint, Throwable e) {
-		addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
+    /**
+     * 
+     * @param hint
+     * @param e
+     */
+    public void addParseException(String hint, Throwable e) {
+        addField(SolrFields.PARSE_ERROR, e.getClass().getName() + " " + hint
                 + ": " + e.getMessage());
-	}
+    }
 
-	/**
-	 * 
-	 * @return
-	 */
-	public String getUrl() {
-		return (String) getField(SolrFields.SOLR_URL).getFirstValue();
-	}
+    /**
+     * 
+     * @return
+     */
+    public String getUrl() {
+        return (String) getField(SolrFields.SOLR_URL).getFirstValue();
+    }
 
-	/**
-	 * 
-	 * @return
-	 */
-	public String getWaybackDate() {
-		return (String) getField(SolrFields.WAYBACK_DATE).getFirstValue();
-	}
+    /**
+     * 
+     * @return
+     */
+    public String getWaybackDate() {
+        return (String) getField(SolrFields.WAYBACK_DATE).getFirstValue();
+    }
 
-	/**
-	 * 
-	 * @return
-	 */
-	public String getHash() {
-		return (String) getField(SolrFields.HASH).getFirstValue();
-	}
+    /**
+     * 
+     * @return
+     */
+    public String getHash() {
+        return (String) getField(SolrFields.HASH).getFirstValue();
+    }
 }

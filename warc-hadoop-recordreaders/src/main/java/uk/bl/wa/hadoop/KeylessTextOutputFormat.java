@@ -48,75 +48,75 @@ import org.apache.hadoop.util.*;
 @SuppressWarnings( "deprecation" )
 public class KeylessTextOutputFormat<K, V> extends FileOutputFormat<K, V> {
 
-	protected static class LineRecordWriter<K, V> implements RecordWriter<K, V> {
-		private static final String utf8 = "UTF-8";
-		private static final byte[] newline;
-		static {
-			try {
-				newline = "\n".getBytes( utf8 );
-			} catch( UnsupportedEncodingException uee ) {
-				throw new IllegalArgumentException( "can't find " + utf8 + " encoding" );
-			}
-		}
+    protected static class LineRecordWriter<K, V> implements RecordWriter<K, V> {
+        private static final String utf8 = "UTF-8";
+        private static final byte[] newline;
+        static {
+            try {
+                newline = "\n".getBytes( utf8 );
+            } catch( UnsupportedEncodingException uee ) {
+                throw new IllegalArgumentException( "can't find " + utf8 + " encoding" );
+            }
+        }
 
-		protected DataOutputStream out;
+        protected DataOutputStream out;
 
-		public LineRecordWriter( DataOutputStream out ) {
-			this.out = out;
-		}
+        public LineRecordWriter( DataOutputStream out ) {
+            this.out = out;
+        }
 
-		/**
-		 * Write the object to the byte stream, handling Text as a special
-		 * case.
-		 * 
-		 * @param o
-		 *            the object to print
-		 * @throws IOException
-		 *             if the write throws, we pass it on
-		 */
-		private void writeObject( Object o ) throws IOException {
-			if( o instanceof Text ) {
-				Text to = ( Text ) o;
-				out.write( to.getBytes(), 0, to.getLength() );
-			} else {
-				out.write( o.toString().getBytes( utf8 ) );
-			}
-		}
+        /**
+         * Write the object to the byte stream, handling Text as a special
+         * case.
+         * 
+         * @param o
+         *            the object to print
+         * @throws IOException
+         *             if the write throws, we pass it on
+         */
+        private void writeObject( Object o ) throws IOException {
+            if( o instanceof Text ) {
+                Text to = ( Text ) o;
+                out.write( to.getBytes(), 0, to.getLength() );
+            } else {
+                out.write( o.toString().getBytes( utf8 ) );
+            }
+        }
 
-		public synchronized void write( K key, V value ) throws IOException {
+        public synchronized void write( K key, V value ) throws IOException {
 
-			boolean nullKey = key == null || key instanceof NullWritable;
-			boolean nullValue = value == null || value instanceof NullWritable;
-			if( nullKey && nullValue ) {
-				return;
-			}
-			if( !nullValue ) {
-				writeObject( value );
-			}
-			out.write( newline );
-		}
+            boolean nullKey = key == null || key instanceof NullWritable;
+            boolean nullValue = value == null || value instanceof NullWritable;
+            if( nullKey && nullValue ) {
+                return;
+            }
+            if( !nullValue ) {
+                writeObject( value );
+            }
+            out.write( newline );
+        }
 
-		@Override
-		public void close( Reporter reporter ) throws IOException {
-			out.close();
-		}
-	}
+        @Override
+        public void close( Reporter reporter ) throws IOException {
+            out.close();
+        }
+    }
 
-	@Override
-	public RecordWriter<K, V> getRecordWriter( FileSystem ignored, JobConf job, String name, Progressable progress ) throws IOException {
-		boolean isCompressed = getCompressOutput( job );
-		if( !isCompressed ) {
-			Path file = FileOutputFormat.getTaskOutputPath( job, name );
-			FileSystem fs = file.getFileSystem( job );
-			FSDataOutputStream fileOut = fs.create( file, progress );
-			return new LineRecordWriter<K, V>( fileOut );
-		} else {
-			Class<? extends CompressionCodec> codecClass = getOutputCompressorClass( job, GzipCodec.class );
-			CompressionCodec codec = ReflectionUtils.newInstance( codecClass, job );
-			Path file = FileOutputFormat.getTaskOutputPath( job, name + codec.getDefaultExtension() );
-			FileSystem fs = file.getFileSystem( job );
-			FSDataOutputStream fileOut = fs.create( file, progress );
-			return new LineRecordWriter<K, V>( new DataOutputStream( codec.createOutputStream( fileOut ) ) );
-		}
-	}
+    @Override
+    public RecordWriter<K, V> getRecordWriter( FileSystem ignored, JobConf job, String name, Progressable progress ) throws IOException {
+        boolean isCompressed = getCompressOutput( job );
+        if( !isCompressed ) {
+            Path file = FileOutputFormat.getTaskOutputPath( job, name );
+            FileSystem fs = file.getFileSystem( job );
+            FSDataOutputStream fileOut = fs.create( file, progress );
+            return new LineRecordWriter<K, V>( fileOut );
+        } else {
+            Class<? extends CompressionCodec> codecClass = getOutputCompressorClass( job, GzipCodec.class );
+            CompressionCodec codec = ReflectionUtils.newInstance( codecClass, job );
+            Path file = FileOutputFormat.getTaskOutputPath( job, name + codec.getDefaultExtension() );
+            FileSystem fs = file.getFileSystem( job );
+            FSDataOutputStream fileOut = fs.create( file, progress );
+            return new LineRecordWriter<K, V>( new DataOutputStream( codec.createOutputStream( fileOut ) ) );
+        }
+    }
 }

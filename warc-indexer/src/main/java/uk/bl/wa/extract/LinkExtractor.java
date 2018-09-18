@@ -46,102 +46,102 @@ import uk.bl.wa.parsers.HtmlFeatureParser;
  *
  */
 public class LinkExtractor {
-	
-	public static final String MALFORMED_HOST = "malformed.host";
-	
-	/**
-	 * 
-	 * @param url
-	 * @return
-	 */
-	public static String extractHost(String url) {
-		String host = "unknown.host";
-		org.apache.commons.httpclient.URI uri = null;
-		// Attempt to parse:
-		try {
-			uri = new org.apache.commons.httpclient.URI(url,false);
-			// Extract domain:
-			host = uri.getHost();
-			if( host == null )
-				host = MALFORMED_HOST;
-		} catch ( Exception e ) {
-			// Return a special hostname if parsing failed:
-			host = MALFORMED_HOST;
-		}
-		return host;
-	}
-	
-	/**
-	 * 
-	 * @param input
-	 * @param charset
-	 * @param baseUri
-	 * @param includeImgLinks
-	 * @return
-	 * @throws IOException
-	 */
-	public static Set<String> extractPublicSuffixes( Metadata metadata ) throws IOException {
-		String[] links = metadata.getValues(HtmlFeatureParser.LINK_LIST);
-		Set<String> suffixes = new HashSet<String>();
-		for( String link : links ) {
-			String suffix = extractPublicSuffix(link);
-			if( suffix != null ) {
-				suffixes.add(suffix);
-			}
-		}
-		return suffixes;
-	}
-	
-	/**
-	 * Extract the public suffix, but compensate for the fact that the library we are 
-	 * using considers 'uk' to be the public suffix, rather than e.g. 'co.uk'
-	 * 
-	 * @param url e.g. http://this.that.google.com/tootles
-	 * @return e.g. "com", or "co.uk".  NULL if there was a parsing error.
-	 */
-	public static String extractPublicSuffix( String url ) {
-		String host;
-		try {
-			host = new URI(url).getHost();
-		} catch (URISyntaxException e) {
-			return null;
-		}
-		return extractPublicSuffixFromHost(host);
-	}
-	
+    
+    public static final String MALFORMED_HOST = "malformed.host";
+    
+    /**
+     * 
+     * @param url
+     * @return
+     */
+    public static String extractHost(String url) {
+        String host = "unknown.host";
+        org.apache.commons.httpclient.URI uri = null;
+        // Attempt to parse:
+        try {
+            uri = new org.apache.commons.httpclient.URI(url,false);
+            // Extract domain:
+            host = uri.getHost();
+            if( host == null )
+                host = MALFORMED_HOST;
+        } catch ( Exception e ) {
+            // Return a special hostname if parsing failed:
+            host = MALFORMED_HOST;
+        }
+        return host;
+    }
+    
+    /**
+     * 
+     * @param input
+     * @param charset
+     * @param baseUri
+     * @param includeImgLinks
+     * @return
+     * @throws IOException
+     */
+    public static Set<String> extractPublicSuffixes( Metadata metadata ) throws IOException {
+        String[] links = metadata.getValues(HtmlFeatureParser.LINK_LIST);
+        Set<String> suffixes = new HashSet<String>();
+        for( String link : links ) {
+            String suffix = extractPublicSuffix(link);
+            if( suffix != null ) {
+                suffixes.add(suffix);
+            }
+        }
+        return suffixes;
+    }
+    
+    /**
+     * Extract the public suffix, but compensate for the fact that the library we are 
+     * using considers 'uk' to be the public suffix, rather than e.g. 'co.uk'
+     * 
+     * @param url e.g. http://this.that.google.com/tootles
+     * @return e.g. "com", or "co.uk".  NULL if there was a parsing error.
+     */
+    public static String extractPublicSuffix( String url ) {
+        String host;
+        try {
+            host = new URI(url).getHost();
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return extractPublicSuffixFromHost(host);
+    }
+    
     public static String extractPublicSuffixFromHost( String host ) {
-		if( host == null ) return null;
-		// Parse out the public suffix:
-		InternetDomainName domainName;
-		try {
-			domainName = InternetDomainName.from(host);
-		} catch( Exception e ) {
-			return null;
-		}
-		InternetDomainName suffix = null;
-		if( host.endsWith(".uk")) {
-			ImmutableList<String> parts = domainName.parts();
-			if( parts.size() >= 2 ) {
-				suffix = InternetDomainName.from(parts.get(parts.size() - 2)
-						+ "." + parts.get(parts.size() - 1));
-			}
-		} else {
-			suffix = domainName.publicSuffix();
-		}
-		// Return a value:
-		if( suffix == null ) return null;
-		return suffix.toString();
-	}
-	
-	public static String extractPrivateSuffix( String url ) {
-		String host;
-		try {
-			host = new URI(url).getHost();
-		} catch (URISyntaxException e) {
-			return null;
-		}
-		return extractPrivateSuffixFromHost(host);
-	}
+        if( host == null ) return null;
+        // Parse out the public suffix:
+        InternetDomainName domainName;
+        try {
+            domainName = InternetDomainName.from(host);
+        } catch( Exception e ) {
+            return null;
+        }
+        InternetDomainName suffix = null;
+        if( host.endsWith(".uk")) {
+            ImmutableList<String> parts = domainName.parts();
+            if( parts.size() >= 2 ) {
+                suffix = InternetDomainName.from(parts.get(parts.size() - 2)
+                        + "." + parts.get(parts.size() - 1));
+            }
+        } else {
+            suffix = domainName.publicSuffix();
+        }
+        // Return a value:
+        if( suffix == null ) return null;
+        return suffix.toString();
+    }
+    
+    public static String extractPrivateSuffix( String url ) {
+        String host;
+        try {
+            host = new URI(url).getHost();
+        } catch (URISyntaxException e) {
+            return null;
+        }
+        return extractPrivateSuffixFromHost(host);
+    }
 
     /**
      * Attempt to parse out the private domain. Fall back on host if things go
@@ -151,40 +151,40 @@ public class LinkExtractor {
      * @return
      */
     public static String extractPrivateSuffixFromHost( String host ) {
-		if( host == null ) return null;
-		// Parse out the public suffix:
-		InternetDomainName domainName;
-		try {
-			domainName = InternetDomainName.from(host);
-		} catch( Exception e ) {
+        if( host == null ) return null;
+        // Parse out the public suffix:
+        InternetDomainName domainName;
+        try {
+            domainName = InternetDomainName.from(host);
+        } catch( Exception e ) {
             return host;
-		}
-		InternetDomainName suffix = null;
+        }
+        InternetDomainName suffix = null;
         // It appears the IDN class does not know about the various UK
         // second-level domains.
         // If it's a UK host, override the result by assuming three levels:
-		if( host.endsWith(".uk")) {
-			ImmutableList<String> parts = domainName.parts();
-			if( parts.size() >= 3 ) {
-				suffix = InternetDomainName.from(parts.get(parts.size() - 3)
-						+ "." + parts.get(parts.size() - 2) + "."
-						+ parts.get(parts.size() - 1));
-			}
-		} else {
-			if( domainName.isTopPrivateDomain() || domainName.isUnderPublicSuffix() ) {
-				suffix = domainName.topPrivateDomain();
-			} else {
-				suffix = domainName;
-			}
-		}
+        if( host.endsWith(".uk")) {
+            ImmutableList<String> parts = domainName.parts();
+            if( parts.size() >= 3 ) {
+                suffix = InternetDomainName.from(parts.get(parts.size() - 3)
+                        + "." + parts.get(parts.size() - 2) + "."
+                        + parts.get(parts.size() - 1));
+            }
+        } else {
+            if( domainName.isTopPrivateDomain() || domainName.isUnderPublicSuffix() ) {
+                suffix = domainName.topPrivateDomain();
+            } else {
+                suffix = domainName;
+            }
+        }
 
         // If it all failed for some reason, fall back on the host value:
         if (suffix == null)
             suffix = domainName;
 
-		return suffix.toString();
+        return suffix.toString();
     }
-	
+    
     /**
      * Returns a list of each level of the given host address. E.g. 'bbc.co.uk' would return:
      * [uk],[co.uk],[bbc.co.uk]
@@ -225,13 +225,13 @@ public class LinkExtractor {
         return levels;
     }
 
-	public static void main( String[] args ) {
-		System.out.println("TEST: "+extractPublicSuffix("http://www.google.com/test.html"));
-		System.out.println("TEST: "+extractPublicSuffix("http://www.google.co.uk/test.html"));
-		System.out.println("TEST: "+extractPublicSuffix("http://www.google.sch.uk/test.html"));
-		System.out.println("TEST: "+extractPublicSuffix("http://www.google.nhs.uk/test.html"));
-		System.out.println("TEST: "+extractPublicSuffix("http://www.nationalarchives.gov.uk/test.html"));
-		System.out.println("TEST: "+extractPublicSuffix("http://www.bl.uk/test.html"));
-	}
+    public static void main( String[] args ) {
+        System.out.println("TEST: "+extractPublicSuffix("http://www.google.com/test.html"));
+        System.out.println("TEST: "+extractPublicSuffix("http://www.google.co.uk/test.html"));
+        System.out.println("TEST: "+extractPublicSuffix("http://www.google.sch.uk/test.html"));
+        System.out.println("TEST: "+extractPublicSuffix("http://www.google.nhs.uk/test.html"));
+        System.out.println("TEST: "+extractPublicSuffix("http://www.nationalarchives.gov.uk/test.html"));
+        System.out.println("TEST: "+extractPublicSuffix("http://www.bl.uk/test.html"));
+    }
 
 }

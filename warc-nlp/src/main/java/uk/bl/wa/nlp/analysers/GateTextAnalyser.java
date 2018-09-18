@@ -135,7 +135,7 @@ package uk.bl.wa.nlp.analysers;
 //    Out.prln("...GATE initialised");
 //
 //    // initialise ANNIE (this may take several minutes)
-//		GateTextAnalyser annie = new GateTextAnalyser();
+//        GateTextAnalyser annie = new GateTextAnalyser();
 //    annie.initAnnie();
 //
 //    // create a GATE corpus and add a document for each command-line

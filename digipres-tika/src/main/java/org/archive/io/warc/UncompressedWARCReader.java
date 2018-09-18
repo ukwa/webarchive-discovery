@@ -49,8 +49,8 @@ public class UncompressedWARCReader extends WARCReader {
         }
         
 
-	public static WARCReader get(String arc, InputStream is, boolean atFirstRecord ) throws IOException {
-		return new UncompressedWARCReader(arc, is, atFirstRecord);
-	}
+    public static WARCReader get(String arc, InputStream is, boolean atFirstRecord ) throws IOException {
+        return new UncompressedWARCReader(arc, is, atFirstRecord);
+    }
 
 }

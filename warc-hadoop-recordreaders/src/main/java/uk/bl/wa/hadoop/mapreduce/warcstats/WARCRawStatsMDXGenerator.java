@@ -64,123 +64,123 @@ public class WARCRawStatsMDXGenerator extends Configured implements Tool {
 
     public static String WARC_HADOOP_NUM_REDUCERS = "warc.hadoop.num_reducers";
 
-	private String inputPath;
-	private String outputPath;
+    private String inputPath;
+    private String outputPath;
     private int numReducers;
-	private boolean wait;
+    private boolean wait;
 
-	/**
-	 * 
-	 * @param args
-	 * @return
-	 * @throws IOException
-	 * @throws ParseException
-	 * @throws InterruptedException
-	 * @throws KeeperException
-	 */
-	protected void createJobConf(JobConf conf, String[] args)
-			throws IOException, ParseException, KeeperException,
-			InterruptedException {
-		// Parse the command-line parameters.
-		this.setup(args, conf);
+    /**
+     * 
+     * @param args
+     * @return
+     * @throws IOException
+     * @throws ParseException
+     * @throws InterruptedException
+     * @throws KeeperException
+     */
+    protected void createJobConf(JobConf conf, String[] args)
+            throws IOException, ParseException, KeeperException,
+            InterruptedException {
+        // Parse the command-line parameters.
+        this.setup(args, conf);
 
-		// Add input paths:
-		LOG.info("Reading input files...");
-		String line = null;
-		BufferedReader br = new BufferedReader(new FileReader(this.inputPath));
-		while ((line = br.readLine()) != null) {
-			FileInputFormat.addInputPath(conf, new Path(line));
-		}
-		br.close();
-		LOG.info("Read " + FileInputFormat.getInputPaths(conf).length
-				+ " input files.");
+        // Add input paths:
+        LOG.info("Reading input files...");
+        String line = null;
+        BufferedReader br = new BufferedReader(new FileReader(this.inputPath));
+        while ((line = br.readLine()) != null) {
+            FileInputFormat.addInputPath(conf, new Path(line));
+        }
+        br.close();
+        LOG.info("Read " + FileInputFormat.getInputPaths(conf).length
+                + " input files.");
 
-		FileOutputFormat.setOutputPath(conf, new Path(this.outputPath));
+        FileOutputFormat.setOutputPath(conf, new Path(this.outputPath));
 
-		conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
-		conf.setInputFormat(ArchiveFileInputFormat.class);
+        conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
+        conf.setInputFormat(ArchiveFileInputFormat.class);
         conf.setMapperClass(WARCRawStatsMapper.class);
-		conf.setReducerClass(MDXReduplicatingReducer.class);
+        conf.setReducerClass(MDXReduplicatingReducer.class);
         conf.setOutputFormat(TextOutputFormat.class);
-		// OR TextOutputFormat?
+        // OR TextOutputFormat?
         // conf.set("map.output.key.field.separator", "");
-		// Compress the output from the maps, to cut down temp space
-		// requirements between map and reduce.
-		conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
-		// for 0.20.x ?
-		conf.set("mapred.compress.map.output", "true");
-		// conf.set("mapred.map.output.compression.codec",
-		// "org.apache.hadoop.io.compress.GzipCodec");
-		// Ensure the JARs we provide take precedence over ones from Hadoop:
-		conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
+        // Compress the output from the maps, to cut down temp space
+        // requirements between map and reduce.
+        conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
+        // for 0.20.x ?
+        conf.set("mapred.compress.map.output", "true");
+        // conf.set("mapred.map.output.compression.codec",
+        // "org.apache.hadoop.io.compress.GzipCodec");
+        // Ensure the JARs we provide take precedence over ones from Hadoop:
+        conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
-		conf.setOutputKeyClass(Text.class);
-		conf.setOutputValueClass(Text.class);
-		conf.setMapOutputKeyClass(Text.class);
+        conf.setOutputKeyClass(Text.class);
+        conf.setOutputValueClass(Text.class);
+        conf.setMapOutputKeyClass(Text.class);
         conf.setMapOutputValueClass(Text.class);
-		conf.setNumReduceTasks(numReducers);
-	}
+        conf.setNumReduceTasks(numReducers);
+    }
 
-	/**
-	 * 
-	 * Run the job:
-	 * 
-	 * @throws InterruptedException
-	 * @throws KeeperException
-	 * 
-	 */
-	public int run(String[] args) throws IOException, ParseException,
-			KeeperException, InterruptedException {
-		// Set up the base conf:
+    /**
+     * 
+     * Run the job:
+     * 
+     * @throws InterruptedException
+     * @throws KeeperException
+     * 
+     */
+    public int run(String[] args) throws IOException, ParseException,
+            KeeperException, InterruptedException {
+        // Set up the base conf:
         JobConf conf = new JobConf(getConf(), WARCRawStatsMDXGenerator.class);
 
-		// Get the job configuration:
-		this.createJobConf(conf, args);
+        // Get the job configuration:
+        this.createJobConf(conf, args);
 
-		// Submit it:
-		if (this.wait) {
-			JobClient.runJob(conf);
-		} else {
-			JobClient client = new JobClient(conf);
-			client.submitJob(conf);
-		}
-		return 0;
-	}
+        // Submit it:
+        if (this.wait) {
+            JobClient.runJob(conf);
+        } else {
+            JobClient client = new JobClient(conf);
+            client.submitJob(conf);
+        }
+        return 0;
+    }
 
-	private void setup(String[] args, JobConf conf) throws ParseException {
-		// Process Hadoop args first:
-		String[] otherArgs = new GenericOptionsParser(conf, args)
-				.getRemainingArgs();
+    private void setup(String[] args, JobConf conf) throws ParseException {
+        // Process Hadoop args first:
+        String[] otherArgs = new GenericOptionsParser(conf, args)
+                .getRemainingArgs();
 
-		// Process remaining args list this:
-		Options options = new Options();
+        // Process remaining args list this:
+        Options options = new Options();
         options.addOption("i", true, "input file list");
         options.addOption("o", true, "output location");
         options.addOption("r", true, "number of reducers");
-		options.addOption("w", false, "wait for job to finish");
+        options.addOption("w", false, "wait for job to finish");
 
-		CommandLineParser parser = new PosixParser();
-		CommandLine cmd = parser.parse(options, otherArgs);
-		if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
-			HelpFormatter helpFormatter = new HelpFormatter();
-			helpFormatter.setWidth(80);
-			helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, "");
-			System.exit(1);
-		}
-		this.inputPath = cmd.getOptionValue("i");
-		this.outputPath = cmd.getOptionValue("o");
-		this.wait = cmd.hasOption("w");
+        CommandLineParser parser = new PosixParser();
+        CommandLine cmd = parser.parse(options, otherArgs);
+        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
+            HelpFormatter helpFormatter = new HelpFormatter();
+            helpFormatter.setWidth(80);
+            helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, "");
+            System.exit(1);
+        }
+        this.inputPath = cmd.getOptionValue("i");
+        this.outputPath = cmd.getOptionValue("o");
+        this.wait = cmd.hasOption("w");
         this.numReducers = Integer.parseInt(cmd.getOptionValue("r", "1"));
-	}
+    }
 
-	/**
-	 * 
-	 * @param args
-	 * @throws Exception
-	 */
-	public static void main(String[] args) throws Exception {
+    /**
+     * 
+     * @param args
+     * @throws Exception
+     */
+    public static void main(String[] args) throws Exception {
         int ret = ToolRunner.run(new WARCRawStatsMDXGenerator(), args);
-		System.exit(ret);
-	}
+        System.exit(ret);
+    }
 
 }

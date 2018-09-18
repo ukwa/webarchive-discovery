@@ -43,8 +43,8 @@ import javax.activation.DataSource;
  *
  */
 public class InputStreamDataSource implements DataSource {
-	private boolean read = false;
-	
+    private boolean read = false;
+    
     private InputStream inputStream;
     
     private String contentType = "*/*";
@@ -60,15 +60,15 @@ public class InputStreamDataSource implements DataSource {
 
     @Override
     public InputStream getInputStream() throws IOException {
-    	if( read == false ) {
-    		read = true;
+        if( read == false ) {
+            read = true;
             return inputStream;
-    	} else if( inputStream.markSupported()) {
-    		inputStream.reset();
-    		return inputStream;
-    	} else {
-    		throw new IOException("InputStreamDataSource: Cannot re-initialise this InputStream!");
-    	}
+        } else if( inputStream.markSupported()) {
+            inputStream.reset();
+            return inputStream;
+        } else {
+            throw new IOException("InputStreamDataSource: Cannot re-initialise this InputStream!");
+        }
     }
 
     @Override

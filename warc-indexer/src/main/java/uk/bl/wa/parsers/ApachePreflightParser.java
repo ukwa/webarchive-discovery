@@ -57,102 +57,102 @@ import uk.bl.wa.util.InputStreamDataSource;
 public class ApachePreflightParser extends AbstractParser {
 
     /** */
-	private static final long serialVersionUID = 710873621129254338L;
+    private static final long serialVersionUID = 710873621129254338L;
 
-	/** */
-	private static final Set<MediaType> SUPPORTED_TYPES =
+    /** */
+    private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
                   MediaType.application("pdf")
             )));
 
-	public static final Property PDF_PREFLIGHT_VALID = Property.internalBoolean("PDF-A-PREFLIGHT-VALID");
+    public static final Property PDF_PREFLIGHT_VALID = Property.internalBoolean("PDF-A-PREFLIGHT-VALID");
 
-	public static final Property PDF_PREFLIGHT_ERRORS = Property.internalTextBag("PDF-A-PREFLIGHT-ERRORS");
+    public static final Property PDF_PREFLIGHT_ERRORS = Property.internalTextBag("PDF-A-PREFLIGHT-ERRORS");
 
-	
-	
-	/* (non-Javadoc)
-	 * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
-	 */
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		return SUPPORTED_TYPES;
-	}
+    
+    
+    /* (non-Javadoc)
+     * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
+     */
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.tika.parser.Parser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)
-	 */
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-		
-		// Attempt to reduce logging of stacktraces:
-		//System.setProperty("log4j.logger.org.apache.pdfbox","");
+    /* (non-Javadoc)
+     * @see org.apache.tika.parser.Parser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)
+     */
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        
+        // Attempt to reduce logging of stacktraces:
+        //System.setProperty("log4j.logger.org.apache.pdfbox","");
 
-		// Set up the validation result:
-		ValidationResult result = null;
+        // Set up the validation result:
+        ValidationResult result = null;
 
-		InputStreamDataSource isds = new InputStreamDataSource(stream);
-		PreflightParser parser = new PreflightParser(isds);
-		PreflightDocument document = null;
-		try {
+        InputStreamDataSource isds = new InputStreamDataSource(stream);
+        PreflightParser parser = new PreflightParser(isds);
+        PreflightDocument document = null;
+        try {
 
-		  /* Parse the PDF file with PreflightParser that inherits from the NonSequentialParser.
-		   * Some additional controls are present to check a set of PDF/A requirements. 
-		   * (Stream length consistency, EOL after some Keyword...)
-		   */
-			parser.parse();
+          /* Parse the PDF file with PreflightParser that inherits from the NonSequentialParser.
+           * Some additional controls are present to check a set of PDF/A requirements. 
+           * (Stream length consistency, EOL after some Keyword...)
+           */
+            parser.parse();
 
-		  /* Once the syntax validation is done, 
-		   * the parser can provide a PreflightDocument 
-		   * (that inherits from PDDocument) 
-		   * This document process the end of PDF/A validation.
-		   */
-			document = parser.getPreflightDocument();
-			document.validate();
-		  
-			// Get validation result
-			result = document.getResult();
+          /* Once the syntax validation is done, 
+           * the parser can provide a PreflightDocument 
+           * (that inherits from PDDocument) 
+           * This document process the end of PDF/A validation.
+           */
+            document = parser.getPreflightDocument();
+            document.validate();
+          
+            // Get validation result
+            result = document.getResult();
 
-		} catch (SyntaxValidationException e) {
-			/*
-			 * the parse method can throw a SyntaxValidationExceptionif the PDF
-			 * file can't be parsed.
-			 * 
-			 * In this case, the exception contains an instance of
-			 * ValidationResult
-			 */
-			result = e.getResult();
-		} catch (Exception e) {
-			// Otherwise, a NULL result:
-			result = null;
+        } catch (SyntaxValidationException e) {
+            /*
+             * the parse method can throw a SyntaxValidationExceptionif the PDF
+             * file can't be parsed.
+             * 
+             * In this case, the exception contains an instance of
+             * ValidationResult
+             */
+            result = e.getResult();
+        } catch (Exception e) {
+            // Otherwise, a NULL result:
+            result = null;
 
-		} finally {
-			// Ensure the document is always closed:
-			if (document != null)
-				document.close();
-		}
+        } finally {
+            // Ensure the document is always closed:
+            if (document != null)
+                document.close();
+        }
 
-		// display validation result
-		Set<String> rs = new HashSet<String>();
-		if (result != null && result.isValid()) {
-		  //System.out.println("The resource is not a valid PDF/A-1b file");
-		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
-		} else {
-		  //System.out.println("The resource is not valid, error(s) :");
-		  metadata.set( PDF_PREFLIGHT_VALID, Boolean.FALSE.toString() );
-			if (result != null) {
-				for (ValidationError error : result.getErrorsList()) {
-					// System.out.println(error.getErrorCode() + " : " +
-					// error.getDetails());
-					rs.add(error.getErrorCode() + " : " + error.getDetails());
-				}
-			}
-		}
+        // display validation result
+        Set<String> rs = new HashSet<String>();
+        if (result != null && result.isValid()) {
+          //System.out.println("The resource is not a valid PDF/A-1b file");
+          metadata.set( PDF_PREFLIGHT_VALID, Boolean.TRUE.toString() );
+        } else {
+          //System.out.println("The resource is not valid, error(s) :");
+          metadata.set( PDF_PREFLIGHT_VALID, Boolean.FALSE.toString() );
+            if (result != null) {
+                for (ValidationError error : result.getErrorsList()) {
+                    // System.out.println(error.getErrorCode() + " : " +
+                    // error.getDetails());
+                    rs.add(error.getErrorCode() + " : " + error.getDetails());
+                }
+            }
+        }
 
-	    metadata.set( PDF_PREFLIGHT_ERRORS , rs.toArray( new String[] {} ));
+        metadata.set( PDF_PREFLIGHT_ERRORS , rs.toArray( new String[] {} ));
 
-	}
+    }
 
 }

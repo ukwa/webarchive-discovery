@@ -62,68 +62,68 @@ import org.xml.sax.helpers.DefaultHandler;
  *
  */
 public class TikaDeepIdentifier {
-	
-	private static Logger log = Logger.getLogger(TikaDeepIdentifier.class.getName());
-	
-	private static int MAX_BUF = 1024*1024;
+    
+    private static Logger log = Logger.getLogger(TikaDeepIdentifier.class.getName());
+    
+    private static int MAX_BUF = 1024*1024;
 
-	// Number of milliseconds before timing out. Defaults to 5 mins (5*60*1000 = 300,000 milliseconds).
-	private final long parseTimeout = 5*60*1000L;
+    // Number of milliseconds before timing out. Defaults to 5 mins (5*60*1000 = 300,000 milliseconds).
+    private final long parseTimeout = 5*60*1000L;
 
-	// Abort handler, limiting the output size, to avoid OOM:
-	private static WriteOutContentHandler ch = null;
-	// Silent handler:
-	//ContentHandler ch = new DefaultHandler();
-	
-	// Set up a parse context:
-	private static ParseContext ctx = new ParseContext();
-	
-	// Set up the parser:
-	private static PreservationParser pika = new PreservationParser();	
-	static {
-		pika.init(ctx);
-	}
-	
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		TikaDeepIdentifier tdi = new TikaDeepIdentifier();
-		tdi.printDetectors();
-		System.out.println("GOT: "+tdi.identify(new byte[] {'%','P','D','F','-'}));
-	}
-	
-	public void printDetectors() {
-		CompositeDetector ds = (CompositeDetector) pika.getDetector();
-		for( Detector d : ds.getDetectors()) {
-			System.out.println("Detector: "+d.getClass().getCanonicalName());
-		}
-		for( MediaType type : pika.getParsers().keySet()) {
-			System.out.println("Parser: "+type+" : "+pika.getParsers().get(type).getClass());
-		}
-	}
+    // Abort handler, limiting the output size, to avoid OOM:
+    private static WriteOutContentHandler ch = null;
+    // Silent handler:
+    //ContentHandler ch = new DefaultHandler();
+    
+    // Set up a parse context:
+    private static ParseContext ctx = new ParseContext();
+    
+    // Set up the parser:
+    private static PreservationParser pika = new PreservationParser();    
+    static {
+        pika.init(ctx);
+    }
+    
+    
+    /**
+     * @param args
+     */
+    public static void main(String[] args) {
+        TikaDeepIdentifier tdi = new TikaDeepIdentifier();
+        tdi.printDetectors();
+        System.out.println("GOT: "+tdi.identify(new byte[] {'%','P','D','F','-'}));
+    }
+    
+    public void printDetectors() {
+        CompositeDetector ds = (CompositeDetector) pika.getDetector();
+        for( Detector d : ds.getDetectors()) {
+            System.out.println("Detector: "+d.getClass().getCanonicalName());
+        }
+        for( MediaType type : pika.getParsers().keySet()) {
+            System.out.println("Parser: "+type+" : "+pika.getParsers().get(type).getClass());
+        }
+    }
 
-	/**
-	 * 
-	 * @param payload
-	 * @return
-	 */
-	public String identify(byte[] payload) {
-		// Fallback
-		String tikaType = MediaType.OCTET_STREAM.toString();
-		// Set up metadata object:
-		Metadata md = new Metadata();
+    /**
+     * 
+     * @param payload
+     * @return
+     */
+    public String identify(byte[] payload) {
+        // Fallback
+        String tikaType = MediaType.OCTET_STREAM.toString();
+        // Set up metadata object:
+        Metadata md = new Metadata();
         TikaInputStream tis = null;
-		try {
+        try {
             tis = TikaInputStream.get( payload, md );
-			// Type according to Tiki:
-			tikaType = pika.getDetector().detect( tis, md ).toString();
-		} catch( Throwable e ) {
-			log.error( "Tika.detect failed:" + e.getMessage() );
-			//e.printStackTrace();
-			return MediaType.OCTET_STREAM.toString();
-		} finally {
+            // Type according to Tiki:
+            tikaType = pika.getDetector().detect( tis, md ).toString();
+        } catch( Throwable e ) {
+            log.error( "Tika.detect failed:" + e.getMessage() );
+            //e.printStackTrace();
+            return MediaType.OCTET_STREAM.toString();
+        } finally {
             if (tis != null) {
                 try {
                     tis.close();
@@ -133,38 +133,38 @@ public class TikaDeepIdentifier {
             }
         }
 
-		// Now perform full parse, to find a more detailed tikaType
-		try {
-			// Default to detected MIME Type:
-			md.set( Metadata.CONTENT_TYPE, tikaType.toString() );
-			
-			// Ensure parsing is NOT recursive:
-			pika.setRecursive(ctx, false);
-			
-			// Now perform the parsing:
-			//parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
-			// One could forcibly limit the size if OOM is still causing problems, like this:
-			//parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
+        // Now perform full parse, to find a more detailed tikaType
+        try {
+            // Default to detected MIME Type:
+            md.set( Metadata.CONTENT_TYPE, tikaType.toString() );
+            
+            // Ensure parsing is NOT recursive:
+            pika.setRecursive(ctx, false);
+            
+            // Now perform the parsing:
+            //parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
+            // One could forcibly limit the size if OOM is still causing problems, like this:
+            //parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
 
-			// Every resource gets it's own write-out buffer:
-			ch = new WriteOutContentHandler(MAX_BUF);
+            // Every resource gets it's own write-out buffer:
+            ch = new WriteOutContentHandler(MAX_BUF);
 
-			// Run the parser in a separate thread:
-			InputStream tikainput = TikaInputStream.get( payload, md );
-			ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
-			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
-			parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
+            // Run the parser in a separate thread:
+            InputStream tikainput = TikaInputStream.get( payload, md );
+            ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
+            Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
+            parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
 
-			try {
-				// TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
-				parseThread.start();
-				parseThread.join( this.parseTimeout );
-				parseThread.interrupt();
-			} catch( OutOfMemoryError o ) {
-				log.error( "TikaExtractor.parse(): " + tikaType + " : " + o.getMessage() );
-			} catch( RuntimeException r ) {
-				log.error( "TikaExtractor.parse(): " + tikaType + " : " + r.getMessage() );
-			} finally {
+            try {
+                // TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
+                parseThread.start();
+                parseThread.join( this.parseTimeout );
+                parseThread.interrupt();
+            } catch( OutOfMemoryError o ) {
+                log.error( "TikaExtractor.parse(): " + tikaType + " : " + o.getMessage() );
+            } catch( RuntimeException r ) {
+                log.error( "TikaExtractor.parse(): " + tikaType + " : " + r.getMessage() );
+            } finally {
                 if (tikainput != null) {
                     try {
                         tikainput.close();
@@ -173,40 +173,40 @@ public class TikaDeepIdentifier {
                     }
                 }
             }
-			
-			// Use the extended MIME type generated by the PreservationParser:
-			String extMimeType = md.get(PreservationParser.EXT_MIME_TYPE);
-			if( runner.complete && extMimeType != null ) tikaType = extMimeType;
-			
-		} catch( Throwable e ) {
-			log.debug( "Tika Exception: " + e.getMessage() );
-			//e.printStackTrace();
-		}
-		// Return whichever value works:
-		return tikaType;
-	}
-	
-	/**
-	 * 
-	 * @param payload
-	 * @param metadata 
-	 * @return
-	 */
-	public String identify(InputStream payload, Metadata metadata) {
-		// Fallback
-		String tikaType = MediaType.OCTET_STREAM.toString();
-		// Set up metadata object:
-		Metadata md = metadata;
+            
+            // Use the extended MIME type generated by the PreservationParser:
+            String extMimeType = md.get(PreservationParser.EXT_MIME_TYPE);
+            if( runner.complete && extMimeType != null ) tikaType = extMimeType;
+            
+        } catch( Throwable e ) {
+            log.debug( "Tika Exception: " + e.getMessage() );
+            //e.printStackTrace();
+        }
+        // Return whichever value works:
+        return tikaType;
+    }
+    
+    /**
+     * 
+     * @param payload
+     * @param metadata 
+     * @return
+     */
+    public String identify(InputStream payload, Metadata metadata) {
+        // Fallback
+        String tikaType = MediaType.OCTET_STREAM.toString();
+        // Set up metadata object:
+        Metadata md = metadata;
         TikaInputStream tis = null;
-		try {
+        try {
             tis = TikaInputStream.get( payload );
-			// Type according to Tiki:
-			tikaType = pika.getDetector().detect( tis, md ).toString();
-		} catch( Throwable e ) {
-			log.error( "Tika.detect failed:" + e.getMessage() );
-			//e.printStackTrace();
-			return MediaType.OCTET_STREAM.toString();
-		} finally {
+            // Type according to Tiki:
+            tikaType = pika.getDetector().detect( tis, md ).toString();
+        } catch( Throwable e ) {
+            log.error( "Tika.detect failed:" + e.getMessage() );
+            //e.printStackTrace();
+            return MediaType.OCTET_STREAM.toString();
+        } finally {
             if (tis != null) {
                 try {
                     tis.close();
@@ -216,37 +216,37 @@ public class TikaDeepIdentifier {
             }
         }
 
-		// Now perform full parse, to find a more detailed tikaType
-		try {
-			// Default to detected MIME Type:
-			md.set( Metadata.CONTENT_TYPE, tikaType.toString() );
-			
-			// Ensure parsing is NOT recursive:
-			pika.setRecursive(ctx, false);
-			
-			// Now perform the parsing:
-			//parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
-			// One could forcibly limit the size if OOM is still causing problems, like this:
-			//parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
+        // Now perform full parse, to find a more detailed tikaType
+        try {
+            // Default to detected MIME Type:
+            md.set( Metadata.CONTENT_TYPE, tikaType.toString() );
+            
+            // Ensure parsing is NOT recursive:
+            pika.setRecursive(ctx, false);
+            
+            // Now perform the parsing:
+            //parser.parse( new ByteArrayInputStream( payload ), ch, md, ctx );
+            // One could forcibly limit the size if OOM is still causing problems, like this:
+            //parser.parse( new ByteArrayInputStream( value.getPayload(), 0, BUF_8KB ), ch, md, ctx );
 
-			// Every resource gets it's own write-out buffer:
-			ch = new WriteOutContentHandler(MAX_BUF);
-			
-			// Run the parser in a separate thread:
-			InputStream tikainput = TikaInputStream.get( payload );
-			ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
-			Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
-			parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
-			try {
-				// TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
-				parseThread.start();
-				parseThread.join( this.parseTimeout );
-				parseThread.interrupt();
-			} catch( OutOfMemoryError o ) {
-				log.error( "TikaExtractor.parse(): " + tikaType + " : " + o.getMessage() );
-			} catch( RuntimeException r ) {
-				log.error( "TikaExtractor.parse(): " + tikaType + " : " + r.getMessage() );
-			} finally {
+            // Every resource gets it's own write-out buffer:
+            ch = new WriteOutContentHandler(MAX_BUF);
+            
+            // Run the parser in a separate thread:
+            InputStream tikainput = TikaInputStream.get( payload );
+            ParseRunner runner = new ParseRunner( pika, tikainput, ch, md, ctx );
+            Thread parseThread = new Thread( runner, Long.toString( System.currentTimeMillis() ) );
+            parseThread.setDaemon(true); // Daemon to ensure proper shutdown when overall processing has finished
+            try {
+                // TODO: This should use TimeLimiter.run(parser, 30000L, false); but that is in the warc-indexer module
+                parseThread.start();
+                parseThread.join( this.parseTimeout );
+                parseThread.interrupt();
+            } catch( OutOfMemoryError o ) {
+                log.error( "TikaExtractor.parse(): " + tikaType + " : " + o.getMessage() );
+            } catch( RuntimeException r ) {
+                log.error( "TikaExtractor.parse(): " + tikaType + " : " + r.getMessage() );
+            } finally {
                 if (tikainput != null) {
                     try {
                         tikainput.close();
@@ -256,90 +256,90 @@ public class TikaDeepIdentifier {
                 }
             }
 
-			// Use the extended MIME type generated by the PreservationParser:
-			String extMimeType = md.get(PreservationParser.EXT_MIME_TYPE);
-			if( runner.complete && extMimeType != null ) tikaType = extMimeType;
-			
-		} catch( Throwable e ) {
-			log.debug( "Tika Exception: " + e.getMessage() );
-			//e.printStackTrace();
-		}
-		// Return whichever value works:
-		return tikaType;
-	}
+            // Use the extended MIME type generated by the PreservationParser:
+            String extMimeType = md.get(PreservationParser.EXT_MIME_TYPE);
+            if( runner.complete && extMimeType != null ) tikaType = extMimeType;
+            
+        } catch( Throwable e ) {
+            log.debug( "Tika Exception: " + e.getMessage() );
+            //e.printStackTrace();
+        }
+        // Return whichever value works:
+        return tikaType;
+    }
 
-	private File copyToTempFile( String name, byte[] content, int max_bytes ) throws Exception {
-		File tmp = File.createTempFile("FmtTmp-", name);
-		tmp.deleteOnExit();
-		FileOutputStream fos = new FileOutputStream(tmp);
-		IOUtils.copy(new ByteArrayInputStream(content, 0, max_bytes), fos);
-		fos.flush();
-		fos.close();
-		return tmp;
-	}
-	
-	private File copyToTempFile( String name, byte[] content ) throws Exception {
-		//if( content.length < BUF_8KB )
-		return copyToTempFile(name, content, MAX_BUF);
-	}
-	
-	// ----
-	
-	private class ParseRunner implements Runnable {
-		private AutoDetectParser parser;
-		private InputStream tikainput;
-		private ContentHandler handler;
-		private Metadata metadata;
-		private ParseContext context;
-		public boolean complete;
+    private File copyToTempFile( String name, byte[] content, int max_bytes ) throws Exception {
+        File tmp = File.createTempFile("FmtTmp-", name);
+        tmp.deleteOnExit();
+        FileOutputStream fos = new FileOutputStream(tmp);
+        IOUtils.copy(new ByteArrayInputStream(content, 0, max_bytes), fos);
+        fos.flush();
+        fos.close();
+        return tmp;
+    }
+    
+    private File copyToTempFile( String name, byte[] content ) throws Exception {
+        //if( content.length < BUF_8KB )
+        return copyToTempFile(name, content, MAX_BUF);
+    }
+    
+    // ----
+    
+    private class ParseRunner implements Runnable {
+        private AutoDetectParser parser;
+        private InputStream tikainput;
+        private ContentHandler handler;
+        private Metadata metadata;
+        private ParseContext context;
+        public boolean complete;
 
-		public ParseRunner( AutoDetectParser parser, InputStream tikainput, ContentHandler handler, Metadata metadata, ParseContext context ) {
-			this.parser = parser;
-			this.tikainput = tikainput;
-			this.handler = handler;
-			this.metadata = metadata;
-			this.context = context;
-			this.complete = false;
-		}
+        public ParseRunner( AutoDetectParser parser, InputStream tikainput, ContentHandler handler, Metadata metadata, ParseContext context ) {
+            this.parser = parser;
+            this.tikainput = tikainput;
+            this.handler = handler;
+            this.metadata = metadata;
+            this.context = context;
+            this.complete = false;
+        }
 
-		@Override
-		public void run() {
-			try {
-				this.parser.parse( this.tikainput, this.handler, this.metadata, this.context );
-				this.complete = true;
-			} catch( InterruptedIOException i ) {
-				this.complete = false;
-			} catch( Exception e ) {
-				System.err.println( "ParseRunner.run(): " + e.getMessage() );
-			}
-		}
-	}
-	
-	// --- Thread pool example, running external command ---
-	
-	private static final ExecutorService THREAD_POOL 
-	= Executors.newCachedThreadPool();
+        @Override
+        public void run() {
+            try {
+                this.parser.parse( this.tikainput, this.handler, this.metadata, this.context );
+                this.complete = true;
+            } catch( InterruptedIOException i ) {
+                this.complete = false;
+            } catch( Exception e ) {
+                System.err.println( "ParseRunner.run(): " + e.getMessage() );
+            }
+        }
+    }
+    
+    // --- Thread pool example, running external command ---
+    
+    private static final ExecutorService THREAD_POOL 
+    = Executors.newCachedThreadPool();
 
-	private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit timeUnit)
-	throws InterruptedException, ExecutionException, TimeoutException
-	{
-		FutureTask<T> task = new FutureTask<T>(c);
-		THREAD_POOL.execute(task);
-		return task.get(timeout, timeUnit);
-	}
+    private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit timeUnit)
+    throws InterruptedException, ExecutionException, TimeoutException
+    {
+        FutureTask<T> task = new FutureTask<T>(c);
+        THREAD_POOL.execute(task);
+        return task.get(timeout, timeUnit);
+    }
 
-	void then() throws InterruptedException, ExecutionException {
-		int timeout = 10;
-		try {
-			int returnCode = timedCall(new Callable<Integer>() {
-				public Integer call() throws Exception
-				{
-					java.lang.Process process = Runtime.getRuntime().exec("command"); 
-					return process.waitFor();
-				}}, new Integer(timeout), TimeUnit.SECONDS);
-		} catch (TimeoutException e) {
-			// Handle timeout here
-		}
-	}
+    void then() throws InterruptedException, ExecutionException {
+        int timeout = 10;
+        try {
+            int returnCode = timedCall(new Callable<Integer>() {
+                public Integer call() throws Exception
+                {
+                    java.lang.Process process = Runtime.getRuntime().exec("command"); 
+                    return process.waitFor();
+                }}, new Integer(timeout), TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            // Handle timeout here
+        }
+    }
 
 }

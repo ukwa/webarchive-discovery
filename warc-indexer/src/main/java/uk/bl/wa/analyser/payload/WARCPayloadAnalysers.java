@@ -56,161 +56,161 @@ import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
  *
  */
 public class WARCPayloadAnalysers {
-	private static Log log = LogFactory.getLog( WARCPayloadAnalysers.class );
-	
-	private boolean passUriToFormatTools = false;
-	private TikaExtractor tika = null;
-	private DroidDetector dd = null;
-	private boolean runDroid = true;
-	private boolean droidUseBinarySignaturesOnly = false;
+    private static Log log = LogFactory.getLog( WARCPayloadAnalysers.class );
+    
+    private boolean passUriToFormatTools = false;
+    private TikaExtractor tika = null;
+    private DroidDetector dd = null;
+    private boolean runDroid = true;
+    private boolean droidUseBinarySignaturesOnly = false;
 
-	private boolean extractContentFirstBytes = true;
-	private int firstBytesLength = 32;
+    private boolean extractContentFirstBytes = true;
+    private int firstBytesLength = 32;
 
-	public HTMLAnalyser html;
-	public PDFAnalyser pdf;
-	public XMLAnalyser xml;
-	public ImageAnalyser image;
+    public HTMLAnalyser html;
+    public PDFAnalyser pdf;
+    public XMLAnalyser xml;
+    public ImageAnalyser image;
 
-	private boolean extractApachePreflightErrors;
-	private boolean extractImageFeatures;
+    private boolean extractApachePreflightErrors;
+    private boolean extractImageFeatures;
 
-	public WARCPayloadAnalysers(Config conf) {
-		this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
-		this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
-		log.info("first_bytes config: " + this.extractContentFirstBytes + " "
-				+ this.firstBytesLength);
-		this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
-		this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
-		this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
+    public WARCPayloadAnalysers(Config conf) {
+        this.extractContentFirstBytes = conf.getBoolean( "warc.index.extract.content.first_bytes.enabled" );
+        this.firstBytesLength = conf.getInt( "warc.index.extract.content.first_bytes.num_bytes" );
+        log.info("first_bytes config: " + this.extractContentFirstBytes + " "
+                + this.firstBytesLength);
+        this.runDroid = conf.getBoolean( "warc.index.id.droid.enabled" );
+        this.passUriToFormatTools = conf.getBoolean( "warc.index.id.useResourceURI" );
+        this.droidUseBinarySignaturesOnly = conf.getBoolean( "warc.index.id.droid.useBinarySignaturesOnly" );
 
-		this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
-		this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.images.enabled");
-		log.info("Image feature extraction = " + this.extractImageFeatures);
-		
-		// Attempt to set up Droid:
-		try {
-			dd = new DroidDetector();
-			dd.setBinarySignaturesOnly( droidUseBinarySignaturesOnly );
-		} catch( CommandExecutionException e ) {
-			e.printStackTrace();
-			dd = null;
-		}
-		
-		// Set up Tika:
-		tika = new TikaExtractor( conf );
-		
-		// Set up other extractors:
-		html = new HTMLAnalyser(conf);
-		if (this.extractApachePreflightErrors) {
-			pdf = new PDFAnalyser(conf);
-		}
-		xml = new XMLAnalyser(conf);
-		if (this.extractImageFeatures) {
-			image = new ImageAnalyser(conf);
-		}
+        this.extractApachePreflightErrors = conf.getBoolean( "warc.index.extract.content.extractApachePreflightErrors" );
+        this.extractImageFeatures = conf.getBoolean("warc.index.extract.content.images.enabled");
+        log.info("Image feature extraction = " + this.extractImageFeatures);
+        
+        // Attempt to set up Droid:
+        try {
+            dd = new DroidDetector();
+            dd.setBinarySignaturesOnly( droidUseBinarySignaturesOnly );
+        } catch( CommandExecutionException e ) {
+            e.printStackTrace();
+            dd = null;
+        }
+        
+        // Set up Tika:
+        tika = new TikaExtractor( conf );
+        
+        // Set up other extractors:
+        html = new HTMLAnalyser(conf);
+        if (this.extractApachePreflightErrors) {
+            pdf = new PDFAnalyser(conf);
+        }
+        xml = new XMLAnalyser(conf);
+        if (this.extractImageFeatures) {
+            image = new ImageAnalyser(conf);
+        }
         Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid", Instrument.SORT.avgtime, 5);
-	}
-	
-	public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
-		final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
-		log.debug("Analysing " + url);
+    }
+    
+    public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+        final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+        log.debug("Analysing " + url);
 
         final long start = System.nanoTime();
-		// Analyse with tika:
-		try {
-			if( passUriToFormatTools ) {
-				solr = tika.extract(source, solr, tikainput, url );
-			} else {
-				solr = tika.extract(source, solr, tikainput, null );
-			}
-		} catch( Exception i ) {
-			log.error( i + ": " + i.getMessage() + ";tika; " + url + "@" + header.getOffset() );
-		}
+        // Analyse with tika:
+        try {
+            if( passUriToFormatTools ) {
+                solr = tika.extract(source, solr, tikainput, url );
+            } else {
+                solr = tika.extract(source, solr, tikainput, null );
+            }
+        } catch( Exception i ) {
+            log.error( i + ": " + i.getMessage() + ";tika; " + url + "@" + header.getOffset() );
+        }
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                            "WARCPayloadAnalyzers.analyze#tikasolrextract", start);
 
         final long firstBytesStart = System.nanoTime();
-		// Pull out the first few bytes, to hunt for new format by magic:
-		try {
-			tikainput.reset();
-			byte[] ffb = new byte[ this.firstBytesLength ];
-			int read = tikainput.read( ffb );
-			if( read >= 4 ) {
-				String hexBytes = Hex.encodeHexString( ffb );
-				solr.addField( SolrFields.CONTENT_FFB, hexBytes.substring( 0, 2 * 4 ) );
-				StringBuilder separatedHexBytes = new StringBuilder();
-				for( String hexByte : Splitter.fixedLength( 2 ).split( hexBytes ) ) {
-					separatedHexBytes.append( hexByte );
-					separatedHexBytes.append( " " );
-				}
-				if( this.extractContentFirstBytes ) {
-					solr.addField( SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim() );
-				}
-			}
-		} catch( Exception i ) {
-			log.error( i + ": " + i.getMessage() + ";ffb; " + url + "@" + header.getOffset() );
-		}
+        // Pull out the first few bytes, to hunt for new format by magic:
+        try {
+            tikainput.reset();
+            byte[] ffb = new byte[ this.firstBytesLength ];
+            int read = tikainput.read( ffb );
+            if( read >= 4 ) {
+                String hexBytes = Hex.encodeHexString( ffb );
+                solr.addField( SolrFields.CONTENT_FFB, hexBytes.substring( 0, 2 * 4 ) );
+                StringBuilder separatedHexBytes = new StringBuilder();
+                for( String hexByte : Splitter.fixedLength( 2 ).split( hexBytes ) ) {
+                    separatedHexBytes.append( hexByte );
+                    separatedHexBytes.append( " " );
+                }
+                if( this.extractContentFirstBytes ) {
+                    solr.addField( SolrFields.CONTENT_FIRST_BYTES, separatedHexBytes.toString().trim() );
+                }
+            }
+        } catch( Exception i ) {
+            log.error( i + ": " + i.getMessage() + ";ffb; " + url + "@" + header.getOffset() );
+        }
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                            "WARCPayloadAnalyzers.analyze#firstbytes", firstBytesStart);
 
-		// Also run DROID (restricted range):
-		if( dd != null && runDroid == true ) {
+        // Also run DROID (restricted range):
+        if( dd != null && runDroid == true ) {
             final long droidStart = System.nanoTime();
-			try {
-				tikainput.reset();
-				// Pass the URL in so DROID can fall back on that:
-				Metadata metadata = new Metadata();
-				if( passUriToFormatTools ) {
-					UsableURI uuri = UsableURIFactory.getInstance(Normalisation.fixURLErrors(url) );
-					// Droid seems unhappy about spaces in filenames, so hack to avoid:
-					String cleanUrl = uuri.getName().replace( " ", "+" );
-					metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );
-				}
-				// Run Droid:
-				MediaType mt = dd.detect( tikainput, metadata );
-				solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
-				Instrument.timeRel("WARCPayloadAnalyzers.analyze#droid",
-								   "WARCPayloadAnalyzers.analyze#droid_type=" + mt.toString(),
-								   droidStart);
-			} catch( Exception i ) {
-				// Note that DROID complains about some URLs with an IllegalArgumentException.
-				log.error(i + ": " + i.getMessage() + ";dd; " + url + " @" + header.getOffset(), i);
-			}
+            try {
+                tikainput.reset();
+                // Pass the URL in so DROID can fall back on that:
+                Metadata metadata = new Metadata();
+                if( passUriToFormatTools ) {
+                    UsableURI uuri = UsableURIFactory.getInstance(Normalisation.fixURLErrors(url) );
+                    // Droid seems unhappy about spaces in filenames, so hack to avoid:
+                    String cleanUrl = uuri.getName().replace( " ", "+" );
+                    metadata.set( Metadata.RESOURCE_NAME_KEY, cleanUrl );
+                }
+                // Run Droid:
+                MediaType mt = dd.detect( tikainput, metadata );
+                solr.addField( SolrFields.CONTENT_TYPE_DROID, mt.toString() );
+                Instrument.timeRel("WARCPayloadAnalyzers.analyze#droid",
+                                   "WARCPayloadAnalyzers.analyze#droid_type=" + mt.toString(),
+                                   droidStart);
+            } catch( Exception i ) {
+                // Note that DROID complains about some URLs with an IllegalArgumentException.
+                log.error(i + ": " + i.getMessage() + ";dd; " + url + " @" + header.getOffset(), i);
+            }
             Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
                                "WARCPayloadAnalyzers.analyze#droid", droidStart);
 
-		}
+        }
 
      
-		try {
-			tikainput.reset();
-			String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
-			if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
-				html.analyse(header, tikainput, solr);
+        try {
+            tikainput.reset();
+            String mime = ( String ) solr.getField( SolrFields.SOLR_CONTENT_TYPE ).getValue();
+            if( mime.startsWith( "text" ) || mime.startsWith("application/xhtml+xml") ) {
+                html.analyse(header, tikainput, solr);
 
-			} else if( mime.startsWith( "image" ) ) {
-				if( this.extractImageFeatures ) {
-					image.analyse(header, tikainput, solr);
-				}
-				
-			} else if( mime.startsWith( "application/pdf" ) ) {
-				if( extractApachePreflightErrors ) {
-					pdf.analyse(header, tikainput, solr);
-				}
-				
-			} else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
-				xml.analyse(header, tikainput, solr);
-				
-			} else {
-				log.debug("No specific additional parser for: "+mime);
-			}
-		} catch( Exception i ) {
+            } else if( mime.startsWith( "image" ) ) {
+                if( this.extractImageFeatures ) {
+                    image.analyse(header, tikainput, solr);
+                }
+                
+            } else if( mime.startsWith( "application/pdf" ) ) {
+                if( extractApachePreflightErrors ) {
+                    pdf.analyse(header, tikainput, solr);
+                }
+                
+            } else if( mime.startsWith("application/xml") || mime.startsWith("text/xml") ) {
+                xml.analyse(header, tikainput, solr);
+                
+            } else {
+                log.debug("No specific additional parser for: "+mime);
+            }
+        } catch( Exception i ) {
             log.error(i + ": " + i.getMessage() + ";x; " + url + "@"
                     + header.getOffset(), i);
-		}
+        }
         Instrument.timeRel("WARCIndexer.extract#analyzetikainput",
                            "WARCPayloadAnalyzers.analyze#total", start);
 
-	}
+    }
 }

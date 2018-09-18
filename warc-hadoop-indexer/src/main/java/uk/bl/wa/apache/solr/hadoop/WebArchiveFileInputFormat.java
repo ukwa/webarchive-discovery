@@ -43,28 +43,28 @@ package uk.bl.wa.apache.solr.hadoop;
 // *
 // */
 //public class WebArchiveFileInputFormat extends
-//		FileInputFormat<Text, WritableArchiveRecord> {
+//        FileInputFormat<Text, WritableArchiveRecord> {
 //
-//	@Override
-//	public RecordReader<Text, WritableArchiveRecord> createRecordReader(
-//			InputSplit split, TaskAttemptContext context) throws IOException,
-//			InterruptedException {
-//		WebArchiveFileRecordReader rr = new WebArchiveFileRecordReader();
-//		rr.initialize(split, context);
-//		return rr;
+//    @Override
+//    public RecordReader<Text, WritableArchiveRecord> createRecordReader(
+//            InputSplit split, TaskAttemptContext context) throws IOException,
+//            InterruptedException {
+//        WebArchiveFileRecordReader rr = new WebArchiveFileRecordReader();
+//        rr.initialize(split, context);
+//        return rr;
 //
-//	}
+//    }
 //
-//	/*
-//	 * (non-Javadoc)
-//	 * 
-//	 * @see
-//	 * org.apache.hadoop.mapreduce.lib.input.FileInputFormat#isSplitable(org
-//	 * .apache.hadoop.mapreduce.JobContext, org.apache.hadoop.fs.Path)
-//	 */
-//	@Override
-//	protected boolean isSplitable(JobContext context, Path filename) {
-//		return false;
-//	}
+//    /*
+//     * (non-Javadoc)
+//     * 
+//     * @see
+//     * org.apache.hadoop.mapreduce.lib.input.FileInputFormat#isSplitable(org
+//     * .apache.hadoop.mapreduce.JobContext, org.apache.hadoop.fs.Path)
+//     */
+//    @Override
+//    protected boolean isSplitable(JobContext context, Path filename) {
+//        return false;
+//    }
 //
 // }

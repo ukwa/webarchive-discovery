@@ -33,12 +33,12 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public abstract class AbstractTextAnalyser {
 
-	/**
-	 * Sub-classes should implement this method to create text payload annotations for solr.
-	 * 
-	 * @param text
-	 * @param solr
-	 */
-	public abstract void analyse( String text, SolrRecord solr );
-	
+    /**
+     * Sub-classes should implement this method to create text payload annotations for solr.
+     * 
+     * @param text
+     * @param solr
+     */
+    public abstract void analyse( String text, SolrRecord solr );
+    
 }

@@ -70,62 +70,62 @@ import java.util.zip.GZIPOutputStream;
  *   uk.bl.wa.util.ValidateWARCNameMatchers -c /warc-indexer/src/test/resources/arcnameanalyser.conf -l warclist.dat
  */
 public class ValidateWARCNameMatchers {
-	
-	private static Log log = LogFactory.getLog(ValidateWARCNameMatchers.class);
+    
+    private static Log log = LogFactory.getLog(ValidateWARCNameMatchers.class);
 
-	private static final String CLI_USAGE = "-c config_file <File with list of WARC files>";
-	private static final String CLI_HEADER =
+    private static final String CLI_USAGE = "-c config_file <File with list of WARC files>";
+    private static final String CLI_HEADER =
             "ValidateWARCNameMatchers - Validates a list of WARC names against the name rule patterns in the " +
             "configuration";
-	private static final String CLI_FOOTER = "";
+    private static final String CLI_FOOTER = "";
 
-	public static void main( String[] args ) throws IOException, TransformerFactoryConfigurationError {
-		CommandLineParser parser = new PosixParser();
-		String configFile = null;
-		String warcs;
-		boolean printLast = false;
+    public static void main( String[] args ) throws IOException, TransformerFactoryConfigurationError {
+        CommandLineParser parser = new PosixParser();
+        String configFile = null;
+        String warcs;
+        boolean printLast = false;
 
-		Options options = new Options();
-		options.addOption("c", "config", true, "Configuration to use.");
-		options.addOption("l", "print last matches", false,
+        Options options = new Options();
+        options.addOption("c", "config", true, "Configuration to use.");
+        options.addOption("l", "print last matches", false,
                           "Print all the warc names that matches the last rule (which is normally the fallback rule).");
 
-		try {
-		    // parse the command line arguments
-		    CommandLine line = parser.parse( options, args );
-		   	String cli_args[] = line.getArgs();
-		   
-		
-			// Check that a mandatory Archive file(s) has been supplied
-			if( !( cli_args.length == 1 ) ) {
-				printUsage( options );
-				System.exit( 0 );
-			}
-			warcs = cli_args[0];
-			if (!new File(warcs).exists()) {
-				throw new FileNotFoundException("The file with WARN names '" + warcs + "' does not exist");
-			}
+        try {
+            // parse the command line arguments
+            CommandLine line = parser.parse( options, args );
+               String cli_args[] = line.getArgs();
+           
+        
+            // Check that a mandatory Archive file(s) has been supplied
+            if( !( cli_args.length == 1 ) ) {
+                printUsage( options );
+                System.exit( 0 );
+            }
+            warcs = cli_args[0];
+            if (!new File(warcs).exists()) {
+                throw new FileNotFoundException("The file with WARN names '" + warcs + "' does not exist");
+            }
 
-			if (line.hasOption("c")) {
-				configFile = line.getOptionValue("c");
-			}
-			printLast = line.hasOption("l");
+            if (line.hasOption("c")) {
+                configFile = line.getOptionValue("c");
+            }
+            printLast = line.hasOption("l");
 
-			validateRules(configFile, warcs, printLast);
-		
-		} catch (org.apache.commons.cli.ParseException e) {
-			log.error("Parse exception when processing command line arguments", e);
+            validateRules(configFile, warcs, printLast);
+        
+        } catch (org.apache.commons.cli.ParseException e) {
+            log.error("Parse exception when processing command line arguments", e);
         }
-	}
-	
-	public static void validateRules(String configFile, String warcs, boolean printLast) throws IOException {
-		long startTime = System.currentTimeMillis();
+    }
+    
+    public static void validateRules(String configFile, String warcs, boolean printLast) throws IOException {
+        long startTime = System.currentTimeMillis();
 
         List<ARCNameAnalyser.Rule> nameRules = getRules(configFile);
-		validateRules(nameRules, new File(warcs), printLast);
-		System.out.println("ValidateWARCNameMatchers Finished in " + ((System.currentTimeMillis() - startTime) / 1000.0)
-						   + " seconds.");
-	}
+        validateRules(nameRules, new File(warcs), printLast);
+        System.out.println("ValidateWARCNameMatchers Finished in " + ((System.currentTimeMillis() - startTime) / 1000.0)
+                           + " seconds.");
+    }
 
     @NotNull
     static List<ARCNameAnalyser.Rule> getRules(String configFile) {
@@ -150,63 +150,63 @@ System.out.println("Pattern #" + i + ": '" + nameRules.get(i).pattern.pattern() 
     }
     static void validateRules(List<ARCNameAnalyser.Rule> nameRules, BufferedReader warcs, boolean printLast)
             throws IOException {
-		String warcName;
-		final int matches[] = new int[nameRules.size()];
-		final String lastMatches[] = new String[nameRules.size()];
-		int total = 0;
-		int nonMatches = 0;
-		String lastNonMatch = null;
-		while ((warcName = warcs.readLine()) != null) {
-			total++;
-			boolean match = false;
-			for (int ruleIndex = 0 ; ruleIndex < nameRules.size() ; ruleIndex++) {
-				if (nameRules.get(ruleIndex).pattern.matcher(warcName.trim()).matches()) {
-					matches[ruleIndex]++;
-					lastMatches[ruleIndex] = warcName;
-					match = true;
-					if (printLast && ruleIndex == nameRules.size()-1) {
+        String warcName;
+        final int matches[] = new int[nameRules.size()];
+        final String lastMatches[] = new String[nameRules.size()];
+        int total = 0;
+        int nonMatches = 0;
+        String lastNonMatch = null;
+        while ((warcName = warcs.readLine()) != null) {
+            total++;
+            boolean match = false;
+            for (int ruleIndex = 0 ; ruleIndex < nameRules.size() ; ruleIndex++) {
+                if (nameRules.get(ruleIndex).pattern.matcher(warcName.trim()).matches()) {
+                    matches[ruleIndex]++;
+                    lastMatches[ruleIndex] = warcName;
+                    match = true;
+                    if (printLast && ruleIndex == nameRules.size()-1) {
                         System.out.println("Last rule match: " + warcName);
                     }
-					break;
-				}
-			}
-			if (!match) {
-				nonMatches++;
-				lastNonMatch = warcName;
-			}
-		}
+                    break;
+                }
+            }
+            if (!match) {
+                nonMatches++;
+                lastNonMatch = warcName;
+            }
+        }
 
-		for (int i = 0 ; i < nameRules.size() ; i++) {
-			System.out.println(String.format("Rule #%d: %d warc name matches. Last match='%s'",
+        for (int i = 0 ; i < nameRules.size() ; i++) {
+            System.out.println(String.format("Rule #%d: %d warc name matches. Last match='%s'",
                                              i, matches[i],lastMatches[i]));
-		}
-		System.out.println("Total warc names: " + total);
-		System.out.println("Total matching warc names: " + (total - nonMatches));
-		System.out.println("Total non-matching warc names: " + nonMatches + ". Last non-match='" + lastNonMatch + "'");
-	}
+        }
+        System.out.println("Total warc names: " + total);
+        System.out.println("Total matching warc names: " + (total - nonMatches));
+        System.out.println("Total non-matching warc names: " + nonMatches + ". Last non-match='" + lastNonMatch + "'");
+    }
 
-	private static Config getConfig(String configFile) {
-		Config conf = ConfigFactory.load();
-		if (configFile != null) {
-			log.info("Loading config from log file: " + configFile);
-			File configFilePath = new File(configFile);
-			if (!configFilePath.exists()){
-			  log.error("Config file not found:"+configFile);
-	          System.exit( 0 );
-			}
+    private static Config getConfig(String configFile) {
+        Config conf = ConfigFactory.load();
+        if (configFile != null) {
+            log.info("Loading config from log file: " + configFile);
+            File configFilePath = new File(configFile);
+            if (!configFilePath.exists()){
+              log.error("Config file not found:"+configFile);
+              System.exit( 0 );
+            }
 
-			conf = ConfigFactory.parseFile(configFilePath);
-			// ConfigPrinter.print(conf);
-			// conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
-			log.info("Loaded warc config " + conf.getString("warc.title"));
-		}
-		return conf;
-	}
+            conf = ConfigFactory.parseFile(configFilePath);
+            // ConfigPrinter.print(conf);
+            // conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
+            log.info("Loaded warc config " + conf.getString("warc.title"));
+        }
+        return conf;
+    }
 
-	private static void printUsage( Options options ) {
-		HelpFormatter helpFormatter = new HelpFormatter();
-		helpFormatter.setWidth( 80 );
-		helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
-	}
-	
+    private static void printUsage( Options options ) {
+        HelpFormatter helpFormatter = new HelpFormatter();
+        helpFormatter.setWidth( 80 );
+        helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
+    }
+    
 }

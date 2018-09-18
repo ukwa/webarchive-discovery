@@ -54,71 +54,71 @@ public class WritableArchiveRecord implements Writable {
                                                      // you try to 'getPayload'
                                                      // or 'write' it, otherwise
                                                      // streaming is used.
-	
-	private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
-	private ArchiveRecord record = null;
+    
+    private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
+    private ArchiveRecord record = null;
 
-	public WritableArchiveRecord() {}
+    public WritableArchiveRecord() {}
 
-	public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
-		this.record = record;
-	}
+    public WritableArchiveRecord( ArchiveRecord record ) throws IOException {
+        this.record = record;
+    }
 
-	public void setRecord( ArchiveRecord record ) throws IOException {
-		this.record = record;
-	}
+    public void setRecord( ArchiveRecord record ) throws IOException {
+        this.record = record;
+    }
 
-	public ArchiveRecord getRecord() {
-		log.debug( "Calling getRecord()..." );
-		return record;
-	}
+    public ArchiveRecord getRecord() {
+        log.debug( "Calling getRecord()..." );
+        return record;
+    }
 
     public byte[] getPayload(int max_size) throws IOException {
-		log.debug( "Calling getPayload( int )..." );
-		BufferedInputStream input = new BufferedInputStream( record );
+        log.debug( "Calling getPayload( int )..." );
+        BufferedInputStream input = new BufferedInputStream( record );
         ByteArrayOutputStream output = new ByteArrayOutputStream(
                 max_size);
-		int ch;
+        int ch;
         int buffer_size = BUFFER_SIZE;
         if (buffer_size > max_size) {
             buffer_size = max_size;
         }
         byte[] buffer = new byte[buffer_size];
         int written = 0;
-		try {
-			while( ( ch = input.read( buffer ) ) >= 0 ) {
+        try {
+            while( ( ch = input.read( buffer ) ) >= 0 ) {
                 output.write(buffer, 0, ch);
                 written += ch;
                 if (written >= max_size) {
                     break;
                 }
-			}
-		} catch( IndexOutOfBoundsException i ) {
-			// Invalid Content-Length throws this.
-		}
-		return output.toByteArray();
-	}
+            }
+        } catch( IndexOutOfBoundsException i ) {
+            // Invalid Content-Length throws this.
+        }
+        return output.toByteArray();
+    }
 
-	public InputStream getPayloadAsStream() {
-		log.debug( "Calling getPayloadAsStream()..." );
-		return record;
-	}
+    public InputStream getPayloadAsStream() {
+        log.debug( "Calling getPayloadAsStream()..." );
+        return record;
+    }
 
-	@Override
-	public void readFields( DataInput input ) throws IOException {
-		log.debug( "Calling readField( DataInput )..." );
-		record = ( WARCRecord ) input;
-	}
+    @Override
+    public void readFields( DataInput input ) throws IOException {
+        log.debug( "Calling readField( DataInput )..." );
+        record = ( WARCRecord ) input;
+    }
 
-	@Override
-	public void write( DataOutput output ) throws IOException {
-		log.debug( "Calling write( DataOutput )..." );
-		if( record != null ) {
-			int ch;
-			byte[] buffer = new byte[ BUFFER_SIZE ];
-			while( ( ch = record.read( buffer ) ) >= 0 ) {
-				output.write( buffer, 0, ch );
-			}
-		}
-	}
+    @Override
+    public void write( DataOutput output ) throws IOException {
+        log.debug( "Calling write( DataOutput )..." );
+        if( record != null ) {
+            int ch;
+            byte[] buffer = new byte[ BUFFER_SIZE ];
+            while( ( ch = record.read( buffer ) ) >= 0 ) {
+                output.write( buffer, 0, ch );
+            }
+        }
+    }
 }

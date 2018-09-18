@@ -50,7 +50,7 @@ import java.util.regex.Pattern;
  *
  */
 public class ARCNameAnalyser extends AbstractPayloadAnalyser {
-	private static Log log = LogFactory.getLog( ARCNameAnalyser.class );
+    private static Log log = LogFactory.getLog( ARCNameAnalyser.class );
 
     private final List<Rule> rules = new ArrayList<Rule>();
 
@@ -68,7 +68,7 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
     }
 
      */
-	public ARCNameAnalyser(Config conf) {
+    public ARCNameAnalyser(Config conf) {
         if (!conf.hasPath("warc.index.extract.content.arcname.rules")) {
             log.debug("No rules for ARCNameAnalyzer; no processing of ARC names");
             return;
@@ -91,10 +91,10 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
             rules.add(new Rule(pattern, fieldTemplates));
         }
         log.info("Added " + rules.size() + " ARCName rules");
-	}
+    }
 
     @Override
-   	public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+       public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
         final String name = header.getReaderIdentifier();
         if (name == null || name.isEmpty()) {
             log.debug("No name present for ARC, skipping analyse");
@@ -105,7 +105,7 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
                 break; // Only one rule match
             }
         }
-   	}
+       }
 
     public List<Rule> getRules() {
         return rules;

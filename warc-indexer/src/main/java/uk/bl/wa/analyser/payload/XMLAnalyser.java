@@ -45,35 +45,35 @@ import uk.bl.wa.util.TimeLimiter;
  *
  */
 public class XMLAnalyser extends AbstractPayloadAnalyser {
-	private static Log log = LogFactory.getLog( XMLAnalyser.class );
+    private static Log log = LogFactory.getLog( XMLAnalyser.class );
 
-	/** */
-	private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
-	private boolean extractXMLRootNamespace = true;
+    /** */
+    private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
+    private boolean extractXMLRootNamespace = true;
 
-	public XMLAnalyser(Config conf) {
-	}
+    public XMLAnalyser(Config conf) {
+    }
 
-	/* (non-Javadoc)
-	 * @see uk.bl.wa.analyser.payload.AbstractPayloadAnalyser#analyse(org.archive.io.ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
-	 */
-	@Override
-	public void analyse(ArchiveRecordHeader header, InputStream tikainput,
-			SolrRecord solr) {
+    /* (non-Javadoc)
+     * @see uk.bl.wa.analyser.payload.AbstractPayloadAnalyser#analyse(org.archive.io.ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
+     */
+    @Override
+    public void analyse(ArchiveRecordHeader header, InputStream tikainput,
+            SolrRecord solr) {
         final long start = System.nanoTime();
-		Metadata metadata = new Metadata();
-		// Also attempt to grab the XML Root NS:
-		if( this.extractXMLRootNamespace ) {
-			ParseRunner parser = new ParseRunner( xrns, tikainput, metadata, solr );
-			try {
-				TimeLimiter.run(parser, 30000L, false);
-			} catch( Exception e ) {
-				log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-				solr.addParseException("when parsing for XML Root Namespace", e);
-			}
-			solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
-		}
+        Metadata metadata = new Metadata();
+        // Also attempt to grab the XML Root NS:
+        if( this.extractXMLRootNamespace ) {
+            ParseRunner parser = new ParseRunner( xrns, tikainput, metadata, solr );
+            try {
+                TimeLimiter.run(parser, 30000L, false);
+            } catch( Exception e ) {
+                log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+                solr.addParseException("when parsing for XML Root Namespace", e);
+            }
+            solr.addField( SolrFields.XML_ROOT_NS, metadata.get(XMLRootNamespaceParser.XML_ROOT_NS));
+        }
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total","XMLAnalyzer.analyze", start);
-	}
+    }
 
 }

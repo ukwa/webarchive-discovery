@@ -48,106 +48,106 @@ import com.typesafe.config.Config;
  * @author anj
  */
 public class SolrWebServer {
-	private static Log log = LogFactory.getLog(SolrWebServer.class);
+    private static Log log = LogFactory.getLog(SolrWebServer.class);
 
     private SolrClient solrServer;
-	
-	public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
+    
+    public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
 
-	public static final String CONF_HTTP_SERVERS = "warc.solr.servers";
+    public static final String CONF_HTTP_SERVERS = "warc.solr.servers";
 
-	public static final String CONF_HTTP_SERVER = "warc.solr.server";
+    public static final String CONF_HTTP_SERVER = "warc.solr.server";
 
-	public static final String COLLECTION = "warc.solr.collection";
+    public static final String COLLECTION = "warc.solr.collection";
 
-	public static final String NUM_SHARDS = "warc.solr.num_shards";
+    public static final String NUM_SHARDS = "warc.solr.num_shards";
 
-	public static final String HDFS_OUTPUT_PATH = "warc.solr.hdfs_output_path";
+    public static final String HDFS_OUTPUT_PATH = "warc.solr.hdfs_output_path";
 
-	/**
-	 * Initializes the Solr connection
-	 */
-	public SolrWebServer(Config conf) {
+    /**
+     * Initializes the Solr connection
+     */
+    public SolrWebServer(Config conf) {
 
-		try {
-			if( conf.hasPath(CONF_HTTP_SERVER)) {
-				log.info("Setting up HttpSolrServer client from a url: "+conf.getString(CONF_HTTP_SERVER));
+        try {
+            if( conf.hasPath(CONF_HTTP_SERVER)) {
+                log.info("Setting up HttpSolrServer client from a url: "+conf.getString(CONF_HTTP_SERVER));
                 solrServer = new HttpSolrClient(
-						conf.getString(CONF_HTTP_SERVER));
-				
-			} else if (conf.hasPath(CONF_ZOOKEEPERS)) {
-				log.info("Setting up CloudSolrServer client via zookeepers.");
+                        conf.getString(CONF_HTTP_SERVER));
+                
+            } else if (conf.hasPath(CONF_ZOOKEEPERS)) {
+                log.info("Setting up CloudSolrServer client via zookeepers.");
                 solrServer = new CloudSolrClient(
-						conf.getString(CONF_ZOOKEEPERS));
+                        conf.getString(CONF_ZOOKEEPERS));
                 ((CloudSolrClient) solrServer)
                         .setDefaultCollection(conf
-						.getString(COLLECTION));
-				
-			} else if (conf.hasPath(CONF_HTTP_SERVERS)) {
-				log.info("Setting up LBHttpSolrServer client from servers list.");
+                        .getString(COLLECTION));
+                
+            } else if (conf.hasPath(CONF_HTTP_SERVERS)) {
+                log.info("Setting up LBHttpSolrServer client from servers list.");
                 solrServer = new LBHttpSolrClient(
                         conf.getString(
-						CONF_HTTP_SERVERS).split(","));
-				
-			} else {
-				log.error("No valid SOLR config found.");
-			}
-		} catch (MalformedURLException e) {
-			log.error("WARCIndexerReducer.configure(): " + e.getMessage());
-		}
+                        CONF_HTTP_SERVERS).split(","));
+                
+            } else {
+                log.error("No valid SOLR config found.");
+            }
+        } catch (MalformedURLException e) {
+            log.error("WARCIndexerReducer.configure(): " + e.getMessage());
+        }
 
-		if (solrServer == null) {
-			System.out.println("Cannot connect to Solr Server!");
-		}
-	}
+        if (solrServer == null) {
+            System.out.println("Cannot connect to Solr Server!");
+        }
+    }
 
     public SolrClient getSolrServer() {
-		return this.solrServer;
-	}
+        return this.solrServer;
+    }
 
-	/**
-	 * Post a List of docs.
-	 * 
-	 * @param solrDoc
-	 * @return 
-	 * @throws SolrServerException
-	 * @throws IOException
-	 */
-	public  UpdateResponse add(List<SolrInputDocument> docs)
-			throws SolrServerException, IOException {
-		/*
-		 * for (SolrInputDocument doc : docs) { log.info("DOC:" +
-		 * doc.toString()); solrServer.add(doc); } return null;
-		 */
-		return solrServer.add(docs);
-	}
+    /**
+     * Post a List of docs.
+     * 
+     * @param solrDoc
+     * @return 
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public  UpdateResponse add(List<SolrInputDocument> docs)
+            throws SolrServerException, IOException {
+        /*
+         * for (SolrInputDocument doc : docs) { log.info("DOC:" +
+         * doc.toString()); solrServer.add(doc); } return null;
+         */
+        return solrServer.add(docs);
+    }
 
-	/**
-	 * Post a single documents.
-	 * 
-	 * @param solrDoc
-	 * @throws SolrServerException
-	 * @throws IOException
-	 */
-	public void updateSolrDoc(SolrInputDocument doc)
-			throws SolrServerException, IOException {
-		solrServer.add(doc);
+    /**
+     * Post a single documents.
+     * 
+     * @param solrDoc
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public void updateSolrDoc(SolrInputDocument doc)
+            throws SolrServerException, IOException {
+        solrServer.add(doc);
 
-	}
+    }
 
-	/**
-	 * Commit the SolrServer.
-	 * 
-	 * @throws SolrServerException
-	 * @throws IOException
-	 */
-	public void commit() throws SolrServerException, IOException {
+    /**
+     * Commit the SolrServer.
+     * 
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public void commit() throws SolrServerException, IOException {
 
-		solrServer.commit();
+        solrServer.commit();
 
-	}
+    }
 
-	/**
+    /**
      * Sends the prepared query to solr and returns the result;
      * 
      * @param query
@@ -158,14 +158,14 @@ public class SolrWebServer {
 
     public QueryResponse query(SolrQuery query)
             throws SolrServerException, IOException {
-		QueryResponse rsp = solrServer.query(query);
-		return rsp;
-	}
+        QueryResponse rsp = solrServer.query(query);
+        return rsp;
+    }
 
-	/**
-	 * Overrides the generic destroy method. Closes all Solrj connections.
-	 */
-	public void destroy() {
-		solrServer = null;
-	}
+    /**
+     * Overrides the generic destroy method. Closes all Solrj connections.
+     */
+    public void destroy() {
+        solrServer = null;
+    }
 }

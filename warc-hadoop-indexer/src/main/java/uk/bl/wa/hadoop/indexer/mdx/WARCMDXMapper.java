@@ -50,44 +50,44 @@ import uk.bl.wa.solr.SolrRecord;
 @SuppressWarnings( { "deprecation" } )
 public class WARCMDXMapper extends MapReduceBase implements
         Mapper<Text, WritableArchiveRecord, Text, Text> {
-	private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
+    private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
 
-	private WARCIndexerMapper wim;
+    private WARCIndexerMapper wim;
 
-	public WARCMDXMapper() {
-		try {
-			// Re-configure logging:
-			Properties props = new Properties();
-			props.load(getClass().getResourceAsStream("/log4j-override.properties"));
-			PropertyConfigurator.configure(props);
-		} catch (IOException e1) {
-			LOG.error("Failed to load log4j config from properties file.");
-		}
-	}
+    public WARCMDXMapper() {
+        try {
+            // Re-configure logging:
+            Properties props = new Properties();
+            props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+            PropertyConfigurator.configure(props);
+        } catch (IOException e1) {
+            LOG.error("Failed to load log4j config from properties file.");
+        }
+    }
 
-	@Override
-	public void configure(JobConf job) {
-		if (wim == null) {
-			wim = new WARCIndexerMapper();
-			wim.configure(job);
-		}
-	}
+    @Override
+    public void configure(JobConf job) {
+        if (wim == null) {
+            wim = new WARCIndexerMapper();
+            wim.configure(job);
+        }
+    }
 
-	@Override
-	public void map(Text key, WritableArchiveRecord value,
+    @Override
+    public void map(Text key, WritableArchiveRecord value,
             OutputCollector<Text, Text> output,
-			Reporter reporter) throws IOException {
+            Reporter reporter) throws IOException {
 
-		// Use the main indexing code:
-		WritableSolrRecord wsolr = wim.innerMap(key, value, reporter);
+        // Use the main indexing code:
+        WritableSolrRecord wsolr = wim.innerMap(key, value, reporter);
 
-		// Ignore skipped records, where wsolr will be NULL:
-		if (wsolr != null) {
-			SolrRecord solr = wsolr.getSolrRecord();
+        // Ignore skipped records, where wsolr will be NULL:
+        if (wsolr != null) {
+            SolrRecord solr = wsolr.getSolrRecord();
 
-			// Wrap up the result:
+            // Wrap up the result:
             MDX mdx;
-			// Wrap up the key:
+            // Wrap up the key:
             Text oKey;
             try {
                 mdx = fromWritableSolrRecord(solr);
@@ -103,9 +103,9 @@ public class WARCMDXMapper extends MapReduceBase implements
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-		}
+        }
 
-	}
+    }
 
     /**
      * 

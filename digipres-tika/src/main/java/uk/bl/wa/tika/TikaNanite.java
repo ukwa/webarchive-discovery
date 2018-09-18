@@ -55,98 +55,98 @@ import uk.bl.wa.tika.parser.pdf.itext.PDFParser;
  */
 public class TikaNanite {
 
-	public static void main(String[] args) throws Exception {
-		
-		PreservationParser parser = new PreservationParser();
-		// Wrap it in a recursive parser, to access the metadata.
-		Parser recursiveReportingParser = new RecursiveMetadataParser(parser);
-		// Set up the context:
-		ParseContext context = new ParseContext();
-		context.set(Parser.class, recursiveReportingParser);
-		parser.init(context);
-		// Control recursion:
-		//parser.setRecursive(context, false);
+    public static void main(String[] args) throws Exception {
+        
+        PreservationParser parser = new PreservationParser();
+        // Wrap it in a recursive parser, to access the metadata.
+        Parser recursiveReportingParser = new RecursiveMetadataParser(parser);
+        // Set up the context:
+        ParseContext context = new ParseContext();
+        context.set(Parser.class, recursiveReportingParser);
+        parser.init(context);
+        // Control recursion:
+        //parser.setRecursive(context, false);
 
-		// Basic handler (ignores/pass-through-in-silence):
-		//ContentHandler handler = new DefaultHandler();
-		// Abort handler, limiting the output size, to avoid OOM:
-		ContentHandler handler = new WriteOutContentHandler(1000*1024);
-		
-		for( String arg : args ) {
-			File inputFile = new File(arg);
-		Metadata metadata = new Metadata();
-		metadata.add( Metadata.RESOURCE_NAME_KEY, inputFile.toURI().toString());
-		// Instream
-		InputStream stream = TikaInputStream.get(inputFile);
-		// Detect
-		//Tika tika = new Tika();
-		MediaType type = parser.getDetector().detect(stream, metadata);
-		System.out.println("Detector found: "+type);
-		metadata.add( Metadata.CONTENT_TYPE, type.toString());
-		// Parse
-		try {
-			recursiveReportingParser.parse(stream, handler, metadata, context);
-		} catch (Exception e ) {
-			System.out.println("---- Exception: "+e);			
-		} finally {
-			stream.close();
-		}
-		
-		System.out.println("--EOF-- Top Level Metadata --");
-		String[] names = metadata.names();
-		Arrays.sort(names);
-		for( String name : names ) {
-			System.out.println("MD: "+name+" = "+metadata.get(name));
-		}
-		System.out.println("----");
-		}
-	}
+        // Basic handler (ignores/pass-through-in-silence):
+        //ContentHandler handler = new DefaultHandler();
+        // Abort handler, limiting the output size, to avoid OOM:
+        ContentHandler handler = new WriteOutContentHandler(1000*1024);
+        
+        for( String arg : args ) {
+            File inputFile = new File(arg);
+        Metadata metadata = new Metadata();
+        metadata.add( Metadata.RESOURCE_NAME_KEY, inputFile.toURI().toString());
+        // Instream
+        InputStream stream = TikaInputStream.get(inputFile);
+        // Detect
+        //Tika tika = new Tika();
+        MediaType type = parser.getDetector().detect(stream, metadata);
+        System.out.println("Detector found: "+type);
+        metadata.add( Metadata.CONTENT_TYPE, type.toString());
+        // Parse
+        try {
+            recursiveReportingParser.parse(stream, handler, metadata, context);
+        } catch (Exception e ) {
+            System.out.println("---- Exception: "+e);            
+        } finally {
+            stream.close();
+        }
+        
+        System.out.println("--EOF-- Top Level Metadata --");
+        String[] names = metadata.names();
+        Arrays.sort(names);
+        for( String name : names ) {
+            System.out.println("MD: "+name+" = "+metadata.get(name));
+        }
+        System.out.println("----");
+        }
+    }
 
-	/**
-	 * For this to work reliably, we will need to modify PackageExtractor
-	 * so that the parent-child relationship is maintained. Otherwise, 
-	 * the identity of files gets confused when there are ZIPs in ZIPs etc.
-	 * 
-	 * @author AnJackson
-	 */
-	private static class RecursiveMetadataParser extends ParserDecorator {
+    /**
+     * For this to work reliably, we will need to modify PackageExtractor
+     * so that the parent-child relationship is maintained. Otherwise, 
+     * the identity of files gets confused when there are ZIPs in ZIPs etc.
+     * 
+     * @author AnJackson
+     */
+    private static class RecursiveMetadataParser extends ParserDecorator {
 
-		/** */
-		private static final long serialVersionUID = 5133646719357986442L;
+        /** */
+        private static final long serialVersionUID = 5133646719357986442L;
 
-		public RecursiveMetadataParser(Parser parser) {
-			super(parser);
-		}
+        public RecursiveMetadataParser(Parser parser) {
+            super(parser);
+        }
 
-		@Override
-		public void parse(InputStream stream, ContentHandler ignore,
-				Metadata metadata, ParseContext context) throws IOException,
-				SAXException, TikaException {
-			
-			System.out.println("----");
-			String providedType = metadata.get( Metadata.CONTENT_TYPE );
-			System.out.println("Pre-parse Content-Type = " + providedType);
+        @Override
+        public void parse(InputStream stream, ContentHandler ignore,
+                Metadata metadata, ParseContext context) throws IOException,
+                SAXException, TikaException {
+            
+            System.out.println("----");
+            String providedType = metadata.get( Metadata.CONTENT_TYPE );
+            System.out.println("Pre-parse Content-Type = " + providedType);
 
-			try {
-				super.parse(stream, ignore, metadata, context);
-			} catch (Exception e ) {
-				System.out.println("---- Exception: "+e);
-				e.printStackTrace();
-			}
-			
-			System.out.println("----");
-			System.out.println("resourceName = "+metadata.get(Metadata.RESOURCE_NAME_KEY));
-			System.out.println("----");
-			String[] names = metadata.names();
-			Arrays.sort(names);
-			for( String name : names ) {
-				System.out.println("RMD : "+name+" = "+metadata.get(name));
-			}
-			System.out.println("----");
-			String text = ignore.toString();
-			if( text.length() > 10 ) text = text.substring(0,10);
-			//System.out.println(text);
-		}
-	}
+            try {
+                super.parse(stream, ignore, metadata, context);
+            } catch (Exception e ) {
+                System.out.println("---- Exception: "+e);
+                e.printStackTrace();
+            }
+            
+            System.out.println("----");
+            System.out.println("resourceName = "+metadata.get(Metadata.RESOURCE_NAME_KEY));
+            System.out.println("----");
+            String[] names = metadata.names();
+            Arrays.sort(names);
+            for( String name : names ) {
+                System.out.println("RMD : "+name+" = "+metadata.get(name));
+            }
+            System.out.println("----");
+            String text = ignore.toString();
+            if( text.length() > 10 ) text = text.substring(0,10);
+            //System.out.println(text);
+        }
+    }
 
 }

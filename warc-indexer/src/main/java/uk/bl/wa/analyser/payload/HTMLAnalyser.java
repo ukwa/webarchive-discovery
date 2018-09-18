@@ -53,57 +53,57 @@ import uk.bl.wa.util.TimeLimiter;
  *
  */
 public class HTMLAnalyser extends AbstractPayloadAnalyser {
-	private static Log log = LogFactory.getLog( HTMLAnalyser.class );
+    private static Log log = LogFactory.getLog( HTMLAnalyser.class );
 
-	private HtmlFeatureParser hfp;
-	private boolean extractLinkDomains;
-	private boolean extractLinkHosts;
-	private boolean extractLinks;
-	private boolean extractElementsUsed;
+    private HtmlFeatureParser hfp;
+    private boolean extractLinkDomains;
+    private boolean extractLinkHosts;
+    private boolean extractLinks;
+    private boolean extractElementsUsed;
     private boolean extractImageLinks;
     private boolean normaliseLinks;
 
-	public HTMLAnalyser( Config conf ) {
-	    this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
-		log.info("HTML - Extract resource links " + this.extractLinks);
-		this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
-		log.info("HTML - Extract host links " + this.extractLinkHosts);
-		this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
-		log.info("HTML - Extract domain links " + this.extractLinkDomains);
-		this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
-		log.info("HTML - Extract elements used " + this.extractElementsUsed);
+    public HTMLAnalyser( Config conf ) {
+        this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
+        log.info("HTML - Extract resource links " + this.extractLinks);
+        this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
+        log.info("HTML - Extract host links " + this.extractLinkHosts);
+        this.extractLinkDomains = conf.getBoolean( "warc.index.extract.linked.domains" );
+        log.info("HTML - Extract domain links " + this.extractLinkDomains);
+        this.extractElementsUsed = conf.getBoolean( "warc.index.extract.content.elements_used" );
+        log.info("HTML - Extract elements used " + this.extractElementsUsed);
         this.extractImageLinks = conf.getBoolean( "warc.index.extract.linked.images" );
-	    log.info("HTML - Extract image links " + this.extractElementsUsed);
-		normaliseLinks = conf.hasPath(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
+        log.info("HTML - Extract image links " + this.extractElementsUsed);
+        normaliseLinks = conf.hasPath(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
                conf.getBoolean(uk.bl.wa.parsers.HtmlFeatureParser.CONF_LINKS_NORMALISE) :
-				uk.bl.wa.parsers.HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
+                uk.bl.wa.parsers.HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
 
         hfp = new HtmlFeatureParser(conf);
-	}
-	/**
-	 *  JSoup link extractor for (x)html, deposit in 'links' field.
-	 * 
-	 * @param header
-	 * @param tikainput
-	 * @param solr
-	 */
-	@Override
+    }
+    /**
+     *  JSoup link extractor for (x)html, deposit in 'links' field.
+     * 
+     * @param header
+     * @param tikainput
+     * @param solr
+     */
+    @Override
     public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
         final long start = System.nanoTime();
-		Metadata metadata = new Metadata();
-		Set<String> hosts = new HashSet<String>();
-		Set<String> suffixes = new HashSet<String>();
-		Set<String> domains = new HashSet<String>();
-		
-		// JSoup NEEDS the URL to function:
-		metadata.set( Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()) );
-		ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
-		try {
-			TimeLimiter.run(parser, 30000L, false);
-		} catch( Exception e ) {
-			log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
-			solr.addParseException("when parsing as HTML", e);
-		}
+        Metadata metadata = new Metadata();
+        Set<String> hosts = new HashSet<String>();
+        Set<String> suffixes = new HashSet<String>();
+        Set<String> domains = new HashSet<String>();
+        
+        // JSoup NEEDS the URL to function:
+        metadata.set( Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()) );
+        ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
+        try {
+            TimeLimiter.run(parser, 30000L, false);
+        } catch( Exception e ) {
+            log.error( "WritableSolrRecord.extract(): " + e.getMessage() );
+            solr.addParseException("when parsing as HTML", e);
+        }
         Instrument.timeRel("HTMLAnalyzer.analyze#total", "HTMLAnalyzer.analyze#parser", start);
 
         
@@ -118,82 +118,82 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
           }                
         }
         
-		// Process links:
-		String[] links_list = metadata.getValues( HtmlFeatureParser.LINK_LIST );
-		if( links_list != null ) {
-			String lhost, ldomain, lsuffix;
-			for( String link : links_list ) {
-				lhost = LinkExtractor.extractHost( link );
-				if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
-					hosts.add(lhost);
-				}
-				lsuffix = LinkExtractor.extractPublicSuffix( link );
-				if( lsuffix != null ) {
-					suffixes.add(lsuffix);
-				}
-				ldomain = LinkExtractor.extractPrivateSuffix( link );
-				if( ldomain != null ) {
-					domains.add(ldomain);
-				}
-				// Also store actual resource-level links:
-				if( this.extractLinks ){
-					String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
-					solr.addField( SolrFields.SOLR_LINKS, urlNorm );
-				}
-			}
-			// Store the data from the links:
-			if( this.extractLinkHosts ) {
-				Set<String> cHostSet = new HashSet<String>();
+        // Process links:
+        String[] links_list = metadata.getValues( HtmlFeatureParser.LINK_LIST );
+        if( links_list != null ) {
+            String lhost, ldomain, lsuffix;
+            for( String link : links_list ) {
+                lhost = LinkExtractor.extractHost( link );
+                if( !lhost.equals( LinkExtractor.MALFORMED_HOST ) ) {
+                    hosts.add(lhost);
+                }
+                lsuffix = LinkExtractor.extractPublicSuffix( link );
+                if( lsuffix != null ) {
+                    suffixes.add(lsuffix);
+                }
+                ldomain = LinkExtractor.extractPrivateSuffix( link );
+                if( ldomain != null ) {
+                    domains.add(ldomain);
+                }
+                // Also store actual resource-level links:
+                if( this.extractLinks ){
+                    String urlNorm  = normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
+                    solr.addField( SolrFields.SOLR_LINKS, urlNorm );
+                }
+            }
+            // Store the data from the links:
+            if( this.extractLinkHosts ) {
+                Set<String> cHostSet = new HashSet<String>();
                 for (String host: hosts) {
-					// Canonicalise the host:
-					String cHost = host;
-					if (WARCIndexer.CANONICALISE_HOST) {
-						try {
-							cHost = Normalisation.canonicaliseHost(host);
-						} catch (URIException e) {
-							log.error("Failed to canonicalise host: '" + host
-									+ "': " + e);
-							cHost = host;
-						}
-					}
-					cHostSet.add(cHost);
-				}
+                    // Canonicalise the host:
+                    String cHost = host;
+                    if (WARCIndexer.CANONICALISE_HOST) {
+                        try {
+                            cHost = Normalisation.canonicaliseHost(host);
+                        } catch (URIException e) {
+                            log.error("Failed to canonicalise host: '" + host
+                                    + "': " + e);
+                            cHost = host;
+                        }
+                    }
+                    cHostSet.add(cHost);
+                }
 
                 Set<String> uniqueHostLevels = new LinkedHashSet<String>();
 
                 // Store the unique hosts:
-				for (String host : cHostSet) {
-					solr.addField(SolrFields.SOLR_LINKS_HOSTS, host);
+                for (String host : cHostSet) {
+                    solr.addField(SolrFields.SOLR_LINKS_HOSTS, host);
                     uniqueHostLevels.addAll(LinkExtractor.allLevels(host));
-				}
+                }
 
-				for(String hostLevel : uniqueHostLevels) {
+                for(String hostLevel : uniqueHostLevels) {
                     solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS,
                             SURT.toSURT(hostLevel));
                 }
-			}
-			if( this.extractLinkDomains ) {
+            }
+            if( this.extractLinkDomains ) {
                 for (String domain: domains) {
-					solr.addField( SolrFields.SOLR_LINKS_DOMAINS, domain );
-				}
-			}
+                    solr.addField( SolrFields.SOLR_LINKS_DOMAINS, domain );
+                }
+            }
             for (String suffix: suffixes) {
-				solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, suffix );
-			}
-		}
-		// Process element usage:
-		if( this.extractElementsUsed ) {
-			String[] de = metadata.getValues( HtmlFeatureParser.DISTINCT_ELEMENTS );
-			if( de != null ) {
-				for( String e : de ) {
-					solr.addField( SolrFields.ELEMENTS_USED, e );
-				}
-			}
-		}
-		for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
-			solr.addField( SolrFields.LICENSE_URL, lurl );
-		}
+                solr.addField( SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES, suffix );
+            }
+        }
+        // Process element usage:
+        if( this.extractElementsUsed ) {
+            String[] de = metadata.getValues( HtmlFeatureParser.DISTINCT_ELEMENTS );
+            if( de != null ) {
+                for( String e : de ) {
+                    solr.addField( SolrFields.ELEMENTS_USED, e );
+                }
+            }
+        }
+        for( String lurl : metadata.getValues( Metadata.LICENSE_URL ) ) {
+            solr.addField( SolrFields.LICENSE_URL, lurl );
+        }
         Instrument.timeRel("WARCPayloadAnalyzers.analyze#total", "HTMLAnalyzer.analyze#total", start);
     }
-	
+    
 }

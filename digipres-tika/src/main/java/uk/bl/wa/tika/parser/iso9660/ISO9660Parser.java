@@ -79,25 +79,25 @@ import org.xml.sax.SAXException;
  */
 public class ISO9660Parser extends AbstractParser {
 
-	/**  */
-	private static final long serialVersionUID = 7346851876221749615L;
-	
-	/** */
-	private static final Set<MediaType> SUPPORTED_TYPES =
-		Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
-				MediaType.application("x-iso9660-image"))));
+    /**  */
+    private static final long serialVersionUID = 7346851876221749615L;
+    
+    /** */
+    private static final Set<MediaType> SUPPORTED_TYPES =
+        Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
+                MediaType.application("x-iso9660-image"))));
 
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		return SUPPORTED_TYPES;
-	}
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
 
 
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-		new ISO9660Extractor(handler, metadata, context).parse(stream);
-	}
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        new ISO9660Extractor(handler, metadata, context).parse(stream);
+    }
 
 }

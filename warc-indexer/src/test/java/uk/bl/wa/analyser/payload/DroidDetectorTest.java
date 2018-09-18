@@ -45,47 +45,47 @@ import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
  */
 public class DroidDetectorTest {
 
-	private DroidDetector dd;
+    private DroidDetector dd;
 
-	/**
-	 * @throws java.lang.Exception
-	 */
-	@Before
-	public void setUp() throws Exception {
-		dd = new DroidDetector();
+    /**
+     * @throws java.lang.Exception
+     */
+    @Before
+    public void setUp() throws Exception {
+        dd = new DroidDetector();
 
-	}
+    }
 
-	/**
+    /**
      * 
      * @throws IOException
      * @throws CommandExecutionException
      * @throws URISyntaxException
      */
-	@Test
-	public void testBasicDetection() throws IOException,
+    @Test
+    public void testBasicDetection() throws IOException,
             CommandExecutionException, URISyntaxException {
         this.runDroids("cc.png", "image/png");
         this.runDroids("cc0.mp3", "audio/mpeg");
-	}
+    }
 
-	private void runDroids(String filename, String expected) throws IOException,
+    private void runDroids(String filename, String expected) throws IOException,
             CommandExecutionException, URISyntaxException {
 
         // Set up File and Metadata:
         String filePath = this.getClass().getClassLoader().getResource(filename)
                 .getPath();
         File file = new File(filePath);
-		Metadata metadata = new Metadata();
-		metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
+        Metadata metadata = new Metadata();
+        metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
 
-		// Test identification two ways:
-		assertEquals("ID of " + filename + " as File, failed.", expected, dd
-				.detect(file).getBaseType().toString());
+        // Test identification two ways:
+        assertEquals("ID of " + filename + " as File, failed.", expected, dd
+                .detect(file).getBaseType().toString());
 
-		assertEquals("ID of " + filename + " as InputStream, failed.",
-				expected, dd.detect(new FileInputStream(file), metadata)
-						.getBaseType().toString());
+        assertEquals("ID of " + filename + " as InputStream, failed.",
+                expected, dd.detect(new FileInputStream(file), metadata)
+                        .getBaseType().toString());
 
-	}
+    }
 }

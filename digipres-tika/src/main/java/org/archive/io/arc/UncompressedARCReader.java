@@ -48,8 +48,8 @@ public class UncompressedARCReader extends ARCReader {
         }
         
 
-	public static ARCReader get(String arc, InputStream is, boolean atFirstRecord ) throws IOException {
-		return new UncompressedARCReader(arc, is, atFirstRecord);
-	}
+    public static ARCReader get(String arc, InputStream is, boolean atFirstRecord ) throws IOException {
+        return new UncompressedARCReader(arc, is, atFirstRecord);
+    }
 
 }

@@ -39,38 +39,38 @@ import au.com.bytecode.opencsv.CSVReader;
  *
  */
 public class PostcodeGeomapper {
-	
-	Map<String,String> postcodes = new HashMap<String,String>();
+    
+    Map<String,String> postcodes = new HashMap<String,String>();
 
-	public PostcodeGeomapper() {
-		CSVReader reader = new CSVReader(new InputStreamReader(
-					this.getClass().getResourceAsStream("/geomapping/postcodes-2011-09-15.csv")
-				));
-	    String [] nextLine;
-	    try {
-			while ((nextLine = reader.readNext()) != null) {
-				postcodes.put(nextLine[1], nextLine[2]+","+nextLine[3]);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
-		}		
-	}
-	
-	/**
-	 * 
-	 * @param pcd
-	 * @return
-	 */
-	public String getLatLogForPostcodeDistrict( String pcd ) {
-		return postcodes.get(pcd);
-	}
-	
-	/**
-	 * @param args
-	 */
-	public static void main(String[] args) {
-		PostcodeGeomapper pcgm = new PostcodeGeomapper();
-		System.out.println("LatLog: "+pcgm.getLatLogForPostcodeDistrict("LS23"));
-	}
+    public PostcodeGeomapper() {
+        CSVReader reader = new CSVReader(new InputStreamReader(
+                    this.getClass().getResourceAsStream("/geomapping/postcodes-2011-09-15.csv")
+                ));
+        String [] nextLine;
+        try {
+            while ((nextLine = reader.readNext()) != null) {
+                postcodes.put(nextLine[1], nextLine[2]+","+nextLine[3]);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }        
+    }
+    
+    /**
+     * 
+     * @param pcd
+     * @return
+     */
+    public String getLatLogForPostcodeDistrict( String pcd ) {
+        return postcodes.get(pcd);
+    }
+    
+    /**
+     * @param args
+     */
+    public static void main(String[] args) {
+        PostcodeGeomapper pcgm = new PostcodeGeomapper();
+        System.out.println("LatLog: "+pcgm.getLatLogForPostcodeDistrict("LS23"));
+    }
 
 }

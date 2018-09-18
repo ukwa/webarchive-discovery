@@ -80,25 +80,25 @@ import org.xml.sax.SAXException;
  */
 public class WARCParser extends AbstractParser {
 
-	/**  */
-	private static final long serialVersionUID = 7346851876221749615L;
-	
-	/** */
-	private static final Set<MediaType> SUPPORTED_TYPES =
-		Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
-				MediaType.application("warc"))));
+    /**  */
+    private static final long serialVersionUID = 7346851876221749615L;
+    
+    /** */
+    private static final Set<MediaType> SUPPORTED_TYPES =
+        Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
+                MediaType.application("warc"))));
 
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		return SUPPORTED_TYPES;
-	}
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
 
 
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-		new WebARCExtractor(handler, metadata, context, true).parse(stream);
-	}
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        new WebARCExtractor(handler, metadata, context, true).parse(stream);
+    }
 
 }

@@ -58,101 +58,101 @@ import org.codehaus.jackson.map.SerializationConfig;
  * 
  */
 public class Annotations {
-	private static final Log LOG = LogFactory.getLog(Annotations.class);
+    private static final Log LOG = LogFactory.getLog(Annotations.class);
 
-	@JsonProperty
-	private HashMap<String, HashMap<String, UriCollection>> collections;
+    @JsonProperty
+    private HashMap<String, HashMap<String, UriCollection>> collections;
 
-	@JsonProperty
-	private HashMap<String, DateRange> collectionDateRanges;
+    @JsonProperty
+    private HashMap<String, DateRange> collectionDateRanges;
 
-	public Annotations() {
-		// Initialise the collection maps:
-		collections = new HashMap<String, HashMap<String, UriCollection>>();
-		collections.put("resource", new HashMap<String, UriCollection>());
-		collections.put("plus1", new HashMap<String, UriCollection>());
-		collections.put("root", new HashMap<String, UriCollection>());
-		collections.put("subdomains", new HashMap<String, UriCollection>());
-		collections.put("source_file_matches", new HashMap<String, UriCollection>());
+    public Annotations() {
+        // Initialise the collection maps:
+        collections = new HashMap<String, HashMap<String, UriCollection>>();
+        collections.put("resource", new HashMap<String, UriCollection>());
+        collections.put("plus1", new HashMap<String, UriCollection>());
+        collections.put("root", new HashMap<String, UriCollection>());
+        collections.put("subdomains", new HashMap<String, UriCollection>());
+        collections.put("source_file_matches", new HashMap<String, UriCollection>());
 
-		// An the date ranges:
-		collectionDateRanges = new HashMap<String, DateRange>();
-	}
+        // An the date ranges:
+        collectionDateRanges = new HashMap<String, DateRange>();
+    }
 
-	public HashMap<String, HashMap<String, UriCollection>> getCollections() {
-		return this.collections;
-	}
+    public HashMap<String, HashMap<String, UriCollection>> getCollections() {
+        return this.collections;
+    }
 
-	public HashMap<String, DateRange> getCollectionDateRanges() {
-		return this.collectionDateRanges;
-	}
+    public HashMap<String, DateRange> getCollectionDateRanges() {
+        return this.collectionDateRanges;
+    }
 
-	private static ObjectMapper getObjectMapper() {
-		ObjectMapper mapper = new ObjectMapper();
-		mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
-				false);
-		return mapper;
-	}
+    private static ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        mapper.configure(SerializationConfig.Feature.WRITE_DATES_AS_TIMESTAMPS,
+                false);
+        return mapper;
+    }
 
-	/**
-	 * 
-	 * @param ann
-	 * @return
-	 */
-	public String toJson() {
-		try {
-			ObjectMapper mapper = getObjectMapper();
-			return mapper.writerWithDefaultPrettyPrinter()
-					.writeValueAsString(this);
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-		return null;
-	}
+    /**
+     * 
+     * @param ann
+     * @return
+     */
+    public String toJson() {
+        try {
+            ObjectMapper mapper = getObjectMapper();
+            return mapper.writerWithDefaultPrettyPrinter()
+                    .writeValueAsString(this);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return null;
+    }
 
-	/**
-	 * 
-	 * @param filename
-	 * @throws FileNotFoundException
-	 */
-	public void toJsonFile(String filename) throws FileNotFoundException {
-		final OutputStream os = new FileOutputStream(filename);
-		final PrintStream printStream = new PrintStream(os);
-		printStream.print(this.toJson());
-		printStream.close();
-	}
+    /**
+     * 
+     * @param filename
+     * @throws FileNotFoundException
+     */
+    public void toJsonFile(String filename) throws FileNotFoundException {
+        final OutputStream os = new FileOutputStream(filename);
+        final PrintStream printStream = new PrintStream(os);
+        printStream.print(this.toJson());
+        printStream.close();
+    }
 
-	/**
-	 * 
-	 * @param json
-	 * @return
-	 * @throws IOException
-	 * @throws JsonMappingException
-	 * @throws JsonParseException
-	 */
-	public static Annotations fromJson(String json) throws JsonParseException,
-			JsonMappingException, IOException {
-		ObjectMapper mapper = getObjectMapper();
-		try {
-			return mapper.readValue(json, Annotations.class);
-		} catch (JsonParseException e) {
-			LOG.error("JsonParseException: " + e, e);
-			LOG.error("When parsing: " + json);
-			throw e;
-		}
-	}
+    /**
+     * 
+     * @param json
+     * @return
+     * @throws IOException
+     * @throws JsonMappingException
+     * @throws JsonParseException
+     */
+    public static Annotations fromJson(String json) throws JsonParseException,
+            JsonMappingException, IOException {
+        ObjectMapper mapper = getObjectMapper();
+        try {
+            return mapper.readValue(json, Annotations.class);
+        } catch (JsonParseException e) {
+            LOG.error("JsonParseException: " + e, e);
+            LOG.error("When parsing: " + json);
+            throw e;
+        }
+    }
 
-	/**
-	 * 
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 * @throws JsonMappingException
-	 * @throws JsonParseException
-	 */
-	public static Annotations fromJsonFile(String filename)
-			throws JsonParseException, JsonMappingException, IOException {
-		return fromJson(FileUtils.readFileToString(new File(filename)));
-	}
+    /**
+     * 
+     * @param filename
+     * @return
+     * @throws IOException
+     * @throws JsonMappingException
+     * @throws JsonParseException
+     */
+    public static Annotations fromJsonFile(String filename)
+            throws JsonParseException, JsonMappingException, IOException {
+        return fromJson(FileUtils.readFileToString(new File(filename)));
+    }
 
 }

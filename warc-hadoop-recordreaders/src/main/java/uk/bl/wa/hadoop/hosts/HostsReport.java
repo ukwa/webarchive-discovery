@@ -40,42 +40,42 @@ import org.apache.hadoop.io.Text;
 
 @SuppressWarnings( "deprecation" )
 public class HostsReport extends Configured implements Tool {
-	private static Logger log = Logger.getLogger( HostsReport.class.getName() );
+    private static Logger log = Logger.getLogger( HostsReport.class.getName() );
 
-	@Override
-	public int run( String[] args ) throws Exception {
-		JobConf conf = new JobConf( getConf(), HostsReport.class );
+    @Override
+    public int run( String[] args ) throws Exception {
+        JobConf conf = new JobConf( getConf(), HostsReport.class );
 
-		log.info( "Adding logs..." );
-		String line;
-		BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
-		while( ( line = br.readLine() ) != null ) {
-			log.info( "Adding " + line );
-			FileInputFormat.addInputPath( conf, new Path( line ) );
-		}
-		br.close();
+        log.info( "Adding logs..." );
+        String line;
+        BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
+        while( ( line = br.readLine() ) != null ) {
+            log.info( "Adding " + line );
+            FileInputFormat.addInputPath( conf, new Path( line ) );
+        }
+        br.close();
 
-		FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
-		conf.setJarByClass( HostsReport.class );
-		conf.setInputFormat( TextInputFormat.class );
-		conf.setMapperClass( HostsReportMapper.class );
-		conf.setMapOutputKeyClass( Text.class );
-		conf.setMapOutputValueClass( Text.class );
-		conf.setCombinerClass( HostsReportReducer.class );
-		conf.setReducerClass( HostsReportReducer.class );
-		conf.setOutputFormat( TextOutputFormat.class );
+        FileOutputFormat.setOutputPath( conf, new Path( args[ 1 ] ) );
+        conf.setJarByClass( HostsReport.class );
+        conf.setInputFormat( TextInputFormat.class );
+        conf.setMapperClass( HostsReportMapper.class );
+        conf.setMapOutputKeyClass( Text.class );
+        conf.setMapOutputValueClass( Text.class );
+        conf.setCombinerClass( HostsReportReducer.class );
+        conf.setReducerClass( HostsReportReducer.class );
+        conf.setOutputFormat( TextOutputFormat.class );
 
-		JobClient.runJob( conf );
-		return 0;
-	}
+        JobClient.runJob( conf );
+        return 0;
+    }
 
-	public static void main( String[] args ) throws Exception {
-		if( args.length != 2 ) {
-			System.out.println( "Need <input file list> and <output dir>!" );
-			System.exit( 1 );
+    public static void main( String[] args ) throws Exception {
+        if( args.length != 2 ) {
+            System.out.println( "Need <input file list> and <output dir>!" );
+            System.exit( 1 );
 
-		}
-		int ret = ToolRunner.run( new HostsReport(), args );
-		System.exit( ret );
-	}
+        }
+        int ret = ToolRunner.run( new HostsReport(), args );
+        System.exit( ret );
+    }
 }

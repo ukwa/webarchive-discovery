@@ -46,51 +46,51 @@ import uk.bl.wa.solr.SolrRecord;
 public class StanfordAnalyser extends AbstractTextAnalyser {
 
     StanfordAnnotatorParser parser = new StanfordAnnotatorParser();
-	
-	public static final int MAX_CHARS_TO_ANALYSE = 10000;
+    
+    public static final int MAX_CHARS_TO_ANALYSE = 10000;
 
-	/**
-	 * @param conf
-	 */
-	public StanfordAnalyser(Config conf) {
-	}
+    /**
+     * @param conf
+     */
+    public StanfordAnalyser(Config conf) {
+    }
 
-	/* (non-Javadoc)
-	 * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
-	 */
-	@Override
-	public void analyse(String text, SolrRecord solr) {
-		int sentilen = MAX_CHARS_TO_ANALYSE;
-		if( sentilen > text.length() )
-			sentilen = text.length();
-		String sentitext = text.substring( 0, sentilen );
-		
-		Metadata metadata = new Metadata();
-		parser.parse(sentitext, metadata);
-		
-		Set<String> persons = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_PERSONS)));
-		System.out.println("PERSONS: "+persons);
-		
-		Set<String> orgs = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_ORGANISATIONS)));
-		System.out.println("ORGANIZATIONS: "+orgs);
-		
-		Set<String> locs = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_LOCATIONS)));
-		System.out.println("LOCATIONS: "+locs);
-		
-		Set<String> dates = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_DATES)));
-		System.out.println("DATES: "+dates);
-		
-		Set<String> misc = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_MISC)));
-		System.out.println("MISC: "+misc);
+    /* (non-Javadoc)
+     * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
+     */
+    @Override
+    public void analyse(String text, SolrRecord solr) {
+        int sentilen = MAX_CHARS_TO_ANALYSE;
+        if( sentilen > text.length() )
+            sentilen = text.length();
+        String sentitext = text.substring( 0, sentilen );
+        
+        Metadata metadata = new Metadata();
+        parser.parse(sentitext, metadata);
+        
+        Set<String> persons = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_PERSONS)));
+        System.out.println("PERSONS: "+persons);
+        
+        Set<String> orgs = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_ORGANISATIONS)));
+        System.out.println("ORGANIZATIONS: "+orgs);
+        
+        Set<String> locs = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_LOCATIONS)));
+        System.out.println("LOCATIONS: "+locs);
+        
+        Set<String> dates = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_DATES)));
+        System.out.println("DATES: "+dates);
+        
+        Set<String> misc = new HashSet<String>(Arrays.asList(metadata.getValues(StanfordAnnotatorParser.NER_MISC)));
+        System.out.println("MISC: "+misc);
 
-		/* And sentiments */
-		
-		String sentiment = metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
-		System.out.println("Sentiment: "+sentiment);
-		solr.addField( SolrFields.SENTIMENT, sentiment );
+        /* And sentiments */
+        
+        String sentiment = metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
+        System.out.println("Sentiment: "+sentiment);
+        solr.addField( SolrFields.SENTIMENT, sentiment );
 
-		List<String> sentiments = Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
-		System.out.println("Sentiments: "+sentiments);
-	}
+        List<String> sentiments = Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
+        System.out.println("Sentiments: "+sentiments);
+    }
 
 }

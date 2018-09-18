@@ -53,39 +53,39 @@ import org.xml.sax.SAXException;
 public class XMLRootNamespaceParser extends AbstractParser {
 
     /** */
-	private static final long serialVersionUID = 710873621129254338L;
+    private static final long serialVersionUID = 710873621129254338L;
 
-	/** */
-	private static final Set<MediaType> SUPPORTED_TYPES =
+    /** */
+    private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(
-            	  MediaType.APPLICATION_XML
+                  MediaType.APPLICATION_XML
             )));
 
-	public static final Property XML_ROOT_NS = Property.internalText("XML_ROOT_NS");
+    public static final Property XML_ROOT_NS = Property.internalText("XML_ROOT_NS");
 
-	/* (non-Javadoc)
-	 * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
-	 */
-	@Override
-	public Set<MediaType> getSupportedTypes(ParseContext context) {
-		return SUPPORTED_TYPES;
-	}
+    /* (non-Javadoc)
+     * @see org.apache.tika.parser.Parser#getSupportedTypes(org.apache.tika.parser.ParseContext)
+     */
+    @Override
+    public Set<MediaType> getSupportedTypes(ParseContext context) {
+        return SUPPORTED_TYPES;
+    }
 
-	/* (non-Javadoc)
-	 * @see org.apache.tika.parser.Parser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)
-	 */
-	@Override
-	public void parse(InputStream stream, ContentHandler handler,
-			Metadata metadata, ParseContext context) throws IOException,
-			SAXException, TikaException {
-		
-		QName qname = new XmlRootExtractor().extractRootElement( stream );
-		if( qname != null ) {
-			if( qname.getNamespaceURI() != null && ( !"".equals( qname.getNamespaceURI().trim() ) ) ) {
-				//log.info( "rootXML: " + qname.getLocalPart() + " prefix:" + qname.getPrefix() + " nsURI:" + qname.getNamespaceURI() );
-				metadata.set( XML_ROOT_NS, qname.getNamespaceURI().toLowerCase() + "#" + qname.getLocalPart().toLowerCase() );
-			}
-		}
-	}
+    /* (non-Javadoc)
+     * @see org.apache.tika.parser.Parser#parse(java.io.InputStream, org.xml.sax.ContentHandler, org.apache.tika.metadata.Metadata, org.apache.tika.parser.ParseContext)
+     */
+    @Override
+    public void parse(InputStream stream, ContentHandler handler,
+            Metadata metadata, ParseContext context) throws IOException,
+            SAXException, TikaException {
+        
+        QName qname = new XmlRootExtractor().extractRootElement( stream );
+        if( qname != null ) {
+            if( qname.getNamespaceURI() != null && ( !"".equals( qname.getNamespaceURI().trim() ) ) ) {
+                //log.info( "rootXML: " + qname.getLocalPart() + " prefix:" + qname.getPrefix() + " nsURI:" + qname.getNamespaceURI() );
+                metadata.set( XML_ROOT_NS, qname.getNamespaceURI().toLowerCase() + "#" + qname.getLocalPart().toLowerCase() );
+            }
+        }
+    }
 
 }

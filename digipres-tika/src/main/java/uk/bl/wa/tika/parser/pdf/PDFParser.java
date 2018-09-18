@@ -47,13 +47,13 @@ import org.xml.sax.SAXException;
  */
 public class PDFParser extends org.apache.tika.parser.pdf.PDFParser {
 
-	/**
-	 * 
-	 */
-	private static final long serialVersionUID = -746530738295311633L;
+    /**
+     * 
+     */
+    private static final long serialVersionUID = -746530738295311633L;
 
-	/*
-	public void parse(
+    /*
+    public void parse(
             InputStream stream, ContentHandler handler,
             Metadata metadata, ParseContext context)
             throws IOException, SAXException, TikaException {
@@ -113,5 +113,5 @@ public class PDFParser extends org.apache.tika.parser.pdf.PDFParser {
         }
     }
     */
-	
+    
 }

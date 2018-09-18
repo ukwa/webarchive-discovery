@@ -46,76 +46,76 @@ import org.apache.solr.common.params.SolrParams;
  */
 public class CollectionsUpdateTest {
 
-	/**
-	 * 
-	 * @see http://192.168.1.204:8990/solr/ldwa/select?q=id%3A20130428112038%2F
-	 *      nUmQeJ6sh5vz9%2BEBlCHGNA%3D%3D&wt=json&indent=true
-	 * @id "20130428112038/nUmQeJ6sh5vz9+EBlCHGNA==";
-	 * 
-	 * @param args
-	 * @throws SolrServerException
-	 * @throws IOException
-	 */
-	public static void main(String[] args) throws SolrServerException,
-			IOException {
+    /**
+     * 
+     * @see http://192.168.1.204:8990/solr/ldwa/select?q=id%3A20130428112038%2F
+     *      nUmQeJ6sh5vz9%2BEBlCHGNA%3D%3D&wt=json&indent=true
+     * @id "20130428112038/nUmQeJ6sh5vz9+EBlCHGNA==";
+     * 
+     * @param args
+     * @throws SolrServerException
+     * @throws IOException
+     */
+    public static void main(String[] args) throws SolrServerException,
+            IOException {
 
-		String id = "sha1:P566LTRHGUBUAQ7I7FFPNKWESWNXVL3I/fYJsnswpD+25KXMfiuOAlA==";
-		String server = "http://localhost:8080/discovery";
+        String id = "sha1:P566LTRHGUBUAQ7I7FFPNKWESWNXVL3I/fYJsnswpD+25KXMfiuOAlA==";
+        String server = "http://localhost:8080/discovery";
 
-		String collection = "Health and Social Care Act 2012 - NHS Reforms";
-		String collections = "Health and Social Care Act 2012 - NHS Reforms"
-				+ "|" + "NHS" + "|" + "Acute Trusts";
+        String collection = "Health and Social Care Act 2012 - NHS Reforms";
+        String collections = "Health and Social Care Act 2012 - NHS Reforms"
+                + "|" + "NHS" + "|" + "Acute Trusts";
 
         SolrClient ss = new HttpSolrClient(server);
 
-		doQuery(ss, id);
+        doQuery(ss, id);
 
-		doUpdate(ss, id, collection, collections);
+        doUpdate(ss, id, collection, collections);
 
-		doQuery(ss, id);
+        doQuery(ss, id);
 
-		doUpdate(ss, id, null, null);
+        doUpdate(ss, id, null, null);
 
-		doQuery(ss, id);
+        doQuery(ss, id);
 
-	}
+    }
 
     private static void doUpdate(SolrClient ss, String id, String collection,
-			String collections) throws SolrServerException, IOException {
+            String collections) throws SolrServerException, IOException {
 
-		ss.add(createUpdateDocument(id, collection, collections));
+        ss.add(createUpdateDocument(id, collection, collections));
 
-		ss.commit(true, true);
+        ss.commit(true, true);
 
-		System.out.println("Updated.");
-	}
+        System.out.println("Updated.");
+    }
 
-	private static SolrInputDocument createUpdateDocument(String id,
-			String collection, String collections) {
-		SolrInputDocument doc = new SolrInputDocument();
-		doc.addField("id", id);
+    private static SolrInputDocument createUpdateDocument(String id,
+            String collection, String collections) {
+        SolrInputDocument doc = new SolrInputDocument();
+        doc.addField("id", id);
 
-		Map<String, String> collection_op = new HashMap<String, String>();
-		collection_op.put("set", collection);
-		doc.addField("collection", collection_op);
+        Map<String, String> collection_op = new HashMap<String, String>();
+        collection_op.put("set", collection);
+        doc.addField("collection", collection_op);
 
-		Map<String, String> collections_op = new HashMap<String, String>();
-		collections_op.put("set", collections);
-		doc.addField("collections", collections_op);
+        Map<String, String> collections_op = new HashMap<String, String>();
+        collections_op.put("set", collections);
+        doc.addField("collections", collections_op);
 
-		return doc;
-	}
+        return doc;
+    }
 
     public static void doQuery(SolrClient ss, String id)
             throws SolrServerException, IOException {
-		SolrParams p = new SolrQuery("id:\"" + id + "\"");
-		QueryResponse r = ss.query(p);
-		System.out.println("GOT collection "
-				+ r.getResults().get(0).getFieldValue("collection"));
-		System.out.println("GOT collections "
-				+ r.getResults().get(0).getFieldValue("collections"));
-		System.out.println("STILL GOT crawl_date "
-				+ r.getResults().get(0).getFieldValue("crawl_date"));
-	}
+        SolrParams p = new SolrQuery("id:\"" + id + "\"");
+        QueryResponse r = ss.query(p);
+        System.out.println("GOT collection "
+                + r.getResults().get(0).getFieldValue("collection"));
+        System.out.println("GOT collections "
+                + r.getResults().get(0).getFieldValue("collections"));
+        System.out.println("STILL GOT crawl_date "
+                + r.getResults().get(0).getFieldValue("crawl_date"));
+    }
 
 }
