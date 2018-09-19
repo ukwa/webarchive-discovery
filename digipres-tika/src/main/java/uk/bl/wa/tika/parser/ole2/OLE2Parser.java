@@ -3,7 +3,7 @@
  */
 package uk.bl.wa.tika.parser.ole2;
 
-/*
+/*-
  * #%L
  * digipres-tika
  * %%
@@ -25,22 +25,12 @@ package uk.bl.wa.tika.parser.ole2;
  * #L%
  */
 
-import java.io.EOFException;
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Iterator;
 import java.util.Set;
 
-import org.xml.sax.ContentHandler;
-import org.xml.sax.SAXException;
-
-import org.apache.poi.poifs.eventfilesystem.POIFSReader;
-import org.apache.poi.poifs.eventfilesystem.POIFSReaderEvent;
-import org.apache.poi.poifs.eventfilesystem.POIFSReaderListener;
-import org.apache.poi.poifs.filesystem.*;
 import org.apache.poi.hpsf.ClassID;
 import org.apache.poi.hpsf.MarkUnsupportedException;
 import org.apache.poi.hpsf.NoPropertySetStreamException;
@@ -50,11 +40,21 @@ import org.apache.poi.hpsf.Section;
 import org.apache.poi.hwpf.HWPFDocument;
 import org.apache.poi.hwpf.model.Ffn;
 import org.apache.poi.hwpf.model.TextPiece;
+import org.apache.poi.poifs.eventfilesystem.POIFSReader;
+import org.apache.poi.poifs.eventfilesystem.POIFSReaderEvent;
+import org.apache.poi.poifs.eventfilesystem.POIFSReaderListener;
+import org.apache.poi.poifs.filesystem.DirectoryEntry;
+import org.apache.poi.poifs.filesystem.DocumentInputStream;
+import org.apache.poi.poifs.filesystem.DocumentNode;
+import org.apache.poi.poifs.filesystem.Entry;
+import org.apache.poi.poifs.filesystem.POIFSFileSystem;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
+import org.xml.sax.ContentHandler;
+import org.xml.sax.SAXException;
 
 /**
  * @author andy
@@ -182,7 +182,7 @@ public class OLE2Parser extends AbstractParser {
                     //e.printStackTrace();
                 } catch (MarkUnsupportedException e) {
                     // TODO Auto-generated catch block
-                    //e.printStackTrace();
+                    // e.printStackTrace();
                 }
                 //byte[] bytes = new byte[node.getSize()];
                 //is.read(bytes);

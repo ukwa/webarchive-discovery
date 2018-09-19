@@ -16,7 +16,7 @@
       </license>
    </licenses>
    <properties>
-      <tika.version>1.15</tika.version>
+      <tika.version>1.17</tika.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
    </properties>
@@ -74,6 +74,11 @@
       <dependency>
          <groupId>org.apache.tika</groupId>
          <artifactId>tika-core</artifactId>
+         <version>${tika.version}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.apache.tika</groupId>
+         <artifactId>tika-langdetect</artifactId>
          <version>${tika.version}</version>
       </dependency>
       <dependency>
