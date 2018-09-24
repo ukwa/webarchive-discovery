@@ -78,7 +78,7 @@ public class HTMLAnalyserTest {
         SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
         InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());
         in.mark((int) SAMPLE.length());
-        ha.analyse(header, in, solr);
+        ha.analyse("source", header, in, solr);
 
         // Check number of links:
         assertEquals("The number of links should be correct", 4,

@@ -199,29 +199,6 @@
             </exclusion>
          </exclusions>
       </dependency>
-      <dependency>
-         <groupId>org.openimaj</groupId>
-         <artifactId>faces</artifactId>
-         <version>1.3.6</version>
-         <exclusions>
-            <exclusion>
-               <artifactId>commons-io</artifactId>
-               <groupId>commons-io</groupId>
-            </exclusion>
-            <exclusion>
-               <artifactId>slf4j-api</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
-            <exclusion>
-               <artifactId>guava</artifactId>
-               <groupId>com.google.guava</groupId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.openimaj</groupId>
-               <artifactId>xuggle-video</artifactId>
-            </exclusion>
-         </exclusions>
-      </dependency>
       <!-- <dependency> <groupId>org.apache.commons</groupId> <artifactId>commons-imaging</artifactId> 
          <version>1.0-SNAPSHOT</version> </dependency> -->
       <dependency>

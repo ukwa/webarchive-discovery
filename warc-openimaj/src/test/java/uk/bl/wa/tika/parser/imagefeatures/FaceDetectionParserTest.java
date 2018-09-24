@@ -23,6 +23,7 @@ package uk.bl.wa.tika.parser.imagefeatures;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -35,11 +36,34 @@ import org.apache.tika.metadata.Metadata;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
+import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+
+import uk.bl.wa.analyser.payload.AbstractPayloadAnalyser;
 
 public class FaceDetectionParserTest {
 
     FaceDetectionParser p = new FaceDetectionParser(ConfigFactory.load());
+
+    @Test
+    public void checkServiceLoader() {
+        // Get the config:
+        Config conf = ConfigFactory.load();
+
+        // create a new provider and call getMessage()
+        List<AbstractPayloadAnalyser> providers = AbstractPayloadAnalyser
+                .getPayloadAnalysers(conf);
+        List<String> providerNames = new ArrayList<String>();
+        for (AbstractPayloadAnalyser provider : providers) {
+            // System.out.println(provider.getClass().getCanonicalName());
+            providerNames.add(provider.getClass().getCanonicalName());
+        }
+
+        assertTrue("Face detection analyser not found.", providerNames
+                .contains("uk.bl.wa.analyser.payload.FaceDetectionAnalyser"));
+        assertTrue("Standard HTML analyser found.", providerNames
+                .contains("uk.bl.wa.analyser.payload.HTMLAnalyser"));
+    }
 
     @Test
     public void test() throws FileNotFoundException, IOException, SAXException,
@@ -100,4 +124,5 @@ public class FaceDetectionParserTest {
         assertEquals("Did not match expected number of cat faces.", cats,
                 cat_faces.size());
     }
+
 }

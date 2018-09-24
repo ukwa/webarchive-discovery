@@ -107,7 +107,8 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
      * @param solr
      */
     @Override
-    public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+    public void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput, SolrRecord solr) {
         final long start = System.nanoTime();
         Metadata metadata = new Metadata();
         Set<String> hosts = new HashSet<String>();

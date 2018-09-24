@@ -53,7 +53,8 @@ public abstract class AbstractPayloadAnalyser {
 
     public abstract boolean shouldProcess(String mimeType);
 
-    public abstract void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr);
+    public abstract void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput, SolrRecord solr);
 
     protected class ParseRunner implements Runnable {
         AbstractParser parser;

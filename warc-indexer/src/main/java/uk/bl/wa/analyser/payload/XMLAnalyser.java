@@ -74,7 +74,7 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
      * ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
      */
     @Override
-    public void analyse(ArchiveRecordHeader header, InputStream tikainput,
+    public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput,
             SolrRecord solr) {
         final long start = System.nanoTime();
         Metadata metadata = new Metadata();

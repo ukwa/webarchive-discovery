@@ -20,6 +20,7 @@
       <module>warc-indexer</module>
       <module>digipres-tika</module>
       <module>warc-nlp</module>
+      <module>warc-openimaj</module>
       <!-- module>warc-solr-test-server</module -->
    </modules>
    <licenses>
@@ -61,6 +62,15 @@
    </properties>
    <build>
       <plugins>
+         <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>2.3.2</version>
+            <configuration>
+               <source>1.7</source>
+               <target>1.7</target>
+            </configuration>
+         </plugin>
          <plugin>
             <!-- Separates the unit tests from the integration tests. -->
             <groupId>org.apache.maven.plugins</groupId>

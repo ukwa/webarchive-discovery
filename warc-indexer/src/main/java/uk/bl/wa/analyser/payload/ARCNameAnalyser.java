@@ -37,6 +37,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
 
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 /**
  * Matches the ARC path for configured patterns and adds extracted parts to the Solr document.
@@ -103,11 +104,17 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
 
     @Override
     public boolean shouldProcess(String mimeType) {
-        return true;
+        if (!getRules().isEmpty()) {
+            return true;
+        }
+        return false;
     }
 
     @Override
-       public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+    public void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput, SolrRecord solr) {
+        final long nameStart = System.nanoTime();
+
         final String name = header.getReaderIdentifier();
         if (name == null || name.isEmpty()) {
             log.debug("No name present for ARC, skipping analyse");
@@ -118,6 +125,8 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
                 break; // Only one rule match
             }
         }
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                "WARCPayloadAnalyzers.analyze#arcname", nameStart);
        }
 
     public List<Rule> getRules() {

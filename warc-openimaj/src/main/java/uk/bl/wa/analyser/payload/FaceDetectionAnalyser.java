@@ -1,7 +1,8 @@
+package uk.bl.wa.analyser.payload;
 /**
  * 
  */
-package uk.bl.wa.analyser.payload;
+
 
 /*
  * #%L
@@ -40,12 +41,15 @@ import com.typesafe.config.Config;
 
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
+import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * @author anj
  *
  */
-public class ImageAnalyser extends AbstractPayloadAnalyser {
+public class FaceDetectionAnalyser extends AbstractPayloadAnalyser {
     private static Log log = LogFactory.getLog( ImageAnalyser.class );
 
     /** Maximum file size of images to attempt to parse */
@@ -55,12 +59,21 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
     private double sampleRate = 100;
     private long sampleCount = 0;
 
+    /** */
+    private boolean extractFaces = false;
+
+    /** */
+    private boolean extractDominantColours = false;
+
     private boolean extractImageFeatures = false;
 
-    public ImageAnalyser() {
+    /** */
+    FaceDetectionParser fdp;
+
+    public FaceDetectionAnalyser() {
     }
 
-    public ImageAnalyser(Config conf) {
+    public FaceDetectionAnalyser(Config conf) {
         this.configure(conf);
     }
 
@@ -69,11 +82,18 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
                 .getBoolean("warc.index.extract.content.images.enabled");
         log.info("Image feature extraction = " + this.extractImageFeatures);
 
+        this.extractFaces = conf
+                .getBoolean("warc.index.extract.content.images.detectFaces");
+        this.extractDominantColours = conf
+                .getBoolean("warc.index.extract.content.images.dominantColours");
+        log.info("Image - detect faces = " + this.extractFaces);
         this.max_size_bytes = conf.getBytes("warc.index.extract.content.images.maxSizeInBytes");
         log.info("Image - max size in bytes " + this.max_size_bytes);
         this.sampleRate = 1.0 / conf
                 .getInt("warc.index.extract.content.images.analysisSamplingRate");
         log.info("Image sample rate " + this.sampleRate);
+        // Set up the parser:
+        fdp = new FaceDetectionParser(conf);
     }
 
     @Override
@@ -109,7 +129,44 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
             // Increment number of images sampled:
             sampleCount++;
                         
-            // images are enabled, we still want to extract image/height (fast)
+            // Attempt to extract faces etc.:
+            if (this.extractFaces || this.extractDominantColours) {
+                final long deepStart = System.nanoTime();
+                ParseRunner parser = new ParseRunner(fdp, tikainput, metadata, solr);
+                try {
+                    TimeLimiter.run(parser, 30000L, false);
+                } catch (Exception e) {
+                    log.error("WritableSolrRecord.extract(): " + e.getMessage());
+                    solr.addParseException("when scanning for faces", e);
+                }
+                // Store basic image data:
+                solr.addField(SolrFields.IMAGE_HEIGHT,
+                        metadata.get(FaceDetectionParser.IMAGE_HEIGHT));
+                solr.addField(SolrFields.IMAGE_WIDTH,
+                        metadata.get(FaceDetectionParser.IMAGE_WIDTH));
+                solr.addField(SolrFields.IMAGE_SIZE,
+                        metadata.get(FaceDetectionParser.IMAGE_SIZE));
+                if (this.extractFaces) {
+                    // Store faces in SOLR:
+                    for (String face : metadata
+                            .getValues(FaceDetectionParser.FACE_FRAGMENT_ID)) {
+                        log.debug("Found a face!");
+                        solr.addField(SolrFields.IMAGE_FACES, face);
+                    }
+                    int faces = metadata
+                            .getValues(FaceDetectionParser.FACE_FRAGMENT_ID).length;
+                    if (faces > 0)
+                        solr.setField(SolrFields.IMAGE_FACES_COUNT, "" + faces);
+                }
+                if (this.extractDominantColours) {
+                    // Store colour:
+                    solr.addField(SolrFields.IMAGE_DOMINANT_COLOUR,
+                            metadata.get(FaceDetectionParser.DOM_COL));
+                    // TODO Extract multiple characteristic colours as well
+                }
+                Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                                   "ImageAnalyzer.analyze#facesanddominant", deepStart);
+            } else { //images are enabled, we still want to extract image/height (fast)
                 //This method takes 0.2ms for a large image. I can be done even faster if needed(but more complicated)).
                 //see https://stackoverflow.com/questions/672916/how-to-get-image-height-and-width-using-java
               
@@ -139,6 +196,7 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
                  }
              }
               
+              }
         }
     }
 

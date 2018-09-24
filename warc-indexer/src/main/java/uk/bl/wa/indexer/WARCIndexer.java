@@ -83,7 +83,6 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
-import uk.bl.wa.analyser.payload.ARCNameAnalyser;
 import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
 import uk.bl.wa.analyser.text.TextAnalysers;
 import uk.bl.wa.annotation.Annotations;
@@ -137,9 +136,6 @@ public class WARCIndexer {
     /** Text Analysers */
     private TextAnalysers txa;
 
-    //Generate fields from regexp on warc-filepath
-    ARCNameAnalyser arcname;
-    
     /** Annotations */
     private Annotator ant = null;
 
@@ -245,8 +241,6 @@ public class WARCIndexer {
             }
         }
 
-        this.arcname = new ARCNameAnalyser(conf);
-    
         // We want stats for the 20 resource types that we spend the most time processing
         Instrument.createSortedStat("WARCIndexer#content_types", Instrument.SORT.time, 20);
 
@@ -531,14 +525,6 @@ public class WARCIndexer {
             
             // Use the current value as the waybackDate:
             solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
-            
-               // Parse ARC name
-            if (!arcname.getRules().isEmpty()) {
-                final long nameStart = System.nanoTime();
-                arcname.analyse(header, tikainput, solr);
-                Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
-                                   "WARCPayloadAnalyzers.analyze#arcname", nameStart);
-            }        
             
             // -----------------------------------------------------
             // Apply any annotations:

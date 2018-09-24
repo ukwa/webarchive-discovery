@@ -1,5 +1,12 @@
 package uk.bl.wa.analyser.payload;
 
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
+
 /*
  * #%L
  * warc-indexer
@@ -23,15 +30,10 @@ package uk.bl.wa.analyser.payload;
  */
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
-import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
-
-import java.util.Map;
-import java.util.Set;
 
 public class WARCPayloadAnalysersTest extends TestCase {
     private static Log log = LogFactory.getLog(WARCPayloadAnalysersTest.class);
@@ -49,7 +51,8 @@ public class WARCPayloadAnalysersTest extends TestCase {
 
         ArchiveRecordHeader header = new FakeHeader("whatever/localrun-job87-20150219-133227.warc");
         SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
-        ana.analyse(header, null, solr);
+        ana.analyse("whatever/localrun-job87-20150219-133227.warc", header,
+                null, solr);
         assertEquals("The solr documents should have the right content for field harvest_job",
                      "job87", (solr.getFieldValue("harvest_job").toString()));
         assertEquals("The solr documents should have the right content for field harvest_year",
@@ -109,7 +112,8 @@ public class WARCPayloadAnalysersTest extends TestCase {
                 }
         }) {
             SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
-            ana.analyse(new FakeHeader(test[1]), null, solr);
+            ana.analyse("whatever/localrun-job87-20150219-133227.warc",
+                    new FakeHeader(test[1]), null, solr);
 
             for (String expectedPair:test[0].split(" *, *")) {
                 String[] tokens = expectedPair.split(":", 2);
