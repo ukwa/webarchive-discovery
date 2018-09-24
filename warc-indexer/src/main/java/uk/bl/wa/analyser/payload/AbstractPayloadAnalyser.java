@@ -84,7 +84,7 @@ public abstract class AbstractPayloadAnalyser {
     
     /**
      * This dynamically loads the available parser implementations on the
-     * classpath:
+     * classpath. Passes in the provided configuration to get things set up.
      * 
      * @return
      */

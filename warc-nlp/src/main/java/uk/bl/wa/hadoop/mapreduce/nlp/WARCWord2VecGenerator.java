@@ -32,8 +32,7 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
-import uk.bl.wa.hadoop.mapreduce.mdx.WARCMDXGenerator;
+import uk.bl.wa.hadoop.indexer.mdx.WARCMDXGenerator;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
@@ -147,7 +146,7 @@ public class WARCWord2VecGenerator extends Configured implements Tool {
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(Text.class);
         conf.setMapOutputKeyClass(Text.class);
-        conf.setMapOutputValueClass(MDXWritable.class);
+        conf.setMapOutputValueClass(Text.class);
         conf.setNumReduceTasks(numReducers);
     }
 

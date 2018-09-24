@@ -19,8 +19,8 @@
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
       <module>digipres-tika</module>
+      <module>warc-nlp</module>
       <!-- module>warc-solr-test-server</module -->
-      <!-- module>warc-nlp</module -->
    </modules>
    <licenses>
       <license>

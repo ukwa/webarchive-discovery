@@ -52,24 +52,31 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
     private static Log log = LogFactory.getLog( ImageAnalyser.class );
 
     /** Maximum file size of images to attempt to parse */
-    private final long max_size_bytes;
+    private long max_size_bytes = 1000;
 
     /** Random sampling rate */
-    private final double sampleRate;
+    private double sampleRate = 100;
     private long sampleCount = 0;
 
     /** */
-    private final boolean extractFaces;
+    private boolean extractFaces = false;
 
     /** */
-    private final boolean extractDominantColours;
+    private boolean extractDominantColours = false;
 
-    private boolean extractImageFeatures;
+    private boolean extractImageFeatures = false;
 
     /** */
     FaceDetectionParser fdp;
 
+    public ImageAnalyser() {
+    }
+
     public ImageAnalyser(Config conf) {
+        this.configure(conf);
+    }
+
+    public void configure(Config conf) {
         this.extractImageFeatures = conf
                 .getBoolean("warc.index.extract.content.images.enabled");
         log.info("Image feature extraction = " + this.extractImageFeatures);
