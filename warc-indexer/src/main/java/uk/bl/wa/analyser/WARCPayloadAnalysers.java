@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.analyser.payload;
+package uk.bl.wa.analyser;
 
 /*
  * #%L
@@ -34,6 +34,8 @@ import org.archive.io.ArchiveRecordHeader;
 
 import com.typesafe.config.Config;
 
+import uk.bl.wa.analyser.payload.AbstractPayloadAnalyser;
+import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;

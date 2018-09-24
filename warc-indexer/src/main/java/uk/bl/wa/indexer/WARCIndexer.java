@@ -83,8 +83,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
-import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
-import uk.bl.wa.analyser.text.TextAnalysers;
+import uk.bl.wa.analyser.TextAnalysers;
+import uk.bl.wa.analyser.WARCPayloadAnalysers;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.extract.LinkExtractor;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package uk.bl.wa.analyser.text;
+package uk.bl.wa.analyser;
 
 /*-
  * #%L
@@ -29,6 +29,7 @@ import java.util.List;
 
 import com.typesafe.config.Config;
 
+import uk.bl.wa.analyser.text.AbstractTextAnalyser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;

@@ -26,7 +26,8 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
-import uk.bl.wa.analyser.payload.WARCPayloadAnalysers;
+
+import uk.bl.wa.analyser.WARCPayloadAnalysers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
