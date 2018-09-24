@@ -98,7 +98,6 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
         if (dd != null && runDroid == true) {
             final long droidStart = System.nanoTime();
             try {
-                tikainput.reset();
                 // Pass the URL in so DROID can fall back on that:
                 Metadata metadata = new Metadata();
                 if (passUriToFormatTools) {

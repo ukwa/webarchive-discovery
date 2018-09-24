@@ -81,7 +81,6 @@ public class FirstBytesAnalyser extends AbstractPayloadAnalyser {
         final long firstBytesStart = System.nanoTime();
         // Pull out the first few bytes, to hunt for new format by magic:
         try {
-            tikainput.reset();
             byte[] ffb = new byte[this.firstBytesLength];
             int read = tikainput.read(ffb);
             if (read >= 4) {

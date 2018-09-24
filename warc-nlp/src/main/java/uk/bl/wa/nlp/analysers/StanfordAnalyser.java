@@ -52,7 +52,13 @@ public class StanfordAnalyser extends AbstractTextAnalyser {
     /**
      * @param conf
      */
-    public StanfordAnalyser(Config conf) {
+    public void configure(Config conf) {
+        if (conf.hasPath("warc.index.extract.content.text_stanford_ner") && conf
+                .getBoolean("warc.index.extract.content.text_stanford_ner")) {
+            this.setEnabled(true);
+        } else {
+            this.setEnabled(false);
+        }
     }
 
     /* (non-Javadoc)

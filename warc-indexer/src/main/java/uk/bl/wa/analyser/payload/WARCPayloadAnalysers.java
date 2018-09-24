@@ -42,7 +42,12 @@ import uk.bl.wa.util.Normalisation;
 
 /**
  * 
- * TODO Entropy, compressibility, fuzzy hashes, etc.
+ * This runs the payload through all the analysers that the ServiceLoader can
+ * find.
+ * 
+ * It runs Tika first, to set up the MIME type, then runs the rest.
+ * 
+ * TODO Entropy, compressibility, fuzzy hashes, etc. ?
  * 
  * @author anj
  *

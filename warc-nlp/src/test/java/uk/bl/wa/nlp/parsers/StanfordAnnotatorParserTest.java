@@ -37,8 +37,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import uk.bl.wa.nlp.parsers.StanfordAnnotatorParser;
-
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  * 

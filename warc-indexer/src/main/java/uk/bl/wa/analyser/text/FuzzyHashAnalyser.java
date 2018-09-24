@@ -46,7 +46,13 @@ public class FuzzyHashAnalyser extends AbstractTextAnalyser {
     /**
      * @param conf
      */
-    public FuzzyHashAnalyser(Config conf) {
+    public void configure(Config conf) {
+        if (!conf.hasPath("warc.index.extract.content.text_fuzzy_hash") || conf
+                .getBoolean("warc.index.extract.content.text_fuzzy_hash")) {
+            setEnabled(true);
+        } else {
+            setEnabled(false);
+        }
     }
 
     /* (non-Javadoc)

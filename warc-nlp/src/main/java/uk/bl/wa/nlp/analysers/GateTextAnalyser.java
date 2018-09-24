@@ -10,6 +10,14 @@ package uk.bl.wa.nlp.analysers;
 //         <version>7.1</version>
 //      </dependency>
 //
+//
+//
+// if (conf.hasPath("warc.index.extract.content.text_gate") &&
+// conf.getBoolean("warc.index.extract.content.text_gate")) {
+// analysers.add(new GateTextAnalyser(conf)); }
+//
+//
+//
 // */
 //package uk.bl.wa.analyser.text;
 

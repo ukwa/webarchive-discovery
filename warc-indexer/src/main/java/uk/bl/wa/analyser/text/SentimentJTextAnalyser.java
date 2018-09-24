@@ -48,7 +48,13 @@ public class SentimentJTextAnalyser extends AbstractTextAnalyser {
     /**
      * @param conf
      */
-    public SentimentJTextAnalyser(Config conf) {
+    public void configure(Config conf) {
+        if (conf.hasPath("warc.index.extract.content.text_sentimentj") && conf
+                .getBoolean("warc.index.extract.content.text_sentimentj")) {
+            setEnabled(true);
+        } else {
+            setEnabled(false);
+        }
     }
 
     /**
