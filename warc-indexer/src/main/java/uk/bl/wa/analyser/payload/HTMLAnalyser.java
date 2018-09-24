@@ -63,7 +63,15 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
     private boolean extractImageLinks;
     private boolean normaliseLinks;
 
+    public HTMLAnalyser() {
+    }
+
     public HTMLAnalyser( Config conf ) {
+        this.configure(conf);
+    }
+
+    @Override
+    public void configure(Config conf) {
         this.extractLinks = conf.getBoolean( "warc.index.extract.linked.resources" );
         log.info("HTML - Extract resource links " + this.extractLinks);
         this.extractLinkHosts = conf.getBoolean( "warc.index.extract.linked.hosts" );
@@ -80,6 +88,17 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
 
         hfp = new HtmlFeatureParser(conf);
     }
+
+    @Override
+    public boolean shouldProcess(String mime) {
+        if (mime.startsWith("text")
+                || mime.startsWith("application/xhtml+xml")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
     /**
      *  JSoup link extractor for (x)html, deposit in 'links' field.
      * 

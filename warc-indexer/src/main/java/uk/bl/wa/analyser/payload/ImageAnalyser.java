@@ -36,12 +36,12 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.tika.parser.imagefeatures.FaceDetectionParser;
 import uk.bl.wa.util.Instrument;
-
-import com.typesafe.config.Config;
 import uk.bl.wa.util.TimeLimiter;
 
 /**
@@ -64,10 +64,16 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
     /** */
     private final boolean extractDominantColours;
 
+    private boolean extractImageFeatures;
+
     /** */
     FaceDetectionParser fdp;
 
     public ImageAnalyser(Config conf) {
+        this.extractImageFeatures = conf
+                .getBoolean("warc.index.extract.content.images.enabled");
+        log.info("Image feature extraction = " + this.extractImageFeatures);
+
         this.extractFaces = conf
                 .getBoolean("warc.index.extract.content.images.detectFaces");
         this.extractDominantColours = conf
@@ -80,6 +86,16 @@ public class ImageAnalyser extends AbstractPayloadAnalyser {
         log.info("Image sample rate " + this.sampleRate);
         // Set up the parser:
         fdp = new FaceDetectionParser(conf);
+    }
+
+    @Override
+    public boolean shouldProcess(String mime) {
+        if( mime.startsWith( "image" ) ) {
+            if (this.extractImageFeatures) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /* (non-Javadoc)

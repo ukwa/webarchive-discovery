@@ -1,5 +1,16 @@
 package uk.bl.wa.analyser.payload;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
+
 /*
  * #%L
  * warc-indexer
@@ -24,18 +35,8 @@ package uk.bl.wa.analyser.payload;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.archive.io.ArchiveRecordHeader;
-import uk.bl.wa.solr.SolrRecord;
-import uk.bl.wa.util.Instrument;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import uk.bl.wa.solr.SolrRecord;
 
 /**
  * Matches the ARC path for configured patterns and adds extracted parts to the Solr document.
@@ -54,6 +55,13 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
 
     private final List<Rule> rules = new ArrayList<Rule>();
 
+    public ARCNameAnalyser() {
+    }
+
+    public ARCNameAnalyser(Config conf) {
+        configure(conf);
+    }
+
     /*
     "arcname" : {
         # Order is significant. Processing stops after first match
@@ -68,7 +76,7 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
     }
 
      */
-    public ARCNameAnalyser(Config conf) {
+    public void configure(Config conf) {
         if (!conf.hasPath("warc.index.extract.content.arcname.rules")) {
             log.debug("No rules for ARCNameAnalyzer; no processing of ARC names");
             return;
@@ -91,6 +99,11 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
             rules.add(new Rule(pattern, fieldTemplates));
         }
         log.info("Added " + rules.size() + " ARCName rules");
+    }
+
+    @Override
+    public boolean shouldProcess(String mimeType) {
+        return true;
     }
 
     @Override
