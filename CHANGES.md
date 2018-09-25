@@ -3,6 +3,9 @@
 
 **NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
 * Validation/statistics for WARC file name matching rules, given a list of WARC file names 
+* Added some experimental face detection code with tests.
+* Fixed licence headers #182
+* Switched from tabs to spaces #173
 * New folder with  Solr 7 schema.xml and solrconfig. All fieldtypes converted to Solr 7. Field content changed to single valued (only in this folder)
 * Solr 7: highlight component added on field content.
 * Solr 7: solrconfig.xml Improved ranking and search in a few more fields with boost.
@@ -27,7 +30,7 @@
 * Default to storing text in the MDX rather than stripping it.
 * Attempt to improve link extraction via MDX  [#16](https://github.com/ukwa/webarchive-discovery/issues/16)
 * Switch to Java 7 (required by Tika > 1.10) [#69](https://github.com/ukwa/webarchive-discovery/issues/69)
-* Updated to Tika 1.15, Solr 5.5.4, Nanite 1.3.1-90, OpenWayback 2.3.2.
+* Updated to Tika 1.17, Solr 5.5.4, Nanite 1.3.1-94, OpenWayback 2.3.2.
 * Deprecated usage of collapse-by-hash mode (i.e. use `use_hash_url_id=false` now) as using updates in this way scales poorly for us.
 * Store host in surt form, and the url path and the status code [#81](https://github.com/ukwa/webarchive-discovery/issues/81)
 * Switched to loading test resources via the classpath [#54](https://github.com/ukwa/webarchive-discovery/issues/54)
