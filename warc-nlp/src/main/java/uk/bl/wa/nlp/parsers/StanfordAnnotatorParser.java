@@ -50,11 +50,9 @@ import edu.stanford.nlp.ling.CoreAnnotations.NamedEntityTagAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.SentencesAnnotation;
 import edu.stanford.nlp.ling.CoreAnnotations.TokensAnnotation;
 import edu.stanford.nlp.ling.CoreLabel;
-import edu.stanford.nlp.neural.rnn.RNNCoreAnnotations;
+import edu.stanford.nlp.ling.CoreLabel.OutputFormat;
 import edu.stanford.nlp.pipeline.Annotation;
 import edu.stanford.nlp.pipeline.StanfordCoreNLP;
-import edu.stanford.nlp.sentiment.SentimentCoreAnnotations.SentimentAnnotatedTree;
-import edu.stanford.nlp.trees.Tree;
 import edu.stanford.nlp.util.CoreMap;
 
 /**
@@ -157,12 +155,13 @@ public class StanfordAnnotatorParser extends AbstractParser {
         double totalSentences = 0;
         int[] sentiments = new int[5];
         for(CoreMap sentence: sentences) {
-            Tree tree = sentence.get(SentimentAnnotatedTree.class);
-            int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
-            totalSentiment += sentiment;
-            totalSentences++;
-            // Also store as a histogram:
-            sentiments[sentiment]++;
+            // REQUIRES LATER VERSION OF PARSER (Java 8)
+            // Tree tree = sentence.get(SentimentAnnotatedTree.class);
+            // int sentiment = RNNCoreAnnotations.getPredictedClass(tree);
+            // totalSentiment += sentiment;
+            // totalSentences++;
+            // // Also store as a histogram:
+            // sentiments[sentiment]++;
             
             // traversing the words in the current sentence
             // a CoreLabel is a CoreMap with additional token-specific methods
@@ -199,7 +198,8 @@ public class StanfordAnnotatorParser extends AbstractParser {
                             System.err.println("Entity type "+currentEntityType+" for token "+token+" cannot be handled by this parser!");
                         }
                     } else {
-                        currentEntity += " " + token;
+                        currentEntity += " "
+                                + token.toString(OutputFormat.VALUE);
                     }
                 }
             }
@@ -214,9 +214,9 @@ public class StanfordAnnotatorParser extends AbstractParser {
         // And calculate and store the rounded average sentiment:
         metadata.set( AVG_SENTIMENT, (int)Math.round(totalSentiment/totalSentences) );
         // Convert sentiment distribution:
-        String[] sentiment_dist = new String[5];
-        for( int i = 0; i < 5; i++ ) sentiment_dist[i] = ""+sentiments[i];
-        metadata.set( SENTIMENT_DIST, sentiment_dist);
+        // String[] sentiment_dist = new String[5];
+        // for( int i = 0; i < 5; i++ ) sentiment_dist[i] = ""+sentiments[i];
+        // metadata.set( SENTIMENT_DIST, sentiment_dist);
     }
 
     /**

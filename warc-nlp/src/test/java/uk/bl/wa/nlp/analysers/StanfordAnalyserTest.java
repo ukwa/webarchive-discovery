@@ -27,7 +27,6 @@ import static org.junit.Assert.assertTrue;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
@@ -36,13 +35,11 @@ import com.typesafe.config.ConfigFactory;
 import uk.bl.wa.analyser.text.AbstractTextAnalyser;
 
 /**
- * IGNORING because NER needs Java 8
  * 
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
 
-@Ignore
 public class StanfordAnalyserTest {
 
     @Test
@@ -59,8 +56,8 @@ public class StanfordAnalyserTest {
             providerNames.add(provider.getClass().getCanonicalName());
         }
 
-        assertTrue("Face detection analyser not found.", providerNames
-                .contains("uk.bl.wa.analyser.payload.FaceDetectionAnalyser"));
+        assertTrue("Additional analyser not found.", providerNames
+                .contains("uk.bl.wa.analyser.payload.TestPayloadAnalyser"));
         assertTrue("Standard HTML analyser found.", providerNames
                 .contains("uk.bl.wa.analyser.payload.HTMLAnalyser"));
     }
