@@ -21,7 +21,6 @@
       <module>digipres-tika</module>
       <module>warc-nlp</module>
       <module>warc-openimaj</module>
-      <!-- module>warc-solr-test-server</module -->
    </modules>
    <licenses>
       <license>
@@ -57,7 +56,7 @@
       <jdk.version>1.7</jdk.version>
       <hadoop.version>0.20.2</hadoop.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-      <ram>1g</ram>
+      <ram>1024</ram>
       <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
    </properties>
    <build>
@@ -84,7 +83,7 @@
                   work) -->
                <trimStackTrace>false</trimStackTrace>
                <forkMode>once</forkMode>
-               <argLine>-Xms${ram} -Xmx${ram}</argLine>
+               <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
             </configuration>
             <executions>
                <execution>
