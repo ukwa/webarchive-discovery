@@ -19,6 +19,10 @@ before_script:
  - "umask 022"
  - "mkdir inputs"
 
+cache:
+  directories:
+  - $HOME/.m2
+
 notifications:
   slack: ukwebarchive:oqbYOo0bd09bnSXn4hGR1aUk
 
