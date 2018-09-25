@@ -52,14 +52,14 @@ public class StanfordAnalyserTest {
                 .getTextAnalysers(conf);
         List<String> providerNames = new ArrayList<String>();
         for (AbstractTextAnalyser provider : providers) {
-            // System.out.println(provider.getClass().getCanonicalName());
+            System.out.println(provider.getClass().getCanonicalName());
             providerNames.add(provider.getClass().getCanonicalName());
         }
 
         assertTrue("Additional analyser not found.", providerNames
-                .contains("uk.bl.wa.analyser.payload.TestPayloadAnalyser"));
+                .contains("uk.bl.wa.nlp.analysers.StanfordAnalyser"));
         assertTrue("Standard HTML analyser found.", providerNames
-                .contains("uk.bl.wa.analyser.payload.HTMLAnalyser"));
+                .contains("uk.bl.wa.analyser.text.PostcodeAnalyser"));
     }
 
 
