@@ -84,7 +84,7 @@
                   work) -->
                <trimStackTrace>false</trimStackTrace>
                <forkMode>once</forkMode>
-               <argLine>-Xmx${ram}</argLine>
+               <argLine>-Xms${ram} -Xmx${ram}</argLine>
             </configuration>
             <executions>
                <execution>
