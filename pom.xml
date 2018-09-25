@@ -21,6 +21,7 @@
       <module>digipres-tika</module>
       <module>warc-nlp</module>
       <module>warc-openimaj</module>
+      <module>warc-analysers-oscar4</module>
    </modules>
    <licenses>
       <license>
@@ -82,7 +83,7 @@
                <!-- Show 100% of the lines from the stack trace (doesn't 
                   work) -->
                <trimStackTrace>false</trimStackTrace>
-               <forkMode>once</forkMode>
+               <forkMode>never</forkMode>
                <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
             </configuration>
             <executions>

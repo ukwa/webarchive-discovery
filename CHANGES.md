@@ -1,3 +1,12 @@
+3.1.0
+-----
+
+* TODO Remove hash-based-ID code to further simplify the indexer code.
+* TODO Move as much code as possible out of the main Indexer class to the Payload or Text analyser classes.
+* TODO Update to Nanite 1.3.2-94 for the bugfixed container signature file and to reduce dependency size.
+* Switch to using `java.util.ServiceLoader` pattern so we can manage build artefacts and dependencies more easily.
+
+
 3.0.0
 -----
 
