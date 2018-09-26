@@ -32,17 +32,6 @@
             </configuration>
          </plugin>
          <plugin>
-            <groupId>com.mycila.maven-license-plugin</groupId>
-            <artifactId>maven-license-plugin</artifactId>
-            <configuration>
-               <header>src/etc/header.txt</header>
-               <year>2012</year>
-               <user.name>Andrew Jackson</user.name>
-               <email>Andrew.Jackson@bl.uk</email>
-               <strictCheck>true</strictCheck>
-            </configuration>
-         </plugin>
-         <plugin>
             <artifactId>maven-assembly-plugin</artifactId>
             <configuration>
                <descriptorRefs>
