@@ -7,7 +7,7 @@ package uk.bl.wa.nlp.analysers;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2014 The UK Web Archive
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -52,7 +52,13 @@ public class StanfordAnalyser extends AbstractTextAnalyser {
     /**
      * @param conf
      */
-    public StanfordAnalyser(Config conf) {
+    public void configure(Config conf) {
+        if (conf.hasPath("warc.index.extract.content.text_stanford_ner") && conf
+                .getBoolean("warc.index.extract.content.text_stanford_ner")) {
+            this.setEnabled(true);
+        } else {
+            this.setEnabled(false);
+        }
     }
 
     /* (non-Javadoc)

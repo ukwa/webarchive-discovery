@@ -29,6 +29,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
@@ -39,13 +40,10 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
-import org.codehaus.plexus.util.IOUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
-
-import uk.bl.wa.hadoop.indexer.mdx.MDXSeqSampleGenerator;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -141,7 +139,7 @@ public class MDXSeqSampleGeneratorIntegrationTest {
             log.info(" --- output : " + output);
             if (dfsCluster.getFileSystem().isFile(output)) {
                 InputStream is = dfsCluster.getFileSystem().open(output);
-                IOUtil.copy(is, fout);
+                IOUtils.copy(is, fout);
             } else {
                 log.info(" --- ...skipping directory...");
             }

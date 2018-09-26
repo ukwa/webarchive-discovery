@@ -33,14 +33,14 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.parsers.ApachePreflightParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
-
-import com.typesafe.config.Config;
 import uk.bl.wa.util.Instrument;
-import uk.bl.wa.util.TimeLimiter;
 import uk.bl.wa.util.Normalisation;
+import uk.bl.wa.util.TimeLimiter;
 
 /**
  * @author anj
@@ -52,14 +52,35 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
     /** */
     private ApachePreflightParser app = new ApachePreflightParser();
 
+    private boolean extractApachePreflightErrors;
+
+    public PDFAnalyser() {
+    }
+
     public PDFAnalyser(Config conf) {
+    }
+
+    public void configure(Config conf) {
+        this.extractApachePreflightErrors = conf.getBoolean(
+                "warc.index.extract.content.extractApachePreflightErrors");
+    }
+
+    @Override
+    public boolean shouldProcess(String mime) {
+        if (mime.startsWith("application/pdf")) {
+            if (extractApachePreflightErrors) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /* (non-Javadoc)
      * @see uk.bl.wa.analyser.payload.AbstractPayloadAnalyser#analyse(org.archive.io.ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
      */
     @Override
-    public void analyse(ArchiveRecordHeader header, InputStream tikainput,
+    public void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput,
             SolrRecord solr) {
         final long start = System.nanoTime();
         Metadata metadata = new Metadata();

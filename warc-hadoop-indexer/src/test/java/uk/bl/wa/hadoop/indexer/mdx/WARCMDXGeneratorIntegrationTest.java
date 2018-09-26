@@ -48,7 +48,6 @@ import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
-import org.codehaus.plexus.util.IOUtil;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -190,7 +189,7 @@ public class WARCMDXGeneratorIntegrationTest {
             log.info(" --- output : " + output);
             if (getFileSystem().isFile(output)) {
                 InputStream is = getFileSystem().open(output);
-                IOUtil.copy(is, fout);
+                IOUtils.copy(is, fout);
             } else {
                 log.info(" --- ...skipping directory...");
             }
@@ -250,7 +249,7 @@ public class WARCMDXGeneratorIntegrationTest {
             log.info(" --- output : " + output);
             if (getFileSystem().isFile(output)) {
                 InputStream is = getFileSystem().open(output);
-                IOUtil.copy(is, fout);
+                IOUtils.copy(is, fout);
             } else {
                 log.info(" --- ...skipping directory...");
             }

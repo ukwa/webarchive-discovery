@@ -36,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
+
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
@@ -43,14 +45,14 @@ import org.junit.Test;
 public class TikaExtractorTest {
     private static Log log = LogFactory.getLog(TikaExtractorTest.class);
 
-    private TikaExtractor tika;
+    private TikaPayloadAnalyser tika;
 
     /**
      * @throws java.lang.Exception
      */
     @Before
     public void setUp() throws Exception {
-        tika = new TikaExtractor();
+        tika = new TikaPayloadAnalyser();
     }
 
     @Test

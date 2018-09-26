@@ -51,7 +51,14 @@ public class PostcodeAnalyser extends AbstractTextAnalyser {
     /**
      * @param conf
      */
-    public PostcodeAnalyser(Config conf) {
+    public void configure(Config conf) {
+        if (!conf.hasPath("warc.index.extract.content.text_extract_postcodes")
+                || conf.getBoolean(
+                        "warc.index.extract.content.text_extract_postcodes")) {
+            setEnabled(true);
+        } else {
+            setEnabled(false);
+        }
     }
 
     /* (non-Javadoc)

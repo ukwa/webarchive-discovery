@@ -1,0 +1,4 @@
+uk.bl.wa.analyser.text.LanguageAnalyser
+uk.bl.wa.analyser.text.PostcodeAnalyser
+uk.bl.wa.analyser.text.FuzzyHashAnalyser
+uk.bl.wa.analyser.text.SentimentJTextAnalyser

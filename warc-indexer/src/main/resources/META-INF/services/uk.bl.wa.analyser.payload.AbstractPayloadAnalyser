@@ -1,0 +1,8 @@
+uk.bl.wa.analyser.payload.ARCNameAnalyser
+uk.bl.wa.analyser.payload.DroidDetectorAnalyser
+uk.bl.wa.analyser.payload.FirstBytesAnalyser
+uk.bl.wa.analyser.payload.HTMLAnalyser
+uk.bl.wa.analyser.payload.ImageAnalyser
+uk.bl.wa.analyser.payload.PDFAnalyser
+uk.bl.wa.analyser.payload.XMLAnalyser
+

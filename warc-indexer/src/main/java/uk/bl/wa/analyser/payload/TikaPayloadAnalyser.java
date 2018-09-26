@@ -1,4 +1,4 @@
-package uk.bl.wa.solr;
+package uk.bl.wa.analyser.payload;
 
 /*
  * #%L
@@ -50,6 +50,7 @@ import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
+import org.archive.io.ArchiveRecordHeader;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
@@ -58,11 +59,13 @@ import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
 import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
 import uk.bl.wa.extract.Times;
+import uk.bl.wa.solr.SolrFields;
+import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.Normalisation;
 import uk.bl.wa.util.TimeLimiter;
 
 /**
@@ -71,11 +74,11 @@ import uk.bl.wa.util.TimeLimiter;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-public class TikaExtractor {
+public class TikaPayloadAnalyser extends AbstractPayloadAnalyser {
     
     public static final String TIKA_PARSE_EXCEPTION = "Tika-Parse-Exception";
 
-    private static Log log = LogFactory.getLog(TikaExtractor.class);
+    private static Log log = LogFactory.getLog(TikaPayloadAnalyser.class);
     
     /** Time to wait for Tika to complete before giving up: */
     private long parseTimeout;
@@ -102,18 +105,21 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
     /** Extract all metadata? */
     private boolean extractAllMetadata;
 
+    private boolean passUriToFormatTools = false;
+
     /* --- --- --- --- */
     
-    public TikaExtractor() {
-        this( ConfigFactory.load() );
+    public TikaPayloadAnalyser() {
+        this.tika = new Tika();
     }
 
     /**
      * 
      * @param conf
      */
-    public TikaExtractor( Config conf ) {
-        this.tika = new Tika();
+    public void configure(Config conf) {
+        this.passUriToFormatTools = conf
+                .getBoolean("warc.index.id.useResourceURI");
         
         this.excludes = conf.getStringList( "warc.index.tika.exclude_mime" );
         log.info("Config: MIME exclude list: " + this.excludes);
@@ -133,8 +139,35 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
     }
 
+    @Override
+    public boolean shouldProcess(String mimeType) {
+        return true;
+    }
 
-    
+    @Override
+    public void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput,
+            SolrRecord solr) {
+        final String url = Normalisation
+                .sanitiseWARCHeaderValue(header.getUrl());
+        log.debug("Analysing " + url);
+
+        final long start = System.nanoTime();
+        // Analyse with tika:
+        try {
+            if (passUriToFormatTools) {
+                solr = this.extract(source, solr, tikainput, url);
+            } else {
+                solr = this.extract(source, solr, tikainput, null);
+            }
+        } catch (Exception i) {
+            log.error(i + ": " + i.getMessage() + ";tika; " + url + "@"
+                    + header.getOffset());
+        }
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                "WARCPayloadAnalyzers.analyze#tikasolrextract", start);
+
+    }
     /**
      * Override embedded document parser logic to prevent descent.
      * 
@@ -254,7 +287,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
             // If there was a parse error, report it:
             String tikaException = metadata
-                    .get(TikaExtractor.TIKA_PARSE_EXCEPTION);
+                    .get(TikaPayloadAnalyser.TIKA_PARSE_EXCEPTION);
             if (tikaException != null) {
                 solr.addParseException(tikaException,
                         new RuntimeException("Exception from Tika"));
@@ -523,7 +556,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         Throwable t = ExceptionUtils.getRootCause(e);
         if ( t == null ) t = e;
         if ( t == null ) return;
-        metadata.set(TikaExtractor.TIKA_PARSE_EXCEPTION, t.getClass().getName()+": "+t.getMessage());
+        metadata.set(TikaPayloadAnalyser.TIKA_PARSE_EXCEPTION, t.getClass().getName()+": "+t.getMessage());
     }
 
     public ContentHandler getHandler( Writer out ) {
@@ -627,5 +660,4 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
          return decimalDegrees;        
        }
 
-    
 }

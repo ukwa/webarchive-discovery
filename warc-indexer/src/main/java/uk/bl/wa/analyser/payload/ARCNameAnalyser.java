@@ -1,5 +1,16 @@
 package uk.bl.wa.analyser.payload;
 
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
+
 /*
  * #%L
  * warc-indexer
@@ -24,18 +35,9 @@ package uk.bl.wa.analyser.payload;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigValue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.archive.io.ArchiveRecordHeader;
+
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
-
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 /**
  * Matches the ARC path for configured patterns and adds extracted parts to the Solr document.
@@ -54,6 +56,13 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
 
     private final List<Rule> rules = new ArrayList<Rule>();
 
+    public ARCNameAnalyser() {
+    }
+
+    public ARCNameAnalyser(Config conf) {
+        configure(conf);
+    }
+
     /*
     "arcname" : {
         # Order is significant. Processing stops after first match
@@ -68,7 +77,7 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
     }
 
      */
-    public ARCNameAnalyser(Config conf) {
+    public void configure(Config conf) {
         if (!conf.hasPath("warc.index.extract.content.arcname.rules")) {
             log.debug("No rules for ARCNameAnalyzer; no processing of ARC names");
             return;
@@ -94,7 +103,18 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
     }
 
     @Override
-       public void analyse(ArchiveRecordHeader header, InputStream tikainput, SolrRecord solr) {
+    public boolean shouldProcess(String mimeType) {
+        if (!getRules().isEmpty()) {
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public void analyse(String source, ArchiveRecordHeader header,
+            InputStream tikainput, SolrRecord solr) {
+        final long nameStart = System.nanoTime();
+
         final String name = header.getReaderIdentifier();
         if (name == null || name.isEmpty()) {
             log.debug("No name present for ARC, skipping analyse");
@@ -105,6 +125,8 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
                 break; // Only one rule match
             }
         }
+        Instrument.timeRel("WARCPayloadAnalyzers.analyze#total",
+                "WARCPayloadAnalyzers.analyze#arcname", nameStart);
        }
 
     public List<Rule> getRules() {

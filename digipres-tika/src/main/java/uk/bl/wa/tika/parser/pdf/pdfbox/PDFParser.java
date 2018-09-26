@@ -156,13 +156,6 @@ public class PDFParser extends AbstractParser {
                    password = "";
                 }
                
-                try { // FIXME This may no longer be requried!?
-                    pdfDocument = PDDocument.load(
-                            new CloseShieldInputStream(stream), "",
-                            MemoryUsageSetting.setupMixed(100 * 1024 * 1024));
-                } catch (Exception e) {
-                    // Ignore
-                }
             }
             metadata.set(Metadata.CONTENT_TYPE, "application/pdf");
             extractMetadata(pdfDocument, metadata);

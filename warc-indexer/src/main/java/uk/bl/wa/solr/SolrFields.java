@@ -109,6 +109,7 @@ public interface SolrFields {
     public static final String SOLR_EXTRACTED_TEXT_NOT_STORED = "text";
     public static final String SOLR_EXTRACTED_TEXT_LENGTH = "content_text_length";
     public static final String SOLR_TIKA_METADATA = "content_metadata";
+    public static final String SOLR_TIKA_METADATA_LIST = "content_metadata_ss";
     public static final String WAYBACK_DATE = "wayback_date";
     public static final String CRAWL_DATE = "crawl_date";
     public static final String CRAWL_DATES = "crawl_dates";

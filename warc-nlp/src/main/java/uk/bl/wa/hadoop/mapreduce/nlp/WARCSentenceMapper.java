@@ -1,5 +1,27 @@
 package uk.bl.wa.hadoop.mapreduce.nlp;
 
+/*-
+ * #%L
+ * warc-nlp
+ * %%
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
 import java.io.IOException;
 import java.util.Properties;
 
@@ -17,12 +39,11 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
-import uk.bl.wa.hadoop.mapreduce.mdx.MDXWritable;
 import uk.bl.wa.solr.SolrRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCSentenceMapper extends MapReduceBase implements
-        Mapper<Text, WritableArchiveRecord, Text, MDXWritable> {
+        Mapper<Text, WritableArchiveRecord, Text, Text> {
     private static final Log LOG = LogFactory.getLog(WARCSentenceMapper.class);
 
     private WARCIndexerMapper wim;
@@ -48,7 +69,7 @@ public class WARCSentenceMapper extends MapReduceBase implements
 
     @Override
     public void map(Text key, WritableArchiveRecord value,
-            OutputCollector<Text, MDXWritable> output,
+            OutputCollector<Text, Text> output,
             Reporter reporter) throws IOException {
 
         // Use the main indexing code:
@@ -59,7 +80,7 @@ public class WARCSentenceMapper extends MapReduceBase implements
             SolrRecord solr = wsolr.getSolrRecord();
 
             // Wrap up the result:
-            MDX mdx = MDX.fromWritableSolrRecord(solr);
+            MDX mdx = new MDX(solr.toString());
             // Wrap up the key:
             Text oKey = new Text(mdx.getHash());
             // Alternative key, based on record type + url + timestamp
@@ -67,8 +88,7 @@ public class WARCSentenceMapper extends MapReduceBase implements
             // + mdx.getRecordType());
 
             // Collect
-            MDXWritable result = new MDXWritable(mdx);
-            output.collect(oKey, result);
+            output.collect(oKey, new Text(mdx.toString()));
         }
 
     }

@@ -3,6 +3,13 @@
  */
 package uk.bl.wa.analyser.text;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.ServiceLoader;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
+
 /*
  * #%L
  * warc-indexer
@@ -33,6 +40,23 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public abstract class AbstractTextAnalyser {
 
+    private boolean enabled = false;
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    /**
+     * Hook for run-time config.
+     * 
+     * @param conf
+     */
+    public abstract void configure(Config conf);
+
     /**
      * Sub-classes should implement this method to create text payload annotations for solr.
      * 
@@ -41,4 +65,44 @@ public abstract class AbstractTextAnalyser {
      */
     public abstract void analyse( String text, SolrRecord solr );
     
+    /**
+     * This dynamically loads the available parser implementations on the
+     * classpath. Passes in the provided configuration to get things set up.
+     * 
+     * @return
+     */
+    public static List<AbstractTextAnalyser> getTextAnalysers(Config conf) {
+
+        // load our plugins
+        ServiceLoader<AbstractTextAnalyser> serviceLoader = ServiceLoader
+                .load(AbstractTextAnalyser.class);
+
+        // Get the list:
+        List<AbstractTextAnalyser> providers = new ArrayList<AbstractTextAnalyser>();
+        for (AbstractTextAnalyser provider : serviceLoader) {
+            // Perform any necessary configuration:
+            provider.configure(conf);
+            providers.add(provider);
+        }
+
+        return providers;
+    }
+
+    /**
+     * Just for testing.
+     * 
+     * @param ignored
+     */
+    public static void main(String[] ignored) {
+
+        // Get the config:
+        Config conf = ConfigFactory.load();
+
+        // create a new provider and call getMessage()
+        List<AbstractTextAnalyser> providers = AbstractTextAnalyser
+                .getTextAnalysers(conf);
+        for (AbstractTextAnalyser provider : providers) {
+            System.out.println(provider.getClass().getCanonicalName());
+        }
+    }
 }

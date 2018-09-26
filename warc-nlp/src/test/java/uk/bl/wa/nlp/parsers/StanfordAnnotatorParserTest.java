@@ -7,7 +7,7 @@ package uk.bl.wa.nlp.parsers;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2014 The UK Web Archive
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -37,8 +37,6 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import uk.bl.wa.nlp.parsers.StanfordAnnotatorParser;
-
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  * 
@@ -46,7 +44,6 @@ import uk.bl.wa.nlp.parsers.StanfordAnnotatorParser;
  *         much RAM and causes Travis to fail.
  * 
  */
-@Ignore
 public class StanfordAnnotatorParserTest {
 
     private StanfordAnnotatorParser parser;
@@ -87,15 +84,20 @@ public class StanfordAnnotatorParserTest {
         assertTrue(misc.contains("American"));
 
         /* And sentiments */
+        // Requires Java 8
         
-        String sentiment = metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
-        System.out.println("Sentiment: "+sentiment);
-        
-        List<String> sentiments = Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
-        System.out.println("Sentiments: "+sentiments);
+        // String sentiment =
+        // metadata.get(StanfordAnnotatorParser.AVG_SENTIMENT);
+        // System.out.println("Sentiment: "+sentiment);
+        //
+        // List<String> sentiments =
+        // Arrays.asList(metadata.getValues(StanfordAnnotatorParser.SENTIMENT_DIST));
+        // System.out.println("Sentiments: "+sentiments);
     }
 
-    @Test
+    // Requires Java 8
+    // Test
+    @Ignore
     public void testNERSentiment() {
         String text = "This movie doesn't care about cleverness, wit or any other kind of intelligent humor. Those who find ugly meanings in beautiful things are corrupt without being charming. There are slow and repetitive parts, but it has just enough spice to keep it interesting.";
         Metadata metadata = new Metadata();

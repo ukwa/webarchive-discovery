@@ -327,7 +327,7 @@ public class WARCIndexerTest {
             if (doc == null) {
                 nullCount++;
             } else {
-                // System.out.println("DOC: " + doc.toXml());
+                System.out.println("DOC: " + doc.toXml());
             }
         }
 

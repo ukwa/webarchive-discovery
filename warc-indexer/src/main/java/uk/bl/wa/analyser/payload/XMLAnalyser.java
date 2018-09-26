@@ -32,11 +32,11 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
+import com.typesafe.config.Config;
+
 import uk.bl.wa.parsers.XMLRootNamespaceParser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
-
-import com.typesafe.config.Config;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.TimeLimiter;
 
@@ -51,14 +51,30 @@ public class XMLAnalyser extends AbstractPayloadAnalyser {
     private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();
     private boolean extractXMLRootNamespace = true;
 
+    public XMLAnalyser() {
+    }
+
     public XMLAnalyser(Config conf) {
     }
 
-    /* (non-Javadoc)
-     * @see uk.bl.wa.analyser.payload.AbstractPayloadAnalyser#analyse(org.archive.io.ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
+    @Override
+    public boolean shouldProcess(String mime) {
+        if (mime.startsWith("application/xml") || mime.startsWith("text/xml")) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    /*
+     * (non-Javadoc)
+     * 
+     * @see
+     * uk.bl.wa.analyser.payload.AbstractPayloadAnalyser#analyse(org.archive.io.
+     * ArchiveRecordHeader, java.io.InputStream, uk.bl.wa.util.solr.SolrRecord)
      */
     @Override
-    public void analyse(ArchiveRecordHeader header, InputStream tikainput,
+    public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput,
             SolrRecord solr) {
         final long start = System.nanoTime();
         Metadata metadata = new Metadata();
