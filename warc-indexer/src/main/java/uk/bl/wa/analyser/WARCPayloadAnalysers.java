@@ -30,6 +30,7 @@ import java.util.List;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
 
 import com.typesafe.config.Config;
@@ -76,7 +77,7 @@ public class WARCPayloadAnalysers {
      * @param solr
      */
     public void analyse(String source, ArchiveRecordHeader header,
-            InputStream tikainput, SolrRecord solr) {
+            InputStream tikainput, SolrRecord solr, long content_length) {
         final String url = Normalisation
                 .sanitiseWARCHeaderValue(header.getUrl());
         log.debug("Analysing " + url);
@@ -103,9 +104,120 @@ public class WARCPayloadAnalysers {
                 }
             }
         }
+
+        // Derive normalised/simplified content type:
+        processContentType(solr, header, content_length, false);
+
+        // End
         Instrument.timeRel("WARCIndexer.extract#analyzetikainput",
                 "WARCPayloadAnalyzers.analyze#total", start);
 
+    }
+
+    /**
+     * 
+     * @param solr
+     * @param header
+     * @param content_length
+     */
+    private void processContentType(SolrRecord solr, ArchiveRecordHeader header,
+            long content_length, boolean revisit) {
+        // Get the current content-type:
+        String contentType = (String) solr
+                .getFieldValue(SolrFields.SOLR_CONTENT_TYPE);
+
+        // Store the raw content type from Tika:
+        solr.setField(SolrFields.CONTENT_TYPE_TIKA, contentType);
+
+        // Also get the other content types:
+        MediaType mt_tika = MediaType.parse(contentType);
+        if (solr.getField(SolrFields.CONTENT_TYPE_DROID) != null) {
+            MediaType mt_droid = MediaType.parse((String) solr
+                    .getField(SolrFields.CONTENT_TYPE_DROID).getFirstValue());
+            if (mt_tika == null || mt_tika.equals(MediaType.OCTET_STREAM)) {
+                contentType = mt_droid.toString();
+            } else if (mt_droid.getBaseType().equals(mt_tika.getBaseType())
+                    && mt_droid.getParameters().get("version") != null) {
+                // Union of results:
+                mt_tika = new MediaType(mt_tika, mt_droid.getParameters());
+                contentType = mt_tika.toString();
+            }
+            if (mt_droid.getParameters().get("version") != null) {
+                solr.addField(SolrFields.CONTENT_VERSION,
+                        mt_droid.getParameters().get("version"));
+            }
+        }
+
+        // Allow header MIME
+        if (contentType != null && contentType.isEmpty()) {
+            if (header.getHeaderFieldKeys()
+                    .contains("WARC-Identified-Payload-Type")) {
+                contentType = ((String) header.getHeaderFields()
+                        .get("WARC-Identified-Payload-Type"));
+            } else {
+                contentType = header.getMimetype();
+            }
+        }
+        // Determine content type:
+        if (contentType != null)
+            solr.setField(SolrFields.FULL_CONTENT_TYPE, contentType);
+
+        // If zero-length, then change to application/x-empty for the
+        // 'content_type' field.
+        if (content_length == 0 && !revisit)
+            contentType = "application/x-empty";
+
+        // Content-Type can still be null
+        if (contentType != null) {
+            // Strip parameters out of main type field:
+            solr.setField(SolrFields.SOLR_CONTENT_TYPE,
+                    contentType.replaceAll(";.*$", ""));
+
+            // Also add a more general, simplified type, as appropriate:
+            if (contentType.matches("^image/.*$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image");
+                solr.setField(SolrFields.SOLR_TYPE, "Image");
+            } else if (contentType.matches("^audio/.*$")
+                    || contentType.matches("^application/vnd.rn-realaudio$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "audio");
+                solr.setField(SolrFields.SOLR_TYPE, "Audio");
+            } else if (contentType.matches("^video/.*$")
+                    || contentType.matches("^application/mp4$")
+                    || contentType.matches("^application/vnd.rn-realmedia$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "video");
+                solr.setField(SolrFields.SOLR_TYPE, "Video");
+            } else if (contentType.matches("^text/htm.*$")
+                    || contentType.matches("^application/xhtml.*$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html");
+                solr.setField(SolrFields.SOLR_TYPE, "Web Page");
+            } else if (contentType.matches("^application/pdf.*$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf");
+                solr.setField(SolrFields.SOLR_TYPE, "Document");
+            } else if (contentType.matches("^.*word$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word");
+                solr.setField(SolrFields.SOLR_TYPE, "Document");
+            } else if (contentType.matches("^.*excel$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel");
+                solr.setField(SolrFields.SOLR_TYPE, "Data");
+            } else if (contentType.matches("^.*powerpoint$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE,
+                        "powerpoint");
+                solr.setField(SolrFields.SOLR_TYPE, "Presentation");
+            } else if (contentType.matches("^text/plain.*$")) {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text");
+                solr.setField(SolrFields.SOLR_TYPE, "Document");
+            } else {
+                solr.setField(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other");
+                solr.setField(SolrFields.SOLR_TYPE, "Other");
+            }
+
+            // Remove text from JavaScript, CSS, ...
+            if (contentType.startsWith("application/javascript")
+                    || contentType.startsWith("text/javascript")
+                    || contentType.startsWith("text/css")) {
+                solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+            }
+        }
     }
 
 }

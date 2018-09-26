@@ -37,11 +37,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Collections;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Properties;
 import java.util.TimeZone;
@@ -56,11 +53,6 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.solr.client.solrj.SolrQuery;
-import org.apache.solr.client.solrj.SolrServerException;
-import org.apache.solr.client.solrj.response.QueryResponse;
-import org.apache.solr.common.SolrDocument;
-import org.apache.tika.mime.MediaType;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
@@ -119,7 +111,6 @@ public class WARCIndexer {
     /** */
     private boolean extractText;
     private boolean storeText;
-    private boolean hashUrlId;
 
     /** Wayback-style URI filtering: */
     private StaticMapExclusionFilterFactory smef = null;
@@ -175,15 +166,13 @@ public class WARCIndexer {
         this.storeText = conf
                 .getBoolean("warc.index.extract.content.text_stored");
         log.info("Store text = " + storeText);
-        this.hashUrlId = conf.getBoolean( "warc.solr.use_hash_url_id" );
-        log.info("hashUrlId = " + hashUrlId);
         addNormalisedURL = conf.hasPath(HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
                 conf.getBoolean(HtmlFeatureParser.CONF_LINKS_NORMALISE) :
                 HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
         this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
-        if( this.hashUrlId == false && this.checkSolrForDuplicates == true ) {
-            log.warn("Checking Solr for duplicates may not work as expected when using the timestamp+md5(URL) key.");
-            log.warn("You need to use the payload-hash+md5(URL) key option to resolve revisit records.");
+        if (this.checkSolrForDuplicates == true) {
+            log.warn(
+                    "Checking Solr for duplicates is not implemented at present!");
         }
         // URLs to exclude:
         this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
@@ -383,6 +372,10 @@ public class WARCIndexer {
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
 
+            // -----------------------------------------------------
+            // Now consume record and HTTP headers (only)
+            // -----------------------------------------------------
+
             InputStream tikainput = null;
 
             // Only parse HTTP headers for HTTP URIs
@@ -390,25 +383,8 @@ public class WARCIndexer {
                 // Parse HTTP headers:
                 String statusCode = null;
                 if( record instanceof WARCRecord ) {
-                    // There are not always headers! The code should check first.
-                    String statusLine = HttpParser.readLine( record, "UTF-8" );
-                    if( statusLine != null && statusLine.startsWith( "HTTP" ) ) {
-                        String firstLine[] = statusLine.split( " " );
-                        if( firstLine.length > 1 ) {
-                            statusCode = firstLine[ 1 ].trim();
-                            try {
-                                this.processHeaders( solr, statusCode, HttpParser.parseHeaders( record, "UTF-8" ), targetUrl );
-                            } catch( ProtocolException p ) {
-                                log.error( "ProtocolException [" + statusCode + "]: " + header.getHeaderValue( WARCConstants.HEADER_KEY_FILENAME ) + "@" + header.getHeaderValue( WARCConstants.ABSOLUTE_OFFSET_KEY ), p );
-                            }
-                        } else {
-                            log.warn( "Could not parse status line: " + statusLine );
-                        }
-                    } else {
-                        log.warn( "Invalid status line: " + header.getHeaderValue( WARCConstants.HEADER_KEY_FILENAME ) + "@" + header.getHeaderValue( WARCConstants.ABSOLUTE_OFFSET_KEY ) );
-                    }
-                    // No need for this, as the headers have already been read from the InputStream (above):
-                    // WARCRecordUtils.getPayload(record);
+                    statusCode = this.processWARCHeaders(record, header,
+                            targetUrl, solr);
                     tikainput = record;
                 } else if( record instanceof ARCRecord ) {
                     ARCRecord arcr = ( ARCRecord ) record;
@@ -432,14 +408,15 @@ public class WARCIndexer {
                 log.info("Skipping header parsing as URL does not start with 'http'");
             }
             
-            // Update the content_length based on what's available:
-            content_length = tikainput.available();
-            // Record the length:
-            solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
-            
             // -----------------------------------------------------
             // Headers have been processed, payload ready to cache:
             // -----------------------------------------------------
+
+            // Update the content_length based on what's available:
+            content_length = tikainput.available();
+
+            // Record the length:
+            solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
             
             // Create an appropriately cached version of the payload, to allow analysis.
             final long hashStreamStart = System.nanoTime();
@@ -452,76 +429,18 @@ public class WARCIndexer {
             // Prepare crawl date information:
             String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
             Date crawlDate =  getWaybackDate( waybackDate );
-            String crawlDateString = parseCrawlDate(waybackDate);
             
-            // Optionally use a hash-based ID to store only one version of a URL:
-            String id = null;
-            if( hashUrlId ) {
-                id = hash + "/" + url_md5hex;
-            } else {
-                id = waybackDate + "/" + url_md5hex;
-            }
+            // Use an ID that ensures every URL+timestamp gets a separate
+            // record:
+            String id = waybackDate + "/" + url_md5hex;
+
             // Set these last:
             solr.setField( SolrFields.ID, id );
             solr.setField( SolrFields.HASH, hash );
 
-            // -----------------------------------------------------
-            // Payload has been cached, ready to check crawl dates:
-            // -----------------------------------------------------
-            
-            HashSet<Date> currentCrawlDates = new HashSet<Date>();
-            // If we are collapsing records based on hash:
-            if (hashUrlId) {
-                // Query for currently known crawl dates:
-                if (this.checkSolrForDuplicates && solrServer != null) {
-                    SolrQuery q = new SolrQuery("id:\"" + id + "\"");
-                    q.addField(SolrFields.CRAWL_DATES);
-                    try {
-                        QueryResponse results = solrServer.query(q);
-                        if (results.getResults().size() > 0) {
-                            SolrDocument fr = results.getResults().get(0);
-                            if (fr.containsKey(SolrFields.CRAWL_DATES)) {
-                                for (Object cds : fr
-                                        .getFieldValues(SolrFields.CRAWL_DATES)) {
-                                    currentCrawlDates.add((Date) cds);
-                                }
-                            }
-                        } else {
-                            log.debug("No matching entries found.");
-                        }
-                    } catch (SolrServerException e) {
-                        e.printStackTrace();
-                        // FIXME retry?
-                    }
-                }
-
-                // Is the current date unknown? (inc. no-solr-check case):
-                if (!currentCrawlDates.contains(crawlDate)) {
-                    // Dates to be merged under the CRAWL_DATES field:
-                    solr.mergeField(SolrFields.CRAWL_DATES, crawlDateString);
-                    solr.mergeField(SolrFields.CRAWL_YEARS,
-                            extractYear(header.getDate()));
-                } else {
-                    // Otherwise, ensure the all the known dates (i.e. including
-                    // this one) are copied over:
-                    for (Date ccd : currentCrawlDates) {
-                        solr.addField(SolrFields.CRAWL_DATES,
-                                formatter.format(ccd));
-                        solr.addField(SolrFields.CRAWL_YEARS,
-                                getYearFromDate(ccd));
-                    }
-                    // TODO This could optionally skip re-submission instead?
-                }
-            }
-            
-            // Sort the dates and find the earliest:
-            List<Date> dateList = new ArrayList<Date>(currentCrawlDates);
-            dateList.add(crawlDate);
-            Collections.sort(dateList);
-            Date firstDate = dateList.get(0);
-            solr.setField(SolrFields.CRAWL_DATE,
-                    formatter.format(firstDate));
-            solr.setField( SolrFields.CRAWL_YEAR, getYearFromDate(firstDate) );
+            // Store the dates:
+            solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
+            solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
             
             // Use the current value as the waybackDate:
             solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
@@ -539,15 +458,15 @@ public class WARCIndexer {
                 }
             }
 
+            // -----------------------------------------------------
+            // WARC revisit record handling:
+            // -----------------------------------------------------
+
             // If this is a revisit record, we should just return an update to the crawl_dates (when using hashUrlId)
             if (WARCConstants.WARCRecordType.revisit.name().equalsIgnoreCase((String) header.getHeaderValue(HEADER_KEY_TYPE))) {
-                if (currentCrawlDates.contains(crawlDate)) {
-                    return null;
-                }
                 solr.removeField(SolrFields.CONTENT_LENGTH); //It is 0 and would mess with statistics                                                                                
                 //Copy content_type_served to content_type (no tika/droid for revisits)
                 solr.addField(SolrFields.SOLR_CONTENT_TYPE, (String) solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
-                processContentType(solr, header, content_length, true);//The value set above is used here for content_type_norm                
                 return solr;
             }
 
@@ -556,19 +475,19 @@ public class WARCIndexer {
             // -----------------------------------------------------
 
             final long analyzeStart = System.nanoTime();
-            // Mark the start of the payload.
+
+            // Mark the start of the payload, with a readLimit corresponding to
+            // the payload size:
             tikainput.mark( ( int ) content_length );
             
             // Pass on to other extractors as required, resetting the stream before each:
-            this.wpa.analyse(archiveName, header, tikainput, solr);
+            this.wpa.analyse(archiveName, header, tikainput, solr,
+                    content_length);
             Instrument.timeRel("WARCIndexer.extract#total", "WARCIndexer.extract#analyzetikainput", analyzeStart);
 
 
             // Clear up the caching of the payload:
             hcis.cleanup();
-
-            // Derive normalised/simplified content type:
-            processContentType(solr, header, content_length, false);
 
             // -----------------------------------------------------
             // Payload analysis complete, now performing text analysis:
@@ -669,6 +588,45 @@ public class WARCIndexer {
 
     /* ----------------------------------- */
 
+    private String processWARCHeaders(ArchiveRecord record,
+            ArchiveRecordHeader header, String targetUrl, SolrRecord solr)
+            throws IOException {
+        String statusCode = null;
+        // There are not always headers! The code should check first.
+        String statusLine = HttpParser.readLine(record, "UTF-8");
+        if (statusLine != null && statusLine.startsWith("HTTP")) {
+            String firstLine[] = statusLine.split(" ");
+            if (firstLine.length > 1) {
+                statusCode = firstLine[1].trim();
+                try {
+                    this.processHeaders(solr, statusCode,
+                            HttpParser.parseHeaders(record, "UTF-8"),
+                            targetUrl);
+                } catch (ProtocolException p) {
+                    log.error(
+                            "ProtocolException [" + statusCode + "]: "
+                                    + header.getHeaderValue(
+                                            WARCConstants.HEADER_KEY_FILENAME)
+                                    + "@"
+                                    + header.getHeaderValue(
+                                            WARCConstants.ABSOLUTE_OFFSET_KEY),
+                            p);
+                }
+            } else {
+                log.warn("Could not parse status line: " + statusLine);
+            }
+        } else {
+            log.warn("Invalid status line: "
+                    + header.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
+                    + "@"
+                    + header.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY));
+        }
+        // No need for this, as the headers have already been read from the
+        // InputStream (above):
+        // WARCRecordUtils.getPayload(record); ]
+        return statusCode;
+    }
+
     private void processHeaders( SolrRecord solr, String statusCode, Header[] httpHeaders , String targetUrl) {
         try {
             // This is a simple test that the status code setting worked:
@@ -705,7 +663,6 @@ public class WARCIndexer {
             solr.addParseException("when parsing headers", e);
         }
     }
-
 
     /**
      * 
@@ -802,101 +759,6 @@ public class WARCIndexer {
             waybackYear = "unknown";
         // Return
         return waybackYear;
-    }
-
-    /**
-     * 
-     * @param solr
-     * @param header
-     * @param content_length
-     */
-    private void processContentType(SolrRecord solr,
-            ArchiveRecordHeader header, long content_length, boolean revisit) {
-        // Get the current content-type:
-        String contentType = ( String ) solr.getFieldValue( SolrFields.SOLR_CONTENT_TYPE );
-
-        // Store the raw content type from Tika:
-        solr.setField( SolrFields.CONTENT_TYPE_TIKA, contentType );
-
-        // Also get the other content types:
-        MediaType mt_tika = MediaType.parse( contentType );
-        if( solr.getField( SolrFields.CONTENT_TYPE_DROID ) != null ) {
-            MediaType mt_droid = MediaType.parse( ( String ) solr.getField( SolrFields.CONTENT_TYPE_DROID ).getFirstValue() );
-            if( mt_tika == null || mt_tika.equals( MediaType.OCTET_STREAM ) ) {
-                contentType = mt_droid.toString();
-            } else if( mt_droid.getBaseType().equals( mt_tika.getBaseType() ) && mt_droid.getParameters().get( "version" ) != null ) {
-                // Union of results:
-                mt_tika = new MediaType( mt_tika, mt_droid.getParameters() );
-                contentType = mt_tika.toString();
-            }
-            if( mt_droid.getParameters().get( "version" ) != null ) {
-                solr.addField( SolrFields.CONTENT_VERSION, mt_droid.getParameters().get( "version" ) );
-            }
-        }
-
-        // Allow header MIME
-        if( contentType != null && contentType.isEmpty() ) {
-            if( header.getHeaderFieldKeys().contains( "WARC-Identified-Payload-Type" ) ) {
-                contentType = ( ( String ) header.getHeaderFields().get( "WARC-Identified-Payload-Type" ) );
-            } else {
-                contentType = header.getMimetype();
-            }
-        }
-        // Determine content type:
-        if( contentType != null )
-            solr.setField( SolrFields.FULL_CONTENT_TYPE, contentType );
-        
-        // If zero-length, then change to application/x-empty for the 'content_type' field.
-        if (content_length == 0 && !revisit)
-            contentType = "application/x-empty";
-
-        // Content-Type can still be null
-        if( contentType != null ) {
-            // Strip parameters out of main type field:
-            solr.setField( SolrFields.SOLR_CONTENT_TYPE, contentType.replaceAll( ";.*$", "" ) );
-
-            // Also add a more general, simplified type, as appropriate:
-            if( contentType.matches( "^image/.*$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "image" );
-                solr.setField(SolrFields.SOLR_TYPE, "Image");
-            } else if (contentType.matches("^audio/.*$")
-                    || contentType.matches("^application/vnd.rn-realaudio$")) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "audio" );
-                solr.setField(SolrFields.SOLR_TYPE, "Audio");
-            } else if (contentType.matches("^video/.*$")
-                    || contentType.matches("^application/mp4$")
-                    || contentType.matches("^application/vnd.rn-realmedia$")) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "video" );
-                solr.setField(SolrFields.SOLR_TYPE, "Video");
-            } else if (contentType.matches("^text/htm.*$")
-                    || contentType.matches("^application/xhtml.*$")) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "html" );
-                solr.setField(SolrFields.SOLR_TYPE, "Web Page");
-            } else if( contentType.matches( "^application/pdf.*$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "pdf" );
-                solr.setField(SolrFields.SOLR_TYPE, "Document");
-            } else if( contentType.matches( "^.*word$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "word" );
-                solr.setField(SolrFields.SOLR_TYPE, "Document");
-            } else if( contentType.matches( "^.*excel$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "excel" );
-                solr.setField(SolrFields.SOLR_TYPE, "Data");
-            } else if( contentType.matches( "^.*powerpoint$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "powerpoint" );
-                solr.setField(SolrFields.SOLR_TYPE, "Presentation");
-            } else if( contentType.matches( "^text/plain.*$" ) ) {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "text" );
-                solr.setField(SolrFields.SOLR_TYPE, "Document");
-            } else {
-                solr.setField( SolrFields.SOLR_NORMALISED_CONTENT_TYPE, "other" );
-                solr.setField(SolrFields.SOLR_TYPE, "Other");
-            }
-
-            // Remove text from JavaScript, CSS, ...
-            if( contentType.startsWith( "application/javascript" ) || contentType.startsWith( "text/javascript" ) || contentType.startsWith( "text/css" ) ) {
-                solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
-            }
-        }
     }
 
     private boolean checkUrl( String url ) {
