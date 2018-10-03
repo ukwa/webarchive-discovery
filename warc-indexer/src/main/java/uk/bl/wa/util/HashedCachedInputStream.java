@@ -41,9 +41,9 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.apache.commons.io.IOUtils;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.Base32;
@@ -160,6 +160,9 @@ public class HashedCachedInputStream {
                         ) {
                     if( ! headerHash.equals(hash)) {
                         log.error("Hashes are not equal for this input!");
+                        log.error(
+                                " - payload hash from header = " + headerHash);
+                        log.error(" - payload hash from content = " + hash);
                         throw new RuntimeException("Hash check failed!");
                     } else {
                         log.debug("Hashes were found to match for " + url);
