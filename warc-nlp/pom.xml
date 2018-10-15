@@ -4,7 +4,7 @@
    <parent>
       <groupId>uk.bl.wa.discovery</groupId>
       <artifactId>warc-discovery</artifactId>
-      <version>3.0.1-SNAPSHOT</version>
+      <version>3.1.0-SNAPSHOT</version>
    </parent>
    <artifactId>warc-nlp</artifactId>
    <properties>
@@ -20,7 +20,7 @@
       <dependency>
          <groupId>uk.bl.wa.discovery</groupId>
          <artifactId>warc-hadoop-indexer</artifactId>
-         <version>3.0.1-SNAPSHOT</version>
+         <version>3.1.0-SNAPSHOT</version>
       </dependency>
       <dependency>
          <groupId>edu.stanford.nlp</groupId>
