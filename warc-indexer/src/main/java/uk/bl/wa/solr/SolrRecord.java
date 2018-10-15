@@ -90,8 +90,6 @@ public class SolrRecord implements Serializable {
         ClientUtils.writeXML( doc, writer );
     }
 
-    private static final int MAX_FIELD_LEN = 4096;
-    
     public SolrRecord(int defaultMaxFieldLength, HashMap<String, Integer> maxFieldLengths,
                       String filename, ArchiveRecordHeader header) {
         defaultMax = defaultMaxFieldLength;
