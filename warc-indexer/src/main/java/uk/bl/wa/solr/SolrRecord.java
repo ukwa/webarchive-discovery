@@ -37,7 +37,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
@@ -211,7 +210,9 @@ public class SolrRecord implements Serializable {
      */
     public void addFieldTruncated(String solr_property, String value, int truncateTo) {
         value = sanitizeString(value, truncateTo);
-        if (value != null && !value.isEmpty())
+        // If the value is not empty and not already in the field:
+        if (value != null && !value.isEmpty()
+                && !doc.getFieldValues(solr_property).contains(value))
             doc.addField( solr_property, value );
     }
 
