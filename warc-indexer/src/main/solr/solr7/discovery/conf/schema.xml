@@ -41,7 +41,7 @@ This schema is for Solr 7+ and will not work under Solr 6.
         <!-- Author extracted from HTML meta-fields, Word documents meta data, image Exif etc.
              Search directly in the author-field is verbatim and thus not very usable for user-defines queries.
              Sample use: Faceting with facet=true&facet.field=author -->
-        <field name="author"               type="string" />
+        <field name="author"               type="string" multiValued="true" />
 
         <!-- Does not seem to be used as of 20180516 -->
         <field name="category"             type="text_general" />
