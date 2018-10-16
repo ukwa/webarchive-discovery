@@ -10,6 +10,7 @@
 * Add optional OSCAR4 chemical compound extractor [#163](https://github.com/ukwa/webarchive-discovery/issues/163)
 * Set author to be multivalued in Solr 7 schema [#191](https://github.com/ukwa/webarchive-discovery/pull/191)
 * Updated to requiring Java 8 [#193](https://github.com/ukwa/webarchive-discovery/issues/193)
+* Updated to Apache Tika 1.19.1
 
 3.0.0
 -----

@@ -3,8 +3,6 @@
  */
 package uk.bl.wa.analyser.text;
 
-import java.io.IOException;
-
 /*
  * #%L
  * warc-indexer
@@ -56,12 +54,7 @@ public class LanguageAnalyser extends AbstractTextAnalyser {
         setEnabled(!conf.hasPath("warc.index.extract.content.language.enabled")
                 || conf.getBoolean(
                         "warc.index.extract.content.language.enabled"));
-        try {
-            ld = new OptimaizeLangDetector().loadModels();
-        } catch (IOException e) {
-            // This should not happen, so raise the alarm:
-            throw new RuntimeException(e);
-        }
+        ld = new OptimaizeLangDetector().loadModels();
         log.info(
                 "Constructed language analyzer with enabled = " + isEnabled());
     }

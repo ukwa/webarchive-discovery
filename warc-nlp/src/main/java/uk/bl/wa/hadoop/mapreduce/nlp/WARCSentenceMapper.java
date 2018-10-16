@@ -34,6 +34,7 @@ import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONException;
 
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
@@ -80,7 +81,14 @@ public class WARCSentenceMapper extends MapReduceBase implements
             SolrRecord solr = wsolr.getSolrRecord();
 
             // Wrap up the result:
-            MDX mdx = new MDX(solr.toString());
+            MDX mdx;
+            try {
+                mdx = new MDX(solr.toString());
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                return;
+            }
             // Wrap up the key:
             Text oKey = new Text(mdx.getHash());
             // Alternative key, based on record type + url + timestamp

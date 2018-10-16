@@ -37,6 +37,7 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.json.JSONException;
 
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 
@@ -81,7 +82,13 @@ public class Word2VecReducer extends MapReduceBase implements
         MDX exemplar = null;
         List<MDX> toReduplicate = new ArrayList<MDX>();
         while (values.hasNext()) {
-            mdx = new MDX(values.next().toString());
+            try {
+                mdx = new MDX(values.next().toString());
+            } catch (JSONException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+                continue;
+            }
             noValues++;
             
             // Collect the revisit records:
@@ -120,7 +127,13 @@ public class Word2VecReducer extends MapReduceBase implements
             // Handle merge:
             if( exemplar != null ) {
                 // Modify record type and and merge the properties:
-                rmdxw.setRecordType("reduplicated");
+                try {
+                    rmdxw.setRecordType("reduplicated");
+                } catch (JSONException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                    continue;
+                }
                 //rmdxw..getProperties().putAll(exemplar.getProperties());
                 reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
                 // Collect resolved records:

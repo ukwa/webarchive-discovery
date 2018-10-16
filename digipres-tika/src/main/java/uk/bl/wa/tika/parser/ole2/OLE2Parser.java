@@ -32,7 +32,6 @@ import java.util.Iterator;
 import java.util.Set;
 
 import org.apache.poi.hpsf.ClassID;
-import org.apache.poi.hpsf.MarkUnsupportedException;
 import org.apache.poi.hpsf.NoPropertySetStreamException;
 import org.apache.poi.hpsf.Property;
 import org.apache.poi.hpsf.PropertySet;
@@ -180,9 +179,6 @@ public class OLE2Parser extends AbstractParser {
                 } catch (NoPropertySetStreamException e) {
                     // TODO Auto-generated catch block
                     //e.printStackTrace();
-                } catch (MarkUnsupportedException e) {
-                    // TODO Auto-generated catch block
-                    // e.printStackTrace();
                 }
                 //byte[] bytes = new byte[node.getSize()];
                 //is.read(bytes);
