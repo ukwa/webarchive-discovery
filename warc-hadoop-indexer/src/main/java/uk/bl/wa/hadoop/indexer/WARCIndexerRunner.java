@@ -211,11 +211,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         // Process remaining args list this:
         Options options = new Options();
+        options.addOption("d", false, "dump configuration");
+        options.addOption("h", false, "print help");
         options.addOption("i", true, "input file list");
         options.addOption("o", true, "output directory");
         options.addOption("c", true, "path to configuration");
         options.addOption("w", false, "wait for job to finish");
-        options.addOption("d", false, "dump configuration");
         options.addOption("x", false, "output XML in OAI-PMH format");
         options.addOption("a", false,
                 "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'");
@@ -228,12 +229,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, otherArgs);
-        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
-            HelpFormatter helpFormatter = new HelpFormatter();
-            helpFormatter.setWidth(80);
-            helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, "");
-            System.exit(1);
-        }
         this.inputPath = cmd.getOptionValue("i");
         this.outputPath = cmd.getOptionValue("o");
         this.wait = cmd.hasOption("w");
@@ -243,6 +238,28 @@ public class WARCIndexerRunner extends Configured implements Tool {
         this.dumpConfig = cmd.hasOption("d");
         this.exportXml = cmd.hasOption("x");
         this.applyAnnotations = cmd.hasOption("a");
+
+        // If we are just dumping the config no need to validate:
+        if (this.dumpConfig)
+            return;
+
+        // If we are prining help, just do that:
+        if (cmd.hasOption('h'))
+            printHelp("", options);
+
+        // Validate remaining args:
+        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
+            printHelp("You must specify both the input and output parameters!",
+                    options);
+        }
+
+    }
+
+    private void printHelp(String message, Options options) {
+        HelpFormatter helpFormatter = new HelpFormatter();
+        helpFormatter.setWidth(80);
+        helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, message);
+        System.exit(1);
     }
 
     /**
