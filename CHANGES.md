@@ -4,9 +4,12 @@
 * Removed previously deprecated hash-based-ID code to further simplify the indexer code.
 * Move as much code as possible out of the main Indexer class to the Payload or Text analyser classes.
 * Separate Standard and 'Kitchen Sink' build. [#183](https://github.com/ukwa/webarchive-discovery/issues/183)
-* Switch to using `java.util.ServiceLoader` pattern so we can manage build artefacts and dependencies more easily.
+* Switch to using `java.util.ServiceLoader` pattern so we can manage build artefacts and dependencies more easily [#189](https://github.com/ukwa/webarchive-discovery/pull/189)
 * Update to Nanite 1.3.2-94 for the bugfixed container signature file and to reduce dependency size.
-
+* Prevent duplicate values for multi-valued fields [#192](https://github.com/ukwa/webarchive-discovery/issues/192)
+* Add optional OSCAR4 chemical compound extractor [#163](https://github.com/ukwa/webarchive-discovery/issues/163)
+* Set author to be multivalued in Solr 7 schema [#191](https://github.com/ukwa/webarchive-discovery/pull/191)
+* Updated to requiring Java 8 [#193](https://github.com/ukwa/webarchive-discovery/issues/193)
 
 3.0.0
 -----
