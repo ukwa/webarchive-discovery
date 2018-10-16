@@ -249,7 +249,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         // Validate remaining args:
         if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
-            printHelp("You must specify both the input and output parameters!",
+            printHelp(
+                    "\nERROR: You must specify both the input and output parameters!",
                     options);
         }
 

@@ -202,22 +202,41 @@ public class WARCMDXGenerator extends Configured implements Tool {
         options.addOption("c", true, "path to configuration");
         options.addOption("w", false, "wait for job to finish");
         options.addOption("d", false, "dump configuration");
+        options.addOption("h", false, "print help");
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, otherArgs);
-        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
-            HelpFormatter helpFormatter = new HelpFormatter();
-            helpFormatter.setWidth(80);
-            helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, "");
-            System.exit(1);
-        }
-        this.inputPath = cmd.getOptionValue("i");
-        this.outputPath = cmd.getOptionValue("o");
         this.wait = cmd.hasOption("w");
         if (cmd.hasOption("c")) {
             this.configPath = cmd.getOptionValue("c");
         }
         this.dumpConfig = cmd.hasOption("d");
+
+        // Pass through to print dump configuration:
+        if (this.dumpConfig) {
+            return;
+        }
+
+        // Print help
+        if (cmd.hasOption("h")) {
+            printHelp("", options);
+        }
+
+        // Validate:
+        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
+            printHelp(
+                    "\nERROR: You need to supply input and output parameters!",
+                    options);
+        }
+        this.inputPath = cmd.getOptionValue("i");
+        this.outputPath = cmd.getOptionValue("o");
+    }
+
+    private void printHelp(String message, Options options) {
+        HelpFormatter helpFormatter = new HelpFormatter();
+        helpFormatter.setWidth(80);
+        helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, message);
+        System.exit(1);
     }
 
     /**

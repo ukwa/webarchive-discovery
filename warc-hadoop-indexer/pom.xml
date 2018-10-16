@@ -33,7 +33,9 @@
 					</descriptors>
                     <archive>
                         <manifest>
+                        <!-- 
                            <mainClass>uk.bl.wa.hadoop.indexer.WARCIndexerRunner</mainClass>
+                            -->
                         </manifest>
                     </archive>
 					<!-- <descriptorRefs> <descriptorRef>jar-with-dependencies</descriptorRef> 
