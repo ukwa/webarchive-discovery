@@ -31,13 +31,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InterruptedIOException;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.FutureTask;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -313,29 +306,30 @@ public class TikaDeepIdentifier {
     
     // --- Thread pool example, running external command ---
     
-    private static final ExecutorService THREAD_POOL 
-    = Executors.newCachedThreadPool();
-
-    private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit timeUnit)
-    throws InterruptedException, ExecutionException, TimeoutException
-    {
-        FutureTask<T> task = new FutureTask<T>(c);
-        THREAD_POOL.execute(task);
-        return task.get(timeout, timeUnit);
-    }
-
-    void then() throws InterruptedException, ExecutionException {
-        int timeout = 10;
-        try {
-            int returnCode = timedCall(new Callable<Integer>() {
-                public Integer call() throws Exception
-                {
-                    java.lang.Process process = Runtime.getRuntime().exec("command"); 
-                    return process.waitFor();
-                }}, new Integer(timeout), TimeUnit.SECONDS);
-        } catch (TimeoutException e) {
-            // Handle timeout here
-        }
-    }
-
+    // private static final ExecutorService THREAD_POOL
+    // = Executors.newCachedThreadPool();
+    //
+    // private static <T> T timedCall(Callable<T> c, long timeout, TimeUnit
+    // timeUnit)
+    // throws InterruptedException, ExecutionException, TimeoutException
+    // {
+    // FutureTask<T> task = new FutureTask<T>(c);
+    // THREAD_POOL.execute(task);
+    // return task.get(timeout, timeUnit);
+    // }
+    //
+//    void then() throws InterruptedException, ExecutionException {
+//        int timeout = 10;
+//        try {
+//            int returnCode = timedCall(new Callable<Integer>() {
+//                public Integer call() throws Exception
+//                {
+//                    java.lang.Process process = Runtime.getRuntime().exec("command"); 
+//                    return process.waitFor();
+//                }}, new Integer(timeout), TimeUnit.SECONDS);
+//        } catch (TimeoutException e) {
+//            // Handle timeout here
+//        }
+//    }
+    //
 }

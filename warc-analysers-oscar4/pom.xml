@@ -10,34 +10,28 @@
    <properties>
    </properties>
    <build>
-      <plugins>
-      </plugins>
+     <plugins>
+       <plugin>
+         <artifactId>maven-assembly-plugin</artifactId>
+         <configuration>
+           <descriptorRefs>
+             <descriptorRef>jar-with-dependencies</descriptorRef>
+           </descriptorRefs>
+         </configuration>
+       </plugin>
+     </plugins>
    </build>
    <dependencies>
       <dependency>
          <groupId>uk.bl.wa.discovery</groupId>
-         <artifactId>warc-hadoop-indexer</artifactId>
+         <artifactId>warc-indexer</artifactId>
          <version>3.1.0-SNAPSHOT</version>
+         <scope>provided</scope>
       </dependency>
       <dependency>
          <groupId>uk.ac.cam.ch.wwmm.oscar</groupId>
          <artifactId>oscar4-api</artifactId>
          <version>4.2.2</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.solr</groupId>
-         <artifactId>solr-solrj</artifactId>
-         <version>${solr.version}</version>
-         <exclusions>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-api</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>jcl-over-slf4j</artifactId>
-            </exclusion>
-         </exclusions>
       </dependency>
    </dependencies>
 </project>

@@ -24,6 +24,7 @@ package uk.bl.wa.hadoop.datasets;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.logging.Log;
@@ -50,7 +51,6 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerRunner;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
 import uk.bl.wa.indexer.WARCIndexer;
-import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.util.Normalisation;
@@ -211,13 +211,30 @@ public class WARCDatasetMapper extends MapReduceBase implements
             String wbd = s.getWaybackDate();
             String year = wbd.substring(0, 4);
             // Hosts:
-            output.collect(new Text("hosts-" + year + "__"),
+            output.collect(
+                    new Text(WARCDatasetGenerator.HOSTS_NAME + "__" + year),
                     new Text(s.getHost()));
             // Formats:
+            output.collect(new Text(
+                    WARCDatasetGenerator.FORMATS_SUMMARY_NAME + "__" + year),
+                    new Text(s.getFormatResults()));
             // Faces:
-            // Links:
-            output.collect(new Text("hosts-" + year + "__"),
-                    new Text((String) s.getFieldValue(SolrFields.SOLR_HOST)));
+            String faces = s.getFaces();
+            if (faces != null) {
+                output.collect(
+                        new Text(WARCDatasetGenerator.FACES_NAME + "__" + year),
+                        new Text(faces));
+            }
+            // Host links:
+            List<String> hl = s.getHostLinks();
+            if( hl != null ) {
+                // Record each:
+                for( String h2h : hl ) {
+                    output.collect(new Text(
+                            WARCDatasetGenerator.HOST_LINKS_NAME + "__" + year),
+                            new Text(h2h));
+                }
+            }
 
         }
     }

@@ -37,12 +37,13 @@ import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TextOutputFormat;
+import org.apache.hadoop.mapred.lib.MultipleOutputs;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -77,6 +78,13 @@ public class WARCDatasetGenerator extends Configured implements Tool {
     private String configPath;
     private boolean wait;
     private boolean dumpConfig;
+
+    public static String FORMATS_SUMMARY_NAME = "formats";
+    public static String FORMATS_FFB_NAME = "formatsExt";
+    public static String HOSTS_NAME = "hosts";
+    public static String HOST_LINKS_NAME = "hostLinks";
+    public static String FACES_NAME = "faces";
+    public static String GEO_SUMMARY_NAME = "geo";
 
     /**
      * 
@@ -153,9 +161,23 @@ public class WARCDatasetGenerator extends Configured implements Tool {
 
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(Text.class);
-        conf.setMapOutputKeyClass(IntWritable.class);
+        conf.setMapOutputKeyClass(Text.class);
         conf.setMapOutputValueClass(Text.class);
         conf.setNumReduceTasks(numReducers);
+
+        MultipleOutputs.addMultiNamedOutput(conf, FORMATS_SUMMARY_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+        MultipleOutputs.addMultiNamedOutput(conf, FORMATS_FFB_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+        MultipleOutputs.addMultiNamedOutput(conf, HOSTS_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+        MultipleOutputs.addMultiNamedOutput(conf, HOST_LINKS_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+        MultipleOutputs.addMultiNamedOutput(conf, GEO_SUMMARY_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+        MultipleOutputs.addMultiNamedOutput(conf, FACES_NAME,
+                TextOutputFormat.class, Text.class, Text.class);
+
     }
 
     /**

@@ -37,8 +37,10 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -311,6 +313,14 @@ public class SolrRecord implements Serializable {
                 e.getClass().getName() + ": " + e.getMessage());
     }
 
+    /*
+     * ----------------------------------------
+     * 
+     * Helpers for getting data back out.
+     * 
+     * ----------------------------------------
+     */
+
     /**
      * 
      * @param hint
@@ -351,5 +361,73 @@ public class SolrRecord implements Serializable {
      */
     public String getHost() {
         return (String) getField(SolrFields.SOLR_HOST).getFirstValue();
+    }
+
+    /**
+     * Get a string containing the format as determined by three different
+     * techniques:
+     * 
+     * @return
+     */
+    public String getFormatResults() {
+        StringBuilder sb = new StringBuilder();
+        // As Served:
+        sb.append((String) getField(SolrFields.CONTENT_TYPE_SERVED)
+                .getFirstValue());
+        // Tika:
+        sb.append("\t");
+        SolrInputField tika = getField(SolrFields.CONTENT_TYPE_TIKA);
+        if (tika != null) {
+            sb.append((String) tika.getFirstValue());
+        }
+        // DROID:
+        sb.append("\t");
+        SolrInputField droid = getField(SolrFields.CONTENT_TYPE_DROID);
+        if (droid != null) {
+            sb.append((String) droid.getFirstValue());
+        }
+
+        return sb.toString();
+    }
+
+    /**
+     * Get the list of faces and the item identifier:
+     */
+    public String getFaces() {
+        SolrInputField faces = getField(SolrFields.IMAGE_FACES);
+        if (faces == null || faces.getValueCount() == 0)
+            return null;
+        // Otherwise, list 'em:
+        StringBuilder sb = new StringBuilder();
+        sb.append(getUrl());
+        sb.append("\t");
+        sb.append(getWaybackDate());
+        sb.append("\t");
+        int i = 0;
+        for( Object v : faces.getValues()) {
+            if (i > 0)
+                sb.append(" ");
+            sb.append((String) v);
+            i++;
+        }
+        
+        return sb.toString();
+        
+    }
+
+    /**
+     * Get the host->host links:
+     */
+    public List<String> getHostLinks() {
+        SolrInputField links = getField(SolrFields.SOLR_LINKS_HOSTS);
+        if (links == null || links.getValueCount() == 0)
+            return null;
+
+        // Otherwise, build a list:
+        List<String> hl = new ArrayList<String>();
+        for (Object v : links.getValues()) {
+            hl.add(getHost() + "\t" + (String) v);
+        }
+        return hl;
     }
 }
