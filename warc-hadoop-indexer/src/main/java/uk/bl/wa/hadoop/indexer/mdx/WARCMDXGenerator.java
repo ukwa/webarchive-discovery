@@ -236,6 +236,8 @@ public class WARCMDXGenerator extends Configured implements Tool {
         HelpFormatter helpFormatter = new HelpFormatter();
         helpFormatter.setWidth(80);
         helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, message);
+        System.out.println("\n");
+        ToolRunner.printGenericCommandUsage(System.out);
         System.exit(1);
     }
 

@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop.indexer;
+package uk.bl.wa.hadoop.datasets;
 
 /*
  * #%L
@@ -51,37 +51,32 @@ import org.apache.zookeeper.KeeperException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.KeylessTextOutputFormat;
+import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
- * WARCIndexerRunner
  * 
- * Extracts text/metadata using from a series of Archive files.
+ * Extracts metadata from a series of ARC/WARC files and formats the results
+ * into datasets.
  * 
- * @author rcoram
+ * @author anjackson
  */
 
 @SuppressWarnings({ "deprecation" })
-public class WARCIndexerRunner extends Configured implements Tool {
-    private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
+public class WARCDatasetGenerator extends Configured implements Tool {
+    private static final Log LOG = LogFactory
+            .getLog(WARCDatasetGenerator.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.] [-x] [output XML in OAI-PMH format]";
-    private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
+    private static final String CLI_HEADER = "WARCDatasetGenerator - MapReduce method for extracing datasets from ARCs and WARCs";
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";
-    public static final String CONFIG_APPLY_ANNOTATIONS = "warc.applyAnnotations";
-
-    protected static String solrHomeZipName = "solr_home.zip";
 
     private String inputPath;
     private String outputPath;
     private String configPath;
     private boolean wait;
     private boolean dumpConfig;
-    private boolean exportXml;
-    private boolean applyAnnotations;
 
     /**
      * 
@@ -111,28 +106,13 @@ public class WARCIndexerRunner extends Configured implements Tool {
             System.exit(0);
         }
         // Decide whether to apply annotations:
-        index_conf = index_conf.withValue(CONFIG_APPLY_ANNOTATIONS,
-                ConfigValueFactory.fromAnyRef(applyAnnotations));
         // Store the properties:
         conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
                 .render(ConfigRenderOptions.concise()));
         LOG.info("Loaded warc config.");
         LOG.info(index_conf.getString("warc.title"));
-        if (index_conf.getBoolean("warc.solr.use_hash_url_id")) {
-            LOG.info("Using hash-based ID.");
-        }
-        if (index_conf.hasPath("warc.solr.zookeepers")) {
-            LOG.info("Using Zookeepers.");
-        } else {
-            LOG.info("Using SolrServers.");
-        }
 
-        // Also set reduce speculative execution off, avoiding duplicate
-        // submissions to Solr.
-        conf.set("mapred.reduce.tasks.speculative.execution", "false");
-
-        // Reducer count dependent on concurrent HTTP connections to Solr
-        // server.
+        // Reducer count
         int numReducers = 1;
         try {
             numReducers = index_conf.getInt("warc.hadoop.num_reducers");
@@ -155,10 +135,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
         conf.setInputFormat(ArchiveFileInputFormat.class);
-        conf.setMapperClass(WARCIndexerMapper.class);
-        conf.setReducerClass(WARCIndexerReducer.class);
-        conf.setOutputFormat(KeylessTextOutputFormat.class);
-        conf.set("map.output.key.field.separator", "");
+        conf.setMapperClass(WARCDatasetMapper.class);
+        conf.setReducerClass(FrequencyCountingReducer.class);
+        // This can be optionally use to suppress keys:
+        // conf.setOutputFormat(KeylessTextOutputFormat.class);
+        // conf.set( "map.output.key.field.separator", "" );
+
         // Compress the output from the maps, to cut down temp space
         // requirements between map and reduce.
         conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
@@ -169,12 +151,10 @@ public class WARCIndexerRunner extends Configured implements Tool {
         // Ensure the JARs we provide take precedence over ones from Hadoop:
         conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
-        conf.setBoolean("mapred.output.oai-pmh", this.exportXml);
-
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(Text.class);
         conf.setMapOutputKeyClass(IntWritable.class);
-        conf.setMapOutputValueClass(WritableSolrRecord.class);
+        conf.setMapOutputValueClass(Text.class);
         conf.setNumReduceTasks(numReducers);
     }
 
@@ -189,7 +169,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
     public int run(String[] args) throws IOException, ParseException,
             KeeperException, InterruptedException {
         // Set up the base conf:
-        JobConf conf = new JobConf(getConf(), WARCIndexerRunner.class);
+        JobConf conf = new JobConf(getConf(), WARCDatasetGenerator.class);
 
         // Get the job configuration:
         this.createJobConf(conf, args);
@@ -217,15 +197,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
         options.addOption("o", true, "output directory");
         options.addOption("c", true, "path to configuration");
         options.addOption("w", false, "wait for job to finish");
-        options.addOption("x", false, "output XML in OAI-PMH format");
-        options.addOption("a", false,
-                "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'");
-        // TODO: Problematic with "hadoop jar"?
-        // I think starting with the GenericOptionsParser (above) should resolve
-        // this?
-        // options.addOption( OptionBuilder.withArgName( "property=value"
-        // ).hasArgs( 2 ).withValueSeparator().withDescription(
-        // "use value for given property" ).create( "D" ) );
 
         CommandLineParser parser = new PosixParser();
         CommandLine cmd = parser.parse(options, otherArgs);
@@ -236,8 +207,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
             this.configPath = cmd.getOptionValue("c");
         }
         this.dumpConfig = cmd.hasOption("d");
-        this.exportXml = cmd.hasOption("x");
-        this.applyAnnotations = cmd.hasOption("a");
 
         // If we are just dumping the config no need to validate:
         if (this.dumpConfig)
@@ -271,7 +240,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
      * @throws Exception
      */
     public static void main(String[] args) throws Exception {
-        int ret = ToolRunner.run(new WARCIndexerRunner(), args);
+        int ret = ToolRunner.run(new WARCDatasetGenerator(), args);
         System.exit(ret);
     }
 

@@ -344,4 +344,12 @@ public class SolrRecord implements Serializable {
     public String getHash() {
         return (String) getField(SolrFields.HASH).getFirstValue();
     }
+
+    /**
+     * 
+     * @return
+     */
+    public String getHost() {
+        return (String) getField(SolrFields.SOLR_HOST).getFirstValue();
+    }
 }
