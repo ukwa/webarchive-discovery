@@ -1,5 +1,7 @@
 package uk.bl.wa.hadoop.indexer;
 
+import static org.junit.Assert.assertFalse;
+
 /*-
  * #%L
  * warc-hadoop-indexer
@@ -50,7 +52,9 @@ public class ServiceLoaderTest {
             providerNames.add(provider.getClass().getCanonicalName());
         }
 
-        assertTrue("Face detection analyser not found.", providerNames
+        assertFalse(
+                "Face detection analyser found - should not be in base build.",
+                providerNames
                 .contains("uk.bl.wa.analyser.payload.FaceDetectionAnalyser"));
         assertTrue("Standard HTML analyser found.", providerNames
                 .contains("uk.bl.wa.analyser.payload.HTMLAnalyser"));
