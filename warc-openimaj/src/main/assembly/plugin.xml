@@ -1,0 +1,18 @@
+<assembly>
+  <id>plugin</id>
+  <formats>
+    <format>jar</format>
+  </formats>
+  <includeBaseDirectory>false</includeBaseDirectory>
+  <dependencySets>
+    <dependencySet>
+      <unpack>true</unpack>
+      <useProjectArtifact>true</useProjectArtifact>
+      <scope>runtime</scope>
+      <excludes>
+        <exclude>commons-logging:commons-logging</exclude>
+      </excludes>
+      <useTransitiveDependencies>true</useTransitiveDependencies>
+    </dependencySet>
+  </dependencySets>
+</assembly>
