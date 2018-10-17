@@ -401,12 +401,13 @@ public class SolrRecord implements Serializable {
             return null;
         // Otherwise, list 'em:
         List<String> hl = new ArrayList<String>();
-        hl.add(this.gatherMatches(faces.getValues(), "cat"));
-        hl.add(this.gatherMatches(faces.getValues(), "human"));
+        this.gatherMatches(faces.getValues(), "cat", hl);
+        this.gatherMatches(faces.getValues(), "human", hl);
         return hl;
     }
 
-    private String gatherMatches(Collection<Object> strings, String prefix) {
+    private void gatherMatches(Collection<Object> strings, String prefix,
+            List<String> hl) {
         StringBuilder sb = new StringBuilder();
         sb.append(getUrl());
         sb.append("\t");
@@ -422,8 +423,9 @@ public class SolrRecord implements Serializable {
                 i++;
             }
         }
-        
-        return sb.toString();
+        if (i > 0) {
+            hl.add(sb.toString());
+        }
     }
 
     /**

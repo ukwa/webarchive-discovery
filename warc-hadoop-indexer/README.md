@@ -34,6 +34,18 @@ or to check your supplied configuration is kicking in:
 
 [1]: https://github.com/typesafehub/config
 
+
+Dataset Generator
+-----------------
+
+This will run using the base set of parsers and extractors:
+
+    $  hadoop jar warc-hadoop-indexer/target/warc-hadoop-indexer-3.1.0-SNAPSHOT-job.jar uk.bl.wa.hadoop.datasets.WARCDatasetGenerator -i test-input.txt -o dataset-test-no-faces
+
+This adds the OpenIMAJ module, enabling face detection:
+ 
+    $  hadoop jar warc-hadoop-indexer/target/warc-hadoop-indexer-3.1.0-SNAPSHOT-job.jar uk.bl.wa.hadoop.datasets.WARCDatasetGenerator -libjars warc-openimaj/target/warc-openimaj-3.1.0-SNAPSHOT-plugin.jar -i test-input.txt -o dataset-test-faces
+
 MDX Work
 --------
 
