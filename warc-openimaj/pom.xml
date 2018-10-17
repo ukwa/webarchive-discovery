@@ -57,6 +57,10 @@
                <groupId>org.openimaj</groupId>
                <artifactId>xuggle-video</artifactId>
             </exclusion>
+            <exclusion>
+               <groupId>commons-logging</groupId>
+               <artifactId>commons-logging</artifactId>
+            </exclusion>
          </exclusions>
       </dependency>
    </dependencies>
