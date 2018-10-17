@@ -9,9 +9,6 @@
       <unpack>true</unpack>
       <useProjectArtifact>true</useProjectArtifact>
       <scope>runtime</scope>
-      <excludes>
-        <exclude>commons-logging:commons-logging</exclude>
-      </excludes>
       <useTransitiveDependencies>true</useTransitiveDependencies>
     </dependencySet>
   </dependencySets>
