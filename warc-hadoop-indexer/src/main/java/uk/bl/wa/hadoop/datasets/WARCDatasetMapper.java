@@ -219,11 +219,13 @@ public class WARCDatasetMapper extends MapReduceBase implements
                     WARCDatasetGenerator.FORMATS_SUMMARY_NAME + "__" + year),
                     new Text(s.getFormatResults()));
             // Faces:
-            String faces = s.getFaces();
+            List<String> faces = s.getFaces();
             if (faces != null) {
+                for (String face : faces) {
                 output.collect(
                         new Text(WARCDatasetGenerator.FACES_NAME + "__" + year),
-                        new Text(faces));
+                            new Text(face));
+                }
             }
             // Host links:
             List<String> hl = s.getHostLinks();

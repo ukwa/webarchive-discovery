@@ -395,26 +395,35 @@ public class SolrRecord implements Serializable {
     /**
      * Get the list of faces and the item identifier:
      */
-    public String getFaces() {
+    public List<String> getFaces() {
         SolrInputField faces = getField(SolrFields.IMAGE_FACES);
         if (faces == null || faces.getValueCount() == 0)
             return null;
         // Otherwise, list 'em:
+        List<String> hl = new ArrayList<String>();
+        hl.add(this.gatherMatches(faces.getValues(), "cat"));
+        hl.add(this.gatherMatches(faces.getValues(), "human"));
+        return hl;
+    }
+
+    private String gatherMatches(Collection<Object> strings, String prefix) {
         StringBuilder sb = new StringBuilder();
         sb.append(getUrl());
         sb.append("\t");
         sb.append(getWaybackDate());
         sb.append("\t");
         int i = 0;
-        for( Object v : faces.getValues()) {
+        for (Object v : strings) {
+            String vs = (String) v;
             if (i > 0)
                 sb.append(" ");
-            sb.append((String) v);
-            i++;
+            if (vs.startsWith(prefix)) {
+                sb.append(vs);
+                i++;
+            }
         }
         
         return sb.toString();
-        
     }
 
     /**
