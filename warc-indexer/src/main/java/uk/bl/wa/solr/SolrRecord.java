@@ -372,8 +372,10 @@ public class SolrRecord implements Serializable {
     public String getFormatResults() {
         StringBuilder sb = new StringBuilder();
         // As Served:
-        sb.append((String) getField(SolrFields.CONTENT_TYPE_SERVED)
-                .getFirstValue());
+        SolrInputField served = getField(SolrFields.CONTENT_TYPE_SERVED);
+        if (served != null) {
+            sb.append((String) served.getFirstValue());
+        }
         // Tika:
         sb.append("\t");
         SolrInputField tika = getField(SolrFields.CONTENT_TYPE_TIKA);
