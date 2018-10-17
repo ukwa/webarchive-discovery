@@ -1,5 +1,27 @@
 package uk.bl.wa.hadoop.datasets;
 
+/*-
+ * #%L
+ * warc-hadoop-indexer
+ * %%
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as
+ * published by the Free Software Foundation, either version 2 of the
+ * License, or (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU General Public
+ * License along with this program.  If not, see
+ * <http://www.gnu.org/licenses/gpl-2.0.html>.
+ * #L%
+ */
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -43,11 +65,6 @@ public class WARCDatasetGeneratorIntegrationTest {
 
     private final Path input = new Path("inputs");
     private final Path output = new Path("outputs");
-    private final Path outputMerged = new Path("outputs-merged");
-
-    // Exported results
-    public static File outputSeq = new File("target/test.seq");
-    public static File outputMergedSeq = new File("target/test-merged.seq");
 
     @Before
     public void setUp() throws Exception {
@@ -116,7 +133,7 @@ public class WARCDatasetGeneratorIntegrationTest {
 
     @SuppressWarnings("deprecation")
     @Test
-    public void testMDXGenerator() throws Exception {
+    public void testGenerator() throws Exception {
         // prepare for test
         // createTextInputFile();
 
@@ -149,13 +166,11 @@ public class WARCDatasetGeneratorIntegrationTest {
         // check the output exists
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
                 output, new OutputLogFilter()));
-        // Default is 1 reducers (as knitting together multiple sequence files
-        // is not a mere matter of concatentation):
-        Assert.assertEquals(1, outputFiles.length);
 
         // Copy the output out of HDFS and onto local FS:
-        FileOutputStream fout = new FileOutputStream(outputSeq);
         for (Path output : outputFiles) {
+            FileOutputStream fout = new FileOutputStream(
+                    "target/datasets-" + output.getName());
             log.info(" --- output : " + output);
             if (getFileSystem().isFile(output)) {
                 InputStream is = getFileSystem().open(output);
@@ -164,12 +179,12 @@ public class WARCDatasetGeneratorIntegrationTest {
                 log.info(" --- ...skipping directory...");
             }
             fout.flush();
+            fout.close();
         }
-        fout.close();
 
-        // Check contents of the output:
-        Configuration config = new Configuration();
-        Path path = new Path(outputSeq.getAbsolutePath());
+        // Did we generate the expected multiple output files?:
+        Assert.assertEquals(4, outputFiles.length);
+
     }
 
 
