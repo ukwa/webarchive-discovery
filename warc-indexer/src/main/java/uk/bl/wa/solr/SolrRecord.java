@@ -39,6 +39,7 @@ import java.nio.charset.CharsetEncoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -413,9 +414,16 @@ public class SolrRecord implements Serializable {
         sb.append("\t");
         sb.append(getWaybackDate());
         sb.append("\t");
-        int i = 0;
+        // Order:
+        List<String> list = new ArrayList<String>();
         for (Object v : strings) {
             String vs = (String) v;
+            list.add(vs);
+        }
+        Collections.sort(list);
+        // Go through:
+        int i = 0;
+        for (String vs : list) {
             if (i > 0)
                 sb.append(" ");
             if (vs.startsWith(prefix)) {

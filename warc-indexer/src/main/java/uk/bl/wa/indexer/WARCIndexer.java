@@ -369,6 +369,17 @@ public class WARCIndexer {
             // Add URL-based fields:
             URI saneURI = parseURL(solr, targetUrl);
 
+            // Prepare crawl date information:
+            String waybackDate = (header.getDate().replaceAll("[^0-9]", ""));
+            Date crawlDate = getWaybackDate(waybackDate);
+
+            // Store the dates:
+            solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
+            solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
+
+            // Use the current value as the waybackDate:
+            solr.setField(SolrFields.WAYBACK_DATE, waybackDate);
+
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
 
@@ -426,10 +437,6 @@ public class WARCIndexer {
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#hashstreamwrap", hashStreamStart);
 
-            // Prepare crawl date information:
-            String waybackDate = ( header.getDate().replaceAll( "[^0-9]", "" ) );
-            Date crawlDate =  getWaybackDate( waybackDate );
-            
             // Use an ID that ensures every URL+timestamp gets a separate
             // record:
             String id = waybackDate + "/" + url_md5hex;
@@ -438,13 +445,6 @@ public class WARCIndexer {
             solr.setField( SolrFields.ID, id );
             solr.setField( SolrFields.HASH, hash );
 
-            // Store the dates:
-            solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
-            solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
-            
-            // Use the current value as the waybackDate:
-            solr.setField( SolrFields.WAYBACK_DATE, waybackDate );
-            
             // -----------------------------------------------------
             // Apply any annotations:
             // -----------------------------------------------------
