@@ -75,7 +75,8 @@ public abstract class AbstractPayloadAnalyser {
                 input.reset();
                 parser.parse( input, null, metadata, null );
             } catch( Exception e ) {
-                log.error( parser.getClass().getName()+".parse(): " + e.getMessage() );
+                log.error(parser.getClass().getName() + ".parse(): "
+                        + e.getMessage(), e);
                 // Also record as a Solr PARSE_ERROR
                 solr.addParseException("when parsing with "
                         + parser.getClass().getName(), e);

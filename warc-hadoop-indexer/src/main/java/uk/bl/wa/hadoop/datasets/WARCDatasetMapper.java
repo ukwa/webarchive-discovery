@@ -222,7 +222,7 @@ public class WARCDatasetMapper extends MapReduceBase implements
             List<String> faces = s.getFaces();
             if (faces != null) {
                 for (String face : faces) {
-                output.collect(
+                    output.collect(
                         new Text(WARCDatasetGenerator.FACES_NAME + "__" + year),
                             new Text(face));
                 }

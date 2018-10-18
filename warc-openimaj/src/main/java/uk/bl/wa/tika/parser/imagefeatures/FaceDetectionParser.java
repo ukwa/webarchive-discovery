@@ -195,6 +195,7 @@ public class FaceDetectionParser extends AbstractParser {
         String xywh = kind + "@xywh=" + (int) b.x + "," + (int) b.y + ","
                 + (int) b.width + "," + (int) b.height;
         metadata.add(FACE_FRAGMENT_ID, xywh);
+        log.info("Found face: " + xywh);
     }
 
     /**

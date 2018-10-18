@@ -131,6 +131,7 @@ public class FaceDetectionAnalyser extends AbstractPayloadAnalyser {
                         
             // Attempt to extract faces etc.:
             if (this.extractFaces || this.extractDominantColours) {
+                log.info("Attempting to parse image file: " + header.getUrl());
                 final long deepStart = System.nanoTime();
                 ParseRunner parser = new ParseRunner(fdp, tikainput, metadata, solr);
                 try {
@@ -187,8 +188,10 @@ public class FaceDetectionAnalyser extends AbstractPayloadAnalyser {
               }
               catch(Exception e){
                 //it is known that (most) .ico and (all) .svg are not supported by java. Do not log, since it will spam.
-               // log.warn("Unable to extract image height/width/size for url:"+header.getUrl(),e);
-                
+                    log.warn(
+                            "Unable to extract image data for url:"
+                                    + header.getUrl(),
+                            e);
               }
               finally {
                  if (reader != null){
