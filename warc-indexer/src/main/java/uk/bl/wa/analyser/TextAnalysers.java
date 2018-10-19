@@ -64,7 +64,9 @@ public class TextAnalysers {
             text = text.trim();
             if( !"".equals( text ) ) {
                 for( AbstractTextAnalyser ta : analysers ) {
-                    ta.analyse(text, solr);
+                    if (ta.isEnabled()) {
+                        ta.analyse(text, solr);
+                    }
                 }
             }
         }
