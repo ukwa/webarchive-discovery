@@ -1,3 +1,7 @@
+
+**NOTE** Generally, we only add terms to the Solr schema, so it should usually be compatible with previous versions (i.e. clients should be able to query across both without modification). However, there are been a small number of fixes which unfortunately required breaking changes you may need to be aware of or work-around. e.g. [hash becomes single-valued](https://github.com/ukwa/webarchive-discovery/issues/95)... TBA...
+
+
 3.1.0
 -----
 
@@ -16,6 +20,7 @@
 -----
 
 **NOTE** The changes to the schema mean this version is not compatible with 2.1.0 indexes. We've also moved to Java 7.
+
 * Validation/statistics for WARC file name matching rules, given a list of WARC file names 
 * Added some experimental face detection code with tests.
 * Fixed licence headers #182

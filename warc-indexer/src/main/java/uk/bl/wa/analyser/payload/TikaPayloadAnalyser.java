@@ -105,6 +105,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
     /** Extract all metadata? */
     private boolean extractAllMetadata;
 
+    private boolean extractExifLocation;
+
     private boolean passUriToFormatTools = false;
 
     /* --- --- --- --- */
@@ -133,6 +135,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         this.extractAllMetadata = conf
                 .getBoolean("warc.index.tika.extract_all_metadata");
         log.info("Config: extractAllMetadata "+this.extractAllMetadata);
+
+        this.extractExifLocation = conf
+                .getBoolean("warc.index.tika.extract_exif_location");
+        log.info("Config: extractExifLocation " + this.extractExifLocation);
 
         this.useBoilerpipe = conf.getBoolean("warc.index.tika.use_boilerpipe");
         log.info("Config: useBoilerpipe " + this.useBoilerpipe);
@@ -408,7 +414,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                  // This potentially results in multiple author, which is valid
                  solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);
                }
-                            
+
+                if (this.extractExifLocation) {
+
               String exif_latitude = metadata.get("GPS Latitude");
               String exif_longitude = metadata.get("GPS Longitude");            
                             
@@ -429,6 +437,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                     } catch(Exception e){ //Just ignore. No GPS data added to solr
                         log.warn("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
                     }
+                }
                 }
             }
             //End image exif metadata
