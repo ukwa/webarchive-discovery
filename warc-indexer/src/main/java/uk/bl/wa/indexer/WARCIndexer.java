@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -49,6 +50,7 @@ import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -345,7 +347,11 @@ public class WARCIndexer {
             // Basic metadata:
             solr.setField(SolrFields.SOURCE_FILE, archiveName);
             solr.setField(SolrFields.SOURCE_FILE_OFFSET,"" + header.getOffset());
-            solr.setField(SolrFields.SOURCE_FILE_PATH, header.getReaderIdentifier()); //Full path of file
+            String filePath = header.getReaderIdentifier();//Full path of file                        
+            
+            //Will convert windows path to linux path. Linux paths will not be modified.
+            String linuxFilePath = FilenameUtils.separatorsToUnix(filePath);                                     
+            solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath); 
             
             byte[] url_md5digest = md5
                     .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
