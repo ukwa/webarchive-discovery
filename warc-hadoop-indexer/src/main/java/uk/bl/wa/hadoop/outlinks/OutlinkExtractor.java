@@ -42,9 +42,10 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 @SuppressWarnings( "deprecation" )
 public class OutlinkExtractor extends Configured implements Tool {
 
-    public int run( String[] args ) throws IOException {
-        JobConf conf = new JobConf( getConf(), OutlinkExtractor.class );
-
+    private boolean wait = true;
+    
+    protected void createJobConf(JobConf conf, String[] args)
+            throws IOException {
         String line = null;
         BufferedReader br = new BufferedReader( new FileReader( args[ 0 ] ) );
         while( ( line = br.readLine() ) != null ) {
@@ -60,8 +61,22 @@ public class OutlinkExtractor extends Configured implements Tool {
 
         conf.setOutputKeyClass( Text.class );
         conf.setOutputValueClass( Text.class );
-//        JobClient.runJob( conf );
-        new JobClient( conf ).submitJob( conf );
+    }
+
+    public int run(String[] args) throws IOException {
+        // Set up the base conf:
+        JobConf conf = new JobConf(getConf(), OutlinkExtractor.class);
+
+        // Get the job configuration:
+        this.createJobConf(conf, args);
+
+        // Submit it:
+        if (this.wait) {
+            JobClient.runJob(conf);
+        } else {
+            JobClient client = new JobClient(conf);
+            client.submitJob(conf);
+        }
         return 0;
     }
 
