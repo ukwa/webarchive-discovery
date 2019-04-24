@@ -26,11 +26,14 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -47,6 +50,9 @@ import org.jsoup.parser.ParseError;
 import org.jsoup.parser.Parser;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
+
+import com.typesafe.config.Config;
+import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
@@ -216,7 +222,14 @@ public class HtmlFeatureParser extends AbstractParser {
         }
         // For some elements, dig deeper and record attributes too:
         for (Element e : doc.select("link")) {
-            de.add("link/@rel=" + e.attr("rel"));
+            if (e.attr("rel") != null) {
+                de.add("link/@rel=" + e.attr("rel").toLowerCase());
+            }
+        }
+        for (Element e : doc.select("meta")) {
+            if (e.attr("name") != null) {
+                de.add("meta/@name=" + e.attr("name").toLowerCase());
+            }
         }
         // Store them:
         metadata.set(DISTINCT_ELEMENTS, de.toArray(new String[] {}));
