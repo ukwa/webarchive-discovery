@@ -42,7 +42,7 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 @SuppressWarnings( "deprecation" )
 public class OutlinkExtractor extends Configured implements Tool {
 
-    private boolean wait = true;
+    private boolean wait = false;
     
     protected void createJobConf(JobConf conf, String[] args)
             throws IOException {
