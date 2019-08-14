@@ -101,9 +101,9 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
                 // Pass the URL in so DROID can fall back on that:
                 Metadata metadata = new Metadata();
                 if (passUriToFormatTools) {
-                    UsableURI uuri = UsableURIFactory
-                            .getInstance(Normalisation
-                                    .fixURLErrors(header.getUrl()));
+                    UsableURI uuri = UsableURIFactory.getInstance(
+                            Normalisation.fixURLErrors(
+                                    Normalisation.sanitiseWARCHeaderValue(header.getUrl())));
                     // Droid seems unhappy about spaces in filenames, so hack to
                     // avoid:
                     String cleanUrl = uuri.getName().replace(" ", "+");
