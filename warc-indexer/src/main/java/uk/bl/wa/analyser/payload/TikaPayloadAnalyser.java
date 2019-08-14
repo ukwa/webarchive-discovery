@@ -64,6 +64,7 @@ import de.l3s.boilerpipe.extractors.ArticleExtractor;
 import uk.bl.wa.extract.Times;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 import uk.bl.wa.util.TimeLimiter;
@@ -229,13 +230,24 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
     @SuppressWarnings( "deprecation" )
     public SolrRecord extract( String source, SolrRecord solr, InputStream is, String url ) throws IOException {
 
-        // Set up the TikaInputStream:
-        TikaInputStream tikainput = null;
-        if( this.maxBytesToParser  > 0 ) {
-            tikainput = TikaInputStream.get( new BoundedInputStream( new CloseShieldInputStream(is), maxBytesToParser ) );
-        } else {
-            tikainput = TikaInputStream.get( new CloseShieldInputStream(is) );
+
+        InputStream is_fixed = null;
+        InputStream tikainput= null;
+        try{
+          is_fixed = InputStreamUtils.maybeDecompress(is);
+
         }
+        catch(Exception e){
+          log.error("Error in maybeDecompress gzip");
+          is_fixed = is;
+        }
+        
+        if( this.maxBytesToParser  > 0 ) {
+            tikainput = TikaInputStream.get( new BoundedInputStream( new CloseShieldInputStream(  is_fixed), maxBytesToParser ) );
+        } else {
+            tikainput = TikaInputStream.get( new CloseShieldInputStream(  is_fixed) );
+        }
+        
         
         // Also pass URL as metadata to allow extension hints to work:
         Metadata metadata = new Metadata();
@@ -670,4 +682,5 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
          return decimalDegrees;        
        }
 
+          
 }
