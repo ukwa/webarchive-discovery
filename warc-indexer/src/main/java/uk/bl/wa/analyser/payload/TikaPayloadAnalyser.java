@@ -136,8 +136,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                 .getBoolean("warc.index.tika.extract_all_metadata");
         log.info("Config: extractAllMetadata "+this.extractAllMetadata);
 
-        this.extractExifLocation = conf
-                .getBoolean("warc.index.tika.extract_exif_location");
+        this.extractExifLocation =
+                !conf.hasPath("warc.index.tika.extract_exif_location") ||
+                conf.getBoolean("warc.index.tika.extract_exif_location"); // EXIF is fairly lightweight
         log.info("Config: extractExifLocation " + this.extractExifLocation);
 
         this.useBoilerpipe = conf.getBoolean("warc.index.tika.use_boilerpipe");
