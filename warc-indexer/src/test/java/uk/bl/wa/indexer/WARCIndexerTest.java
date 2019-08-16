@@ -39,7 +39,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.httpclient.URIException;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
@@ -235,6 +238,49 @@ public class WARCIndexerTest {
 
         System.out.println("nullCount: " + nullCount);
         assertEquals(expectedNullCount, nullCount);
+    }
+
+    /**
+     * Tests support for overall compression (WARC with GZipped elements) as well as
+     * content-compression (GZip and Brotli).
+     * TODO: Test support for GZipped WARCs without the .gz-extension
+     */
+    @Test
+    public void testCompressionSupport() throws IOException, NoSuchAlgorithmException {
+        final String EXPECTED_CONTENT = "Extremely simple webpage";
+        final Pattern ENCODING = Pattern.compile("Content-Encoding: ([a-z]*)", Pattern.DOTALL);
+        List<String> WARCs = Arrays.asList(
+                "transfer_compression_brotli.warc",
+                "transfer_compression_brotli.warc.gz",
+                "transfer_compression_gzip.warc",
+                "transfer_compression_gzip.warc.gz",
+                "transfer_compression_none.warc",
+                "transfer_compression_none.warc.gz"
+        );
+        WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
+        windex.setCheckSolrForDuplicates(false);
+
+        for (String warc: WARCs) {
+            String warcFile = this.getClass().getClassLoader()
+                    .getResource("compression/" + warc).getPath();
+            ArchiveReader reader = ArchiveReaderFactory.get(warcFile);
+            Iterator<ArchiveRecord> ir = reader.iterator();
+            assertTrue("There should be at least 1 record in " + warc, ir.hasNext());
+            while(ir.hasNext()) {
+                ArchiveRecord rec = ir.next();
+                if(!"response".equals(rec.getHeader().getHeaderValue("WARC-Type"))) {
+                    continue;
+                }
+                String content = Streams.asString(rec);
+                Matcher encodingMatcher = ENCODING.matcher(content);
+                String encoding = encodingMatcher.find() ? encodingMatcher.group(1) : "N/A";
+                if (!content.contains(EXPECTED_CONTENT)) {
+                    System.out.println("'Content-Encoding' was '" + encoding + "'  for the response in " + warc + "" +
+                                       " that did not contain the expected phrase \"" + EXPECTED_CONTENT +
+                                       "\". This indicates that it was compressed in an unsupported way.");
+                }
+            }
+        }
     }
 
     @Test
