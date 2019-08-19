@@ -269,23 +269,15 @@ public class WARCIndexerTest {
                     continue;
                 }
                 assertTrue("The record in '" + warc + "'should be a WARC-record", rec instanceof WARCRecord);
-                WARCRecord wRec = (WARCRecord)rec;
 
-                String line = HttpParser.readLine(wRec, "utf-8");
-                assertTrue("First line in headers for '" + warc + "'should start with HTTP", line.startsWith("HTTP"));
-                Header[] headers = HttpParser.parseHeaders(wRec, "UTF-8");
-                String encoding = "N/A";
-                for (Header header: headers) {
-                    if (ENCODING.equals(header.getName())) {
-                        encoding = header.getValue();
-                        break;
-                    }
-                }
-
-                String content = Streams.asString(wRec);
+                SolrRecord doc = windex.extract("", rec);
+                assertTrue("The field '" + SolrFields.SOLR_EXTRACTED_TEXT + "' should be present in the" +
+                           " record in " + warc +". Missing content indicates missing compression support",
+                           doc.containsKey(SolrFields.SOLR_EXTRACTED_TEXT)) ;
+                String content = doc.getField(SolrFields.SOLR_EXTRACTED_TEXT).toString();
                 if (!content.contains(EXPECTED_CONTENT)) {
-                    Assert.fail("'Content-Encoding' was '" + encoding + "' for the response in " + warc + "" +
-                                " that did not contain the expected phrase \"" + EXPECTED_CONTENT +
+                    Assert.fail("The response in " + warc + "" +
+                                " did not contain the expected phrase \"" + EXPECTED_CONTENT +
                                 "\". This indicates that it was compressed in an unsupported way.");
                 }
             }
