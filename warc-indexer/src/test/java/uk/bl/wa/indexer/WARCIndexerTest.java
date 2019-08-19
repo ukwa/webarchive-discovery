@@ -35,20 +35,17 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.*;
 
 import org.apache.commons.fileupload.util.Streams;
-import org.apache.commons.httpclient.URIException;
+import org.apache.commons.httpclient.*;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
@@ -248,12 +245,12 @@ public class WARCIndexerTest {
     @Test
     public void testCompressionSupport() throws IOException, NoSuchAlgorithmException {
         final String EXPECTED_CONTENT = "Extremely simple webpage";
-        final Pattern ENCODING = Pattern.compile("Content-Encoding: ([a-z]*)", Pattern.DOTALL);
+        final String ENCODING = "Content-Encoding";
         List<String> WARCs = Arrays.asList(
-                "transfer_compression_brotli.warc",
-                "transfer_compression_brotli.warc.gz",
                 "transfer_compression_gzip.warc",
                 "transfer_compression_gzip.warc.gz",
+                "transfer_compression_brotli.warc",
+                "transfer_compression_brotli.warc.gz",
                 "transfer_compression_none.warc",
                 "transfer_compression_none.warc.gz"
         );
@@ -271,13 +268,25 @@ public class WARCIndexerTest {
                 if(!"response".equals(rec.getHeader().getHeaderValue("WARC-Type"))) {
                     continue;
                 }
-                String content = Streams.asString(rec);
-                Matcher encodingMatcher = ENCODING.matcher(content);
-                String encoding = encodingMatcher.find() ? encodingMatcher.group(1) : "N/A";
+                assertTrue("The record in '" + warc + "'should be a WARC-record", rec instanceof WARCRecord);
+                WARCRecord wRec = (WARCRecord)rec;
+
+                String line = HttpParser.readLine(wRec, "utf-8");
+                assertTrue("First line in headers for '" + warc + "'should start with HTTP", line.startsWith("HTTP"));
+                Header[] headers = HttpParser.parseHeaders(wRec, "UTF-8");
+                String encoding = "N/A";
+                for (Header header: headers) {
+                    if (ENCODING.equals(header.getName())) {
+                        encoding = header.getValue();
+                        break;
+                    }
+                }
+
+                String content = Streams.asString(wRec);
                 if (!content.contains(EXPECTED_CONTENT)) {
-                    System.out.println("'Content-Encoding' was '" + encoding + "'  for the response in " + warc + "" +
-                                       " that did not contain the expected phrase \"" + EXPECTED_CONTENT +
-                                       "\". This indicates that it was compressed in an unsupported way.");
+                    Assert.fail("'Content-Encoding' was '" + encoding + "' for the response in " + warc + "" +
+                                " that did not contain the expected phrase \"" + EXPECTED_CONTENT +
+                                "\". This indicates that it was compressed in an unsupported way.");
                 }
             }
         }
