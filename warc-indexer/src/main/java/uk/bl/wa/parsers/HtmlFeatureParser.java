@@ -54,6 +54,7 @@ import org.xml.sax.SAXException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 
@@ -150,10 +151,18 @@ public class HtmlFeatureParser extends AbstractParser {
      * 
      */
     @Override
-    public void parse(InputStream stream, ContentHandler handler,
+    public void parse(InputStream streamTemp, ContentHandler handler,
             Metadata metadata, ParseContext context) throws IOException,
             SAXException, TikaException {
+      InputStream stream= null;
         final long start = System.nanoTime();
+        try{
+           stream = InputStreamUtils.maybeDecompress(streamTemp);
+        }
+        catch(Exception e){
+          log.error("Error in automatic GZIP inputstream wrapper");
+          stream = streamTemp;          
+        }
         // Pick up the URL:
         String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
         
@@ -307,4 +316,5 @@ public class HtmlFeatureParser extends AbstractParser {
         }
         return metadata;
     }
+  
 }
