@@ -399,6 +399,7 @@ public class WARCIndexer {
             if( targetUrl.startsWith( "http" ) ) {
                 // Parse HTTP headers:
                 String statusCode = null;
+                // TODO: Consider extracting & temporarily keeping all HTTP-header for later hinting on compression etc.
                 if( record instanceof WARCRecord ) {
                     statusCode = this.processWARCHeaders(record, header,
                             targetUrl, solr);
@@ -439,6 +440,7 @@ public class WARCIndexer {
             final long hashStreamStart = System.nanoTime();
             HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
             tikainput = hcis.getInputStream();
+            // TODO: Consider adding support for GZip / Brotli compression at this point
             String hash = hcis.getHash();
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#hashstreamwrap", hashStreamStart);

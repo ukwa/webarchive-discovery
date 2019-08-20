@@ -247,12 +247,12 @@ public class WARCIndexerTest {
         final String EXPECTED_CONTENT = "Extremely simple webpage";
         final String ENCODING = "Content-Encoding";
         List<String> WARCs = Arrays.asList(
+                "transfer_compression_none.warc",
+                "transfer_compression_none.warc.gz",
                 "transfer_compression_gzip.warc",
                 "transfer_compression_gzip.warc.gz",
                 "transfer_compression_brotli.warc",
-                "transfer_compression_brotli.warc.gz",
-                "transfer_compression_none.warc",
-                "transfer_compression_none.warc.gz"
+                "transfer_compression_brotli.warc.gz"
         );
         WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
         windex.setCheckSolrForDuplicates(false);
