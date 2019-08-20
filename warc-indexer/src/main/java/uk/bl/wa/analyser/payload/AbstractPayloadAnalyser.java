@@ -72,7 +72,6 @@ public abstract class AbstractPayloadAnalyser {
         @Override
         public void run() {
             try {
-                input.reset();
                 parser.parse( input, null, metadata, null );
             } catch( Exception e ) {
                 log.error(parser.getClass().getName() + ".parse(): "

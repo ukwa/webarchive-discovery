@@ -157,7 +157,8 @@ public class HtmlFeatureParser extends AbstractParser {
       InputStream stream= null;
         final long start = System.nanoTime();
         try{
-           stream = InputStreamUtils.maybeDecompress(streamTemp);
+            // TODO: Pass HTTP headers through to this point to provide compressionHint
+           stream = InputStreamUtils.maybeDecompress(streamTemp, null);
         }
         catch(Exception e){
           log.error("Error in automatic GZIP inputstream wrapper");
@@ -262,14 +263,8 @@ public class HtmlFeatureParser extends AbstractParser {
 
     /**
      * Use a tolerant parser to extract all of the absolute a href links from a document.
-     * 
+     *
      * Does not extract other links, e.g. stylesheets, etc. etc. Image extracting in another field
-     * 
-     * @param input The InputStream
-     * @param charset The character set, e.g. "UTF-8". Value of "null" attempts to extract encoding from the document and falls-back on UTF-8.
-     * @param baseUri base URI for the page, for resolving relative links. e.g. "http://www.example.com/"
-     * @return
-     * @throws java.io.IOException
      */
     private Set<String> extractLinks( Document doc) throws IOException {
         Set<String> linkset = new HashSet<String>();

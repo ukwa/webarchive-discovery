@@ -4,7 +4,7 @@ package uk.bl.wa.util;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2019 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -23,8 +23,8 @@ package uk.bl.wa.util;
  */
 
 import java.io.BufferedInputStream;
+import java.io.IOException;
 import java.io.InputStream;
-import java.io.PushbackInputStream;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
@@ -36,22 +36,36 @@ public class InputStreamUtils {
     private static Log log = LogFactory.getLog(InputStreamUtils.class );
 
     /*
-     * Detects if the input stream is GZipped or Brotli-compressed. If so, the stream will be wrapped and automatically
-     * decompressed upon use. If the input stream is not compressed, it will be returned wrapped in a BufferedInputStream.
+     * Provides a decompressing wrapper for the input. If the compressionHint is null, the method will attempt to
+     * auto-guess if the input is GZip-compressed. Auto-guessing does not work for Brotli as such detection is
+     * unreliable for that format.
+     * If the hint is empty, the input stream will be returned unmodified.
+     * @param input the input stream that might be decompressed.
+     * @param compressionHint if present, this will be used for selecting the compression scheme.
+      *       Usable values are 'GZip' and 'Br'. Not case-sensitive.
      */
-    public static InputStream maybeDecompress(InputStream input) throws Exception {
-        final BufferedInputStream buf = new BufferedInputStream(input);
-        buf.mark(1024);
-
-        if (ArchiveUtils.isGzipped(buf)) {
-            log.debug("GZIP stream detected");
+    public static InputStream maybeDecompress(InputStream input, String compressionHint) throws IOException {
+        final String hint = compressionHint == null ? null : compressionHint.toLowerCase().trim();
+        if (hint == null) { // Auto-guess
+            // Detecting Brotli is hard: https://stackoverflow.com/questions/39008957/is-there-a-way-to-check-if-a-buffer-is-in-brotli-compressed-format
+            final BufferedInputStream buf = new BufferedInputStream(input);
+            buf.mark(1024);
+            if (ArchiveUtils.isGzipped(buf)) {
+                log.debug("GZIP stream auto detected");
+                buf.reset();
+                return new GZIPInputStream(buf);
+            }
             buf.reset();
-            return new GZIPInputStream(buf);
+            return buf;
         }
-
-        // TODO: Add Brotli detection. Problem: It seems to be hard: https://stackoverflow.com/questions/39008957/is-there-a-way-to-check-if-a-buffer-is-in-brotli-compressed-format
-
-        buf.reset();
-        return buf;
+        switch (hint) {
+            case "": return input;
+            case "gzip": return new GZIPInputStream(input);
+            case "br": return new org.brotli.dec.BrotliInputStream(input);
+            default: {
+                log.warn("Unsupported compression hint '" + compressionHint + "'. Returning stream as-is");
+                return input;
+            }
+        }
     }
 }
