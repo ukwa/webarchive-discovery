@@ -33,11 +33,11 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.ZoneId;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
@@ -139,6 +139,9 @@ public class WARCIndexer {
     public static final boolean CANONICALISE_HOST = true;
 
     private final SolrRecordFactory solrFactory;
+    private final java.time.format.DateTimeFormatter WAYBACK_DATETIME =
+            java.time.format.DateTimeFormatter.ofPattern("yyyyMMddHHmmss").withZone(ZoneId.of("UTC"));
+//    private final DateTimeFormatter WAYBACK_DATETIME = DateTimeFormat.forPattern("yyyyMMddHHmmss");
 
     /* ------------------------------------------------------------ */
 
@@ -383,8 +386,8 @@ public class WARCIndexer {
             solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
             solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
 
-            // Use the current value as the waybackDate:
-            solr.setField(SolrFields.WAYBACK_DATE, waybackDate);
+            // We format the crawlDate to ensure the two datetime fields represents the same instance
+            solr.setField(SolrFields.WAYBACK_DATE, WAYBACK_DATETIME.format(crawlDate.toInstant()));
 
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
