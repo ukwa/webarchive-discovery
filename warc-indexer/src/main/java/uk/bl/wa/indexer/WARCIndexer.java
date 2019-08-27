@@ -31,18 +31,14 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.Calendar;
-import java.util.Date;
-import java.util.List;
-import java.util.Properties;
-import java.util.TimeZone;
+import java.util.*;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.Header;
@@ -285,28 +281,19 @@ public class WARCIndexer {
      */
     public SolrRecord extract( String archiveName, ArchiveRecord record, boolean isTextIncluded ) throws IOException {      
       final long start = System.nanoTime();
-        ArchiveRecordHeader header = record.getHeader();
-        SolrRecord solr = solrFactory.createRecord(archiveName, header);
+        final ArchiveRecordHeader header = record.getHeader();
+        final SolrRecord solr = solrFactory.createRecord(archiveName, header);
         
         if( !header.getHeaderFields().isEmpty() ) {
             if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) ) {
-                log.debug("Looking at "
-                        + header.getHeaderValue(HEADER_KEY_TYPE));
+                log.debug("Looking at " + header.getHeaderValue(HEADER_KEY_TYPE));
 
                 if( !checkRecordType( ( String ) header.getHeaderValue( HEADER_KEY_TYPE ) ) ) {
                     return null;
                 }
-                // Store WARC record type:
-                solr.setField(SolrFields.SOLR_RECORD_TYPE, (String) header.getHeaderValue(HEADER_KEY_TYPE));
-
-                //Store WARC-Record-ID
-                solr.setField(SolrFields.WARC_KEY_ID, (String) header.getHeaderValue(HEADER_KEY_ID));
-                solr.setField(SolrFields.WARC_IP, (String) header.getHeaderValue(HEADER_KEY_IP));
-                
+                processWARCHeader(header, solr);
             } else {
-                // else we're processing ARCs so nothing to filter and no
-                // revisits
-                solr.setField(SolrFields.SOLR_RECORD_TYPE, "arc");
+                processARCHeader(solr);
             }
 
             if( header.getUrl() == null )
@@ -328,63 +315,16 @@ public class WARCIndexer {
             log.debug("Processing " + targetUrl + " from " + archiveName);
 
             // Check the filters:
-            if( this.checkProtocol( targetUrl ) == false )
+            if(!this.checkProtocol(targetUrl) || !this.checkUrl(targetUrl) || !this.checkExclusionFilter(targetUrl)) {
                 return null;
-            if( this.checkUrl( targetUrl ) == false )
-                return null;
-            if( this.checkExclusionFilter( targetUrl ) == false )
-                return null;
-                
-            // -----------------------------------------------------
-            // Add user supplied Archive-It Solr fields and values:
-            // -----------------------------------------------------
-            solr.setField( SolrFields.INSTITUTION, WARCIndexerCommand.institution );
-            solr.setField( SolrFields.COLLECTION, WARCIndexerCommand.collection );
-            solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.collection_id );
-
-            // --- Basic headers ---
-
-            // Basic metadata:
-            solr.setField(SolrFields.SOURCE_FILE, archiveName);
-            solr.setField(SolrFields.SOURCE_FILE_OFFSET,"" + header.getOffset());
-            String filePath = header.getReaderIdentifier();//Full path of file                        
-            
-            //Will convert windows path to linux path. Linux paths will not be modified.
-            String linuxFilePath = FilenameUtils.separatorsToUnix(filePath);                                     
-            solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath); 
-            
-            byte[] url_md5digest = md5
-                    .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
-            // String url_base64 =
-            // Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
-            String url_md5hex = Base64.encodeBase64String(url_md5digest);
-            solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
-            if (addNormalisedURL) {
-                solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
             }
-
-            // Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
-            long content_length = header.getLength();
-
-            // Also pull out the file extension, if any:
-            String resourceName = parseResourceName(targetUrl);
-            solr.addField(SolrFields.RESOURCE_NAME, resourceName);
-            solr.addField(SolrFields.CONTENT_TYPE_EXT,
-                    parseExtension(resourceName));
+            setUserFields(solr, archiveName);
 
             // Add URL-based fields:
-            URI saneURI = parseURL(solr, targetUrl);
+            final URI saneURI = parseURL(solr, targetUrl);
 
-            // Prepare crawl date information:
-            String waybackDate = (header.getDate().replaceAll("[^0-9]", ""));
-            Date crawlDate = getWaybackDate(waybackDate);
-
-            // Store the dates:
-            solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
-            solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
-
-            // Use the current value as the waybackDate:
-            solr.setField(SolrFields.WAYBACK_DATE, waybackDate);
+            // --- Basic headers ---
+            processEnvelopeHeader(solr, header, targetUrl);
 
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#archeaders", start);
@@ -393,32 +333,30 @@ public class WARCIndexer {
             // Now consume record and HTTP headers (only)
             // -----------------------------------------------------
 
-            InputStream tikainput = null;
-
             // Only parse HTTP headers for HTTP URIs
+            HTTPHeader httpHeader = null;
             if( targetUrl.startsWith( "http" ) ) {
-                // Parse HTTP headers:
-                String statusCode = null;
+                // TODO: Consider extracting & temporarily keeping all HTTP-header for later hinting on compression etc.
                 if( record instanceof WARCRecord ) {
-                    statusCode = this.processWARCHeaders(record, header,
-                            targetUrl, solr);
-                    tikainput = record;
+                    httpHeader = this.processWARCHTTPHeaders(record, header, targetUrl, solr);
                 } else if( record instanceof ARCRecord ) {
                     ARCRecord arcr = ( ARCRecord ) record;
-                    statusCode = "" + arcr.getStatusCode();
-                    this.processHeaders( solr, statusCode, arcr.getHttpHeaders() , targetUrl);
+                    httpHeader = new HTTPHeader();
+                    httpHeader.setHttpStatus(Integer.toString(arcr.getStatusCode()));
+                    httpHeader.addAll(arcr.getHttpHeaders());
+
+                    this.processHTTPHeaders(solr, httpHeader, targetUrl);
                     arcr.skipHttpHeader();
-                    tikainput = arcr;
                 } else {
-                    log.error( "FAIL! Unsupported archive record type." );
+                    log.error( "FAIL! Unsupported archive record type " + record.getClass().getCanonicalName() );
                     return solr;
                 }
 
-                solr.setField(SolrFields.SOLR_STATUS_CODE, statusCode);
+                solr.setField(SolrFields.SOLR_STATUS_CODE, httpHeader.getHttpStatus());
 
                 // Skip recording non-content URLs (i.e. 2xx responses only please):
-                if(!checkResponseCode(statusCode)) {
-                    log.debug( "Skipping this record based on status code " + statusCode + ": " + targetUrl );
+                if(!checkResponseCode(httpHeader.getHttpStatus())) {
+                    log.debug( "Skipping this record based on status code " + httpHeader.getHttpStatus() + ": " + targetUrl );
                     return null;
                 }
             } else {
@@ -428,41 +366,24 @@ public class WARCIndexer {
             // -----------------------------------------------------
             // Headers have been processed, payload ready to cache:
             // -----------------------------------------------------
-
             // Update the content_length based on what's available:
-            content_length = tikainput.available();
+            final long content_length = record.available();
 
             // Record the length:
             solr.setField(SolrFields.CONTENT_LENGTH, ""+content_length);
             
             // Create an appropriately cached version of the payload, to allow analysis.
             final long hashStreamStart = System.nanoTime();
-            HashedCachedInputStream hcis = new HashedCachedInputStream(header, tikainput, content_length );
-            tikainput = hcis.getInputStream();
-            String hash = hcis.getHash();
+            final HashedCachedInputStream hcis = new HashedCachedInputStream(header, record, content_length );
+            final InputStream tikaInput = hcis.getInputStream();
+            // TODO: Consider adding support for GZip / Brotli compression at this point
+            final String hash = hcis.getHash();
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#hashstreamwrap", hashStreamStart);
-
-            // Use an ID that ensures every URL+timestamp gets a separate
-            // record:
-            String id = waybackDate + "/" + url_md5hex;
-
             // Set these last:
-            solr.setField( SolrFields.ID, id );
             solr.setField( SolrFields.HASH, hash );
 
-            // -----------------------------------------------------
-            // Apply any annotations:
-            // -----------------------------------------------------
-            if (ant != null) {
-                try {
-                    ant.applyAnnotations(saneURI,
-                            solr.getSolrDocument());
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                    log.error("Failed to annotate " + saneURI + " : " + e);
-                }
-            }
+            applyAnnotations(solr, saneURI);
 
             // -----------------------------------------------------
             // WARC revisit record handling:
@@ -484,13 +405,11 @@ public class WARCIndexer {
 
             // Mark the start of the payload, with a readLimit corresponding to
             // the payload size:
-            tikainput.mark( ( int ) content_length );
+            tikaInput.mark( ( int ) content_length );
             
             // Pass on to other extractors as required, resetting the stream before each:
-            this.wpa.analyse(archiveName, header, tikainput, solr,
-                    content_length);
+            this.wpa.analyse(archiveName, header, httpHeader, tikaInput, solr, content_length);
             Instrument.timeRel("WARCIndexer.extract#total", "WARCIndexer.extract#analyzetikainput", analyzeStart);
-
 
             // Clear up the caching of the payload:
             hcis.cleanup();
@@ -498,26 +417,8 @@ public class WARCIndexer {
             // -----------------------------------------------------
             // Payload analysis complete, now performing text analysis:
             // -----------------------------------------------------
-            
-            this.txa.analyse(solr);
 
-            // Remove the Text Field if required
-            if( !isTextIncluded ) {
-                solr.removeField( SolrFields.SOLR_EXTRACTED_TEXT );
-
-            } else {
-                // Otherwise, decide whether to store or both store and index
-                // the text:
-                if (storeText == false) {
-                    // Copy the text into the indexed (but not stored) field:
-                    solr.setField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED,
-                            (String) solr.getField(
-                                    SolrFields.SOLR_EXTRACTED_TEXT)
-                                    .getFirstValue());
-                    // Take the text out of the original (stored) field.
-                    solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
-                }
-            }
+            processText(solr, isTextIncluded);
         }
         Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#solrdocCreation",
                      "WARCIndexer.extract#total", start);
@@ -528,15 +429,129 @@ public class WARCIndexer {
         return solr;
     }
 
+    private void processText(SolrRecord solr, boolean isTextIncluded) {
+        this.txa.analyse(solr);
+
+        // Remove the Text Field if required
+        if( !isTextIncluded ) {
+            solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT );
+        } else {
+            // Otherwise, decide whether to store or both store and index
+            // the text:
+            if (!storeText) {
+                // Copy the text into the indexed (but not stored) field:
+                solr.setField(SolrFields.SOLR_EXTRACTED_TEXT_NOT_STORED,
+                        (String) solr.getField(
+                                SolrFields.SOLR_EXTRACTED_TEXT)
+                                .getFirstValue());
+                // Take the text out of the original (stored) field.
+                solr.removeField(SolrFields.SOLR_EXTRACTED_TEXT);
+            }
+        }
+    }
+
+    private void applyAnnotations(SolrRecord solr, URI saneURI) throws URIException {
+        // -----------------------------------------------------
+        // Apply any annotations:
+        // -----------------------------------------------------
+        if (ant != null) {
+            try {
+                ant.applyAnnotations(saneURI, solr.getSolrDocument());
+            } catch (URISyntaxException e) {
+                e.printStackTrace();
+                log.error("Failed to annotate " + saneURI + " : " + e);
+            }
+        }
+    }
+
     /**
-     * Perform URL parsing and manipulation
-     * 
-     * @return
-     * 
-     * @throws URIException
+     * Updates the provided Solr document based on envelope (ARC or WARC) headers.
      */
-    protected URI parseURL(SolrRecord solr, String fullUrl)
-            throws URIException {
+    private void processEnvelopeHeader(SolrRecord solr, ArchiveRecordHeader header, String targetUrl)
+            throws UnsupportedEncodingException {
+        // Basic metadata:
+        solr.setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
+        final String filePath = header.getReaderIdentifier();//Full path of file
+
+        //Will convert windows path to linux path. Linux paths will not be modified.
+        final String linuxFilePath = FilenameUtils.separatorsToUnix(filePath);
+        solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath);
+
+        byte[] url_md5digest = md5
+                .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
+        // String url_base64 =
+        // Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
+        final String url_md5hex = Base64.encodeBase64String(url_md5digest);
+        solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
+        if (addNormalisedURL) {
+            solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
+        }
+
+        // Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
+        //long content_length = header.getLength();
+
+        // Also pull out the file extension, if any:
+        final String resourceName = parseResourceName(targetUrl);
+        solr.addField(SolrFields.RESOURCE_NAME, resourceName);
+        solr.addField(SolrFields.CONTENT_TYPE_EXT,
+                parseExtension(resourceName));
+
+
+        // Prepare crawl date information:
+        final String waybackDate = (header.getDate().replaceAll("[^0-9]", ""));
+        final Date crawlDate = getWaybackDate(waybackDate);
+
+        // Use an ID that ensures every URL+timestamp gets a separate
+        // record:
+        final String id = waybackDate + "/" + url_md5hex;
+        solr.setField( SolrFields.ID, id );
+
+        // Store the dates:
+        solr.setField(SolrFields.CRAWL_DATE, formatter.format(crawlDate));
+        solr.setField(SolrFields.CRAWL_YEAR, getYearFromDate(crawlDate));
+
+        // Use the current value as the waybackDate:
+        solr.setField(SolrFields.WAYBACK_DATE, waybackDate);
+    }
+
+    /**
+     * Assigns user-specified fields (institution, collection, collection ID) to the provided Solr document.
+     */
+    private void setUserFields(SolrRecord solr, String archiveName) {
+        solr.setField(SolrFields.SOURCE_FILE, archiveName);
+        // -----------------------------------------------------
+        // Add user supplied Archive-It Solr fields and values:
+        // -----------------------------------------------------
+        solr.setField(SolrFields.INSTITUTION, WARCIndexerCommand.institution );
+        solr.setField( SolrFields.COLLECTION, WARCIndexerCommand.collection );
+        solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.collection_id );
+    }
+
+    /**
+     * Adds ARC-specific headers to the provided Solr document.
+     */
+    private void processARCHeader(SolrRecord solr) {
+        // else we're processing ARCs so nothing to filter and no
+        // revisits
+        solr.setField(SolrFields.SOLR_RECORD_TYPE, "arc");
+    }
+
+    /**
+     * Adds WARC-specific headers to the provided Solr document.
+     */
+    private void processWARCHeader(ArchiveRecordHeader header, SolrRecord solr) {
+        // Store WARC record type:
+        solr.setField(SolrFields.SOLR_RECORD_TYPE, (String) header.getHeaderValue(HEADER_KEY_TYPE));
+
+        //Store WARC-Record-ID
+        solr.setField(SolrFields.WARC_KEY_ID, (String) header.getHeaderValue(HEADER_KEY_ID));
+        solr.setField(SolrFields.WARC_IP, (String) header.getHeaderValue(HEADER_KEY_IP));
+    }
+
+    /**
+     * Perform URL parsing and manipulation.
+     */
+    protected URI parseURL(SolrRecord solr, String fullUrl) throws URIException {
         UsableURI url = UsableURIFactory.getInstance(fullUrl);
 
         solr.setField(SolrFields.SOLR_URL_PATH, url.getPath());
@@ -594,28 +609,33 @@ public class WARCIndexer {
 
     /* ----------------------------------- */
 
-    private String processWARCHeaders(ArchiveRecord record,
-            ArchiveRecordHeader header, String targetUrl, SolrRecord solr)
+    /**
+     * If HTTP headers are present in the WARC record, they are extracted and passed on to ${@link #processHTTPHeaders}.
+     * @return {@link HTTPHeader} containing extracted HTTP status and headers for the record.
+     */
+    private HTTPHeader processWARCHTTPHeaders(
+            ArchiveRecord record, ArchiveRecordHeader warcHeader, String targetUrl, SolrRecord solr)
             throws IOException {
         String statusCode = null;
         // There are not always headers! The code should check first.
         String statusLine = HttpParser.readLine(record, "UTF-8");
+        HTTPHeader httpHeaders = new HTTPHeader();
+
         if (statusLine != null && statusLine.startsWith("HTTP")) {
-            String firstLine[] = statusLine.split(" ");
+            String[] firstLine = statusLine.split(" ");
             if (firstLine.length > 1) {
                 statusCode = firstLine[1].trim();
+                httpHeaders.setHttpStatus(statusCode);
                 try {
-                    this.processHeaders(solr, statusCode,
-                            HttpParser.parseHeaders(record, "UTF-8"),
-                            targetUrl);
+                    Header[] headers = HttpParser.parseHeaders(record, "UTF-8");
+                    httpHeaders.addAll(headers);
+                    this.processHTTPHeaders(solr, httpHeaders, targetUrl);
                 } catch (ProtocolException p) {
                     log.error(
                             "ProtocolException [" + statusCode + "]: "
-                                    + header.getHeaderValue(
-                                            WARCConstants.HEADER_KEY_FILENAME)
+                                    + warcHeader.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
                                     + "@"
-                                    + header.getHeaderValue(
-                                            WARCConstants.ABSOLUTE_OFFSET_KEY),
+                                    + warcHeader.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY),
                             p);
                 }
             } else {
@@ -623,20 +643,23 @@ public class WARCIndexer {
             }
         } else {
             log.warn("Invalid status line: "
-                    + header.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
+                    + warcHeader.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
                     + "@"
-                    + header.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY));
+                    + warcHeader.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY));
         }
         // No need for this, as the headers have already been read from the
         // InputStream (above):
         // WARCRecordUtils.getPayload(record); ]
-        return statusCode;
+        return httpHeaders;
     }
 
-    private void processHeaders( SolrRecord solr, String statusCode, Header[] httpHeaders , String targetUrl) {
+    /**
+     * Adds selected HTTP headers to the Solr document.
+     */
+    private void processHTTPHeaders(SolrRecord solr, HTTPHeader httpHeaders , String targetUrl) {
         try {
             // This is a simple test that the status code setting worked:
-            int statusCodeInt = Integer.parseInt( statusCode );
+            int statusCodeInt = Integer.parseInt( httpHeaders.getHttpStatus() );
             if( statusCodeInt < 0 || statusCodeInt > 1000 )
                 throw new Exception( "Status code out of range: " + statusCodeInt );
             // Get the other headers:
@@ -662,7 +685,7 @@ public class WARCIndexer {
                                                
             }
         } catch( NumberFormatException e ) {
-            log.error( "Exception when parsing status code: " + statusCode + ": " + e );
+            log.error( "Exception when parsing status code: " + httpHeaders.getHttpStatus() + ": " + e );
             solr.addParseException("when parsing statusCode", e);
         } catch( Exception e ) {
             log.error( "Exception when parsing headers: " + e );
@@ -670,11 +693,6 @@ public class WARCIndexer {
         }
     }
 
-    /**
-     * 
-     * @param fullUrl
-     * @return
-     */
     protected static String parseResourceName(String fullUrl) {
         if( fullUrl.lastIndexOf( "/" ) != -1 ) {
             String path = fullUrl.substring(fullUrl.lastIndexOf("/") + 1);

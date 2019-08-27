@@ -25,6 +25,7 @@ package uk.bl.wa.analyser;
  * #L%
  */
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
@@ -37,8 +38,10 @@ import com.typesafe.config.Config;
 
 import uk.bl.wa.analyser.payload.AbstractPayloadAnalyser;
 import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
+import uk.bl.wa.indexer.HTTPHeader;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 
@@ -70,34 +73,40 @@ public class WARCPayloadAnalysers {
     }
 
     /**
-     * 
-     * @param source
+     *  @param source
      * @param header
+     * @param httpHeader
      * @param tikainput
      * @param solr
      */
-    public void analyse(String source, ArchiveRecordHeader header,
-            InputStream tikainput, SolrRecord solr, long content_length) {
-        final String url = Normalisation
-                .sanitiseWARCHeaderValue(header.getUrl());
+    public void analyse(String source, ArchiveRecordHeader header, HTTPHeader httpHeader,
+                        InputStream tikainput, SolrRecord solr, long content_length) {
+        // Note: The repeated use of InputStreamUtils.maybeDecompress might cause multiple uncompressions.
+        // This is acceptable as it saves memory/temporary disk space and because the compression schemes
+        // used are GZip & Brotly, both of which are fairly light weight to decompress.
+        final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
         log.debug("Analysing " + url);
 
         final long start = System.nanoTime();
 
         // Always run Tika first:
         // (this ensures the SOLR_CONTENT_TYPE is set)
-        tika.analyse(source, header, tikainput, solr);
+        final String compressionHint = httpHeader.getHeader("Content-Encoding", null);
+        try {
+            tika.analyse(source, header, InputStreamUtils.maybeDecompress(tikainput, compressionHint), solr);
+        } catch (IOException e) {
+            log.error("IOException analyzing content of '" + source + "' with tika", e);
+        }
 
         // Now run the others:
         for (AbstractPayloadAnalyser provider : providers) {
-            String mimeType = (String) solr
-                    .getField(SolrFields.SOLR_CONTENT_TYPE).getValue();
+            String mimeType = (String) solr.getField(SolrFields.SOLR_CONTENT_TYPE).getValue();
             if (provider.shouldProcess(mimeType)) {
                 try {
                     // Reset input stream before running each parser:
                     tikainput.reset();
                     // Run the parser:
-                    provider.analyse(source, header, tikainput, solr);
+                    provider.analyse(source, header, InputStreamUtils.maybeDecompress(tikainput, compressionHint), solr);
                 } catch (Exception i) {
                     log.error(i + ": " + i.getMessage() + ";x; " + url + "@"
                             + header.getOffset(), i);
