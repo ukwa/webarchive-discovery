@@ -35,18 +35,17 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.security.NoSuchAlgorithmException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
 
-import org.apache.commons.httpclient.URIException;
+import org.apache.commons.fileupload.util.Streams;
+import org.apache.commons.httpclient.*;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.warc.WARCRecord;
 import org.archive.util.ArchiveUtils;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.typesafe.config.Config;
@@ -236,6 +235,53 @@ public class WARCIndexerTest {
 
         System.out.println("nullCount: " + nullCount);
         assertEquals(expectedNullCount, nullCount);
+    }
+
+    /**
+     * Tests support for overall compression (WARC with GZipped elements) as well as
+     * content-compression (GZip and Brotli).
+     * TODO: Test support for GZipped WARCs without the .gz-extension
+     */
+    @Test
+    public void testCompressionSupport() throws IOException, NoSuchAlgorithmException {
+        final String EXPECTED_CONTENT = "Extremely simple webpage";
+        final String ENCODING = "Content-Encoding";
+        List<String> WARCs = Arrays.asList(
+                "transfer_compression_none.warc",
+                "transfer_compression_none.warc.gz",
+                "transfer_compression_gzip.warc",
+                "transfer_compression_gzip.warc.gz",
+                "transfer_compression_brotli.warc",
+                "transfer_compression_brotli.warc.gz"
+        );
+        WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
+        windex.setCheckSolrForDuplicates(false);
+
+        for (String warc: WARCs) {
+            String warcFile = this.getClass().getClassLoader()
+                    .getResource("compression/" + warc).getPath();
+            ArchiveReader reader = ArchiveReaderFactory.get(warcFile);
+            Iterator<ArchiveRecord> ir = reader.iterator();
+            assertTrue("There should be at least 1 record in " + warc, ir.hasNext());
+            while(ir.hasNext()) {
+                ArchiveRecord rec = ir.next();
+                if(!"response".equals(rec.getHeader().getHeaderValue("WARC-Type"))) {
+                    continue;
+                }
+                assertTrue("The record in '" + warc + "'should be a WARC-record", rec instanceof WARCRecord);
+
+                SolrRecord doc = windex.extract("", rec);
+                assertTrue("The field '" + SolrFields.SOLR_EXTRACTED_TEXT + "' should be present in the" +
+                           " record in " + warc +". Missing content indicates missing compression support",
+                           doc.containsKey(SolrFields.SOLR_EXTRACTED_TEXT)) ;
+                String content = doc.getField(SolrFields.SOLR_EXTRACTED_TEXT).toString();
+                if (!content.contains(EXPECTED_CONTENT)) {
+                    Assert.fail("The response in " + warc + "" +
+                                " did not contain the expected phrase \"" + EXPECTED_CONTENT +
+                                "\". This indicates that it was compressed in an unsupported way.");
+                }
+            }
+        }
     }
 
     @Test
