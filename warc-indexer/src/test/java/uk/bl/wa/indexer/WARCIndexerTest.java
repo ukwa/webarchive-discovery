@@ -285,6 +285,28 @@ public class WARCIndexerTest {
     }
 
     @Test
+    public void testTruncatedTime() throws NoSuchAlgorithmException, IOException {
+        final String WARC = "truncated_datetime.warc";
+        final String RECORD_ID = "201908150102/+BV/tmv/tASHANg2c3/2MA==";
+        WARCIndexer windex = new WARCIndexer(ConfigFactory.load());
+
+        String inputFile = this.getClass().getClassLoader().getResource(WARC).getPath();
+        ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
+
+        // Iterate though each record in the WARC file
+        for (ArchiveRecord rec : reader) {
+            SolrRecord doc = windex.extract("", rec);
+            if (doc != null && doc.getField(SolrFields.ID).getValue().equals(RECORD_ID)) {
+                String crawl = doc.getField(SolrFields.CRAWL_DATE).getValue().toString().replaceAll("[^0-9]", "");
+                String wayback = doc.getField(SolrFields.WAYBACK_DATE).getValue().toString();
+                assertEquals("crawlDate and waybackDate should designate the same instance",
+                             crawl, wayback);
+                break;
+            }
+        }
+    }
+
+    @Test
     public void testFields() throws NoSuchAlgorithmException, IOException {
         // ID of WARC record to use in test
         final String recordId = "20131021215312/jbKtN3dWzLJzaIQxTyPCiA==";
