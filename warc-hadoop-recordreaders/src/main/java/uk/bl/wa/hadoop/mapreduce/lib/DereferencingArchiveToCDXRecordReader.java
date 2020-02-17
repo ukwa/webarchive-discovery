@@ -169,10 +169,14 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
                     } else {
                         line = cdxlines.next();
                     }
-                    if (metaTag != null && line != null)
+                    if (metaTag != null)
                         line.setRobotFlag(metaTag);
                     // Set the key using the normalised URL:
-                    this.key.set(line.getUrlKey());
+                    if (line.getUrlKey() != null) {
+                        this.key.set(line.getUrlKey());
+                    } else {
+                        this.key.set(cdxFormat.serializeResult(line));
+                    }
                     // Return the whole formatted line as the value:
                     this.value.set(cdxFormat.serializeResult(line));
                     return true;
