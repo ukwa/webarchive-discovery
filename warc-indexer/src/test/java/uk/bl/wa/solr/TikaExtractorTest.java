@@ -7,7 +7,7 @@ package uk.bl.wa.solr;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2018 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2020 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
