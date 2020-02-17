@@ -78,7 +78,7 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         conf.setBoolean("cdx.hdfs", false);
         
         this.runCDXTest(conf,
-                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - - 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz");
 
     }
 
@@ -91,7 +91,7 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         conf.setBoolean("cdx.hdfs", true);
 
         this.runCDXTest(conf,
-                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - - 776 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz");
 
 
     }
