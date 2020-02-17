@@ -85,6 +85,16 @@ public class TinyCDXServerReducer
             Reducer<Text, Text, Text, Text>.Context context)
                     throws IOException, InterruptedException {
         for (Text t : arg1) {
+            // Drop lines that appear to be raw HTTP header 200 responses
+            // (OPTIONS requests, see
+            // https://github.com/ukwa/webarchive-discovery/issues/215 -- this
+            // is likely a rather specific to Twitter API calls but in general
+            // we would expect HTTP 200 to have a real content type and not just
+            // be HTTP headers):
+            if (t.find(" application/http 200 ") > 0) {
+                continue;
+            }
+            // Collect the rest:
             tcs.add(t);
         }
         // If we're running in produciton context:
