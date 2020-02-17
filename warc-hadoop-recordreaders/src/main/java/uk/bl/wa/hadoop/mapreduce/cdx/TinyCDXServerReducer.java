@@ -102,7 +102,6 @@ public class TinyCDXServerReducer
             // Record progress:
             context.setStatus("Seen " + tcs.getTotalRecords()
                     + " records, sent " + tcs.getTotalSentRecords() + "...");
-            // TODO Also pass to reducer output for cross-checking?
         }
     }
 
