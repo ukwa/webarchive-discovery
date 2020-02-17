@@ -63,9 +63,10 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         String lastValue = "";
         while (reader.nextKeyValue() != false) {
             position += 1;
-            if (position == 3)
+            log.debug(position + ":" + reader.getCurrentValue().toString());
+            if (position == 2)
                 value = reader.getCurrentValue().toString();
-            if (position == 9)
+            if (position == 8)
                 lastValue = reader.getCurrentValue().toString();
         }
 

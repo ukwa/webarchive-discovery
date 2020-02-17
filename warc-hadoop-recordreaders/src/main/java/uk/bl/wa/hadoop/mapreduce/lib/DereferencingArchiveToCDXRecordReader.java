@@ -71,16 +71,14 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
     private FileSystem filesystem;
     private ArchiveReader arcreader;
     private Iterator<CaptureSearchResult> archiveIterator;
-    private Iterator<String> cdxlines;
+    private Iterator<CaptureSearchResult> cdxlines;
     private WarcIndexer warcIndexer = new WarcIndexer();
     private ArcIndexer arcIndexer = new ArcIndexer();
     private Text key;
     private Text value;
     private CDXFormat cdxFormat;
     private boolean hdfs;
-    private int gIndex = -1;
     private String metaTag;
-    private int MIndex = -1;
     private HashMap<String, String> warcArkLookup = new HashMap<String, String>();
 
     @Override
@@ -98,15 +96,6 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
             LOGGER.error("initialize(): " + e.getMessage());
         }
         //
-        String[] parts = format.substring(5).split(" ");
-        for (int i = 0; i < parts.length; i++) {
-            if ("g".equals(parts[i])) {
-                gIndex = i;
-            }
-            if ("M".equals(parts[i])) {
-                MIndex = i;
-            }
-        }
         internal.initialize(split, context);
         this.getLookup(conf);
         metaTag = conf.get("cdx.metatag");
@@ -169,20 +158,23 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
         if (this.value == null) {
             this.value = new Text();
         }
-        String line;
+        CaptureSearchResult line = null;
         while (true) {
             try {
                 if (cdxlines != null && cdxlines.hasNext()) {
-                    if (this.hdfs && this.gIndex > -1) {
-                        line = hdfsPath(cdxlines.next(),
+                    if (this.hdfs) {
+                        line = cdxlines.next();
+                        hdfsPath(line,
                                 this.internal.getCurrentValue().toString());
                     } else {
                         line = cdxlines.next();
                     }
-                    if (metaTag != null && MIndex != -1)
-                        line = setMetaTag(line);
-                    this.key.set(line);
-                    this.value.set(line);
+                    if (metaTag != null && line != null)
+                        line.setRobotFlag(metaTag);
+                    // Set the key using the normalised URL:
+                    this.key.set(line.getUrlKey());
+                    // Return the whole formatted line as the value:
+                    this.value.set(cdxFormat.serializeResult(line));
                     return true;
                 } else {
                     if (this.internal.nextKeyValue()) {
@@ -204,7 +196,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
                         long fileLength = this.filesystem.getFileStatus(path)
                                 .getLen();
                         cdxlines = new CaptureSearchResultIterator(
-                                archiveIterator, cdxFormat, fileLength);
+                                archiveIterator, fileLength);
                         LOGGER.info("Started reader on " + path.getName());
                     } else {
                         return false;
@@ -233,29 +225,14 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
         return this.value;
     }
 
-    private String hdfsPath(String cdx, String path) throws URISyntaxException {
-        String[] fields = cdx.split(" ");
+    private void hdfsPath(CaptureSearchResult cdx, String path)
+            throws URISyntaxException {
         if (warcArkLookup.size() != 0) {
-            fields[gIndex] = warcArkLookup.get(fields[gIndex]) + "#"
-                    + fields[gIndex];
+            cdx.setFile(warcArkLookup.get(cdx.getFile()) + "#"
+                    + cdx.getFile());
         } else {
-            fields[gIndex] = path;
+            cdx.setFile(path);
         }
-        return StringUtils.join(fields, " ");
     }
 
-    /**
-     * We use the "meta tags" field to identify the CDX's licence.
-     * @param cdx
-     * @return
-     */
-    private String setMetaTag(String cdx) {
-        String[] fields = cdx.split(" ");
-        if (fields[MIndex].equals("-")) {
-            fields[MIndex] = metaTag;
-        } else {
-            fields[MIndex] = metaTag + fields[MIndex];
-        }
-        return StringUtils.join(fields, " ");
-    }
 }

@@ -44,17 +44,15 @@ import org.archive.wayback.resourceindex.cdx.format.CDXFormatException;
  *
  */
 public class CaptureSearchResultIterator
-        implements CloseableIterator<String> {
+        implements CloseableIterator<CaptureSearchResult> {
 
     private Iterator<CaptureSearchResult> itr;
-    private CDXFormat cdx;
     private long filesize;
     private CaptureSearchResult cachedPrev = null;
     private CaptureSearchResult cachedNext = null;
 
     public CaptureSearchResultIterator(Iterator<CaptureSearchResult> input,
-            CDXFormat cdx, long filesize) {
-        this.cdx = cdx;
+            long filesize) {
         this.itr = input;
         this.filesize = filesize;
     }
@@ -85,13 +83,13 @@ public class CaptureSearchResultIterator
     }
 
     @Override
-    public String next() {
+    public CaptureSearchResult next() {
         if (cachedPrev == null) {
             throw new NoSuchElementException("call hasNext first!");
         }
         CaptureSearchResult o = cachedPrev;
         cachedPrev = null;
-        return cdx.serializeResult(o);
+        return o;
     }
 
     @Override
