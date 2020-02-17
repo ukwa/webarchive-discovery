@@ -50,11 +50,12 @@ import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.arc.ARCReader;
 import org.archive.io.warc.WARCReader;
 import org.archive.wayback.core.CaptureSearchResult;
-import org.archive.wayback.resourceindex.cdx.SearchResultToCDXFormatAdapter;
 import org.archive.wayback.resourceindex.cdx.format.CDXFormat;
 import org.archive.wayback.resourceindex.cdx.format.CDXFormatException;
 import org.archive.wayback.resourcestore.indexer.ArcIndexer;
 import org.archive.wayback.resourcestore.indexer.WarcIndexer;
+
+import uk.bl.wa.hadoop.mapreduce.cdx.CaptureSearchResultIterator;
 
 public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparable<?>, Value extends Writable>
         extends RecordReader<Text, Text> {
@@ -198,8 +199,12 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
                             archiveIterator = arcIndexer
                                     .iterator((ARCReader) arcreader);
                         }
-                        cdxlines = SearchResultToCDXFormatAdapter
-                                .adapt(archiveIterator, cdxFormat);
+                        // Dedicated iterator to attempt to determine compressed
+                        // record length
+                        long fileLength = this.filesystem.getFileStatus(path)
+                                .getLen();
+                        cdxlines = new CaptureSearchResultIterator(
+                                archiveIterator, cdxFormat, fileLength);
                         LOGGER.info("Started reader on " + path.getName());
                     } else {
                         return false;

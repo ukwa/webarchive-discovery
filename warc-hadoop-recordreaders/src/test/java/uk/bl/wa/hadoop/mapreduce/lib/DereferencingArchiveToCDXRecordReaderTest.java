@@ -42,7 +42,8 @@ public class DereferencingArchiveToCDXRecordReaderTest {
     private static final Log log = LogFactory
             .getLog(DereferencingArchiveToCDXRecordReaderTest.class);
 
-    private void runCDXTest(Configuration conf, String expected)
+    private void runCDXTest(Configuration conf, String expected,
+            String lastExpected)
             throws Exception {
         File testFile = new File("src/test/resources/rr-test-inputs.txt");
         Path path = new Path(testFile.getAbsoluteFile().toURI().toString());
@@ -59,14 +60,23 @@ public class DereferencingArchiveToCDXRecordReaderTest {
 
         int position = 0;
         String value = "";
+        String lastValue = "";
         while (reader.nextKeyValue() != false) {
             position += 1;
             if (position == 3)
                 value = reader.getCurrentValue().toString();
+            if (position == 9)
+                lastValue = reader.getCurrentValue().toString();
         }
-        // Check the third value is as expected
+
+        // Check the third value is as expected:
         log.debug(value);
         Assert.assertEquals(expected, value);
+
+        // Check the last value is as expected (as the compressed record length
+        // is calculated differently):
+        log.debug(lastValue);
+        Assert.assertEquals(lastExpected, lastValue);
     }
 
     @Test
@@ -78,7 +88,8 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         conf.setBoolean("cdx.hdfs", false);
         
         this.runCDXTest(conf,
-                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 IAH-20080430204825-00000-blackbook-truncated.arc.gz",
+                "archive.org/services/collection-rss.php 20080430204830 http://www.archive.org/services/collection-rss.php text/xml 200 JXXJNHJX4GEM44C4NOM3RJWKMKVBIGHF - - 6965 11441 IAH-20080430204825-00000-blackbook-truncated.arc.gz");
 
     }
 
@@ -91,7 +102,8 @@ public class DereferencingArchiveToCDXRecordReaderTest {
         conf.setBoolean("cdx.hdfs", true);
 
         this.runCDXTest(conf,
-                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz");
+                "archive.org/robots.txt 20080430204825 http://www.archive.org/robots.txt text/plain 200 SUCGMUVXDKVB5CS2NL4R4JABNX7K466U - - 523 776 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz",
+                "archive.org/services/collection-rss.php 20080430204830 http://www.archive.org/services/collection-rss.php text/xml 200 JXXJNHJX4GEM44C4NOM3RJWKMKVBIGHF - - 6965 11441 ../warc-indexer/src/test/resources/IAH-20080430204825-00000-blackbook-truncated.arc.gz");
 
 
     }
