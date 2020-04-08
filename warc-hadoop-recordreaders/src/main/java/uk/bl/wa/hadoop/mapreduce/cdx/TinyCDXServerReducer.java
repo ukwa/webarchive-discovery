@@ -94,6 +94,10 @@ public class TinyCDXServerReducer
             if (t.find(" application/http 200 ") > 0) {
                 continue;
             }
+            // Drop lines that appear to be request or metadata records:
+            if (t.find(" warc/request ") > 0 || t.find(" warc/metadata ") > 0) {
+                continue;
+            }
             // Collect the rest:
             tcs.add(t);
         }

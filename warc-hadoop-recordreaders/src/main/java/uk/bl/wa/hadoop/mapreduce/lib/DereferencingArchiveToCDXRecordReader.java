@@ -99,8 +99,8 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
         internal.initialize(split, context);
         this.getLookup(conf);
         metaTag = conf.get("cdx.metatag");
-        //
-        // warcIndexer.setProcessAll(true);
+        // Make the indexer process all records (to get offsets right):
+        warcIndexer.setProcessAll(true);
         //
         LOGGER.info("Initialised with format:" + format);
     }
