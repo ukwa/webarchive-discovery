@@ -106,7 +106,7 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                         exemplar = json;
                     }
                     // Collect complete records:
-                    output.collect(key, new Text(mdx.toString()));
+                    output.collect(null, new Text(mdx.toString()));
                 }
 
                 // Report:
@@ -144,11 +144,13 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
                     rmdx.setRecordType("reduplicated");
                     reporter.incrCounter(MyCounters.NUM_RESOLVED_REVISITS, 1);
                     // Collect resolved records:
-                    output.collect(key, new Text(rmdx.toString()));
+                    // output.collect(key, new Text(rmdx.toString()));
+                    output.collect(null, new Text(rmdx.toString()));
                 } else {
                     reporter.incrCounter(MyCounters.NUM_UNRESOLVED_REVISITS, 1);
                     // Collect unresolved records:
-                    output.collect(key, new Text(rmdxw.toString()));
+                    // output.collect(key, new Text(rmdxw.toString()));
+                    output.collect(null, new Text(rmdxw.toString()));
                 }
             }
         } catch (JSONException e) {

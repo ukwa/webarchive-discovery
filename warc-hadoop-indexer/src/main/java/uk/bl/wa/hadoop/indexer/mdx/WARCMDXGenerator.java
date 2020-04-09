@@ -43,6 +43,7 @@ import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.SequenceFileOutputFormat;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -141,11 +142,12 @@ public class WARCMDXGenerator extends Configured implements Tool {
         conf.setInputFormat(ArchiveFileInputFormat.class);
         conf.setMapperClass(WARCMDXMapper.class);
         conf.setReducerClass(MDXReduplicatingReducer.class);
-        conf.setOutputFormat(SequenceFileOutputFormat.class);
-        // conf.setOutputFormat(TextOutputFormat.class);
+        // Sequence file output?
+        // conf.setOutputFormat(SequenceFileOutputFormat.class);
         // SequenceFileOutputFormat.setOutputCompressionType(conf,
         // CompressionType.BLOCK);
         // OR TextOutputFormat?
+        conf.setOutputFormat(TextOutputFormat.class);
         // conf.set("map.output.key.field.separator", "");
         // Compress the output from the maps, to cut down temp space
         // requirements between map and reduce.

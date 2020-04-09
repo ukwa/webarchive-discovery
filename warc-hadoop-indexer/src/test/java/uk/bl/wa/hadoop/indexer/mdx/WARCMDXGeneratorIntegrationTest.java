@@ -24,12 +24,14 @@ package uk.bl.wa.hadoop.indexer.mdx;
 
 import static org.junit.Assert.assertEquals;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.io.Writer;
 
 import org.apache.commons.io.IOUtils;
@@ -197,28 +199,28 @@ public class WARCMDXGeneratorIntegrationTest {
         }
         fout.close();
 
-        // Check contents of the output:
-        Configuration config = new Configuration();
-        Path path = new Path(outputSeq.getAbsolutePath());
-        SequenceFile.Reader reader = new SequenceFile.Reader(
-                FileSystem.get(config), path, config);
-        WritableComparable key = (WritableComparable) reader.getKeyClass()
-                .newInstance();
-        Writable value = (Writable) reader.getValueClass().newInstance();
-
+        // Check contents of the aggregated output:
+        InputStream is = new FileInputStream(outputSeq);
+        BufferedReader br = new BufferedReader(
+                new InputStreamReader(is, "UTF-8"));
+        
         MDX mdx;
         int counter = 0;
-        while (reader.next(key, value)) {
-            mdx = new MDX(value.toString());
-            System.out.println("Key is: " + key + " record_type: "
+        String line;
+        while ((line = br.readLine()) != null) {
+            mdx = new MDX(line);
+            System.out
+                    .println(
+                "record_type: "
                     + mdx.getRecordType() + " SURT: " + mdx.getUrlAsSURT());
             counter++;
         }
         assertEquals(114, counter);
-        reader.close();
+        br.close();
         
         // Now test the MDXSeqMerger
-        testSeqMerger(outputFiles);
+        // DISABLED as this is not relevant when using JSONL
+        // testSeqMerger(outputFiles);
     }
 
     private void testSeqMerger(Path[] inputFiles) throws Exception {
