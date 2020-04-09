@@ -99,7 +99,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
         LOG.info("Got task.id " + mapTaskId + " and input.file " + inputFile);
 
         // Set up a decent font cache location for PDFBox
-        System.setProperty("pdfbox.fontcache", job.get("hadoop.tmp.dir"));
+        System.setProperty("pdfbox.fontcache", job.get("mapred.child.tmp"));
     }
 
     public void innerConfigure(Config jobConfig) {
