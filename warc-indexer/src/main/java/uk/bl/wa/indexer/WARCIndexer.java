@@ -388,10 +388,13 @@ public class WARCIndexer {
                 // hcis = new HashedCachedInputStream(header, record,
                 // content_length);
                 hcis = new HashedCachedInputStream(header,
-                        new ChunkedInputStream(record), content_length);
+                        new ChunkedInputStream(record), content_length,
+                        this.inMemoryThreshold, this.onDiskThreshold);
             } else {
                 // Otherwise, plain stream
-                hcis = new HashedCachedInputStream(header, record, content_length );
+                hcis = new HashedCachedInputStream(header, record,
+                        content_length, this.inMemoryThreshold,
+                        this.onDiskThreshold);
             }
             
             // If the hash didn't match, record it:
