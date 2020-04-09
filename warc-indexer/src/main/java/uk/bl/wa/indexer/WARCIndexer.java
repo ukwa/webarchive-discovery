@@ -42,12 +42,14 @@ import java.time.ZoneId;
 import java.util.*;
 
 import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.httpclient.ChunkedInputStream;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -378,7 +380,20 @@ public class WARCIndexer {
             
             // Create an appropriately cached version of the payload, to allow analysis.
             final long hashStreamStart = System.nanoTime();
-            final HashedCachedInputStream hcis = new HashedCachedInputStream(header, record, content_length );
+            // If it's a chunked encoding, wrap the input stream to decode:
+            final HashedCachedInputStream hcis;
+            if ("chunked"
+                    .equalsIgnoreCase(
+                            httpHeader.getHeader("Transfer-Encoding", null))) {
+                // hcis = new HashedCachedInputStream(header, record,
+                // content_length);
+                hcis = new HashedCachedInputStream(header,
+                        new ChunkedInputStream(record), content_length);
+            } else {
+                // Otherwise, plain stream
+                hcis = new HashedCachedInputStream(header, record, content_length );
+            }
+            
             final InputStream tikaInput = hcis.getInputStream();
             // TODO: Consider adding support for GZip / Brotli compression at this point
             final String hash = hcis.getHash();

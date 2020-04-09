@@ -148,11 +148,19 @@ public class HashedCachedInputStream {
             // Read the remainder of the stream, to get the hash.
             if( length > this.onDiskThreshold ) {
                 truncated = true;
-                IOUtils.skip( dinput, length - this.onDiskThreshold);
+                // IOUtils.skip( dinput, length - this.onDiskThreshold);
+                IOUtils.toString(dinput);
             }
             
-            hash = "sha1:" + Base32.encode( digest.digest() );
+            // Now set up the inputStream
+            if (inMemory) {
+                this.cacheBytes = ((ByteArrayOutputStream) cache).toByteArray();
+                // Encourage GC
+                cache = null;
+            }
             
+            hash = "sha1:" + Base32.encode(digest.digest());
+
             // For response records, check the hash is consistent with any header hash:
             if( (headerHash != null) && (hash.length() == headerHash.length())) {
                 if( header.getHeaderFieldKeys().contains( HEADER_KEY_TYPE ) &&
@@ -174,12 +182,6 @@ public class HashedCachedInputStream {
                 }
             }
             
-            // Now set up the inputStream
-            if( inMemory ) {
-                this.cacheBytes = ((ByteArrayOutputStream)cache).toByteArray();
-                // Encourage GC
-                cache = null;
-            }
         } catch( Exception i ) {
             log.error( "Hashing: " + url + "@" + header.getOffset(), i );
         }        
