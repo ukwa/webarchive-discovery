@@ -394,6 +394,19 @@ public class WARCIndexer {
                 hcis = new HashedCachedInputStream(header, record, content_length );
             }
             
+            // If the hash didn't match, record it:
+            if (!hcis.isHashMatched()) {
+                // Facet-friendly:
+                solr.addField(SolrFields.PARSE_ERROR,
+                        "Digest validation failed!");
+                // Detailed version:
+                solr.addField(SolrFields.PARSE_ERROR,
+                        "Digest validation failed: header value is "
+                                + hcis.getHeaderHash()
+                                + " but calculated "
+                                + hcis.getHash());
+            }
+
             final InputStream tikaInput = hcis.getInputStream();
             // TODO: Consider adding support for GZip / Brotli compression at this point
             final String hash = hcis.getHash();

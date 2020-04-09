@@ -67,6 +67,8 @@ public class HashedCachedInputStream {
     
     private String hash = null;
 
+    private boolean hashMatched = false;
+
     private boolean inMemory;
     
     private File cacheFile;
@@ -171,7 +173,7 @@ public class HashedCachedInputStream {
                         log.error(
                                 " - payload hash from header = " + headerHash);
                         log.error(" - payload hash from content = " + hash);
-                        throw new RuntimeException("Hash check failed!");
+                        this.hashMatched = false;
                     } else {
                         log.debug("Hashes were found to match for " + url);
                     }
@@ -188,6 +190,13 @@ public class HashedCachedInputStream {
     }
     
     /**
+     * @return the hashMatched
+     */
+    public boolean isHashMatched() {
+        return hashMatched;
+    }
+
+    /**
      * 
      * @return
      */
@@ -196,9 +205,18 @@ public class HashedCachedInputStream {
     }
     
     /**
-     * This returns the content. {@link #cleanup()} should be called after use as this avoids a build-up of
-     * temporary files.
-     * @return a {@link InputStream#mark(int)}-capable InputStream with the content given in the constructor.
+     * @return the headerHash
+     */
+    public String getHeaderHash() {
+        return headerHash;
+    }
+
+    /**
+     * This returns the content. {@link #cleanup()} should be called after use
+     * as this avoids a build-up of temporary files.
+     * 
+     * @return a {@link InputStream#mark(int)}-capable InputStream with the
+     *         content given in the constructor.
      */
     public InputStream getInputStream() {
         if( inMemory ) {
