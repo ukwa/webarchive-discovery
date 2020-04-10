@@ -64,7 +64,6 @@ import de.l3s.boilerpipe.extractors.ArticleExtractor;
 import uk.bl.wa.extract.Times;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
-import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 import uk.bl.wa.util.TimeLimiter;
@@ -109,6 +108,9 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
     private boolean extractExifLocation;
 
     private boolean passUriToFormatTools = false;
+    
+    /** Author is mono valued */
+    private boolean authorMonoValued = false;
 
     /* --- --- --- --- */
     
@@ -144,6 +146,11 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
         this.useBoilerpipe = conf.getBoolean("warc.index.tika.use_boilerpipe");
         log.info("Config: useBoilerpipe " + this.useBoilerpipe);
+        
+        if (conf.hasPath("warc.index.tika.author_mono_valued")) {
+        	this.authorMonoValued = conf.getBoolean("warc.index.tika.author_mono_valued");
+        }
+        log.info("Config: authorMonoValued " + this.authorMonoValued);
 
     }
 
@@ -413,8 +420,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
               solr.addField(SolrFields.EXIF_VERSION, exifVersion);
               String exif_artist = metadata.get("Artist");
                if (exif_artist != null){ // This is a better value for the author field
-                 // This potentially results in multiple author, which is valid
-                 solr.addField(SolrFields.SOLR_AUTHOR, exif_artist);
+            	      if (this.authorMonoValued) {
+            	   	   solr.setField(SolrFields.SOLR_AUTHOR, exif_artist); //Clear old value if any. Not multi valued
+            	      } else {
+            	      // This potentially results in multiple author, which is valid
+            	      solr.addField(SolrFields.SOLR_AUTHOR, exif_artist); 
+            	      }
                }
 
                 if (this.extractExifLocation) {
