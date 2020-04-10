@@ -175,6 +175,7 @@ public class HashedCachedInputStream {
                         log.error(" - payload hash from content = " + hash);
                         this.hashMatched = false;
                     } else {
+                        this.hashMatched = true;
                         log.debug("Hashes were found to match for " + url);
                     }
                 } else {
