@@ -14,7 +14,15 @@
 * Add optional OSCAR4 chemical compound extractor [#163](https://github.com/ukwa/webarchive-discovery/issues/163)
 * Set author to be multivalued in Solr 7 schema [#191](https://github.com/ukwa/webarchive-discovery/pull/191)
 * Updated to requiring Java 8 [#193](https://github.com/ukwa/webarchive-discovery/issues/193)
-* Updated to Apache Tika 1.19.1
+* Updated to Apache Tika 1.24
+* Ensure wayback_date is padded correctly [#211](https://github.com/ukwa/webarchive-discovery/pull/211)
+* Ensure we remain compatible with Solr schemas with single-valued author fields as well as arrays [#217](https://github.com/ukwa/webarchive-discovery/pull/217).
+* Update MDX prototype to extract fields as compressed JSONL rather than send to Solr.
+* Update to latest version (2.10.3) of Jackson JSON parser/writer tools.
+* Decode chunked transfer encoding payloads.
+* Add hash mismatches as a 'parse error' field rather than blocking further parsing and throwing an exception.
+* Extract compressed record length when performing CDX indexing.
+* Skip probably `OPTIONS` records when CDX indexing (arising from web-rendered recordings of e.g. Twitter)
 
 3.0.0
 -----
