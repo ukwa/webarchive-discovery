@@ -27,7 +27,6 @@ package uk.bl.wa.hadoop.mapreduce.mdx;
 
 import org.apache.commons.httpclient.URIException;
 import org.archive.url.SURTTokenizer;
-import org.codehaus.jackson.annotate.JsonIgnore;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -103,7 +102,6 @@ public class MDX extends JSONObject {
      * @return
      * @throws JSONException
      */
-    @JsonIgnore
     public String getUrlAsSURT() throws JSONException {
         String url = this.getString(URL);
         try {

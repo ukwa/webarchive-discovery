@@ -29,9 +29,10 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.IOException;
 
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

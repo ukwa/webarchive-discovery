@@ -39,9 +39,9 @@ import org.apache.log4j.PropertyConfigurator;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.SurtPrefixSet;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 

@@ -34,10 +34,11 @@ import java.util.TimeZone;
 import org.apache.commons.httpclient.URIException;
 import org.apache.solr.common.SolrInputDocument;
 import org.archive.util.SurtPrefixSet;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.map.JsonMappingException;
 import org.junit.Before;
 import org.junit.Test;
+
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 
 import uk.bl.wa.indexer.WARCIndexer;
 import uk.bl.wa.solr.SolrFields;

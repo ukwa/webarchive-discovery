@@ -43,15 +43,15 @@ import java.util.Set;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.solr.common.util.Base64;
-import org.codehaus.jackson.JsonNode;
-import org.codehaus.jackson.JsonParseException;
-import org.codehaus.jackson.JsonParser;
-import org.codehaus.jackson.map.ObjectMapper;
 import org.jdom.Document;
 import org.jdom.Element;
 import org.jdom.JDOMException;
 import org.jdom.input.SAXBuilder;
 
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.base.Joiner;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -377,11 +377,11 @@ public class AnnotationsFromAct {
 
             // Add to the map of the categories:
             for (JsonNode node : root.get("list")) {
-                Integer ci = Integer.parseInt(node.get("tid").getTextValue());
+                Integer ci = Integer.parseInt(node.get("tid").textValue());
                 map.put(ci, node);
             }
             // Look up the next URL:
-            nextUrl = root.path("next").getTextValue();
+            nextUrl = root.path("next").textValue();
             if( nextUrl != null)
                 nextUrl = nextUrl.replaceFirst("\\?", "\\.json\\?");
         } while (nextUrl != null);
@@ -411,7 +411,7 @@ public class AnnotationsFromAct {
 
             // Look to see if the root collection is marked as published:
             Boolean publish = cats.get(0).get("field_publish")
-                    .getBooleanValue();
+                    .booleanValue();
             if (publish) {
                 // LOG.info("Collection Path: " + catPath + " PUBLISHED");
                 // Add to list of collections, w/ date ranges:
@@ -419,12 +419,12 @@ public class AnnotationsFromAct {
                 String start = null;
                 if (cats.get(0).get("field_dates").get("value") != null) {
                     start = cats.get(0).get("field_dates").get("value")
-                            .getTextValue();
+                            .textValue();
                 }
                 String end = null;
                 if (cats.get(0).get("field_dates").get("value2") != null) {
                     end = cats.get(0).get("field_dates").get("value2")
-                            .getTextValue();
+                            .textValue();
                 }
                 DateRange dateRange = new DateRange(start, end);
                 // LOG.info("Adding collection " + name + " with dateRange "
@@ -448,7 +448,7 @@ public class AnnotationsFromAct {
         StringBuilder catPath = new StringBuilder();
         for (int i = 0; i < cats.size(); i++) {
             JsonNode cat = cats.get(i);
-            catPath.append(cat.get("name").getTextValue());
+            catPath.append(cat.get("name").textValue());
             // Append a separator if this is not the last entry:
             if (i < cats.size() - 1)
                 catPath.append("|");
@@ -467,7 +467,7 @@ public class AnnotationsFromAct {
         // Loop through the parents (although there is only ever one in this
         // dataset):
         for (JsonNode parentRef : c.get("parent")) {
-            Integer ci = parentRef.get("id").getIntValue();
+            Integer ci = parentRef.get("id").intValue();
             JsonNode parent = cm.get(ci);
             resolveParents(parent, cats);
         }
@@ -501,8 +501,9 @@ public class AnnotationsFromAct {
             JsonNode root = jp.readValueAsTree();
 
             for (JsonNode node : root.get("list")) {
-                String scope = node.get("field_scope").getTextValue();
-                LOG.debug("Got \"" + node.get("title").getTextValue()
+                String scope = node.get("field_scope").textValue();
+                LOG.debug("Got \"" + node.get("title")
+                        .textValue()
                         + "\" with scope: " + scope);
                 String collectionCategories = null;
                 List<String> allCollections = new ArrayList<String>();
@@ -510,7 +511,7 @@ public class AnnotationsFromAct {
                 // Add on the categories:
                 for (JsonNode cat : node.get("field_collection_categories")) {
                     Integer cid = Integer
-                            .parseInt(cat.get("id").getTextValue());
+                            .parseInt(cat.get("id").textValue());
                     JsonNode catd = cm.get(cid);
                     if (catd == null) {
                         LOG.warn("NULL catd for id=" + cid + " from: "
@@ -518,7 +519,7 @@ public class AnnotationsFromAct {
                         continue;
                     }
                     LOG.debug("collectionCategories: "
-                            + catd.get("name").getTextValue());
+                            + catd.get("name").textValue());
                     // Get the parent categories:
                     List<JsonNode> catds = this.resolveParents(catd);
                     // Turn that into a string representation:
@@ -526,14 +527,14 @@ public class AnnotationsFromAct {
                     allCollections.add(catPath);
                     if (collectionCategories == null) {
                         collectionCategories = catds.get(0).get("name")
-                                .getTextValue();
+                                .textValue();
                     }
                 }
                 // Get the Subject:
                 if( node.get("field_subject") != null ) {
                     Integer sid = Integer.parseInt(node.get("field_subject")
-                            .get("id").getTextValue());
-                    String subject = sm.get(sid).get("name").getTextValue();
+                            .get("id").textValue());
+                    String subject = sm.get(sid).get("name").textValue();
                     LOG.debug("Found a SUBJECT: "
                             + node.get("field_subject").get("id") + " > "
                             + subject);
@@ -542,14 +543,14 @@ public class AnnotationsFromAct {
                 UriCollection uc = new UriCollection(collectionCategories,
                         allCollections.toArray(new String[1]), subjects);
                 for (JsonNode url : node.get("field_url")) {
-                    LOG.debug("Got " + url.get("url").getTextValue());
+                    LOG.debug("Got " + url.get("url").textValue());
                     // Add to the collection:
-                    addCollection(scope, url.get("url").getTextValue(), uc);
+                    addCollection(scope, url.get("url").textValue(), uc);
                 }
             }
 
             // Look up the next page URL:
-            actUrl = root.path("next").getTextValue();
+            actUrl = root.path("next").textValue();
             if (actUrl != null)
                 actUrl = actUrl.replaceFirst("\\?", "\\.json\\?");
         } while (actUrl != null && (page < max_page || max_page < 0));

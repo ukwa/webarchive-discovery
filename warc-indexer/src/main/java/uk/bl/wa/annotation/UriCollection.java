@@ -24,7 +24,7 @@ package uk.bl.wa.annotation;
 
 import java.util.Arrays;
 
-import org.codehaus.jackson.annotate.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * 
