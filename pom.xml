@@ -19,7 +19,7 @@
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
       <module>digipres-tika</module>
-      <module>warc-nlp</module>
+      <!-- module>warc-nlp</module Java11 build failed -->
       <module>warc-openimaj</module>
       <module>warc-analysers-oscar4</module>
    </modules>
