@@ -87,6 +87,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.HashedCachedInputStream;
+import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 
@@ -387,8 +388,12 @@ public class WARCIndexer {
                             httpHeader.getHeader("Transfer-Encoding", null))) {
                 // hcis = new HashedCachedInputStream(header, record,
                 // content_length);
-                hcis = new HashedCachedInputStream(header,
-                        new ChunkedInputStream(record), content_length,
+                // warcio and webrecorder does not agree on whether a chunked response should be stored raw,
+                // i.e. with all the chunked control structures, or de-chunked. The maybeDechunk makes a
+                // qualified guess and responds accordingly.
+                hcis = new HashedCachedInputStream(
+                        header,
+                        InputStreamUtils.maybeDechunk(record), content_length,
                         this.inMemoryThreshold, this.onDiskThreshold);
             } else {
                 // Otherwise, plain stream
