@@ -48,9 +48,10 @@ public class InputStreamUtils {
         final BufferedInputStream buf = new BufferedInputStream(input);
         buf.mark(1024); // Room for a lot of comments
         int pos = 0;
+        int c = -1;
         // Check for hex-number
         while (pos < 8) {
-            int c = buf.read();
+            c = buf.read();
             if (c== -1) { // EOF
                 log.debug("maybeDechunk reached EOF while looking for hex digits at pos " + pos + ": " +
                           "Not a chunked stream, returning content as-is");
@@ -69,8 +70,7 @@ public class InputStreamUtils {
             return buf;
         }
         // Check for \r\n or extension
-        int c = buf.read();
-        if (c== -1) { // EOF
+        if (c == -1) { // EOF
             log.debug("maybeDechunk reached EOF while looking for extension or \\r\\n at pos " + pos + ": " +
                       "Not a chunked stream, returning content as-is");
             buf.reset();
