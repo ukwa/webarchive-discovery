@@ -151,19 +151,10 @@ public class HtmlFeatureParser extends AbstractParser {
      * 
      */
     @Override
-    public void parse(InputStream streamTemp, ContentHandler handler,
+    public void parse(InputStream stream, ContentHandler handler,
             Metadata metadata, ParseContext context) throws IOException,
             SAXException, TikaException {
-      InputStream stream= null;
         final long start = System.nanoTime();
-        try{
-            // TODO: Pass HTTP headers through to this point to provide compressionHint
-           stream = InputStreamUtils.maybeDecompress(streamTemp, null);
-        }
-        catch(Exception e){
-          log.error("Error in automatic GZIP inputstream wrapper");
-          stream = streamTemp;          
-        }
         // Pick up the URL:
         String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
         

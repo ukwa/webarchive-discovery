@@ -91,10 +91,9 @@ public class WARCPayloadAnalysers {
 
         // Always run Tika first:
         // (this ensures the SOLR_CONTENT_TYPE is set)
-        final String compressionHint = httpHeader.getHeader("Content-Encoding", null);
         try {
-            tika.analyse(source, header, InputStreamUtils.maybeDecompress(tikainput, compressionHint), solr);
-        } catch (IOException e) {
+            tika.analyse(source, header, tikainput, solr);
+        } catch (Exception e) {
             log.error("IOException analyzing content of '" + source + "' with tika", e);
         }
 
@@ -106,7 +105,7 @@ public class WARCPayloadAnalysers {
                     // Reset input stream before running each parser:
                     tikainput.reset();
                     // Run the parser:
-                    provider.analyse(source, header, InputStreamUtils.maybeDecompress(tikainput, compressionHint), solr);
+                    provider.analyse(source, header, tikainput, solr);
                 } catch (Exception i) {
                     log.error(i + ": " + i.getMessage() + ";x; " + url + "@"
                             + header.getOffset(), i);
