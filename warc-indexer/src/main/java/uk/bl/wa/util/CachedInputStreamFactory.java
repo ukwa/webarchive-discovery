@@ -25,27 +25,17 @@ package uk.bl.wa.util;
  * #L%
  */
 
-import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.archive.format.warc.WARCConstants;
-import org.archive.io.ArchiveRecordHeader;
-import org.archive.util.Base32;
 import org.jwat.common.RandomAccessFileInputStream;
 
 import java.io.*;
-import java.security.DigestInputStream;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
-import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 /**
  * Utility method that takes a given input stream and caches the content in RAM, on disk, based on some size limits.
  *
- * This allows for cheap calls to {@link InputStream#reset()} from the input stream provided by {@link #getInputStream()}.
+ * This allows for cheap calls to {@link InputStream#reset()} from the generated InputStream.
  */
 public class CachedInputStreamFactory {
     private static Log log = LogFactory.getLog( CachedInputStreamFactory.class );
@@ -55,53 +45,77 @@ public class CachedInputStreamFactory {
     public static final long defaultOnDiskThreshold =   1024*1024*100; // Up to 100MB cached on disk.
 
     /**
-     * Reads length bytes from in to a memory- or disk-cache, depending on thresholds.
+     * Reads the content from in to a memory- or disk-cache, depending on thresholds.
      * Returns the cached bytes as an InputStream that supports {@link InputStream#mark(int)} up to length bytes.
      *
      * Note: It is important to call {@link InputStream#close()} after the returned InputStream has been used, to
      * avoid temporary files building up.
      *
      * @param in any InputStream
-     * @param length the number of bytes to read from in.
-     * @param closeAfterRead if true, in will be closed after reading length bytes.
-     * @return an InputStream with the content of in  that supports {@link InputStream#mark(int)} up to length bytes.
+     * @param length the number of bytes that the in is expected to hold.
+     * @param onlyReadLength if true, only length bytes will be read, else reading will continue to EOF.
+     * @param closeAfterRead if true, in will be closed after reading.
+     * @return an InputStream with the content of in  that supports {@link InputStream#mark(int)}.
      */
-    public static InputStream cacheContent(InputStream in, long length, boolean closeAfterRead) {
-        return cacheContent(in, length, closeAfterRead, defaultInMemoryThreshold, defaultOnDiskThreshold);
+    public static InputStream cacheContent(
+            InputStream in, long length, boolean onlyReadLength, boolean closeAfterRead) {
+        return cacheContent(
+                in, length, onlyReadLength, closeAfterRead, defaultInMemoryThreshold, defaultOnDiskThreshold);
     }
 
     /**
-     * Reads length bytes from in to a memory- or disk-cache, depending on thresholds.
+     * Reads the content from in to a memory- or disk-cache, depending on thresholds.
      * Returns the cached bytes as an InputStream that supports {@link InputStream#mark(int)} up to length bytes.
      *
      * Note: It is important to call {@link InputStream#close()} after the returned InputStream has been used, to
      * avoid temporary files building up.
      *
      * @param in any InputStream
-     * @param length the number of bytes to read from in.
+     * @param length the number of bytes that the in is expected to hold.
+     * @param onlyReadLength if true, only length bytes will be read, else reading will continue to EOF.
      * @param closeAfterRead if true, in will be closed after reading length bytes.
      * @param inMemoryThreshold if length is below this threshold, memory caching will be used, else disk caching will
      *                          be used.
      * @param onDiskThreshold if disk caching is used and length is above onDiskThresHold, only onDiskThreshold will be
      *                        stored on disk, while the remainder will be discarded (it will still be read).
-     * @return an InputStream with the content of in  that supports {@link InputStream#mark(int)} up to length bytes.
+     * @return an InputStream with the content of in that supports {@link InputStream#mark(int)}.
      */
-    public static InputStream cacheContent(InputStream in, long length, boolean closeAfterRead,
+    public static InputStream cacheContent(InputStream in, long length, boolean onlyReadLength, boolean closeAfterRead,
                                            long inMemoryThreshold, long onDiskThreshold) {
         try {
             return length < inMemoryThreshold ?
-                    memoryCacheContent(in, (int) length, closeAfterRead) : // Always below 2GB
-                    diskCacheContent(in, length, closeAfterRead, onDiskThreshold);
+                    memoryCacheContent(in, (int) length, onlyReadLength, closeAfterRead, (int) inMemoryThreshold, onDiskThreshold) : // Always below 2GB
+                    diskCacheContent(in, length, onlyReadLength , closeAfterRead, onDiskThreshold);
         } catch (IOException e) {
             log.error("Unable to cache InputStream, returning empty stream", e);
             return new ByteArrayInputStream(new byte[0]);
         }
     }
 
+    // Note: if onlyReadLength is false and reading exceeds inMemoryThreshold, flow will be switched to diskCacheContent
     private static InputStream memoryCacheContent(
-            InputStream in, int length, boolean closeAfterRead) throws IOException {
+            InputStream in, int length, boolean onlyReadLength, boolean closeAfterRead,
+            int inMemoryThreshold, long onDiskThreshold) throws IOException {
         ByteArrayOutputStream cache = new ByteArrayOutputStream(length);
-        IOUtils.copyLarge(in, cache, 0, length);
+        long copied = IOUtils.copyLarge(in, cache, 0, length);
+        if (copied == length && !onlyReadLength) { // Don't know if EOF is reached and we're allowed to read further
+                if (copied < inMemoryThreshold) {
+                    copied += IOUtils.copyLarge(in, cache, 0, inMemoryThreshold-copied);
+                }
+                if (copied == inMemoryThreshold) { // Still don't know if EOF, but memory limit has been reached
+                    log.debug("Attempted to memory cache content but limit of " + inMemoryThreshold + " bytes has " +
+                              "been reached. Switching to disk based caching");
+                    return diskCacheContent(
+                            new SequenceInputStream(new ByteArrayInputStream(cache.toByteArray()), in) {
+                                @Override
+                                public void close() throws IOException {
+                                    super.close();
+                                    in.close();
+                                }
+                            }, inMemoryThreshold, false, closeAfterRead, onDiskThreshold);
+                }
+        }
+
         if (closeAfterRead) {
             in.close();
         }
@@ -109,36 +123,41 @@ public class CachedInputStreamFactory {
     }
 
     private static InputStream diskCacheContent(
-            InputStream in, long length, boolean closeAfterRead, long onDiskThreshold) throws IOException {
+            InputStream in, long length, boolean onlyReadLength, boolean closeAfterRead,
+            long onDiskThreshold) throws IOException {
         File cacheFile = File.createTempFile("warc-indexer", ".cache");
         cacheFile.deleteOnExit();
         OutputStream cache = new FileOutputStream(cacheFile);
 
-        long toCopy = Math.min(length, onDiskThreshold);
-        IOUtils.copyLarge(in, cache, 0, toCopy);
+        long toCopy = onlyReadLength ? Math.min(length, onDiskThreshold) : onDiskThreshold;
+        long copied = IOUtils.copyLarge(in, cache, 0, toCopy);
         if (closeAfterRead) {
             in.close();
         }
         cache.close();
 
-        boolean truncated = length > onDiskThreshold;
-        // Read the remainder of the stream
-        if(truncated) {
+        if (onlyReadLength && length > onDiskThreshold) {
+            // Read the remainder of the stream
             log.debug(String.format("diskCacheContent(length=%d, onDiskThreshold=%d) will be truncated",
                                     length, onDiskThreshold));
             // IOUtils.skip is not a skip: It reads the bytes from the stream, which is what we need
             IOUtils.skip(in, length - onDiskThreshold);
+        } else if (!onlyReadLength && copied == onDiskThreshold) { // Don't know if EOF has been reached
+            // Read on ad infinitum
+            IOUtils.skip(in, Long.MAX_VALUE);
         }
 
         return new RandomAccessFileInputStream(new RandomAccessFile(cacheFile, "r")) {
             @Override
             public void close() throws IOException {
-                super.close();
                 try {
-                    raf.close();
+                    if (raf != null) { // It will be null if it is already closed
+                        raf.close();
+                    }
                 } catch (Exception e) {
                     log.warn("Exception closing RandomAccessFile cache for '" + cacheFile + "'", e);
                 }
+                super.close(); // Must be after raf.close() as it sets raf = null
                 if(cacheFile.exists()) {
                     try {
                         if (!cacheFile.delete()) {

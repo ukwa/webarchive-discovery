@@ -71,8 +71,8 @@ public class InputStreamUtils {
                 warcHeader.getHeaderValue(HEADER_KEY_TYPE).equals(WARCConstants.WARCRecordType.response.toString());
         String compressionHint = httpHeader == null ? null : httpHeader.getHeader("Content-Encoding", null);
         String chunkHint = httpHeader == null ? null : httpHeader.getHeader("Transfer-Encoding", null);
-        return cacheDecompressDechunkHash(input, length, url, expectedHash, checkHash, compressionHint, chunkHint,
-                                          inMemoryThreshold, onDiskThreshold);
+        return cacheDecompressDechunkHash(input, length, url, expectedHash, checkHash,
+                                          compressionHint, chunkHint, inMemoryThreshold, onDiskThreshold);
     }
 
     /**
@@ -80,6 +80,7 @@ public class InputStreamUtils {
      * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
      * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
      * Dechunking is performed before decompression.
+     * Note: The final size of the content will normally exceed length if compression is used.
      * @param input any InputStream.
      * @param length the number of bytes to read from input.
      * @param url the URL for the content. Used for log messages.
@@ -99,13 +100,13 @@ public class InputStreamUtils {
      * @return a simple structure containing the hash information and the cached decompressed dechunked content.
      */
     public static HashIS cacheDecompressDechunkHash(
-            InputStream input, long length, String url, String expectedHash, boolean checkHash, String compressionHint, String chunkHint,
-            long inMemoryThreshold, long onDiskThreshold)
+            InputStream input, long length, String url, String expectedHash, boolean checkHash,
+            String compressionHint, String chunkHint, long inMemoryThreshold, long onDiskThreshold)
             throws IOException {
         HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, input, length);
         InputStream stream = CachedInputStreamFactory.cacheContent(
                 maybeDecompress(maybeDechunk(hash, chunkHint), compressionHint),
-                length, true, inMemoryThreshold, onDiskThreshold);
+                length, false, true, inMemoryThreshold, onDiskThreshold);
         return new HashIS(stream, hash);
     }
 

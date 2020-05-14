@@ -37,8 +37,9 @@ import java.net.URI;
 import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
-import org.apache.commons.fileupload.util.Streams;
 import org.apache.commons.httpclient.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -58,6 +59,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 
 public class WARCIndexerTest {
+    private static Log log = LogFactory.getLog(WARCIndexerTest.class);
 
     /**
      * Check timestamp parsing is working correctly, as various forms exist in the ARCs and WARCs.
@@ -269,6 +271,7 @@ public class WARCIndexerTest {
                     continue;
                 }
                 assertTrue("The record in '" + warc + "'should be a WARC-record", rec instanceof WARCRecord);
+                log.info("WARC:" + warc + " url:" + rec.getHeader().getUrl());
 
                 SolrRecord doc = windex.extract("", rec);
                 assertTrue("The field '" + SolrFields.SOLR_EXTRACTED_TEXT + "' should be present in the" +
@@ -278,7 +281,7 @@ public class WARCIndexerTest {
                 if (!content.contains(EXPECTED_CONTENT)) {
                     Assert.fail("The response in " + warc + "" +
                                 " did not contain the expected phrase \"" + EXPECTED_CONTENT +
-                                "\". This indicates that it was compressed in an unsupported way.");
+                                "\". This indicates that it was compressed in an unsupported way.\n\n" + content);
                 }
             }
         }
