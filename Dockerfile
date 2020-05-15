@@ -17,4 +17,5 @@ MAINTAINER Andrew.Jackson@bl.uk
 COPY --from=build-env /webarchive-discovery/warc-indexer/target/warc-indexer-*-jar-with-dependencies.jar /jars/warc-indexer.jar
 COPY --from=build-env /webarchive-discovery/warc-hadoop-recordreaders/target/warc-hadoop-recordreaders-*-job.jar /jars/warc-hadoop-recordreaders-job.jar
 COPY --from=build-env /webarchive-discovery/warc-hadoop-indexer/target/warc-hadoop-indexer-*-job.jar /jars/warc-hadoop-indexer-job.jar
+COPY --from=build-env /webarchive-discovery/configs /jars/configs
 
