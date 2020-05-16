@@ -26,7 +26,7 @@ import java.io.IOException;
 
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
+import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
@@ -34,10 +34,13 @@ import org.apache.hadoop.mapred.RecordReader;
 import org.apache.hadoop.mapred.Reporter;
 
 @SuppressWarnings( { "deprecation", "unchecked", "rawtypes" } )
-public class ArchiveFileInputFormat extends FileInputFormat<LongWritable, WritableArchiveRecord> {
+public class ArchiveFileInputFormat
+        extends FileInputFormat<Text, WritableArchiveRecord> {
 
     @Override
-    public RecordReader<LongWritable, WritableArchiveRecord> getRecordReader( InputSplit split, JobConf conf, Reporter reporter ) throws IOException {
+    public RecordReader<Text, WritableArchiveRecord> getRecordReader(
+            InputSplit split, JobConf conf, Reporter reporter)
+            throws IOException {
         return new ArchiveFileRecordReader( conf, split );
     }
 
