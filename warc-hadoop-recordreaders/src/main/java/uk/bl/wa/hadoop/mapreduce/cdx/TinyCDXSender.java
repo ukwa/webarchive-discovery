@@ -60,6 +60,9 @@ public class TinyCDXSender {
     // Total Send:
     private long total_sent_records = 0;
 
+    // Total failures:
+    private long total_failures = 0;
+
     public TinyCDXSender(String endpoint, int batch_size) {
         this.endpoint = endpoint;
         this.batch_size = batch_size;
@@ -119,7 +122,8 @@ public class TinyCDXSender {
                 }
             } catch (Exception e) {
                 log.warn("POSTing failed with ", e);
-                failures += 1;
+                failures++;
+                total_failures++;
                 log.warn("Sleeping for 30s before retrying...");
                 try {
                     Thread.sleep(1000 * 30);
@@ -187,4 +191,12 @@ public class TinyCDXSender {
     public long getTotalSentRecords() {
         return this.total_sent_records;
     }
+
+    /**
+     * @return the total_failures
+     */
+    public long getTotalFailures() {
+        return total_failures;
+    }
+
 }

@@ -44,8 +44,8 @@ public class TinyCDXServerReducer
 
     private TinyCDXSender tcs;
 
-    private long num_unique;
     private long num_lines;
+    private long num_dropped;
 
     /*
      * (non-Javadoc)
@@ -67,11 +67,8 @@ public class TinyCDXServerReducer
 
         this.tcs = new TinyCDXSender(endpoint, batch_size);
 
-        System.setProperty("http.proxyHost", "explorer-private");
-        System.setProperty("http.proxyPort", "3127");
-
-        num_unique = 0;
         num_lines = 0;
+        num_dropped = 0;
     }
 
     /*
@@ -85,6 +82,8 @@ public class TinyCDXServerReducer
             Reducer<Text, Text, Text, Text>.Context context)
                     throws IOException, InterruptedException {
         for (Text t : arg1) {
+            // Count lines:
+            this.num_lines++;
             // Drop lines that appear to be raw HTTP header 200 responses
             // (OPTIONS requests, see
             // https://github.com/ukwa/webarchive-discovery/issues/215 -- this
@@ -92,10 +91,12 @@ public class TinyCDXServerReducer
             // we would expect HTTP 200 to have a real content type and not just
             // be HTTP headers):
             if (t.find(" application/http 200 ") > 0) {
+                this.num_dropped++;
                 continue;
             }
             // Drop lines that appear to be request or metadata records:
             if (t.find(" warc/request ") > 0 || t.find(" warc/metadata ") > 0) {
+                this.num_dropped++;
                 continue;
             }
             // Collect the rest:
@@ -127,9 +128,16 @@ public class TinyCDXServerReducer
             context.setStatus("Seen " + tcs.getTotalRecords()
                     + " records, sent " + tcs.getTotalSentRecords() + "...");
             // And send totals:
-            context.write(new Text("NUM_LINES"), new Text("" + this.num_lines));
-            context.write(new Text("NUM_UNIQUE_LINES"),
-                    new Text("" + this.num_unique));
+            context.write(new Text("TOTAL_RECORDS"),
+                    new Text("" + tcs.getTotalRecords()));
+            context.write(new Text("TOTAL_SENT_RECORDS"),
+                    new Text("" + tcs.getTotalSentRecords()));
+            context.write(new Text("TOTAL_SEND_FAILURES"),
+                    new Text("" + tcs.getTotalFailures()));
+            context.write(new Text("TOTAL_LINES"),
+                    new Text("" + this.num_lines));
+            context.write(new Text("TOTAL_DROPPED_LINES"),
+                    new Text("" + this.num_dropped));
         }
     }
 
