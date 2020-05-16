@@ -27,6 +27,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.time.Instant;
 
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
@@ -155,7 +156,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
 
         Job job = new Job();
         job.setJobName(
-                "ArchiveCDXGenerator" + "_" + System.currentTimeMillis());
+                "ArchiveCDXGenerator" + " @ " + Instant.now().toString());
 
         Configuration conf = job.getConfiguration();
 
