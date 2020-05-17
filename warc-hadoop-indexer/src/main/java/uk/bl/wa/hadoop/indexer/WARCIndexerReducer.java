@@ -73,6 +73,9 @@ public class WARCIndexerReducer extends MapReduceBase implements
     private boolean useEmbeddedServer = false;
     private boolean exportXml = false;
 
+    private OutputCollector<Text, Text> output = null;
+    private Reporter reporter = null;
+
     static enum MyCounters {
         NUM_RECORDS, NUM_ERRORS, NUM_DROPPED_RECORDS
     }
@@ -117,6 +120,14 @@ public class WARCIndexerReducer extends MapReduceBase implements
     public void reduce(IntWritable key, Iterator<WritableSolrRecord> values,
             OutputCollector<Text, Text> output, Reporter reporter)
             throws IOException {
+        // Remember the reporter and output (for emitting stats on .close()):
+        if (this.reporter == null && reporter != null) {
+            this.reporter = reporter;
+        }
+        if (this.output == null && output != null) {
+            this.output = output;
+        }
+        // Set up vars:
         WctEnricher wct;
         WritableSolrRecord wsr;
         SolrRecord solr;
@@ -143,6 +154,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
             } else {
                 log.info("DUMMY_RUN: Skipping addition of doc: "
                         + solr.getField("id").getFirstValue());
+                reporter.incrCounter(MyCounters.NUM_DROPPED_RECORDS, 1);
             }
 
             // Occasionally update application-level status:
@@ -193,6 +205,18 @@ SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
 
     @Override
     public void close() {
+        try {
+            this.output.collect(new Text("NUM_RECORDS"), new Text("" + reporter
+                    .getCounter(MyCounters.NUM_RECORDS).getValue()));
+            this.output.collect(new Text("NUM_DROPPED_RECORDS"), new Text(
+                    "" + reporter
+                    .getCounter(MyCounters.NUM_DROPPED_RECORDS).getValue()));
+            this.output.collect(new Text("NUM_ERRORS"), new Text(""
+                    + reporter.getCounter(MyCounters.NUM_ERRORS).getValue()));
+        } catch (IOException e) {
+            log.error("ERROR on final stats output: " + e);
+            e.printStackTrace();
+        }
     }
 
     /**

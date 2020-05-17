@@ -65,7 +65,11 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
         
         // Set up arguments for the job:
         // FIXME The input file could be written by this test.
-        String[] args = { "-i", "src/test/resources/test-inputs.txt", "-o", this.output.getName()};
+        int reducers = 1;
+        String[] args = { "-w", "-R", "" + reducers,
+                "-i",
+                "src/test/resources/test-inputs.txt",
+                "-o", this.output.getName() };
         
         // Set up the WARCIndexerRunner
         WARCIndexerRunner wir = new WARCIndexerRunner();
@@ -74,15 +78,15 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
         log.info("Setting up job config...");
         JobConf conf = this.mrCluster.createJobConf();
         conf.set("mapred.child.java.opts", "-Xmx1024m");
-        wir.createJobConf(conf, args);
+        wir.setConf(conf);
         log.info("Running job...");
-        JobClient.runJob(conf);
+        wir.run(args);
         log.info("Job finished, checking the results...");
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
                 output, new OutputLogFilter()));
-        //Assert.assertEquals(1, outputFiles.length);
+        Assert.assertEquals(reducers, outputFiles.length);
         
         // Check contents of the output:
         for( Path output : outputFiles ) {
@@ -93,6 +97,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
                 String line = null;
                 while( ( line = reader.readLine()) != null ) {
                     log.info(line);
+                    System.out.println(line);
                 }
                 reader.close();
             } else {

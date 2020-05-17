@@ -46,7 +46,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.KeylessTextOutputFormat;
+import uk.bl.wa.hadoop.mapred.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 
 /**

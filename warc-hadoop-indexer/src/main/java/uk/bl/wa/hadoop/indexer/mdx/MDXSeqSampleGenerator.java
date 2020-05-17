@@ -56,7 +56,7 @@ import org.apache.zookeeper.KeeperException;
 import org.json.JSONArray;
 import org.json.JSONException;
 
-import uk.bl.wa.hadoop.KeylessTextOutputFormat;
+import uk.bl.wa.hadoop.mapred.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.ReservoirSamplingReducer;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.solr.SolrFields;

@@ -26,13 +26,8 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.time.Instant;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
@@ -43,6 +38,7 @@ import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
@@ -53,8 +49,9 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 
+import picocli.CommandLine;
+import picocli.CommandLine.ParseResult;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
-import uk.bl.wa.hadoop.KeylessTextOutputFormat;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
@@ -68,20 +65,12 @@ import uk.bl.wa.util.ConfigPrinter;
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerRunner extends Configured implements Tool {
     private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
-    private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.] [-x] [output XML in OAI-PMH format]";
-    private static final String CLI_HEADER = "WARCIndexerRunner - MapReduce method for extracing metadata/text from Archive Records";
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";
     public static final String CONFIG_APPLY_ANNOTATIONS = "warc.applyAnnotations";
 
     protected static String solrHomeZipName = "solr_home.zip";
 
-    private String inputPath;
-    private String outputPath;
-    private String configPath;
-    private boolean wait;
-    private boolean dumpConfig;
-    private boolean exportXml;
-    private boolean applyAnnotations;
+    WARCIndexerOptions opts = new WARCIndexerOptions();
 
     /**
      * 
@@ -92,27 +81,27 @@ public class WARCIndexerRunner extends Configured implements Tool {
      * @throws InterruptedException
      * @throws KeeperException
      */
-    protected void createJobConf(JobConf conf, String[] args)
-            throws IOException, ParseException, KeeperException,
+    protected void createJobConf(
+            JobConf conf)
+            throws IOException,
+            KeeperException,
             InterruptedException {
-        // Parse the command-line parameters.
-        this.setup(args, conf);
 
         // Store application properties where the mappers/reducers can access
         // them
         Config index_conf;
-        if (this.configPath != null) {
-            index_conf = ConfigFactory.parseFile(new File(this.configPath));
+        if (opts.config != null) {
+            index_conf = ConfigFactory.parseFile(opts.config);
         } else {
             index_conf = ConfigFactory.load();
         }
-        if (this.dumpConfig) {
+        if (opts.dump) {
             ConfigPrinter.print(index_conf);
             System.exit(0);
         }
         // Decide whether to apply annotations:
         index_conf = index_conf.withValue(CONFIG_APPLY_ANNOTATIONS,
-                ConfigValueFactory.fromAnyRef(applyAnnotations));
+                ConfigValueFactory.fromAnyRef(opts.annotations));
         // Store the properties:
         conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
                 .render(ConfigRenderOptions.concise()));
@@ -133,17 +122,12 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         // Reducer count dependent on concurrent HTTP connections to Solr
         // server.
-        int numReducers = 1;
-        try {
-            numReducers = index_conf.getInt("warc.hadoop.num_reducers");
-        } catch (NumberFormatException n) {
-            numReducers = 10;
-        }
+        int numReducers = opts.num_reducers;
 
         // Add input paths:
-        LOG.info("Reading input files...");
+        LOG.info("Reading list of input files from " + opts.input + "...");
         String line = null;
-        BufferedReader br = new BufferedReader(new FileReader(this.inputPath));
+        BufferedReader br = new BufferedReader(new FileReader(opts.input));
         while ((line = br.readLine()) != null) {
             FileInputFormat.addInputPath(conf, new Path(line));
         }
@@ -151,14 +135,15 @@ public class WARCIndexerRunner extends Configured implements Tool {
         LOG.info("Read " + FileInputFormat.getInputPaths(conf).length
                 + " input files.");
 
-        FileOutputFormat.setOutputPath(conf, new Path(this.outputPath));
+        FileOutputFormat.setOutputPath(conf, new Path(opts.output));
 
-        conf.setJobName(this.inputPath + "_" + System.currentTimeMillis());
+        conf.setJobName(
+                "WARCIndexer " + opts.input + " @ " + Instant.now().toString());
         conf.setInputFormat(ArchiveFileInputFormat.class);
         conf.setMapperClass(WARCIndexerMapper.class);
         conf.setReducerClass(WARCIndexerReducer.class);
-        conf.setOutputFormat(KeylessTextOutputFormat.class);
-        conf.set("map.output.key.field.separator", "");
+        conf.setOutputFormat(TextOutputFormat.class);
+
         // Compress the output from the maps, to cut down temp space
         // requirements between map and reduce.
         conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
@@ -169,7 +154,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
         // Ensure the JARs we provide take precedence over ones from Hadoop:
         conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
-        conf.setBoolean("mapred.output.oai-pmh", this.exportXml);
+        conf.setBoolean("mapred.output.oai-pmh", opts.xml);
 
         conf.setOutputKeyClass(Text.class);
         conf.setOutputValueClass(Text.class);
@@ -186,83 +171,31 @@ public class WARCIndexerRunner extends Configured implements Tool {
      * @throws KeeperException
      * 
      */
-    public int run(String[] args) throws IOException, ParseException,
+    public int run(String[] args)
+            throws IOException,
             KeeperException, InterruptedException {
+        // Process remaining args list this:
+        CommandLine cli = new CommandLine(opts);
+        ParseResult pr = cli.parseArgs(args);
+        if (pr.isUsageHelpRequested()) {
+            cli.usage(System.out);
+            return 0;
+        }
+
         // Set up the base conf:
         JobConf conf = new JobConf(getConf(), WARCIndexerRunner.class);
 
         // Get the job configuration:
-        this.createJobConf(conf, args);
+        this.createJobConf(conf);
 
         // Submit it:
-        if (this.wait) {
+        if (opts.wait) {
             JobClient.runJob(conf);
         } else {
             JobClient client = new JobClient(conf);
             client.submitJob(conf);
         }
         return 0;
-    }
-
-    private void setup(String[] args, JobConf conf) throws ParseException {
-        // Process Hadoop args first:
-        String[] otherArgs = new GenericOptionsParser(conf, args)
-                .getRemainingArgs();
-
-        // Process remaining args list this:
-        Options options = new Options();
-        options.addOption("d", false, "dump configuration");
-        options.addOption("h", false, "print help");
-        options.addOption("i", true, "input file list");
-        options.addOption("o", true, "output directory");
-        options.addOption("c", true, "path to configuration");
-        options.addOption("w", false, "wait for job to finish");
-        options.addOption("x", false, "output XML in OAI-PMH format");
-        options.addOption("a", false,
-                "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'");
-        // TODO: Problematic with "hadoop jar"?
-        // I think starting with the GenericOptionsParser (above) should resolve
-        // this?
-        // options.addOption( OptionBuilder.withArgName( "property=value"
-        // ).hasArgs( 2 ).withValueSeparator().withDescription(
-        // "use value for given property" ).create( "D" ) );
-
-        CommandLineParser parser = new PosixParser();
-        CommandLine cmd = parser.parse(options, otherArgs);
-        this.inputPath = cmd.getOptionValue("i");
-        this.outputPath = cmd.getOptionValue("o");
-        this.wait = cmd.hasOption("w");
-        if (cmd.hasOption("c")) {
-            this.configPath = cmd.getOptionValue("c");
-        }
-        this.dumpConfig = cmd.hasOption("d");
-        this.exportXml = cmd.hasOption("x");
-        this.applyAnnotations = cmd.hasOption("a");
-
-        // If we are just dumping the config no need to validate:
-        if (this.dumpConfig)
-            return;
-
-        // If we are prining help, just do that:
-        if (cmd.hasOption('h'))
-            printHelp("", options);
-
-        // Validate remaining args:
-        if (!cmd.hasOption("i") || !cmd.hasOption("o")) {
-            printHelp(
-                    "\nERROR: You must specify both the input and output parameters!",
-                    options);
-        }
-
-    }
-
-    private void printHelp(String message, Options options) {
-        HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.setWidth(80);
-        helpFormatter.printHelp(CLI_USAGE, CLI_HEADER, options, message);
-        System.out.println("\n");
-        ToolRunner.printGenericCommandUsage(System.out);
-        System.exit(1);
     }
 
     /**

@@ -59,6 +59,7 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.archive.hadoop.mapreduce.AlphaPartitioner;
 
+import uk.bl.wa.hadoop.mapreduce.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapreduce.lib.ArchiveToCDXFileInputFormat;
 import uk.bl.wa.hadoop.mapreduce.lib.DereferencingArchiveToCDXRecordReader;
 
@@ -167,8 +168,6 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
         Path outputPath = new Path(this.outputPath);
         FileOutputFormat.setOutputPath(job, outputPath);
         job.setInputFormatClass(ArchiveToCDXFileInputFormat.class);
-        job.setOutputFormatClass(TextOutputFormat.class);
-        conf.set("map.output.key.field.separator", "");
         conf.set("cdx.format", this.cdxFormat);
         conf.set("cdx.hdfs", Boolean.toString(this.hdfs));
         conf.set("cdx.metatag", this.metaTag);
@@ -194,10 +193,12 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
             // Perform the update in the reduce phase:
             job.setMapperClass(Mapper.class);
             job.setReducerClass(TinyCDXServerReducer.class);
+            job.setOutputFormatClass(TextOutputFormat.class);
         } else {
             // Default to the pass-through mapper and reducer:
             job.setMapperClass(Mapper.class);
             job.setReducerClass(Reducer.class);
+            job.setOutputFormatClass(KeylessTextOutputFormat.class);
             // Set up the split:
             if (this.splitFile != null) {
                 log.info("Setting splitFile to " + this.splitFile);
