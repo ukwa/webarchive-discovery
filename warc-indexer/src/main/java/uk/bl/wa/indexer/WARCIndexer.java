@@ -42,14 +42,12 @@ import java.time.ZoneId;
 import java.util.*;
 
 import org.apache.commons.codec.binary.Base64;
-import org.apache.commons.httpclient.ChunkedInputStream;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.io.IOUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.http.HttpHeaders;
@@ -86,7 +84,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 import uk.bl.wa.solr.SolrWebServer;
-import uk.bl.wa.util.HashedCachedInputStream;
+import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
 
@@ -380,39 +378,26 @@ public class WARCIndexer {
             
             // Create an appropriately cached version of the payload, to allow analysis.
             final long hashStreamStart = System.nanoTime();
-            // If it's a chunked encoding, wrap the input stream to decode:
-            final HashedCachedInputStream hcis;
-            if ("chunked"
-                    .equalsIgnoreCase(
-                            httpHeader.getHeader("Transfer-Encoding", null))) {
-                // hcis = new HashedCachedInputStream(header, record,
-                // content_length);
-                hcis = new HashedCachedInputStream(header,
-                        new ChunkedInputStream(record), content_length,
-                        this.inMemoryThreshold, this.onDiskThreshold);
-            } else {
-                // Otherwise, plain stream
-                hcis = new HashedCachedInputStream(header, record,
-                        content_length, this.inMemoryThreshold,
-                        this.onDiskThreshold);
-            }
-            
+            final InputStreamUtils.HashIS hashIS = InputStreamUtils.cacheDecompressDechunkHash(
+                    record, content_length, targetUrl, header, httpHeader,
+                    this.inMemoryThreshold, this.onDiskThreshold);
+
             // If the hash didn't match, record it:
-            if (!hcis.isHashMatched()) {
+            if (!hashIS.getHashStream().isHashMatched()) {
                 // Facet-friendly:
                 solr.addField(SolrFields.PARSE_ERROR,
                         "Digest validation failed!");
                 // Detailed version:
                 solr.addField(SolrFields.PARSE_ERROR,
                         "Digest validation failed: header value is "
-                                + hcis.getHeaderHash()
+                                + hashIS.getHashStream().getHeaderHash()
                                 + " but calculated "
-                                + hcis.getHash());
+                                + hashIS.getHashStream().getHash());
             }
 
-            final InputStream tikaInput = hcis.getInputStream();
+            final InputStream tikaInput = hashIS.getInputStream();
             // TODO: Consider adding support for GZip / Brotli compression at this point
-            final String hash = hcis.getHash();
+            final String hash = hashIS.getHashStream().getHash();
             Instrument.timeRel("WARCIndexer.extract#total",
                                "WARCIndexer.extract#hashstreamwrap", hashStreamStart);
             // Set these last:
@@ -447,7 +432,7 @@ public class WARCIndexer {
             Instrument.timeRel("WARCIndexer.extract#total", "WARCIndexer.extract#analyzetikainput", analyzeStart);
 
             // Clear up the caching of the payload:
-            hcis.cleanup();
+            hashIS.cleanup();
 
             // -----------------------------------------------------
             // Payload analysis complete, now performing text analysis:
