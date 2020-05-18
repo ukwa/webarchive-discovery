@@ -42,6 +42,11 @@ import org.apache.solr.common.SolrInputDocument;
 
 import com.typesafe.config.Config;
 
+import picocli.CommandLine;
+import picocli.CommandLine.ArgGroup;
+import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
+
 /**
  * Solr Server Wrapper
  * 
@@ -50,8 +55,79 @@ import com.typesafe.config.Config;
 public class SolrWebServer {
     private static Log log = LogFactory.getLog(SolrWebServer.class);
 
+    @Command(name = "solr-options", description = "Setting up the Solr connection.")
+    public
+    static class SolrOptions {
+        // Must specify either one or more Solr endpoints, or Zookeeper hosts
+        // and a Solr collection
+        @ArgGroup(exclusive = true, multiplicity = "1")
+        SolrServiceOptions service;
+
+        public
+        static class SolrServiceOptions {
+            @Option(names = { "-S",
+                    "--solr-endpoint" }, description = "The HTTP Solr endpoints to use. Set this multiple times to use a load-balanced group of endpoints.")
+            String[] endpoint;
+
+            @ArgGroup(exclusive = false)
+            ZKCollection zk;
+        }
+
+        public
+        static class ZKCollection {
+            @Option(names = { "-Z",
+                    "--solr-zookeepers" }, description = "A list of comma-separated HOST:PORT values for the Zookeepers. e.g. 'zk1:2121,zk2:2121'")
+            String zookeepers;
+
+            @Option(names = { "-C",
+                    "--solr-collection" }, description = "The Solr collection to populate.")
+            String collection;
+        }
+
+        @Option(names = "--solr-batch-size", description = "Size of batches of documents to send to Solr.", defaultValue = "100")
+        public int batchSize;
+
+    }
+
+    public static void main(String[] args) {
+        SolrOptions cmd = new SolrOptions();
+        new CommandLine(cmd).usage(System.out);
+    }
+
     private SolrClient solrServer;
     
+    /**
+     * Initializes the Solr connection
+     */
+    public SolrWebServer(SolrOptions opts) {
+        // Setup based on options:
+        try {
+            if (opts.service.endpoint != null) {
+                if (opts.service.endpoint.length == 1) {
+                    log.info("Setting up HttpSolrServer client from a url: "
+                            + opts.service.endpoint[0]);
+                    solrServer = new HttpSolrClient(opts.service.endpoint[0]);
+                } else {
+                    log.info(
+                            "Setting up LBHttpSolrServer client from servers list: "
+                                    + opts.service.endpoint);
+                    solrServer = new LBHttpSolrClient(opts.service.endpoint);
+                }
+            } else {
+                log.info("Setting up CloudSolrServer client via zookeepers.");
+                solrServer = new CloudSolrClient(opts.service.zk.zookeepers);
+                ((CloudSolrClient) solrServer)
+                        .setDefaultCollection(opts.service.zk.collection);
+            }
+        } catch (MalformedURLException e) {
+            log.error("WARCIndexerReducer.configure(): " + e.getMessage());
+        }
+
+        if (solrServer == null) {
+            throw new RuntimeException("Cannot connect to Solr Server!");
+        }
+    }
+
     public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
 
     public static final String CONF_HTTP_SERVERS = "warc.solr.servers";
@@ -60,13 +136,6 @@ public class SolrWebServer {
 
     public static final String COLLECTION = "warc.solr.collection";
 
-    public static final String NUM_SHARDS = "warc.solr.num_shards";
-
-    public static final String HDFS_OUTPUT_PATH = "warc.solr.hdfs_output_path";
-
-    /**
-     * Initializes the Solr connection
-     */
     public SolrWebServer(Config conf) {
 
         try {

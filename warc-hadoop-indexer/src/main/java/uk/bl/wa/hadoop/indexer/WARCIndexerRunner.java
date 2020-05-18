@@ -52,6 +52,8 @@ import com.typesafe.config.ConfigValueFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
+import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 import uk.bl.wa.util.ConfigPrinter;
 
 /**
@@ -66,9 +68,6 @@ import uk.bl.wa.util.ConfigPrinter;
 public class WARCIndexerRunner extends Configured implements Tool {
     private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";
-    public static final String CONFIG_APPLY_ANNOTATIONS = "warc.applyAnnotations";
-
-    protected static String solrHomeZipName = "solr_home.zip";
 
     WARCIndexerOptions opts = new WARCIndexerOptions();
 
@@ -99,9 +98,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
             ConfigPrinter.print(index_conf);
             System.exit(0);
         }
-        // Decide whether to apply annotations:
-        index_conf = index_conf.withValue(CONFIG_APPLY_ANNOTATIONS,
-                ConfigValueFactory.fromAnyRef(opts.annotations));
         // Store the properties:
         conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
                 .render(ConfigRenderOptions.concise()));
@@ -176,6 +172,8 @@ public class WARCIndexerRunner extends Configured implements Tool {
             KeeperException, InterruptedException {
         // Process remaining args list this:
         CommandLine cli = new CommandLine(opts);
+        // SolrOptions solrOpts = new SolrWebServer.SolrOptions();
+        // cli.addMixin("solrOpts", solrOpts);
         ParseResult pr = cli.parseArgs(args);
         if (pr.isUsageHelpRequested()) {
             cli.usage(System.out);
@@ -184,6 +182,9 @@ public class WARCIndexerRunner extends Configured implements Tool {
 
         // Set up the base conf:
         JobConf conf = new JobConf(getConf(), WARCIndexerRunner.class);
+
+        // Store the args in there, so Mapper/Reducer can read them:
+        conf.set("commandline.args", String.join("@@@", args));
 
         // Get the job configuration:
         this.createJobConf(conf);

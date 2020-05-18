@@ -66,7 +66,9 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
         // Set up arguments for the job:
         // FIXME The input file could be written by this test.
         int reducers = 1;
-        String[] args = { "-w", "-R", "" + reducers,
+        String[] args = { "--dummy-run", "-w", "-S", "http://none", "-R",
+                ""
+                + reducers,
                 "-i",
                 "src/test/resources/test-inputs.txt",
                 "-o", this.output.getName() };

@@ -68,6 +68,9 @@ public class WARCMDXMapperTest {
     public void setUp() {
         // Overload the config:
         Configuration conf = new Configuration();
+        // Store the args in there, so Mapper/Reducer can read them:
+        String[] args = new String[] { "-i", "in", "-o", "out", "-S", "none" };
+        conf.set("commandline.args", String.join("@@@", args));        
         Config c = ConfigFactory.load("mdx");
         conf.set(WARCMDXGenerator.CONFIG_PROPERTIES, c.withOnlyPath("warc")
                 .root().render(ConfigRenderOptions.concise()));

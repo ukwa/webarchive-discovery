@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import picocli.CommandLine;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
@@ -69,8 +70,8 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
     private WARCIndexer windex;
 
-    private int numShards = 1;
-    private int numReducers = 10;
+    private WARCIndexerOptions opts = new WARCIndexerOptions();
+
     private Config config;
 
     private SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(null); // Overridden by innerConfigure
@@ -88,10 +89,18 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
     @Override
     public void configure( JobConf job ) {
+        // Get config from args:
+        String[] args = job.get("commandline.args").split("@@@");
+        new CommandLine(opts).parseArgs(args);
+
+        // Get config from job property:
         if (this.config == null) {
             innerConfigure(ConfigFactory.parseString(job
                 .get(WARCIndexerRunner.CONFIG_PROPERTIES)));
         }
+
+        // Configure annotations:
+        this.configureAnnotations();
 
         // Other properties:
         mapTaskId = job.get("mapred.task.id");
@@ -102,20 +111,12 @@ public class WARCIndexerMapper extends MapReduceBase implements
         System.setProperty("pdfbox.fontcache", job.get("mapred.child.tmp"));
     }
 
-    public void innerConfigure(Config jobConfig) {
+    private void configureAnnotations() {
         try {
-            // Get config from job property:
-            config = jobConfig;
-            // Initialise indexer:
-            this.windex = new WARCIndexer( config );
             // Decide whether to try to apply annotations:
-            boolean applyAnnotations = false;
-            if( config.hasPath(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS)) {
-                applyAnnotations = config
-                        .getBoolean(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS);
-            }
-            if (applyAnnotations) {
-                LOG.info("Attempting to load annotations from 'annotations.json'...");
+            if (opts.annotations) {
+                LOG.info(
+                        "Attempting to load annotations from 'annotations.json'...");
                 Annotations ann = Annotations.fromJsonFile("annotations.json");
                 LOG.info(
                         "Attempting to load OA SURTS from 'openAccessSurts.txt'...");
@@ -123,24 +124,23 @@ public class WARCIndexerMapper extends MapReduceBase implements
                         .loadSurtPrefix("openAccessSurts.txt");
                 windex.setAnnotations(ann, oaSurts);
             }
-
-            // Set up sharding:
-            numShards = config.getInt(SolrWebServer.NUM_SHARDS);
-
-            // Get the number of reducers:
-            try {
-                numReducers = config.getInt("warc.hadoop.num_reducers");
-            } catch (NumberFormatException n) {
-                numReducers = 10;
-            }
-            solrFactory = SolrRecordFactory.createFactory(config);
-        } catch( NoSuchAlgorithmException e ) {
-            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         } catch (JsonParseException e) {
             LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         } catch (JsonMappingException e) {
             LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         } catch (IOException e) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        }
+
+    }
+
+    public void innerConfigure(Config config) {
+        try {
+            // Initialise indexer:
+            this.windex = new WARCIndexer( config );
+            // Set up record factory:
+            solrFactory = SolrRecordFactory.createFactory(config);
+        } catch( NoSuchAlgorithmException e ) {
             LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         }
     }
@@ -223,7 +223,7 @@ public class WARCIndexerMapper extends MapReduceBase implements
             // Use a random assignment per shard:
             // int iKey = (int) (Math.round(Math.random() * numShards));
             // Use a random assignment per reducer:
-            int iKey = (int) (Math.round(Math.random() * numReducers));
+            int iKey = (int) (Math.round(Math.random() * opts.num_reducers));
 
             IntWritable oKey = new IntWritable(iKey);
             output.collect(oKey, wsolr);

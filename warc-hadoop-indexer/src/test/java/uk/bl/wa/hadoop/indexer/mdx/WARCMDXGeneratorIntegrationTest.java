@@ -162,7 +162,7 @@ public class WARCMDXGeneratorIntegrationTest {
 
         // Set up arguments for the job:
         String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
-                this.output.getName() };
+                this.output.getName(), "-S", "none", "-R", "1", "-w" };
 
         // Set up the WARCIndexerRunner
         WARCMDXGenerator wir = new WARCMDXGenerator();
@@ -170,12 +170,11 @@ public class WARCMDXGeneratorIntegrationTest {
         // run job
         // Job configuration:
         log.info("Setting up job config...");
-        JobConf jobConf = this.mrCluster.createJobConf();
-        jobConf.setInt(WARCMDXGenerator.WARC_HADOOP_NUM_REDUCERS, 1);
-        jobConf.set("mapred.child.java.opts", "-Xmx512m");
-        wir.createJobConf(jobConf, args);
+        JobConf conf = this.mrCluster.createJobConf();
+        conf.set("mapred.child.java.opts", "-Xmx512m");
+        wir.setConf(conf);
         log.info("Running job...");
-        JobClient.runJob(jobConf);
+        wir.run(args);
         log.info("Job finished, checking the results...");
 
         // check the output exists
@@ -230,7 +229,7 @@ public class WARCMDXGeneratorIntegrationTest {
 
         // Set up arguments for the job:
         String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
-                this.outputMerged.getName(), "-r", "1" };
+                this.outputMerged.getName(), "-r", "1", "-S", "none" };
 
         // Set up the WARCIndexerRunner
         MDXSeqMerger msm = new MDXSeqMerger();

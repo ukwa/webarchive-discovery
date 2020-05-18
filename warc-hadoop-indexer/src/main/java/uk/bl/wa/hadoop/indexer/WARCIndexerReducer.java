@@ -47,11 +47,14 @@ import org.apache.solr.common.SolrInputDocument;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import picocli.CommandLine;
+import picocli.CommandLine.ParseResult;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
 import uk.bl.wa.solr.WctFields;
+import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerReducer extends MapReduceBase implements
@@ -60,18 +63,13 @@ public class WARCIndexerReducer extends MapReduceBase implements
     private static Log log = LogFactory.getLog(WARCIndexerReducer.class);
 
     private SolrClient solrServer;
-    private int batchSize;
-    private boolean dummyRun;
+    private WARCIndexerOptions opts = new WARCIndexerOptions();
+
     private ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>();
     private int numberOfSequentialFails = 0;
     private static final int SUBMISSION_PAUSE_MINS = 5;
 
     private FileSystem fs;
-    private Path solrHomeDir = null;
-    private Path outputDir;
-    private String shardPrefix = "shard";
-    private boolean useEmbeddedServer = false;
-    private boolean exportXml = false;
 
     private OutputCollector<Text, Text> output = null;
     private Reporter reporter = null;
@@ -99,19 +97,14 @@ public class WARCIndexerReducer extends MapReduceBase implements
     public void configure(JobConf job) {
         log.info("Configuring reducer, including Solr connection...");
 
-        // Get config from job property:
-        Config conf = ConfigFactory.parseString(job
-                .get(WARCIndexerRunner.CONFIG_PROPERTIES));
+        // Get args from job property:
+        String[] args = job.get("commandline.args").split("@@@");
 
-        this.dummyRun = conf.getBoolean("warc.solr.dummy_run");
-        this.batchSize = conf.getInt("warc.solr.batch_size");
-        this.useEmbeddedServer = conf.getBoolean("warc.solr.hdfs");
-        if (job.get("mapred.output.oai-pmh") != null)
-            this.exportXml = Boolean.parseBoolean(job
-                    .get("mapred.output.oai-pmh"));
+        // Setup options:
+        new CommandLine(opts).parseArgs(args);
 
         // Decide between to-HDFS and to-SolrCloud indexing modes:
-        solrServer = new SolrWebServer(conf).getSolrServer();
+        solrServer = new SolrWebServer(opts.solr).getSolrServer();
 
         log.info("Initialisation complete.");
     }
@@ -147,27 +140,18 @@ public class WARCIndexerReducer extends MapReduceBase implements
                 wct = new WctEnricher(key.toString());
                 wct.addWctMetadata(solr);
             }
-            if (!dummyRun) {
+            if (!opts.dummyRun) {
                 docs.add(solr.getSolrDocument());
                 // Have we exceeded the batchSize?
-                checkSubmission(docs, batchSize, reporter);
+                checkSubmission(docs, opts.solr.batchSize, reporter);
             } else {
                 log.info("DUMMY_RUN: Skipping addition of doc: "
                         + solr.getField("id").getFirstValue());
                 reporter.incrCounter(MyCounters.NUM_DROPPED_RECORDS, 1);
             }
 
-            // Occasionally update application-level status:
-            if ((noValues % 1000) == 0) {
-                reporter.setStatus(this.shardPrefix
-                        + slice
-                        + ": processed "
-                        + noValues
-                        + ", dropped "
-                        + reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS)
-                                .getValue());
-            }
-            if (this.exportXml
+            // Write out XML if requested:
+            if (opts.xml
                     && solr.getSolrDocument().getFieldValue(
                             SolrFields.SOLR_URL_TYPE) != null
                     && solr.getSolrDocument()
@@ -175,10 +159,20 @@ public class WARCIndexerReducer extends MapReduceBase implements
                             .equals(
 SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
                 output.collect(
-                        new Text(""),
+                        new Text(solr.getField("id")
+                                .toString()),
                         new Text(MetadataBuilder.SolrDocumentToElement(solr
                                 .getSolrDocument())));
             }
+
+            // Occasionally update application-level status:
+            if ((noValues % 1000) == 0) {
+                reporter.setStatus("" + slice + ": processed " + noValues
+                        + ", dropped "
+                        + reporter.getCounter(MyCounters.NUM_DROPPED_RECORDS)
+                                .getValue());
+            }
+
         }
 
         try {
@@ -187,14 +181,6 @@ SolrFields.SOLR_URL_TYPE_SLASHPAGE)) {
              * it.
              */
             checkSubmission(docs, 1, reporter);
-
-            // If we are indexing to HDFS, shut the shard down:
-            if (useEmbeddedServer) {
-                // Commit, and block until the changes have been flushed.
-                solrServer.commit(true, false);
-                // And shut it down.
-                solrServer.shutdown();
-            }
 
         } catch (Exception e) {
             log.error("ERROR on commit: " + e);

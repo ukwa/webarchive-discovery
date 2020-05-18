@@ -92,6 +92,8 @@ public class WARCDatasetMapper extends MapReduceBase implements
                 .get(WARCIndexerRunner.CONFIG_PROPERTIES)));
         }
 
+        // FIXME repair functionality to add annotations?
+
         // Other properties:
         mapTaskId = job.get("mapred.task.id");
         inputFile = job.get("map.input.file");
@@ -105,30 +107,8 @@ public class WARCDatasetMapper extends MapReduceBase implements
             config = jobConfig;
             // Initialise indexer:
             this.windex = new WARCIndexer( config );
-            // Decide whether to try to apply annotations:
-            boolean applyAnnotations = false;
-            if( config.hasPath(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS)) {
-                applyAnnotations = config
-                        .getBoolean(WARCIndexerRunner.CONFIG_APPLY_ANNOTATIONS);
-            }
-            if (applyAnnotations) {
-                LOG.info("Attempting to load annotations from 'annotations.json'...");
-                Annotations ann = Annotations.fromJsonFile("annotations.json");
-                LOG.info(
-                        "Attempting to load OA SURTS from 'openAccessSurts.txt'...");
-                SurtPrefixSet oaSurts = Annotator
-                        .loadSurtPrefix("openAccessSurts.txt");
-                windex.setAnnotations(ann, oaSurts);
-            }
-
             solrFactory = SolrRecordFactory.createFactory(config);
         } catch( NoSuchAlgorithmException e ) {
-            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-        } catch (JsonParseException e) {
-            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-        } catch (JsonMappingException e) {
-            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-        } catch (IOException e) {
             LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         }
     }

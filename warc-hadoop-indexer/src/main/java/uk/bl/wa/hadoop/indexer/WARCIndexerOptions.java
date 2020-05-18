@@ -28,7 +28,9 @@ package uk.bl.wa.hadoop.indexer;
 import java.io.File;
 
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Mixin;
 import picocli.CommandLine.Option;
+import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
 /**
  * 
@@ -42,31 +44,38 @@ public class WARCIndexerOptions {
 
     @Option(names = { "-R",
             "--num-reducers" }, description = "Number of reducer tasks to use. Default is ${DEFAULT-VALUE}.", defaultValue = "5")
-    int num_reducers;
+    public int num_reducers;
 
     @Option(names = { "-d",
             "--dump" }, description = "Dump configuration and exit.", defaultValue = "false")
-    boolean dump;
+    public boolean dump;
 
     @Option(names = { "-x",
             "--xml" }, description = "Output XML in OAI-PMH format.", defaultValue = "false")
-    boolean xml;
+    public boolean xml;
 
     @Option(names = { "-w",
             "--wait" }, description = "Wait for job to finish.", defaultValue = "false")
-    boolean wait;
+    public boolean wait;
 
     @Option(names = { "-a",
             "--annotations" }, description = "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'", defaultValue = "false")
-    boolean annotations;
+    public boolean annotations;
 
     @Option(names = "-c", description = "Local file that contains the indexer configuration", required = false)
-    File config;
+    public File config;
 
     @Option(names = "-i", description = "Local input file that contains a list of HDFS paths to WARCs to be indexed.", required = true)
-    File input;
+    public File input;
 
     @Option(names = "-o", description = "HDFS folder the job should write to.", required = true)
-    String output;
+    public String output;
+
+    @Option(names = "--dummy-run", description = "Run the indexing process but do not attempt to push data to Solr.", defaultValue = "false")
+    public boolean dummyRun;
+
+    // Add in Solr options:
+    @Mixin
+    public SolrOptions solr;
 
 }
