@@ -36,10 +36,10 @@ import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AbstractParser;
 import org.archive.io.ArchiveRecordHeader;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
+import picocli.CommandLine;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
 /**
  * @author anj
@@ -47,9 +47,6 @@ import uk.bl.wa.solr.SolrRecord;
  */
 public abstract class AbstractPayloadAnalyser {
     private static Log log = LogFactory.getLog( AbstractPayloadAnalyser.class );
-
-    public void configure(Config conf) {
-    }
 
     public abstract boolean shouldProcess(String mimeType);
 
@@ -90,7 +87,7 @@ public abstract class AbstractPayloadAnalyser {
      * @return
      */
     public static List<AbstractPayloadAnalyser> getPayloadAnalysers(
-            Config conf) {
+            CommandLine cli) {
 
         // load our plugins
         ServiceLoader<AbstractPayloadAnalyser> serviceLoader = ServiceLoader
@@ -99,8 +96,7 @@ public abstract class AbstractPayloadAnalyser {
         // Get the list:
         List<AbstractPayloadAnalyser> providers = new ArrayList<AbstractPayloadAnalyser>();
         for (AbstractPayloadAnalyser provider : serviceLoader) {
-            // Perform any necessary configuration:
-            provider.configure(conf);
+            cli.addMixin(provider.getClass().getCanonicalName(), provider);
             providers.add(provider);
         }
 
@@ -113,15 +109,18 @@ public abstract class AbstractPayloadAnalyser {
      * @param ignored
      */
     public static void main(String[] ignored) {
-
-        // Get the config:
-        Config conf = ConfigFactory.load();
+        SolrOptions opts = new SolrWebServer.SolrOptions();
+        CommandLine cli = new CommandLine(opts);
 
         // create a new provider and call getMessage()
         List<AbstractPayloadAnalyser> providers = AbstractPayloadAnalyser
-                .getPayloadAnalysers(conf);
+                .getPayloadAnalysers(cli);
         for (AbstractPayloadAnalyser provider : providers) {
             System.out.println(provider.getClass().getCanonicalName());
         }
+
+        // And print usage:
+        cli.usage(System.out);
+
     }
 }

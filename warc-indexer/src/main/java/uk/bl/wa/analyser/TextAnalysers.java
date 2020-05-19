@@ -27,8 +27,7 @@ package uk.bl.wa.analyser;
 
 import java.util.List;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine;
 import uk.bl.wa.analyser.text.AbstractTextAnalyser;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -45,9 +44,9 @@ public class TextAnalysers {
      */
     private List<AbstractTextAnalyser> analysers;
 
-    public TextAnalysers(Config conf) {
+    public TextAnalysers(CommandLine cli) {
         // Look up text analysers:
-        analysers = AbstractTextAnalyser.getTextAnalysers(conf);
+        analysers = AbstractTextAnalyser.getTextAnalysers(cli);
     }
     
     /**

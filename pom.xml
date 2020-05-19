@@ -165,6 +165,15 @@
          </plugin>         
       </plugins>
    </build>
+   <dependencyManagement>
+     <dependencies>
+       <dependency>
+         <groupId>info.picocli</groupId>
+         <artifactId>picocli</artifactId>
+         <version>4.3.2</version>
+       </dependency>
+     </dependencies>
+   </dependencyManagement>
 
    <repositories>
       <repository>

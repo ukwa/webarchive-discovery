@@ -28,8 +28,7 @@ package uk.bl.wa.analyser.text;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine.Option;
 import uk.bl.wa.sentimentalj.Sentiment;
 import uk.bl.wa.sentimentalj.SentimentalJ;
 import uk.bl.wa.solr.SolrFields;
@@ -42,20 +41,14 @@ import uk.bl.wa.solr.SolrRecord;
 public class SentimentJTextAnalyser extends AbstractTextAnalyser {
     private static Log log = LogFactory.getLog( SentimentJTextAnalyser.class );
 
+    // Switch off by default
+    @Option(names = "--sentimentj", negatable = true, defaultValue = "false", description = "Run basic sentiment analysis on text. Default: ${DEFAULT-VALUE}")
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     /** */
     private static SentimentalJ sentij = new SentimentalJ();
-
-    /**
-     * @param conf
-     */
-    public void configure(Config conf) {
-        if (conf.hasPath("warc.index.extract.content.text_sentimentj") && conf
-                .getBoolean("warc.index.extract.content.text_sentimentj")) {
-            setEnabled(true);
-        } else {
-            setEnabled(false);
-        }
-    }
 
     /**
      * 

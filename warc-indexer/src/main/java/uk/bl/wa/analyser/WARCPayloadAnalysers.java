@@ -34,8 +34,7 @@ import org.apache.commons.logging.LogFactory;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine;
 import uk.bl.wa.analyser.payload.AbstractPayloadAnalyser;
 import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
 import uk.bl.wa.indexer.HTTPHeader;
@@ -61,15 +60,15 @@ import uk.bl.wa.util.Normalisation;
 public class WARCPayloadAnalysers {
     private static Log log = LogFactory.getLog( WARCPayloadAnalysers.class );
     
-    List<AbstractPayloadAnalyser> providers;
+    private List<AbstractPayloadAnalyser> providers;
 
-    TikaPayloadAnalyser tika = new TikaPayloadAnalyser();
+    private TikaPayloadAnalyser tika;
 
-    public WARCPayloadAnalysers(Config conf) {
+    public WARCPayloadAnalysers(CommandLine cli) {
         // Setup tika:
-        tika.configure(conf);
+        tika = new TikaPayloadAnalyser(cli);
         // And the rest:
-        providers = AbstractPayloadAnalyser.getPayloadAnalysers(conf);
+        providers = AbstractPayloadAnalyser.getPayloadAnalysers(cli);
     }
 
     /**

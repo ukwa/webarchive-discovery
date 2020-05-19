@@ -30,8 +30,7 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine.Option;
 import uk.bl.wa.extract.PostcodeGeomapper;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -43,23 +42,16 @@ import uk.bl.wa.util.Instrument;
  */
 public class PostcodeAnalyser extends AbstractTextAnalyser {
 
+    @Option(names = "--postcodes", negatable = true, defaultValue = "false", description = "Identify postcodes in text. Default: ${DEFAULT-VALUE}")
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     private static final Pattern postcodePattern = Pattern.compile( "[A-Z]{1,2}[0-9R][0-9A-Z]? [0-9][ABD-HJLNP-UW-Z]{2}" );
 
     /** */
     private PostcodeGeomapper pcg = new PostcodeGeomapper();
     
-    /**
-     * @param conf
-     */
-    public void configure(Config conf) {
-        if (conf.getBoolean(
-                        "warc.index.extract.content.text_extract_postcodes")) {
-            setEnabled(true);
-        } else {
-            setEnabled(false);
-        }
-    }
-
     /* (non-Javadoc)
      * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
      */

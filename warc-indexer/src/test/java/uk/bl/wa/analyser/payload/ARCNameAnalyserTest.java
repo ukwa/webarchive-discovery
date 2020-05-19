@@ -1,12 +1,5 @@
 package uk.bl.wa.analyser.payload;
 
-import java.util.Map;
-import java.util.Set;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.archive.io.ArchiveRecordHeader;
-
 /*
  * #%L
  * warc-indexer
@@ -28,18 +21,49 @@ import org.archive.io.ArchiveRecordHeader;
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
  * #L%
  */
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+
+import java.io.File;
+import java.io.FileOutputStream;
+
+import java.io.InputStream;
+import java.util.Map;
+import java.util.Set;
+
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
 
 import junit.framework.TestCase;
+import picocli.CommandLine;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 
-public class WARCPayloadAnalysersTest extends TestCase {
-    private static Log log = LogFactory.getLog(WARCPayloadAnalysersTest.class);
+public class ARCNameAnalyserTest extends TestCase {
+    private static Log log = LogFactory.getLog(ARCNameAnalyserTest.class);
+
+    ARCNameAnalyser ana;
+    SolrRecordFactory srf;
+
+    @Override
+    protected void setUp() throws Exception {
+        // Write config to temp file:
+        InputStream in = Thread.currentThread().getContextClassLoader()
+                .getResourceAsStream("arcnameanalyser.conf");
+        final File tempFile = File.createTempFile("arcnamerules", ".json");
+        tempFile.deleteOnExit();
+        FileOutputStream out = new FileOutputStream(tempFile);
+        IOUtils.copy(in, out);
+
+        // Use it to setup the ARCNameAnalyser:
+        ana = new ARCNameAnalyser();
+        CommandLine cli = new CommandLine(ana);
+        srf = SolrRecordFactory.createFactory(cli);
+        cli.parseArgs("--arcname-rules-file", tempFile.getAbsolutePath(),
+                "--max-len", "harvest_year=4");
+    }
 
     public void testConfig() {
-        ARCNameAnalyser ana = getAnalyser();
         assertEquals("The expected number of rules should be created",
                      12, ana.getRules().size());
         assertEquals("The number of templates for the first rule should be correct",
@@ -47,10 +71,9 @@ public class WARCPayloadAnalysersTest extends TestCase {
     }
 
     public void testSampleRule() {
-        ARCNameAnalyser ana = getAnalyser();
 
         ArchiveRecordHeader header = new FakeHeader("whatever/localrun-job87-20150219-133227.warc");
-        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
+        SolrRecord solr = srf.createRecord();
         ana.analyse("whatever/localrun-job87-20150219-133227.warc", header,
                 null, solr);
         assertEquals("The solr documents should have the right content for field harvest_job",
@@ -60,7 +83,6 @@ public class WARCPayloadAnalysersTest extends TestCase {
     }
 
     public void testSBRules() { // Local rules used at Statsbiblioteket
-        ARCNameAnalyser ana = getAnalyser();
         for (String test[]: new String[][]{
                 {
                         "arc_orig:sb, arc_harvesttime:2008-02-21T00:35:33.000Z, arc_job:25666, arc_harvest:33, "
@@ -111,7 +133,7 @@ public class WARCPayloadAnalysersTest extends TestCase {
                         "/netarkiv/0116/filedir/276809-272-20170622193108196-00004-kb-prod-har-001.kb.dk.warc.gz"
                 }
         }) {
-            SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
+            SolrRecord solr = srf.createRecord();
             ana.analyse("whatever/localrun-job87-20150219-133227.warc",
                     new FakeHeader(test[1]), null, solr);
 
@@ -126,12 +148,6 @@ public class WARCPayloadAnalysersTest extends TestCase {
     }
 
 
-
-    private ARCNameAnalyser getAnalyser() {
-        Config conf = ConfigFactory.parseURL(
-                Thread.currentThread().getContextClassLoader().getResource("arcnameanalyser.conf"));
-        return new ARCNameAnalyser(conf);
-    }
 
     private class FakeHeader implements ArchiveRecordHeader {
         private final String arcPath;

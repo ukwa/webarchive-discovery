@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
+import picocli.CommandLine;
+import picocli.CommandLine.Command;
 
 /*
  * #%L
@@ -33,14 +33,18 @@ import com.typesafe.config.ConfigFactory;
  */
 
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.solr.SolrRecordFactory;
+import uk.bl.wa.solr.SolrWebServer;
+import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
 /**
  * @author anj
  *
  */
+@Command(description = "Extracted text analysis options")
 public abstract class AbstractTextAnalyser {
 
-    private boolean enabled = false;
+    protected boolean enabled = false;
 
     public boolean isEnabled() {
         return enabled;
@@ -49,13 +53,6 @@ public abstract class AbstractTextAnalyser {
     public void setEnabled(boolean enabled) {
         this.enabled = enabled;
     }
-
-    /**
-     * Hook for run-time config.
-     * 
-     * @param conf
-     */
-    public abstract void configure(Config conf);
 
     /**
      * Sub-classes should implement this method to create text payload annotations for solr.
@@ -71,7 +68,7 @@ public abstract class AbstractTextAnalyser {
      * 
      * @return
      */
-    public static List<AbstractTextAnalyser> getTextAnalysers(Config conf) {
+    public static List<AbstractTextAnalyser> getTextAnalysers(CommandLine cli) {
 
         // load our plugins
         ServiceLoader<AbstractTextAnalyser> serviceLoader = ServiceLoader
@@ -80,8 +77,13 @@ public abstract class AbstractTextAnalyser {
         // Get the list:
         List<AbstractTextAnalyser> providers = new ArrayList<AbstractTextAnalyser>();
         for (AbstractTextAnalyser provider : serviceLoader) {
-            // Perform any necessary configuration:
-            provider.configure(conf);
+            /*
+             * Hook for pulling options to add as a run-time mixin. See
+             * https://picocli.info/#_adding_mixins_programmatically
+             */
+            cli.addMixin(provider.getClass().getCanonicalName(), provider);
+
+            // Remember the provider
             providers.add(provider);
         }
 
@@ -96,13 +98,30 @@ public abstract class AbstractTextAnalyser {
     public static void main(String[] ignored) {
 
         // Get the config:
-        Config conf = ConfigFactory.load();
+        SolrOptions opts = new SolrWebServer.SolrOptions();
+        CommandLine cli = new CommandLine(opts);
 
         // create a new provider and call getMessage()
         List<AbstractTextAnalyser> providers = AbstractTextAnalyser
-                .getTextAnalysers(conf);
+                .getTextAnalysers(cli);
         for (AbstractTextAnalyser provider : providers) {
-            System.out.println(provider.getClass().getCanonicalName());
+            System.out.println(provider.getClass().getCanonicalName()
+                    + " Enabled: " + provider.isEnabled());
         }
+
+        SolrRecordFactory.createFactory(cli);
+
+        // And print usage:
+        cli.usage(System.out);
+
+        // Try a setup:
+        cli.parseArgs("-S", "dummy", "--postcodes");
+
+        // And check:
+        for (AbstractTextAnalyser provider : providers) {
+            System.out.println(provider.getClass().getCanonicalName()
+                    + " Enabled: " + provider.isEnabled());
+        }
+
     }
 }

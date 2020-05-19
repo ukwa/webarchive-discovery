@@ -24,14 +24,14 @@ package uk.bl.wa.solr;
  * #L%
  */
 
-import com.typesafe.config.ConfigValue;
+import picocli.CommandLine;
+import picocli.CommandLine.Option;
+
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import com.typesafe.config.Config;
 import org.archive.io.ArchiveRecordHeader;
 
 import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Config supporting factory for {@link SolrRecord}, making it possible to specify limits on Solr fields.
@@ -45,36 +45,38 @@ public class SolrRecordFactory {
 
     public static final int DEFAULT_MAX_LENGTH = -1; // -1 = no limit
 
-    private final int defaultMax;
-    private final HashMap<String, Integer> maxLengths = new HashMap<>(); // Explicit HashMap as it is Serializable
+    @Option(names = "--default-max-len", defaultValue = "-1")
+    private int defaultMax = DEFAULT_MAX_LENGTH;
 
-    public static SolrRecordFactory createFactory(Config config) {
-        return new SolrRecordFactory(config);
+    private HashMap<String, Integer> maxLengths = new HashMap<String, Integer>(); // Explicit
+                                                                                  // HashMap
+                                                                                  // as
+                                                                                  // it
+                                                                                  // is
+                                                                                  // Serializable
+
+    @Option(names = { "-MX", "--max-len" })
+    public void setMaxLength(HashMap<String, Integer> maxLengths) {
+        this.maxLengths = maxLengths;
+        // And enumerate for printing:
+        StringBuilder sb = new StringBuilder();
+        for (String field : maxLengths.keySet()) {
+                if (sb.length() > 0) {
+                    sb.append(", ");
+                }
+                sb.append(field).append("=").append(maxLengths.get(field));
+        }
+        log.info("Created SolrRecordFactory(defaultMaxLength=" + defaultMax
+                + ", maxLengths=[" + sb + "])");
     }
 
-    private SolrRecordFactory(Config config) {
-        defaultMax = config != null && config.hasPath(KEY_DEFAULT_MAX) ?
-                config.getInt(KEY_DEFAULT_MAX) : DEFAULT_MAX_LENGTH;
-        StringBuilder sb = new StringBuilder();
-        if (config != null && config.hasPath(KEY_FIELD_LIST)) {
-            for (Map.Entry<String, ConfigValue> cv : config.getObject(KEY_FIELD_LIST).entrySet()) {
-                String field = cv.getKey();
-                String maxKey = KEY_FIELD_LIST + "." + field + "." + KEY_MAX;
-                if (config.hasPath(maxKey)) {
-                    long max = config.getBytes(KEY_FIELD_LIST + "." + field + "." + KEY_MAX);
-                    if (max > Integer.MAX_VALUE) {
-                        log.error("The limit " + max + " for field " + field + " exceeds Integer.MAX_VALUE");
-                        continue;
-                    }
-                    if (sb.length() > 0) {
-                        sb.append(", ");
-                    }
-                    sb.append(field).append("=").append(max);
-                    maxLengths.put(field, (int) max);
-                }
-            }
-        }
-        log.info("Created SolrRecordFactory(defaultMaxLength=" + defaultMax + ", maxLengths=[" + sb + "])");
+    public static SolrRecordFactory createFactory(CommandLine cli) {
+        return new SolrRecordFactory(cli);
+    }
+
+    private SolrRecordFactory(CommandLine cli) {
+        // Register these options:
+        cli.addMixin("SolrRecordFactory", this);
     }
 
     public SolrRecord createRecord() {

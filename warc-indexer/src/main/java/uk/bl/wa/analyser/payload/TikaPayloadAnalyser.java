@@ -61,6 +61,7 @@ import org.xml.sax.ContentHandler;
 import com.typesafe.config.Config;
 
 import de.l3s.boilerpipe.extractors.ArticleExtractor;
+import picocli.CommandLine;
 import uk.bl.wa.extract.Times;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -114,7 +115,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
 
     /* --- --- --- --- */
     
-    public TikaPayloadAnalyser() {
+    public TikaPayloadAnalyser(CommandLine cli) {
         this.tika = new Tika();
     }
 
@@ -122,7 +123,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
      * 
      * @param conf
      */
-    public void configure(Config conf) {
+    public void configure(CommandLine cli) {
         this.passUriToFormatTools = conf
                 .getBoolean("warc.index.id.useResourceURI");
         

@@ -74,6 +74,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+import picocli.CommandLine;
 import uk.bl.wa.analyser.TextAnalysers;
 import uk.bl.wa.analyser.WARCPayloadAnalysers;
 import uk.bl.wa.annotation.Annotations;
@@ -152,8 +153,9 @@ public class WARCIndexer {
     /**
      * Preferred constructor, allows passing in configuration from execution environment.
      */
-    public WARCIndexer( Config conf ) throws NoSuchAlgorithmException {
+    public WARCIndexer(CommandLine cli) throws NoSuchAlgorithmException {
         log.info("Initialising WARCIndexer...");
+        // Attempt to ensure log4j settings are honoured:
         try {
             Properties props = new Properties();
             props.load(getClass().getResourceAsStream("/log4j-override.properties"));
@@ -171,11 +173,6 @@ public class WARCIndexer {
         addNormalisedURL = conf.hasPath(HtmlFeatureParser.CONF_LINKS_NORMALISE) ?
                 conf.getBoolean(HtmlFeatureParser.CONF_LINKS_NORMALISE) :
                 HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
-        this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
-        if (this.checkSolrForDuplicates == true) {
-            log.warn(
-                    "Checking Solr for duplicates is not implemented at present!");
-        }
         // URLs to exclude:
         this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
         // Protocols to include:
@@ -201,12 +198,6 @@ public class WARCIndexer {
         // Instanciate required helpers:
         md5 = MessageDigest.getInstance( "MD5" );
         
-        // Also hook up to Solr server for queries:
-        if( this.checkSolrForDuplicates ) {
-            log.info("Initialisating connection to Solr...");
-            solrServer = new SolrWebServer(conf);
-        }
-        
         // Set up hash-cache properties:
         this.inMemoryThreshold = conf.getBytes( "warc.index.extract.inMemoryThreshold" );
         this.onDiskThreshold = conf.getBytes( "warc.index.extract.onDiskThreshold" );
@@ -214,8 +205,8 @@ public class WARCIndexer {
         
         // Set up analysers
         log.info("Setting up analysers...");
-        this.wpa = new WARCPayloadAnalysers(conf);
-        this.txa = new TextAnalysers(conf);
+        this.wpa = new WARCPayloadAnalysers(cli);
+        this.txa = new TextAnalysers(cli);
 
 
         // Set up annotator
