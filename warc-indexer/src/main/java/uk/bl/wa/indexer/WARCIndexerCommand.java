@@ -61,10 +61,7 @@ import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 import org.archive.util.SurtPrefixSet;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigValueFactory;
-
+import picocli.CommandLine.Command;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.solr.SolrFields;
@@ -78,6 +75,8 @@ import uk.bl.wa.util.Normalisation;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
+
+@Command(name = "WARCIndexer", description = "Index WARC files for Solr.")
 public class WARCIndexerCommand {
     
     private static Log log = LogFactory.getLog(WARCIndexerCommand.class);

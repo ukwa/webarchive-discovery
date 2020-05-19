@@ -31,8 +31,7 @@ import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine.Option;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
@@ -44,26 +43,23 @@ import uk.bl.wa.util.Instrument;
 public class LanguageAnalyser extends AbstractTextAnalyser {
     private Log log = LogFactory.getLog(LanguageAnalyser.class);
     
-    /** */
-    private LanguageDetector ld;
-
-    /**
-     * @param conf
-     */
-    public void configure(Config conf) {
-        setEnabled(!conf.hasPath("warc.index.extract.content.language.enabled")
-                || conf.getBoolean(
-                        "warc.index.extract.content.language.enabled"));
-        ld = new OptimaizeLangDetector().loadModels();
-        log.info(
-                "Constructed language analyzer with enabled = " + isEnabled());
+    @Option(names = "--no-langdetect", negatable = true, defaultValue = "true", description = "Run language detection on text. Default: ${DEFAULT-VALUE}")
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
+
+    /** */
+    private LanguageDetector ld = null;
 
     /* (non-Javadoc)
      * @see uk.bl.wa.analyser.text.TextAnalyser#analyse(java.lang.String, uk.bl.wa.util.solr.SolrRecord)
      */
     @Override
     public void analyse(String text, SolrRecord solr) {
+        if (ld == null) {
+            ld = new OptimaizeLangDetector().loadModels();
+            log.info("Created language analyzer with enabled = " + isEnabled());
+        }
         final long start = System.nanoTime();
         try {
             LanguageResult li = ld.detect(text);

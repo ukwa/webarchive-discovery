@@ -35,8 +35,7 @@ import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.UsableURI;
 import org.archive.url.UsableURIFactory;
 
-import com.typesafe.config.Config;
-
+import picocli.CommandLine.Option;
 import uk.bl.wa.nanite.droid.DroidDetector;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
@@ -53,9 +52,20 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
 
     /** */
     private DroidDetector dd = null;
+
+    @Option(names = "--no-droid", negatable = true, defaultValue = "true")
     private boolean runDroid = true;
-    private boolean droidUseBinarySignaturesOnly = false;
+
+    @Option(names = "--no-droid-ext-hint", negatable = true, defaultValue = "false")
     private boolean passUriToFormatTools = false;
+
+    private boolean droidUseBinarySignaturesOnly = false;
+
+    @Option(names = "--droid-binsig-only", defaultValue = "false")
+    public void setDroidUseBinarySignaturesOnly(boolean binSigOnly) {
+        this.droidUseBinarySignaturesOnly = binSigOnly;
+        dd.setBinarySignaturesOnly(droidUseBinarySignaturesOnly);
+    }
 
     public DroidDetectorAnalyser() {
         // Attempt to set up Droid:
@@ -67,16 +77,6 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
         }
         Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid",
                 Instrument.SORT.avgtime, 5);
-    }
-
-    public void configure(Config conf) {
-        this.runDroid = conf.getBoolean("warc.index.id.droid.enabled");
-        this.passUriToFormatTools = conf
-                .getBoolean("warc.index.id.useResourceURI");
-        this.droidUseBinarySignaturesOnly = conf
-                .getBoolean("warc.index.id.droid.useBinarySignaturesOnly");
-        // Configure DORID:
-        dd.setBinarySignaturesOnly(droidUseBinarySignaturesOnly);
     }
 
     @Override
@@ -94,6 +94,7 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
     @Override
     public void analyse(String source, ArchiveRecordHeader header, InputStream tikainput,
             SolrRecord solr) {
+
         // Also run DROID (restricted range):
         if (dd != null && runDroid == true) {
             final long droidStart = System.nanoTime();

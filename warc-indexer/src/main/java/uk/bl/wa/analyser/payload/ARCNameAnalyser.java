@@ -1,16 +1,5 @@
 package uk.bl.wa.analyser.payload;
 
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
-import org.archive.io.ArchiveRecordHeader;
-
 /*
  * #%L
  * warc-indexer
@@ -33,9 +22,27 @@ import org.archive.io.ArchiveRecordHeader;
  * #L%
  */
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigValue;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.archive.io.ArchiveRecordHeader;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import picocli.CommandLine.Option;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 
@@ -54,17 +61,14 @@ import uk.bl.wa.util.Instrument;
 public class ARCNameAnalyser extends AbstractPayloadAnalyser {
     private static Log log = LogFactory.getLog( ARCNameAnalyser.class );
 
-    private final List<Rule> rules = new ArrayList<Rule>();
+    private List<Rule> rules = new ArrayList<Rule>();
 
     public ARCNameAnalyser() {
     }
 
-    public ARCNameAnalyser(Config conf) {
-        configure(conf);
-    }
-
+    // @formatter:off
     /*
-    "arcname" : {
+    {
         # Order is significant. Processing stops after first match
         "rules" : [
             { "pattern" :"([0-9]+)-([0-9]+)-([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]+)-(sb-prod-har)-([0-9]{1,3}).(statsbiblioteket.dk.warc|statsbiblioteket.dk.arc|arc)",
@@ -75,31 +79,47 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
             }
         ]
     }
+    */
+    // @formatter:on
 
+    /**
+     * Set a JSON file that the rules should be read from, formatted as above.
+     * 
+     * @param rulesFile
      */
-    public void configure(Config conf) {
-        if (!conf.hasPath("warc.index.extract.content.arcname.rules")) {
-            log.debug("No rules for ARCNameAnalyzer; no processing of ARC names");
-            return;
+    @Option(names = "--arcname-rules-file", description = "File containing ARC/WARC filename-to-field mapping rules.")
+    public void setARCNameRules(File rulesFile) {
+        try {
+            RuleSet rs = fromJson(FileUtils.readFileToString(rulesFile));
+            this.rules = rs.rules;
+            log.info("Added " + rules.size() + " ARCName rules");
+        } catch (JsonParseException e) {
+            log.error("Error reading ARCName rules file!", e);
+        } catch (JsonMappingException e) {
+            log.error("Error reading ARCName rules file!", e);
+        } catch (IOException e) {
+            log.error("Error reading ARCName rules file!", e);
         }
-        for (Config ruleConf: conf.getConfigList("warc.index.extract.content.arcname.rules")) {
-            /*
-            { "pattern" :"([0-9]+)-([0-9]+)-([0-9]{4})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})([0-9]{2})-([0-9]+)-(sb-prod-har)-([0-9]{1,3}).(statsbiblioteket.dk.warc|statsbiblioteket.dk.arc|arc)",
-               templates : {
-                   "arc_type" : "sb",
-                   "arc_harvesttime" : "$3-$4-$5T$6:$7:$8.000Z"
-               }
-            }
-            */
-            Pattern pattern = Pattern.compile(ruleConf.getString("pattern"));
-            List<FieldTemplate> fieldTemplates = new ArrayList<FieldTemplate>();
-            for (Map.Entry<String, ConfigValue> entry: ruleConf.getConfig("templates").entrySet()) {
-                // "arc_type" : "sb",
-                fieldTemplates.add(new FieldTemplate(entry.getKey(), entry.getValue().unwrapped().toString()));
-            }
-            rules.add(new Rule(pattern, fieldTemplates));
+    }
+
+    public static RuleSet fromJson(
+            String json)
+            throws JsonParseException, JsonMappingException, IOException {
+        ObjectMapper mapper = getObjectMapper();
+        try {
+            return mapper.readValue(json, RuleSet.class);
+        } catch (JsonParseException e) {
+            log.error("JsonParseException: " + e, e);
+            log.error("When parsing: " + json);
+            throw e;
         }
-        log.info("Added " + rules.size() + " ARCName rules");
+    }
+
+    private static ObjectMapper getObjectMapper() {
+        ObjectMapper mapper = new ObjectMapper();
+        // Allow comment lines that start with a # symbol:
+        mapper.configure(JsonParser.Feature.ALLOW_YAML_COMMENTS, true);
+        return mapper;
     }
 
     @Override
@@ -133,13 +153,20 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
         return rules;
     }
 
-    public static class Rule {
-        public final Pattern pattern;
-        public final List<FieldTemplate> templates;
+    public static class RuleSet {
+        @JsonProperty
+        public List<Rule> rules;
+    }
 
-        public Rule(Pattern pattern, List<FieldTemplate> templates) {
-            this.pattern = pattern;
-            this.templates = templates;
+    public static class Rule {
+        @JsonProperty
+        public Map<String, String> templates;
+
+        @JsonProperty
+        public String pattern;
+
+        private Pattern getCompiledPattern() {
+            return Pattern.compile(pattern);
         }
 
         /**
@@ -149,36 +176,25 @@ public class ARCNameAnalyser extends AbstractPayloadAnalyser {
          * @return true if the rule was applies, else false.
          */
         public boolean apply(String name, SolrRecord solr) {
-            Matcher matcher = pattern.matcher(name);
+            Matcher matcher = getCompiledPattern().matcher(name);
             if (!matcher.matches()) {
                 return false;
             }
             // Got a match. Apply all templates
-            for (FieldTemplate ft: templates) {
+            for (String field : templates.keySet()) {
                 try {
-                    solr.addField(ft.field, matcher.replaceAll(ft.template));
+                    solr.addField(field,
+                            matcher.replaceAll(templates.get(field)));
                 } catch (Exception e) {
                     log.warn(String.format(
                             "Unable to apply replaceAll to '%s' with matching pattern '%s' and template '%s:%s': %s",
-                            name, pattern.pattern(), ft.field, ft.template, e.getMessage()));
+                            name, pattern, field,
+                            templates.get(field),
+                            e.getMessage()), e);
                 }
             }
             return true;
         }
     }
-    public static class FieldTemplate {
-        public final String field;
-        public final String template;
 
-        public FieldTemplate(String field, String template) {
-            this.field = field;
-            this.template = template;
-            if (field == null || field.isEmpty()) {
-                throw new IllegalArgumentException("Field must not be empty");
-            }
-            if (template == null || template.isEmpty()) {
-                throw new IllegalArgumentException("Template must not be empty");
-            }
-        }
-    }
 }

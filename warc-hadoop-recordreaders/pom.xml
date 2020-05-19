@@ -66,11 +66,6 @@
          <version>2.13.1</version>
       </dependency>
       <dependency>
-         <groupId>com.typesafe</groupId>
-         <artifactId>config</artifactId>
-         <version>1.0.2</version>
-      </dependency>
-      <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
          <version>${slf4j.version.override}</version>
@@ -80,6 +75,10 @@
          <artifactId>slf4j-simple</artifactId>
          <version>${slf4j.version.override}</version>
          <scope>test</scope>
+      </dependency>
+      <dependency>
+         <groupId>info.picocli</groupId>
+         <artifactId>picocli</artifactId>
       </dependency>
       <dependency>
          <groupId>org.apache.solr</groupId>

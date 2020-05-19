@@ -40,8 +40,6 @@ import org.apache.solr.client.solrj.response.QueryResponse;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.typesafe.config.Config;
-
 import picocli.CommandLine;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
@@ -55,7 +53,7 @@ import picocli.CommandLine.Option;
 public class SolrWebServer {
     private static Log log = LogFactory.getLog(SolrWebServer.class);
 
-    @Command(name = "solr-options", description = "Setting up the Solr connection.")
+    @Command(name = "solr-options", description = "Setting up the Solr connection.", separator = " ")
     public
     static class SolrOptions {
         // Must specify either one or more Solr endpoints, or Zookeeper hosts
@@ -125,48 +123,6 @@ public class SolrWebServer {
 
         if (solrServer == null) {
             throw new RuntimeException("Cannot connect to Solr Server!");
-        }
-    }
-
-    public static final String CONF_ZOOKEEPERS = "warc.solr.zookeepers";
-
-    public static final String CONF_HTTP_SERVERS = "warc.solr.servers";
-
-    public static final String CONF_HTTP_SERVER = "warc.solr.server";
-
-    public static final String COLLECTION = "warc.solr.collection";
-
-    public SolrWebServer(Config conf) {
-
-        try {
-            if( conf.hasPath(CONF_HTTP_SERVER)) {
-                log.info("Setting up HttpSolrServer client from a url: "+conf.getString(CONF_HTTP_SERVER));
-                solrServer = new HttpSolrClient(
-                        conf.getString(CONF_HTTP_SERVER));
-                
-            } else if (conf.hasPath(CONF_ZOOKEEPERS)) {
-                log.info("Setting up CloudSolrServer client via zookeepers.");
-                solrServer = new CloudSolrClient(
-                        conf.getString(CONF_ZOOKEEPERS));
-                ((CloudSolrClient) solrServer)
-                        .setDefaultCollection(conf
-                        .getString(COLLECTION));
-                
-            } else if (conf.hasPath(CONF_HTTP_SERVERS)) {
-                log.info("Setting up LBHttpSolrServer client from servers list.");
-                solrServer = new LBHttpSolrClient(
-                        conf.getString(
-                        CONF_HTTP_SERVERS).split(","));
-                
-            } else {
-                log.error("No valid SOLR config found.");
-            }
-        } catch (MalformedURLException e) {
-            log.error("WARCIndexerReducer.configure(): " + e.getMessage());
-        }
-
-        if (solrServer == null) {
-            System.out.println("Cannot connect to Solr Server!");
         }
     }
 

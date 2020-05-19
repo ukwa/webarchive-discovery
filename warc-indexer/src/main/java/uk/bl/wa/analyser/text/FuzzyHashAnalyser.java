@@ -29,10 +29,9 @@ import java.io.UnsupportedEncodingException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import com.typesafe.config.Config;
-
 import eu.scape_project.bitwiser.utils.FuzzyHash;
 import eu.scape_project.bitwiser.utils.SSDeep;
+import picocli.CommandLine.Option;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
@@ -43,16 +42,9 @@ import uk.bl.wa.util.Instrument;
  */
 public class FuzzyHashAnalyser extends AbstractTextAnalyser {
 
-    /**
-     * @param conf
-     */
-    public void configure(Config conf) {
-        if (!conf.hasPath("warc.index.extract.content.text_fuzzy_hash") || conf
-                .getBoolean("warc.index.extract.content.text_fuzzy_hash")) {
-            setEnabled(true);
-        } else {
-            setEnabled(false);
-        }
+    @Option(names = "--fuzzyhash", negatable = true, defaultValue = "false", description = "Calculate fuzzy hash of text. Default: ${DEFAULT-VALUE}")
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
     }
 
     /* (non-Javadoc)

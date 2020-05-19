@@ -56,11 +56,6 @@
    </build>
    <dependencies>
       <dependency>
-         <groupId>com.typesafe</groupId>
-         <artifactId>config</artifactId>
-         <version>1.0.2</version>
-      </dependency>
-      <dependency>
          <groupId>org.apache.tika</groupId>
          <artifactId>tika-core</artifactId>
          <version>${tika.version}</version>
@@ -272,11 +267,6 @@
                <artifactId>spring-beans</artifactId>
             </exclusion>
          </exclusions>
-      </dependency>
-      <dependency>
-         <groupId>info.picocli</groupId>
-         <artifactId>picocli</artifactId>
-         <version>4.3.2</version>
       </dependency>
    </dependencies>
 </project>
