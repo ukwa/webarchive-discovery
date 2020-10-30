@@ -71,6 +71,7 @@ public class InputStreamUtils {
                 warcHeader.getHeaderValue(HEADER_KEY_TYPE).equals(WARCConstants.WARCRecordType.response.toString());
         String compressionHint = httpHeader == null ? null : httpHeader.getHeader("Content-Encoding", null);
         String chunkHint = httpHeader == null ? null : httpHeader.getHeader("Transfer-Encoding", null);
+        log.info("length=" + length + ", hint=" + compressionHint + ", date=" + (warcHeader != null ? warcHeader.getDate() : "n/a"));
         return cacheDecompressDechunkHash(input, length, url, expectedHash, checkHash,
                                           compressionHint, chunkHint, inMemoryThreshold, onDiskThreshold);
     }
