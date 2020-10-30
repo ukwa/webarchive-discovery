@@ -226,7 +226,7 @@ public class InputStreamUtils {
                 buf.reset();
                 return buf;
             }
-            if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f')) {
+            if (('0' <= c && c <= '9') || ('a' <= c && c <= 'f') || ('A' <= c && c <= 'F')) {
                 pos++;
                 continue;
             }
