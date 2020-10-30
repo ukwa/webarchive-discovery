@@ -42,6 +42,10 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 public class InputStreamUtils {
     private static Log log = LogFactory.getLog(InputStreamUtils.class );
 
+    /**
+     * If true, {@link #maybeDechunk} also accepts LF as terminator for hex strings, instead of only CRLF.
+     */
+    public static final boolean LENIENT_DECHUNK = true;
 
     /**
      * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
@@ -71,7 +75,6 @@ public class InputStreamUtils {
                 warcHeader.getHeaderValue(HEADER_KEY_TYPE).equals(WARCConstants.WARCRecordType.response.toString());
         String compressionHint = httpHeader == null ? null : httpHeader.getHeader("Content-Encoding", null);
         String chunkHint = httpHeader == null ? null : httpHeader.getHeader("Transfer-Encoding", null);
-        log.info("length=" + length + ", hint=" + compressionHint + ", date=" + (warcHeader != null ? warcHeader.getDate() : "n/a"));
         return cacheDecompressDechunkHash(input, length, url, expectedHash, checkHash,
                                           compressionHint, chunkHint, inMemoryThreshold, onDiskThreshold);
     }
@@ -104,10 +107,11 @@ public class InputStreamUtils {
             InputStream input, long length, String url, String expectedHash, boolean checkHash,
             String compressionHint, String chunkHint, long inMemoryThreshold, long onDiskThreshold)
             throws IOException {
+        String shortURL = url != null && url.length() > 200 ? url.substring(0, 200) + "..." : url;
         HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, input, length);
         InputStream stream = CachedInputStreamFactory.cacheContent(
                 // Don't try to de-chunk or de-compress if length is 0
-                length == 0 ? hash : maybeDecompress(maybeDechunk(hash, chunkHint), compressionHint),
+                length == 0 ? hash : maybeDecompress(maybeDechunk(hash, chunkHint, shortURL), compressionHint),
                 length, false, true, inMemoryThreshold, onDiskThreshold);
         return new HashIS(stream, hash);
     }
@@ -161,7 +165,21 @@ public class InputStreamUtils {
      * @throws IOException if the stream could not be processed.
      */
     public static InputStream maybeDechunk(InputStream input, String chunkHint) throws IOException {
-        return "chunked".equalsIgnoreCase(chunkHint) ? maybeDechunk(input) : input;
+        return maybeDechunk(input, chunkHint, "n/a");
+    }
+
+    /**
+     * If chunkHint is {@code "chunked"}, this will redurect to {@link #maybeDechunk(InputStream)}, else input
+     * will be returned unmodified.
+     * @param input a stream with the response body from a HTTP-response.
+     * @param chunkHint       {@code chunked} or null.
+     *                        Normally taken from the HTTP-header {@code Transfer-Encoding}.
+     * @param id the designation/name/id of the content. Only used for logging
+     * @return the un-chunked content of the given stream.
+     * @throws IOException if the stream could not be processed.
+     */
+    public static InputStream maybeDechunk(InputStream input, String chunkHint, String id) throws IOException {
+        return "chunked".equalsIgnoreCase(chunkHint) ? maybeDechunkNamed(input, id) : input;
     }
 
     /**
@@ -175,6 +193,20 @@ public class InputStreamUtils {
      * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding">Transfer-Encoding</a>
      */
     public static InputStream maybeDechunk(InputStream input) throws IOException {
+        return maybeDechunkNamed(input, "n/a");
+    }
+    /**
+     * Checks if an input stream seems to be chunked. If so, the stream content is de-chunked.
+     * If not, the stream content is returned unmodified.
+     * Chunked streams must begin with {@code ^[0-9a-z]{1,8}(;.{0,1024})?\r\n}.
+     * Note: Closing the returned stream will automatically close input.
+     * @param input a stream with the response body from a HTTP-response.
+     * @param id the designation/name/id of the content. Only used for logging
+     * @return the un-chunked content of the given stream.
+     * @throws IOException if the stream could not be processed.
+     * @see <a href="https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Transfer-Encoding">Transfer-Encoding</a>
+     */
+    public static InputStream maybeDechunkNamed(InputStream input, String id) throws IOException {
         final BufferedInputStream buf = new BufferedInputStream(input) {
             @Override
             public void close() throws IOException {
@@ -186,11 +218,11 @@ public class InputStreamUtils {
         int pos = 0;
         int c = -1;
         // Check for hex-number
-        while (pos < 8) {
+        while (pos <= 8) { // Max 8 digits + the character after
             c = buf.read();
             if (c== -1) { // EOF
                 log.debug("maybeDechunk reached EOF while looking for hex digits at pos " + pos + ": " +
-                          "Not a chunked stream, returning content as-is");
+                          "Not a chunked stream, returning content as-is for " + id);
                 buf.reset();
                 return buf;
             }
@@ -200,15 +232,15 @@ public class InputStreamUtils {
             }
             break;
         }
-        if (pos == 0 || pos == 8) {
-            log.debug("maybeDechunk found " + pos + " hex digits: Not a chunked stream, returning content as-is");
+        if (pos == 0 || pos > 8) {
+            log.debug("maybeDechunk found " + pos + " hex digits: Not a chunked stream, returning content as-is for " + id);
             buf.reset();
             return buf;
         }
         // Check for \r\n or extension
         if (c == -1) { // EOF
             log.debug("maybeDechunk reached EOF while looking for extension or \\r\\n at pos " + pos + ": " +
-                      "Not a chunked stream, returning content as-is");
+                      "Not a chunked stream, returning content as-is for " + id);
             buf.reset();
             return buf;
         }
@@ -229,21 +261,14 @@ public class InputStreamUtils {
                 }
             }
             if (pos == 1024 || c == -1) {
-                log.debug("maybeDechunk found hex digits and start of an extension but could not locate CRLF: " +
-                          "Not a chunked stream, returning content as-is");
+                log.info("maybeDechunk found hex digits and start of an extension but could not locate CRLF: " +
+                          "Not a chunked stream, returning content as-is for " + id);
                 buf.reset();
                 return buf;
             }
             log.debug("maybeDechunk found hex digits and an extension: Probably chunked stream, returning content " +
-                      "wrapped in a de-chunker");
-            buf.reset();
-            return new ChunkedInputStream(buf) {
-                @Override
-                public void close() throws IOException {
-                    super.close();
-                    buf.close();
-                }
-            };
+                      "wrapped in a de-chunker for " + id);
+            return dechunk(buf);
         }
         // Not with extension. Next chars must be CRLF
         if (c == '\r') { // CR
@@ -251,20 +276,38 @@ public class InputStreamUtils {
             if (c == '\n') { // LF
                 log.debug("maybeDechunk found hex digits CRLF: Probably chunked stream, returning content " +
                           "wrapped in a de-chunker");
-                buf.reset();
-                return new ChunkedInputStream(buf) {
-                    @Override
-                    public void close() throws IOException {
-                        super.close();
-                        buf.close();
-                    }
-                };
+                return dechunk(buf);
             }
+            log.info("maybeDechunk found hex digits followed by CR (0x" + Integer.toHexString('\r') +
+                     ") and but the charactor following that was 0x" + Integer.toHexString(c) +
+                     " and not LF (" + Integer.toHexString('\n') + ") for " + id);
+        } else if (c == '\n') {
+            if (LENIENT_DECHUNK) {
+                log.debug("maybeDechunk found hex digits followed by LF (0x" + Integer.toHexString('\n') +
+                         ") but expected CRLF. This is likely chunking delivered by a non-standard compliant server." +
+                         " The de-chunker is lenient and accepts this for " + id);
+                return dechunk(buf);
+            }
+            log.info("maybeDechunk found hex digits followed by LF (0x" + Integer.toHexString('\n') +
+                     ") but expected CRLF. This is likely chunking delivered by a non-standard compliant server." +
+                     " The de-chunker is not lenient and will return the stream as-is for " + id);
+        } else {
+            log.info("maybeDechunk found hex digits but could not locate CRLF. Instead it found 0x" +
+                     Integer.toHexString(c) + ": Not a chunked stream, returning content as-is for " + id);
         }
-        log.debug("maybeDechunk found hex digits but could not locate CRLF: " +
-                  "Not a chunked stream, returning content as-is");
         buf.reset();
         return buf;
+    }
+
+    private static ChunkedInputStream dechunk(InputStream in) throws IOException {
+        in.reset();
+        return new ChunkedInputStream(in) {
+            @Override
+            public void close() throws IOException {
+                super.close();
+                in.close();
+            }
+        };
     }
 
     /*
