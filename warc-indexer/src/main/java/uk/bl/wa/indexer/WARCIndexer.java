@@ -122,6 +122,7 @@ public class WARCIndexer {
     /** Payload Analysers */
     private long inMemoryThreshold;
     private long onDiskThreshold;
+    private final InputStreamUtils.HASH_STAGE hashStage;
     private WARCPayloadAnalysers wpa;
     
     /** Text Analysers */
@@ -201,7 +202,11 @@ public class WARCIndexer {
         // Set up hash-cache properties:
         this.inMemoryThreshold = conf.getBytes( "warc.index.extract.inMemoryThreshold" );
         this.onDiskThreshold = conf.getBytes( "warc.index.extract.onDiskThreshold" );
-        log.info("Hashing & Caching thresholds are: < "+this.inMemoryThreshold+" in memory, < "+this.onDiskThreshold+" on disk.");
+        this.hashStage = conf.hasPath("warc.index.extract.hashStage") ?
+                InputStreamUtils.HASH_STAGE.valueOf(conf.getString("warc.index.extract.hashStage")) :
+                InputStreamUtils.DEFAULT_HASH_STAGE;
+        log.info("Hashing & Caching thresholds are: < "+this.inMemoryThreshold+" in memory, < "+
+                 this.onDiskThreshold+" on disk. HashStage = " + this.hashStage);
         
         // Set up analysers
         log.info("Setting up analysers...");
@@ -371,7 +376,7 @@ public class WARCIndexer {
             final long hashStreamStart = System.nanoTime();
             final InputStreamUtils.HashIS hashIS = InputStreamUtils.cacheDecompressDechunkHash(
                     record, content_length, targetUrl, header, httpHeader,
-                    this.inMemoryThreshold, this.onDiskThreshold);
+                    this.inMemoryThreshold, this.onDiskThreshold, this.hashStage);
 
             // If the hash didn't match, record it:
             if (!hashIS.getHashStream().isHashMatched()) {

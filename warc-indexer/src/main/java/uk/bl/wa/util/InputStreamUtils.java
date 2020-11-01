@@ -25,12 +25,12 @@ package uk.bl.wa.util;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.archive.format.warc.WARCConstants;
-import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.ArchiveUtils;
 import org.apache.commons.httpclient.ChunkedInputStream;
@@ -48,10 +48,38 @@ public class InputStreamUtils {
     public static final boolean LENIENT_DECHUNK = true;
 
     /**
+     * If no explicit hashStage is stated, this will be used.
+     */
+    public static final HASH_STAGE DEFAULT_HASH_STAGE = HASH_STAGE.first;
+
+    /**
+     * The WARC standard at https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/#warc-payload-digest
+     * does not mention chunking and compression explicitly, but it does state that the {@code WARC-Payload-Digest}
+     * operates on the "logical record". Chunking is a transfer detail and compression is an encoding detail, both of
+     * which can be see and independent of the logical record.
+     *
+     * The HASH_STAGE represents the three possible places in the processing stream to perform the hashing.
+     */
+    public enum HASH_STAGE {
+        /**
+         * The hashing will be calculated over the WARC-payload bytes as-is.
+         */
+        first,
+        /**
+         * The hashing will be calculated after dechunking, but before decompression.
+         */
+        after_dechunk_before_decompression,
+        /**
+         * The hashing will be calculated after dechunking and after decompression.
+         */
+        after_dechunk_after_decompression}
+
+    /**
      * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
      * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
      * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
-     * Dechunking is performed before decompression.
+     * Dechunking is performed before decompression. Hashing is done first (before dechunking and decompression)
+     * as per {@link #DEFAULT_HASH_STAGE}.
      * @param input any InputStream.
      * @param length the number of bytes to read from input.
      * @param url the URL for the content. Used for log messages.
@@ -66,17 +94,42 @@ public class InputStreamUtils {
     public static HashIS cacheDecompressDechunkHash(
             InputStream input, long length, String url, ArchiveRecordHeader warcHeader,
             HTTPHeader httpHeader, long inMemoryThreshold, long onDiskThreshold) throws IOException {
+        return cacheDecompressDechunkHash(
+                input, length, url, warcHeader, httpHeader, inMemoryThreshold, onDiskThreshold, DEFAULT_HASH_STAGE);
+    }
+
+    /**
+     * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
+     * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
+     * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
+     * Dechunking is performed before decompression.
+     * @param input any InputStream.
+     * @param length the number of bytes to read from input.
+     * @param url the URL for the content. Used for log messages.
+     * @param warcHeader will be used to derive expected hash.
+     * @param httpHeader will be used to extract hints for compression and chunking.
+     * @param inMemoryThreshold if length is below this threshold, memory caching will be used, else disk caching will
+     *                          be used.
+     * @param onDiskThreshold if disk caching is used and length is above onDiskThresHold, only onDiskThreshold will be
+     *                        stored on disk, while the remainder will be discarded (it will still be read).
+     * @param hashSTage where in the delivery chain hashing is performed.
+     * @return a simple structure containing the hash information and the cached decompressed dechunked content.
+     */
+    public static HashIS cacheDecompressDechunkHash(
+            InputStream input, long length, String url, ArchiveRecordHeader warcHeader,
+            HTTPHeader httpHeader, long inMemoryThreshold, long onDiskThreshold, HASH_STAGE hashSTage)
+            throws IOException {
         String expectedHash =
                 (warcHeader == null || !warcHeader.getHeaderFieldKeys().contains(HEADER_KEY_PAYLOAD_DIGEST))?
                         null :
-                        (String) warcHeader.getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST);
+                        Normalisation.sha1HashAsBase32((String) warcHeader.getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST));
         boolean checkHash =
                 warcHeader != null && warcHeader.getHeaderFieldKeys().contains(HEADER_KEY_TYPE) &&
                 warcHeader.getHeaderValue(HEADER_KEY_TYPE).equals(WARCConstants.WARCRecordType.response.toString());
         String compressionHint = httpHeader == null ? null : httpHeader.getHeader("Content-Encoding", null);
         String chunkHint = httpHeader == null ? null : httpHeader.getHeader("Transfer-Encoding", null);
         return cacheDecompressDechunkHash(input, length, url, expectedHash, checkHash,
-                                          compressionHint, chunkHint, inMemoryThreshold, onDiskThreshold);
+                                          compressionHint, chunkHint, inMemoryThreshold, onDiskThreshold, hashSTage);
     }
 
     /**
@@ -101,19 +154,43 @@ public class InputStreamUtils {
      *                          be used.
      * @param onDiskThreshold if disk caching is used and length is above onDiskThresHold, only onDiskThreshold will be
      *                        stored on disk, while the remainder will be discarded (it will still be read).
+     * @param hashSTage where in the delivery chain hashing is performed.
      * @return a simple structure containing the hash information and the cached decompressed dechunked content.
      */
     public static HashIS cacheDecompressDechunkHash(
             InputStream input, long length, String url, String expectedHash, boolean checkHash,
-            String compressionHint, String chunkHint, long inMemoryThreshold, long onDiskThreshold)
+            String compressionHint, String chunkHint, long inMemoryThreshold, long onDiskThreshold, HASH_STAGE hashSTage)
             throws IOException {
         String shortURL = url != null && url.length() > 200 ? url.substring(0, 200) + "..." : url;
-        HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, input, length);
-        InputStream stream = CachedInputStreamFactory.cacheContent(
-                // Don't try to de-chunk or de-compress if length is 0
-                length == 0 ? hash : maybeDecompress(maybeDechunk(hash, chunkHint, shortURL), compressionHint),
-                length, false, true, inMemoryThreshold, onDiskThreshold);
-        return new HashIS(stream, hash);
+        switch (hashSTage) {
+            case first: {
+                HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, input, length);
+                InputStream stream = CachedInputStreamFactory.cacheContent(
+                        // Don't try to de-chunk or de-compress if length is 0
+                        length == 0 ? hash : maybeDecompress(maybeDechunk(hash, chunkHint, shortURL), compressionHint),
+                        length, false, true, inMemoryThreshold, onDiskThreshold);
+                return new HashIS(stream, hash);
+            }
+            case after_dechunk_before_decompression: {
+                InputStream dechunked = length == 0 ? input : maybeDechunk(input, chunkHint, shortURL);
+                HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, dechunked, length);
+                InputStream stream = CachedInputStreamFactory.cacheContent(
+                        // Don't try to de-chunk or de-compress if length is 0
+                        length == 0 ? hash : maybeDecompress(hash, compressionHint),
+                        length, false, true, inMemoryThreshold, onDiskThreshold);
+                return new HashIS(stream, hash);
+            }
+            case after_dechunk_after_decompression: {
+                InputStream deall = length == 0 ? input :
+                        maybeDecompress(maybeDechunk(input, chunkHint, shortURL), compressionHint);
+                HashedInputStream hash = new HashedInputStream(url, expectedHash, checkHash, deall, length);
+                InputStream stream = CachedInputStreamFactory.cacheContent(
+                        deall, length, false, true, inMemoryThreshold, onDiskThreshold);
+                return new HashIS(stream, hash);
+            }
+            default: throw new IllegalArgumentException(
+                    "Unknown HASH_STAGE '" + hashSTage + "'. Valid values are " + Arrays.toString(HASH_STAGE.values()));
+        }
     }
 
     /**
