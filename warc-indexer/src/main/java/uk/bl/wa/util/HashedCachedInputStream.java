@@ -123,7 +123,7 @@ public class HashedCachedInputStream {
         
         try {
             if( header.getHeaderFieldKeys().contains( HEADER_KEY_PAYLOAD_DIGEST ) ) {
-                headerHash = ( String ) header.getHeaderValue( HEADER_KEY_PAYLOAD_DIGEST );
+                headerHash = Normalisation.sha1HashAsBase32((String) header.getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST));
             }
             
             // Create a suitable outputstream for caching the content:

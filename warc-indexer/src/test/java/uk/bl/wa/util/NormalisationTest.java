@@ -236,4 +236,11 @@ public class NormalisationTest {
                          test[1], Normalisation.canonicaliseHost(test[0]));
         }
     }
+
+    @Test
+    public void testBase16ToBytes() {
+        final String B16 = "sha1:5a3311bde611032119d6080eebf83a4a3b3475ed";
+        final String B32 = "sha1:LIZRDPPGCEBSCGOWBAHOX6B2JI5TI5PN";
+        assertEquals(B32, Normalisation.sha1HashAsBase32(B16));
+    }
 }

@@ -77,7 +77,7 @@ public class HashedInputStream extends DigestInputStream {
     public HashedInputStream(ArchiveRecordHeader header, InputStream in, long length ) {
         this(header.getUrl(),
              header.getHeaderFieldKeys().contains(HEADER_KEY_PAYLOAD_DIGEST) ?
-                     (String) header.getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST) :
+                     Normalisation.sha1HashAsBase32((String) header.getHeaderValue(HEADER_KEY_PAYLOAD_DIGEST)) :
                      null,
              header.getHeaderFieldKeys().contains(HEADER_KEY_TYPE) &&
              header.getHeaderValue(HEADER_KEY_TYPE).equals(WARCConstants.WARCRecordType.response.toString()),
@@ -159,14 +159,16 @@ public class HashedInputStream extends DigestInputStream {
             return;
         }
 
+        // We always perform a hash compare to make isHashMatched return the result, but we only complain
+        // about problems if checkHash == true
+        hashMatched = headerHash.equals(hash);
+
         if(checkHash) {
-            if(!headerHash.equals(hash)) {
+            if(!hashMatched) {
                 log.warn(String.format(
                         "Hashes are not equal for '%s'. WARC-header: %s, content: %s", url, headerHash, hash));
-                this.hashMatched = false;
             } else {
                 log.debug("Hashes were found to match for '" + url + "'");
-                this.hashMatched = true;
             }
         } else {
             // For revisit records, use the hash of the revisited payload:
@@ -187,13 +189,13 @@ public class HashedInputStream extends DigestInputStream {
     }
 
     /**
-     * @return true if the header hash matches the calculated hash.
+     * @return true if the header hash matches the calculated hash or checkHash == false.
      */
     public boolean isHashMatched() {
         if (!isClosed) {
             throw new IllegalStateException("Stream must be closed before calling isHashMatched()");
         }
-        return hashMatched;
+        return hashMatched || !checkHash;
     }
 
     /**

@@ -26,12 +26,10 @@ import org.apache.commons.httpclient.URIException;
 import org.apache.commons.logging.LogFactory;
 import org.apache.commons.logging.Log;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
-
-import uk.bl.wa.analyser.WARCPayloadAnalysers;
+import org.jwat.common.Base32;
 
 import java.io.ByteArrayOutputStream;
 import java.io.UnsupportedEncodingException;
-import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
 import java.util.regex.Matcher;
@@ -298,5 +296,37 @@ public class Normalisation {
         return (b >= '0' && b <= '9') || (b >= 'a' && b <= 'f') || (b >= 'A' && b <= 'F');
     }
 
-
+    /**
+     * If the input is detected as a sha1-digest (starts with "sha1:") and is in base 16, it is returned in base 32
+     * representation. Else it is returned unchanged.
+     *
+     * Spurred by brozzler using base 16 to represent sha1-hashes, which is valid but different from the de facto
+     * standard of base 32
+     * https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/#warc-payload-digest
+     * @param hash any hash.
+     * @return the hash in base 32, if the hash was a sha1. Else the input hash without any changes.
+     */
+    public static String sha1HashAsBase32(String hash) {
+        if (hash == null || hash.length() != 45) { // Quick check
+            return hash;
+        }
+        Matcher m = SHA1_BASE32_PATTERN.matcher(hash);
+        if (!m.matches()) {
+            return hash;
+        }
+        return m.group(1) + Base32.encodeArray(base16ToBytes(m.group(2)));
+    }
+    private static final Pattern SHA1_BASE32_PATTERN = Pattern.compile("([sS][hH][aA]1:)([0-9A-Fa-f]{40,40})");
+    private static byte[] base16ToBytes(String hex) {
+        if (hex.length() % 2 != 0) {
+            throw new IllegalArgumentException(
+                    "The length of the input must be even, but was " + hex.length() +
+                    ". Offending input was '" + hex + "'");
+        }
+        byte[] bytes = new byte[hex.length()/2];
+        for (int i = 0 ; i < hex.length() ; i+=2) {
+            bytes[i>>1] = (byte) Integer.parseInt(hex.substring(i, i+2), 16);
+        }
+        return bytes;
+    }
 }
