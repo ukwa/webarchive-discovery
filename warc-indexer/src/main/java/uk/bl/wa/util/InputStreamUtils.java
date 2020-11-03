@@ -48,9 +48,10 @@ public class InputStreamUtils {
     public static final boolean LENIENT_DECHUNK = true;
 
     /**
-     * If no explicit hashStage is stated, this will be used.
+     * If no explicit hashStage is stated, this will be used. This stage matches the warc-1.1 specification
+     * http://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/#warc-payload-digest
      */
-    public static final HASH_STAGE DEFAULT_HASH_STAGE = HASH_STAGE.first;
+    public static final HASH_STAGE DEFAULT_HASH_STAGE = HASH_STAGE.after_dechunk_before_decompression;
 
     /**
      * The WARC standard at https://iipc.github.io/warc-specifications/specifications/warc-format/warc-1.1/#warc-payload-digest
@@ -78,7 +79,7 @@ public class InputStreamUtils {
      * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
      * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
      * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
-     * Dechunking is performed before decompression. Hashing is done first (before dechunking and decompression)
+     * Dechunking is performed before decompression. Hashing is done after dechunking but before decompression
      * as per {@link #DEFAULT_HASH_STAGE}.
      * @param input any InputStream.
      * @param length the number of bytes to read from input.
@@ -101,7 +102,6 @@ public class InputStreamUtils {
     /**
      * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
      * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
-     * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
      * Dechunking is performed before decompression.
      * @param input any InputStream.
      * @param length the number of bytes to read from input.
@@ -135,7 +135,6 @@ public class InputStreamUtils {
     /**
      * Calculates SHA-1 hash from length bytes of input, performs decompression & dechunking of the content and
      * returns the resulting content as a stream that supports {@link InputStream#mark(int)} up to length.
-     * The hash digestion is performed directly on the bytes from input, before decompression & dechunking.
      * Dechunking is performed before decompression.
      * Note: The final size of the content will normally exceed length if compression is used.
      * @param input any InputStream.
