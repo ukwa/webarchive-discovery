@@ -7,9 +7,9 @@
    </parent>
    <artifactId>warc-nlp</artifactId>
    <properties>
-      <nd4j.version>0.6.0</nd4j.version>
-      <dl4j.version>0.6.0</dl4j.version>
-      <stanford.nlp.version>3.4</stanford.nlp.version>
+      <nd4j.version>1.0.0-beta7</nd4j.version>
+      <dl4j.version>1.0.0-beta7</dl4j.version>
+      <stanford.nlp.version>4.0.0</stanford.nlp.version>
    </properties>
    <build>
      <plugins>
@@ -47,7 +47,7 @@
       <dependency>
          <groupId>edu.stanford.nlp</groupId>
          <artifactId>stanford-corenlp</artifactId>
-         <version>${stanford.nlp.version}.1</version>
+         <version>${stanford.nlp.version}</version>
          <exclusions>
             <exclusion>
                <groupId>org.slf4j</groupId>
