@@ -23,6 +23,7 @@ package uk.bl.wa.hadoop.mapreduce.hash;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.BufferedReader;
 import java.io.InputStream;
@@ -92,13 +93,17 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
                     line_count++;
                     // Check:
                     if (line_count == 1) {
-                        assertEquals(
-                                "/user/andy/inputs\t722eb9d7bfeb0b2ad2dd9c8a2fd7105f2880b139e5248e9b13a41d69ec63893b9afc034751be1432d867e171f4c6293ac89fc4e85c09a72288c16fd40f5996b2 26164 /user/andy/inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz",
-                                line);
+                        assertTrue(line.contains(
+                                "722eb9d7bfeb0b2ad2dd9c8a2fd7105f2880b139e5248e9b13a41d69ec63893b9afc034751be1432d867e171f4c6293ac89fc4e85c09a72288c16fd40f5996b2"));
+                        assertTrue(line.contains("26164"));
+                        assertTrue(line.contains(
+                                "inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz"));
                     } else if (line_count == 2) {
-                        assertEquals(
-                                "/user/andy/inputs\tba14747ac52ff1885905022299b4c470ad87270128939001b674c13e8787612011b4f2bd4f3c568df3b6789b7aa50ba0062c58a506debc12c57c037d10012203 18406 /user/andy/inputs/IAH-20080430204825-00000-blackbook-truncated.arc.gz",
-                                line);
+                        assertTrue(line.contains(
+                                "ba14747ac52ff1885905022299b4c470ad87270128939001b674c13e8787612011b4f2bd4f3c568df3b6789b7aa50ba0062c58a506debc12c57c037d10012203"));
+                        assertTrue(line.contains("18406"));
+                        assertTrue(line.contains(
+                                "inputs/IAH-20080430204825-00000-blackbook-truncated.arc.gz"));
                     }
                 }
                 reader.close();
