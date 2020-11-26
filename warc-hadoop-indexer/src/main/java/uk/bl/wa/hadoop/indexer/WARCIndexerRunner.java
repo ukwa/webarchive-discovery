@@ -44,17 +44,11 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-import com.typesafe.config.ConfigRenderOptions;
-import com.typesafe.config.ConfigValueFactory;
-
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.SolrWebServer.SolrOptions;
-import uk.bl.wa.util.ConfigPrinter;
 
 /**
  * WARCIndexerRunner
@@ -85,32 +79,6 @@ public class WARCIndexerRunner extends Configured implements Tool {
             throws IOException,
             KeeperException,
             InterruptedException {
-
-        // Store application properties where the mappers/reducers can access
-        // them
-        Config index_conf;
-        if (opts.config != null) {
-            index_conf = ConfigFactory.parseFile(opts.config);
-        } else {
-            index_conf = ConfigFactory.load();
-        }
-        if (opts.dump) {
-            ConfigPrinter.print(index_conf);
-            System.exit(0);
-        }
-        // Store the properties:
-        conf.set(CONFIG_PROPERTIES, index_conf.withOnlyPath("warc").root()
-                .render(ConfigRenderOptions.concise()));
-        LOG.info("Loaded warc config.");
-        LOG.info(index_conf.getString("warc.title"));
-        if (index_conf.getBoolean("warc.solr.use_hash_url_id")) {
-            LOG.info("Using hash-based ID.");
-        }
-        if (index_conf.hasPath("warc.solr.zookeepers")) {
-            LOG.info("Using Zookeepers.");
-        } else {
-            LOG.info("Using SolrServers.");
-        }
 
         // Also set reduce speculative execution off, avoiding duplicate
         // submissions to Solr.

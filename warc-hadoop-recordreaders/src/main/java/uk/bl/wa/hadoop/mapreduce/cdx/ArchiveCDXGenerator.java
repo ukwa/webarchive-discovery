@@ -155,7 +155,7 @@ public class ArchiveCDXGenerator extends Configured implements Tool {
     protected Job createJob(String[] args)
             throws Exception {
 
-        Job job = new Job();
+        Job job = new Job(this.getConf());
         job.setJobName(
                 "ArchiveCDXGenerator" + " @ " + Instant.now().toString());
 

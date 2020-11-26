@@ -31,7 +31,6 @@ import java.util.Properties;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -44,17 +43,12 @@ import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.solr.common.SolrInputDocument;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 import picocli.CommandLine;
-import picocli.CommandLine.ParseResult;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.WctEnricher;
 import uk.bl.wa.solr.WctFields;
-import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerReducer extends MapReduceBase implements

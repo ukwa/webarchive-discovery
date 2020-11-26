@@ -94,6 +94,12 @@ public class WARCIndexerCommand {
     public static String collection;
     public static String collection_id;
 
+    // Set up the server config:
+    SolrWebServer solrWeb = new SolrWebServer(conf);
+
+    // Also pass config down:
+    WARCIndexer windex = new WARCIndexer();
+
     /**
      * 
      * @param args
@@ -283,13 +289,6 @@ public class WARCIndexerCommand {
         if (batchSize == -1) { // Batch size not set as command line, so resolve it from conf with default 1
             batchSize = conf.hasPath("warc.solr.batch_size") ? conf.getInt("warc.solr.batch_size") : 1;
         }
-
-        // Set up the server config:
-        SolrWebServer solrWeb = new SolrWebServer(conf);
-        
-
-        // Also pass config down:
-        WARCIndexer windex = new WARCIndexer(conf);
 
         // Add in annotations, if set:
         if (annotationsFile != null) {
