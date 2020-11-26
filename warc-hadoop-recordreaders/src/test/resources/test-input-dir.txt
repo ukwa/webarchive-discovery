@@ -1,2 +1,2 @@
-/user/andy/inputs/
+./inputs/
 
