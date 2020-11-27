@@ -7,7 +7,7 @@
    <modelVersion>4.0.0</modelVersion>
    <groupId>uk.bl.wa.discovery</groupId>
    <artifactId>warc-discovery</artifactId>
-   <version>3.1.0</version>
+   <version>3.1.1-SNAPSHOT</version>
    <packaging>pom</packaging>
    <organization>
       <name>The webarchive-discovery project contributors</name>

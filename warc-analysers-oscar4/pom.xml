@@ -3,7 +3,7 @@
    <parent>
       <groupId>uk.bl.wa.discovery</groupId>
       <artifactId>warc-discovery</artifactId>
-      <version>3.1.0</version>
+      <version>3.1.1-SNAPSHOT</version>
    </parent>
    <artifactId>warc-analysers-oscar4</artifactId>
    <properties>
@@ -32,7 +32,7 @@
       <dependency>
          <groupId>uk.bl.wa.discovery</groupId>
          <artifactId>warc-indexer</artifactId>
-         <version>3.1.0</version>
+         <version>3.1.1-SNAPSHOT</version>
          <scope>provided</scope>
       </dependency>
       <dependency>
