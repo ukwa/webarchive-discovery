@@ -47,9 +47,9 @@
       <url>https://github.com/ukwa/warc-discovery/issues</url>
    </issueManagement>
    <scm>
-      <connection>scm:git:https://github.com/ukwa/webarchive-discovery.git</connection>
-      <developerConnection>scm:git:https://github.com/ukwa/webarchive-discovery.git</developerConnection>
-      <url>https://github.com/ukwa/webarchive-discovery.git</url>
+      <connection>scm:git:git@github.com:ukwa/warc-discovery.git</connection>
+      <developerConnection>scm:git:git@github.com:ukwa/warc-discovery.git</developerConnection>
+      <url>git@github.com:ukwa/warc-discovery.git</url>
    </scm>
    <properties>
       <solr.version>5.5.4</solr.version>
