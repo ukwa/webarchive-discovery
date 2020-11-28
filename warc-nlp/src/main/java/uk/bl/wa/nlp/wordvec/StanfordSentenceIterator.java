@@ -36,7 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import edu.stanford.nlp.ling.HasWord;
-import edu.stanford.nlp.ling.Sentence;
+import edu.stanford.nlp.ling.SentenceUtils;
 import edu.stanford.nlp.process.DocumentPreprocessor;
 
 /**
@@ -68,7 +68,7 @@ public class StanfordSentenceIterator implements SentenceIterator {
     @Override
     public String nextSentence() {
         List<HasWord> item = dpi.next();
-        String sentence = Sentence.listToString(item);
+        String sentence = SentenceUtils.listToString(item);
         log.info("Got item " + sentence);
         return sentence;
     }

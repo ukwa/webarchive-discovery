@@ -36,6 +36,8 @@ import org.apache.commons.logging.LogFactory;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.typesafe.config.ConfigFactory;
+
 import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
 
 /**
@@ -53,6 +55,7 @@ public class TikaExtractorTest {
     @Before
     public void setUp() throws Exception {
         tika = new TikaPayloadAnalyser();
+        tika.configure(ConfigFactory.load());
     }
 
     @Test

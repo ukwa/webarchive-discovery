@@ -30,6 +30,7 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -45,6 +46,7 @@ import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
 import org.apache.tika.parser.html.BoilerpipeContentHandler;
@@ -55,7 +57,6 @@ import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
-import org.restlet.data.MediaType;
 import org.xml.sax.ContentHandler;
 
 import com.typesafe.config.Config;
@@ -91,7 +92,7 @@ public class TikaPayloadAnalyser extends AbstractPayloadAnalyser {
 mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image,video,audio
      *
      */
-    private List<String> excludes;
+    private List<String> excludes = new ArrayList<String>();
     
     /** The actual Tika instance */
     private Tika tika;
@@ -269,7 +270,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         // Only proceed if we have a suitable type:
         if( !this.checkMime( detected.toString() ) ) {
             if( "".equals(detected.toString())) {
-                solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.APPLICATION_OCTET_STREAM.toString() );
+                solr.addField( SolrFields.SOLR_CONTENT_TYPE, MediaType.OCTET_STREAM.toString() );
             } else {
                 solr.addField( SolrFields.SOLR_CONTENT_TYPE, detected.toString() );
             }

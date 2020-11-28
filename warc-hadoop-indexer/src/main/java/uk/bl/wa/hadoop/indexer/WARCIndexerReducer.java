@@ -52,7 +52,6 @@ import picocli.CommandLine.ParseResult;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
-import uk.bl.wa.solr.WctEnricher;
 import uk.bl.wa.solr.WctFields;
 import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 
@@ -121,7 +120,6 @@ public class WARCIndexerReducer extends MapReduceBase implements
             this.output = output;
         }
         // Set up vars:
-        WctEnricher wct;
         WritableSolrRecord wsr;
         SolrRecord solr;
 
@@ -135,11 +133,6 @@ public class WARCIndexerReducer extends MapReduceBase implements
             solr = wsr.getSolrRecord();
             noValues++;
 
-            // Add additional metadata for WCT Instances.
-            if (solr.containsKey(WctFields.WCT_INSTANCE_ID)) {
-                wct = new WctEnricher(key.toString());
-                wct.addWctMetadata(solr);
-            }
             if (!opts.dummyRun) {
                 docs.add(solr.getSolrDocument());
                 // Have we exceeded the batchSize?

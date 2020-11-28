@@ -25,24 +25,6 @@
 		</testResources>
 		<plugins>
 			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.3.2</version>
-				<configuration>
-					<source>${jdk.version}</source>
-					<target>${jdk.version}</target>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.14.1</version>
-				<configuration>
-					<argLine>-Xmx1024m</argLine>
-					<forkMode>never</forkMode>
-				</configuration>
-			</plugin>
-			<plugin>
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>2.4</version>
 				<configuration>
@@ -77,7 +59,7 @@
       <dependency>
          <groupId>org.jsoup</groupId>
          <artifactId>jsoup</artifactId>
-         <version>1.7.2</version>
+         <version>1.13.1</version>
       </dependency>
       <dependency>
          <groupId>junit</groupId>
@@ -118,7 +100,7 @@
       <dependency>
          <groupId>org.apache.pdfbox</groupId>
          <artifactId>preflight</artifactId>
-         <version>2.0.6</version>
+         <version>2.0.21</version>
          <exclusions>
          	<exclusion>
          		<artifactId>commons-io</artifactId>
@@ -223,12 +205,16 @@
                <artifactId>guava</artifactId>
                <groupId>com.google.guava</groupId>
             </exclusion>
+            <exclusion>
+            	<groupId>org.apache.hadoop</groupId>
+            	<artifactId>hadoop-hdfs-client</artifactId>
+            </exclusion>
          </exclusions>
       </dependency>      
       <dependency>
       	<groupId>commons-io</groupId>
       	<artifactId>commons-io</artifactId>
-      	<version>2.4</version>
+      	<version>2.6</version>
       </dependency>
       <dependency>
          <groupId>org.netpreserve.commons</groupId>
@@ -264,7 +250,7 @@
       <dependency>
          <groupId>com.google.guava</groupId>
          <artifactId>guava</artifactId>
-         <version>17.0</version>
+         <version>18.0</version>
       </dependency>
       <dependency>
          <groupId>org.jdom</groupId>

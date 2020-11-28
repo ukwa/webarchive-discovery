@@ -2,6 +2,13 @@
 **NOTE** Generally, we only add terms to the Solr schema, so it should usually be compatible with previous versions (i.e. clients should be able to query across both without modification). However, there are been a small number of fixes which unfortunately required breaking changes you may need to be aware of or work-around. e.g. [hash becomes single-valued](https://github.com/ukwa/webarchive-discovery/issues/95)... TBA...
 
 
+3.2.0
+-----
+
+* Updated many dependencies, in particular Solr to 8.7.0.
+* Cut large, experimental packages out of the main build (NPL etc.) for now.
+
+
 3.1.0
 -----
 
@@ -23,6 +30,8 @@
 * Add hash mismatches as a 'parse error' field rather than blocking further parsing and throwing an exception.
 * Extract compressed record length when performing CDX indexing.
 * Skip probably `OPTIONS` records when CDX indexing (arising from web-rendered recordings of e.g. Twitter)
+* Add heuristic check for chunked content [#220](https://github.com/ukwa/webarchive-discovery/pull/220).
+* Decompress and dechunk fixes [#232](https://github.com/ukwa/webarchive-discovery/pull/222).
 
 3.0.0
 -----

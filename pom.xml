@@ -19,9 +19,9 @@
       <module>warc-hadoop-indexer</module>
       <module>warc-indexer</module>
       <module>digipres-tika</module>
-      <module>warc-nlp</module>
-      <module>warc-openimaj</module>
-      <module>warc-analysers-oscar4</module>
+      <!-- module>warc-nlp</module -->
+      <!-- module>warc-openimaj</module -->
+      <!-- module>warc-analysers-oscar4</module -->
    </modules>
    <licenses>
       <license>
@@ -52,13 +52,13 @@
       <url>https://github.com/ukwa/webarchive-discovery.git</url>
    </scm>
    <properties>
-      <solr.version>5.5.4</solr.version>
-      <webarchive.commons.version>1.1.8</webarchive.commons.version>
+      <solr.version>8.7.0</solr.version>
+      <webarchive.commons.version>1.1.9</webarchive.commons.version>
       <jdk.version>1.8</jdk.version>
       <hadoop.version>0.20.2</hadoop.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>1024</ram>
-      <jackson.version>2.10.3</jackson.version>
+      <jackson.version>2.11.3</jackson.version>
       <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
    </properties>
    <build>
@@ -66,7 +66,7 @@
          <plugin>
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-compiler-plugin</artifactId>
-            <version>2.3.2</version>
+            <version>3.8.1</version>
             <configuration>
                <source>1.8</source>
                <target>1.8</target>
@@ -76,7 +76,7 @@
             <!-- Separates the unit tests from the integration tests. -->
             <groupId>org.apache.maven.plugins</groupId>
             <artifactId>maven-surefire-plugin</artifactId>
-            <version>2.7.2</version>
+            <version>3.0.0-M5</version>
             <configuration>
                <!-- Skip the default running of this plug-in (or everything 
                   is run twice...see below) -->
@@ -84,7 +84,7 @@
                <!-- Show 100% of the lines from the stack trace (doesn't 
                   work) -->
                <trimStackTrace>false</trimStackTrace>
-               <forkMode>once</forkMode>
+               <forkMode>always</forkMode>
                <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
             </configuration>
             <executions>

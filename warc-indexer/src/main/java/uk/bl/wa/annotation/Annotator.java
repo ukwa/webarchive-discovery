@@ -367,7 +367,7 @@ public class Annotator {
             String solrServer) throws SolrServerException, URISyntaxException,
             IOException {
         // Connect to solr:
-        SolrClient solr = new HttpSolrClient(solrServer);
+        SolrClient solr = new HttpSolrClient.Builder(solrServer).build();
 
         // Set up annotator:
         Annotator anr = new Annotator(ann, oaSurts);
