@@ -157,7 +157,7 @@ public class HtmlFeatureParserTest {
             System.err.println("testParseInputStreamContentHandlerMetadataParseContext: Unable to locate Mona Lisa test file. Skipping test");
             return;
         }
-        innerBasicParseTest(url.openStream(), baseUri, 43);
+        innerBasicParseTest(url.openStream(), baseUri, 46);
     }
 
 }

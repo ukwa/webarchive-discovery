@@ -31,6 +31,7 @@ import static org.junit.Assert.assertEquals;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -85,15 +86,14 @@ public class WARCIndexerEmbeddedSolrTest {
         
         // Note that the following property could be set through JVM level arguments too
         String solrXmlPath = getClass().getClassLoader()
-                .getResource("solr/solr.xml").getPath();
-        System.setProperty("solr.solr.home", new File(solrXmlPath).getParent());
+                .getResource("solr7/solr.xml").getPath();
+        Path solrHome = new File(solrXmlPath).getParentFile().toPath();
+        System.setProperty("solr.solr.home", solrHome.toString());
         System.setProperty("solr.data.dir", "target/solr-test-home");
         System.setProperty("solr.lock.type", "native");
         System.out.println("Loading container...");
-        CoreContainer coreContainer = new CoreContainer();
-        coreContainer.load();
         System.out.println("Setting up embedded server...");
-        server = new EmbeddedSolrServer(coreContainer, "discovery");
+        server = new EmbeddedSolrServer(solrHome, "discovery");
         // Remove any items from previous executions:
         server.deleteByQuery("*:*");
     }
@@ -103,7 +103,7 @@ public class WARCIndexerEmbeddedSolrTest {
      */
     @After
     public void tearDown() throws Exception {
-        server.shutdown();
+        server.close();
     }
 
     /**

@@ -26,7 +26,9 @@ package uk.bl.wa.solr;
 
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -99,26 +101,24 @@ public class SolrWebServer {
      */
     public SolrWebServer(SolrOptions opts) {
         // Setup based on options:
-        try {
-            if (opts.service.endpoint != null) {
-                if (opts.service.endpoint.length == 1) {
-                    log.info("Setting up HttpSolrServer client from a url: "
-                            + opts.service.endpoint[0]);
-                    solrServer = new HttpSolrClient(opts.service.endpoint[0]);
-                } else {
-                    log.info(
-                            "Setting up LBHttpSolrServer client from servers list: "
-                                    + opts.service.endpoint);
-                    solrServer = new LBHttpSolrClient(opts.service.endpoint);
-                }
+        if (opts.service.endpoint != null) {
+            if (opts.service.endpoint.length == 1) {
+                log.info("Setting up HttpSolrServer client from a url: "
+                        + opts.service.endpoint[0]);
+                solrServer = new HttpSolrClient.Builder(opts.service.endpoint[0]).build();
             } else {
-                log.info("Setting up CloudSolrServer client via zookeepers.");
-                solrServer = new CloudSolrClient(opts.service.zk.zookeepers);
-                ((CloudSolrClient) solrServer)
-                        .setDefaultCollection(opts.service.zk.collection);
+                log.info(
+                        "Setting up LBHttpSolrServer client from servers list: "
+                                + opts.service.endpoint);
+                solrServer = new LBHttpSolrClient.Builder().withBaseSolrUrls(opts.service.endpoint).build();
             }
-        } catch (MalformedURLException e) {
-            log.error("WARCIndexerReducer.configure(): " + e.getMessage());
+        } else {
+        	
+        	final List<String> zkHosts = Arrays.asList(opts.service.zk.zookeepers.split(","));
+            log.info("Setting up CloudSolrServer client via zookeepers: "+zkHosts);
+            solrServer = new CloudSolrClient.Builder(zkHosts, Optional.empty()).build();
+            ((CloudSolrClient) solrServer)
+                    .setDefaultCollection(opts.service.zk.collection);
         }
 
         if (solrServer == null) {

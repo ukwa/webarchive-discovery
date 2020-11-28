@@ -34,10 +34,12 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
+@Ignore
 public class OutlinkExtractorTest extends MapReduceTestBaseClass {
 
     private static final Log log = LogFactory

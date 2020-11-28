@@ -66,7 +66,7 @@ public class CollectionsUpdateTest {
         String collections = "Health and Social Care Act 2012 - NHS Reforms"
                 + "|" + "NHS" + "|" + "Acute Trusts";
 
-        SolrClient ss = new HttpSolrClient(server);
+        SolrClient ss = new HttpSolrClient.Builder(server).build();
 
         doQuery(ss, id);
 
