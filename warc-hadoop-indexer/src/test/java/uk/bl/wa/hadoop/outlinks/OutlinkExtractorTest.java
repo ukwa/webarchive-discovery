@@ -39,7 +39,6 @@ import org.junit.Test;
 
 import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
-@Ignore
 public class OutlinkExtractorTest extends MapReduceTestBaseClass {
 
     private static final Log log = LogFactory
