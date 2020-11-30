@@ -29,8 +29,6 @@ import java.io.IOException;
 import java.io.InputStream;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
@@ -40,6 +38,8 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.RecordReader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -53,8 +53,7 @@ import org.apache.hadoop.mapred.RecordReader;
 @SuppressWarnings("deprecation")
 public class ByteBlockRecordReader
         implements RecordReader<Path, BytesWritable> {
-    private static final Log log = LogFactory
-            .getLog(ByteBlockRecordReader.class);
+    private static final Logger log = LoggerFactory.getLogger(ByteBlockRecordReader.class);
 
     private InputStream fsdis;
     private Path path;

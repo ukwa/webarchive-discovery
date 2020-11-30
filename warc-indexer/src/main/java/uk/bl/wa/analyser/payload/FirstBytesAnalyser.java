@@ -28,8 +28,8 @@ package uk.bl.wa.analyser.payload;
 import java.io.InputStream;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.io.ArchiveRecordHeader;
 
 import com.google.common.base.Splitter;
@@ -44,7 +44,7 @@ import uk.bl.wa.util.Instrument;
  *
  */
 public class FirstBytesAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( FirstBytesAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( FirstBytesAnalyser.class );
 
     /** */
 

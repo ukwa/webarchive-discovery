@@ -34,8 +34,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileStatus;
@@ -51,6 +49,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.lib.input.UnsplittableInputFileFormat;
 
 /*
@@ -65,7 +65,7 @@ import uk.bl.wa.hadoop.mapreduce.lib.input.UnsplittableInputFileFormat;
  */
 public class HdfsFileHasher extends Configured implements Tool {
 
-    private static final Log log = LogFactory.getLog(HdfsFileHasher.class);
+    private static final Logger log = LoggerFactory.getLogger(HdfsFileHasher.class);
 
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-m] [Use MD5 instead of SHA-512.]";
     private static final String CLI_HEADER = "MapReduce job for calculating checksums of files on HDFS.";

@@ -37,8 +37,8 @@ import java.util.List;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
@@ -79,7 +79,7 @@ public class TikaPayloadAnalyser extends AbstractPayloadAnalyser {
     
     public static final String TIKA_PARSE_EXCEPTION = "Tika-Parse-Exception";
 
-    private static Log log = LogFactory.getLog(TikaPayloadAnalyser.class);
+    private static Logger log = LoggerFactory.getLogger(TikaPayloadAnalyser.class);
     
     /** Time to wait for Tika to complete before giving up: */
     private long parseTimeout;

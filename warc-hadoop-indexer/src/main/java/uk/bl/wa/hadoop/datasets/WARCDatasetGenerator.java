@@ -33,8 +33,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -53,6 +51,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 import uk.bl.wa.util.ConfigPrinter;
@@ -67,8 +67,7 @@ import uk.bl.wa.util.ConfigPrinter;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCDatasetGenerator extends Configured implements Tool {
-    private static final Log LOG = LogFactory
-            .getLog(WARCDatasetGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WARCDatasetGenerator.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.] [-x] [output XML in OAI-PMH format]";
     private static final String CLI_HEADER = "WARCDatasetGenerator - MapReduce method for extracing datasets from ARCs and WARCs";
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";

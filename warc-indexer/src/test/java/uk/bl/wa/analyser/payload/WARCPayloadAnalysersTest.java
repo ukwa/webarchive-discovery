@@ -3,8 +3,8 @@ package uk.bl.wa.analyser.payload;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.io.ArchiveRecordHeader;
 
 /*
@@ -36,7 +36,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 
 public class WARCPayloadAnalysersTest extends TestCase {
-    private static Log log = LogFactory.getLog(WARCPayloadAnalysersTest.class);
+    private static Logger log = LoggerFactory.getLogger(WARCPayloadAnalysersTest.class);
 
     public void testConfig() {
         ARCNameAnalyser ana = getAnalyser();

@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -38,6 +36,8 @@ import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -51,7 +51,7 @@ import org.json.JSONException;
 public class MDXReduplicatingReducer extends MapReduceBase implements
         Reducer<Text, Text, Text, Text> {
 
-    private static Log log = LogFactory.getLog(MDXReduplicatingReducer.class);
+    private static Logger log = LoggerFactory.getLogger(MDXReduplicatingReducer.class);
 
     static enum MyCounters {
         NUM_RECORDS, NUM_REVISITS, NUM_ERRORS, NUM_DROPPED_RECORDS, NUM_UNRESOLVED_REVISITS, NUM_RESOLVED_REVISITS

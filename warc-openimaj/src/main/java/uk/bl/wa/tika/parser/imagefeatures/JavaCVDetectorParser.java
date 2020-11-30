@@ -38,8 +38,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
@@ -70,7 +70,7 @@ import com.typesafe.config.ConfigFactory;
  *
  */
 public class JavaCVDetectorParser extends AbstractParser {
-    private static Log log = LogFactory.getLog( JavaCVDetectorParser.class );
+    private static Logger log = LoggerFactory.getLogger( JavaCVDetectorParser.class );
 
     /** */
     private static final long serialVersionUID = -773080986108106790L;

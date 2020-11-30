@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.IntWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
@@ -45,6 +43,8 @@ import com.fasterxml.jackson.databind.JsonMappingException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
@@ -58,7 +58,7 @@ import uk.bl.wa.util.Normalisation;
 @SuppressWarnings( { "deprecation" } )
 public class WARCIndexerMapper extends MapReduceBase implements
         Mapper<Text, WritableArchiveRecord, IntWritable, WritableSolrRecord> {
-    private static final Log LOG = LogFactory.getLog( WARCIndexerMapper.class );
+    private static final Logger LOG = LoggerFactory.getLogger(WARCIndexerMapper.class );
 
     static enum MyCounters {
         NUM_RECORDS, NUM_ERRORS, NUM_NULLS, NUM_EMPTY_HEADERS

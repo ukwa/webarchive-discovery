@@ -35,12 +35,13 @@ import org.apache.hadoop.mapred.TextInputFormat;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings( "deprecation" )
 public class HostsReport extends Configured implements Tool {
-    private static Logger log = Logger.getLogger( HostsReport.class.getName() );
+    private static Logger log = LoggerFactory.getLogger(HostsReport.class.getName() );
 
     @Override
     public int run( String[] args ) throws Exception {

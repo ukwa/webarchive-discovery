@@ -25,8 +25,6 @@ package uk.bl.wa.hadoop.mapreduce.lib.input;
 import java.io.IOException;
 import java.util.Arrays;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -35,10 +33,11 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class ByteBlockRecordReader extends RecordReader<Path, BytesWritable> {
-    private static final Log log = LogFactory
-            .getLog(ByteBlockRecordReader.class);
+    private static final Logger log = LoggerFactory.getLogger(ByteBlockRecordReader.class);
 
     private FSDataInputStream fsdis;
     private Path path;

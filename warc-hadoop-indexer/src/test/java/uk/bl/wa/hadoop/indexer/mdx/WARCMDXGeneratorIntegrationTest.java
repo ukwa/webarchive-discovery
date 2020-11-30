@@ -35,8 +35,6 @@ import java.io.InputStreamReader;
 import java.io.Writer;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -55,13 +53,14 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXSeqMerger;
 
 public class WARCMDXGeneratorIntegrationTest {
-
-    private static final Log log = LogFactory
-            .getLog(WARCMDXGeneratorIntegrationTest.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(WARCMDXGeneratorIntegrationTest.class);
 
     // Test cluster:
     private MiniDFSCluster dfsCluster = null;

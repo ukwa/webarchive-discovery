@@ -25,8 +25,8 @@ package uk.bl.wa.analyser.text;
  * #L%
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.typesafe.config.Config;
 
@@ -40,7 +40,7 @@ import uk.bl.wa.solr.SolrRecord;
  *
  */
 public class SentimentJTextAnalyser extends AbstractTextAnalyser {
-    private static Log log = LogFactory.getLog( SentimentJTextAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger(SentimentJTextAnalyser.class );
 
     /** */
     private static SentimentalJ sentij = new SentimentalJ();

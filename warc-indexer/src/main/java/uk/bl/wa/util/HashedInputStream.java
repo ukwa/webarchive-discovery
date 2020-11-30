@@ -27,8 +27,8 @@ package uk.bl.wa.util;
 
 import org.apache.commons.codec.digest.MessageDigestAlgorithms;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.Base32;
@@ -46,7 +46,7 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
  * Utility method that takes a given input stream and wraps is in a SHA-1 {@link DigestInputStream}.
  */
 public class HashedInputStream extends DigestInputStream {
-    private static Log log = LogFactory.getLog( HashedInputStream.class );
+    private static Logger log = LoggerFactory.getLogger(HashedInputStream.class );
 
 
     private final String url;

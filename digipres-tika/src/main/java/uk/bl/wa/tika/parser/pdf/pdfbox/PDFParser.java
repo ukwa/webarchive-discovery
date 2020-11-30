@@ -51,7 +51,6 @@ import java.util.Set;
 
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaPDF;
-import org.apache.log4j.Logger;
 import org.apache.pdfbox.cos.COSArray;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSDictionary;
@@ -71,6 +70,8 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.PasswordProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -87,7 +88,7 @@ import uk.bl.wa.tika.parser.pdf.XMPSchemaPDFA;
  */
 public class PDFParser extends AbstractParser {
     
-    private static Logger log = Logger.getLogger(PDFParser.class);
+    private static Logger log = LoggerFactory.getLogger(PDFParser.class);
 
     /** Serial version UID */
     private static final long serialVersionUID = -752276948656079347L;

@@ -31,8 +31,8 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.SURT;
@@ -53,7 +53,7 @@ import uk.bl.wa.util.TimeLimiter;
  *
  */
 public class HTMLAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( HTMLAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( HTMLAnalyser.class );
 
     private HtmlFeatureParser hfp;
     private boolean extractLinkDomains;

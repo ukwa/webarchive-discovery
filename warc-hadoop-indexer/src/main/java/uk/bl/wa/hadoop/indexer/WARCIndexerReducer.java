@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -47,6 +45,8 @@ import org.apache.solr.common.SolrInputDocument;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
 import uk.bl.wa.solr.SolrFields;
@@ -58,8 +58,8 @@ import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerReducer extends MapReduceBase implements
         Reducer<IntWritable, WritableSolrRecord, Text, Text> {
-
-    private static Log log = LogFactory.getLog(WARCIndexerReducer.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(WARCIndexerReducer.class);
 
     private SolrClient solrServer;
     private WARCIndexerOptions opts = new WARCIndexerOptions();

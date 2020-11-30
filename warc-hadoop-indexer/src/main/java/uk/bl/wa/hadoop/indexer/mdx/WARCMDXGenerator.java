@@ -27,8 +27,6 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -47,6 +45,8 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
@@ -65,7 +65,7 @@ import uk.bl.wa.util.ConfigPrinter;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCMDXGenerator extends Configured implements Tool {
-    private static final Log LOG = LogFactory.getLog(WARCMDXGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WARCMDXGenerator.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-c <config file>] [-d] [Dump config.] [-w] [Wait for completion.]";
     private static final String CLI_HEADER = "MapReduce method for extracting metadata/text from Archive Records";
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";

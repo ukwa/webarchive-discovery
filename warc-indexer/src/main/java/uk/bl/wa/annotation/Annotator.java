@@ -45,8 +45,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -72,7 +72,7 @@ import uk.bl.wa.solr.SolrFields;
  * 
  */
 public class Annotator {
-    private static Log LOG = LogFactory.getLog( Annotator.class );
+    private static Logger LOG = LoggerFactory.getLogger(Annotator.class );
     
     private Annotations annotations;
 

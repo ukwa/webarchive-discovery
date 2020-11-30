@@ -32,8 +32,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -47,6 +45,8 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
 
@@ -57,8 +57,7 @@ import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCRawStatsMDXGenerator extends Configured implements Tool {
-    private static final Log LOG = LogFactory
-            .getLog(WARCRawStatsMDXGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WARCRawStatsMDXGenerator.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-w] [Wait for completion.]";
     private static final String CLI_HEADER = "MapReduce method for extracting basic metadata from WARCs and pushing it into MDX format.";
 

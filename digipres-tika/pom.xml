@@ -55,44 +55,13 @@
       </plugins>
    </build>
    <dependencies>
-      <!-- This module uses slf4j, and the log4j bridge     -->
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>1.7.30</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>log4j-over-slf4j</artifactId>
-         <version>1.7.30</version>
-      </dependency>
+
       <dependency>
          <!--slf4j simple for tests-->
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-simple</artifactId>
          <version>1.7.30</version>
          <scope>test</scope>
-      </dependency>
-
-      <!--These log dependencies are disabled (scope provided)-->
-      <!--This way, you do NOT need to add them as exclusions to all the dependencies below -->
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-1.2-api</artifactId>
-         <version>2.13.2</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-core</artifactId>
-         <version>2.13.2</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>commons-logging</groupId>
-         <artifactId>commons-logging</artifactId>
-         <version>1.2</version>
-         <scope>provided</scope>
       </dependency>
 
       <dependency>
@@ -207,10 +176,6 @@
             <exclusion>
                <groupId>org.springframework</groupId>
                <artifactId>spring-beans</artifactId>
-            </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-log4j12</artifactId>
             </exclusion>
          </exclusions>
       </dependency>

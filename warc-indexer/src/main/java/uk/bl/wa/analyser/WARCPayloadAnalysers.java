@@ -29,8 +29,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
 
@@ -59,7 +59,7 @@ import uk.bl.wa.util.Normalisation;
  *
  */
 public class WARCPayloadAnalysers {
-    private static Log log = LogFactory.getLog( WARCPayloadAnalysers.class );
+    private static Logger log = LoggerFactory.getLogger(WARCPayloadAnalysers.class );
     
     List<AbstractPayloadAnalyser> providers;
 

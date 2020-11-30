@@ -40,15 +40,16 @@ import org.apache.hadoop.mapred.FileSplit;
 import org.apache.hadoop.mapred.InputSplit;
 import org.apache.hadoop.mapred.MultiFileSplit;
 import org.apache.hadoop.mapred.RecordReader;
-import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings("deprecation")
 public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value extends Writable>
         implements RecordReader<Text, WritableArchiveRecord> {
-    private static Logger log = Logger.getLogger(ArchiveFileRecordReader.class
+    private static Logger log = LoggerFactory.getLogger(ArchiveFileRecordReader.class
             .getName());
 
     private FSDataInputStream datainputstream;

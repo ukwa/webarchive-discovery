@@ -44,7 +44,6 @@ import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.input.LineRecordReader;
-import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.arc.ARCReader;
@@ -55,6 +54,8 @@ import org.archive.wayback.resourceindex.cdx.format.CDXFormatException;
 import org.archive.wayback.resourcestore.indexer.ArcIndexer;
 import org.archive.wayback.resourcestore.indexer.WarcIndexer;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.cdx.CaptureSearchResultIterator;
 
 public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparable<?>, Value extends Writable>
@@ -64,7 +65,7 @@ public class DereferencingArchiveToCDXRecordReader<Key extends WritableComparabl
     public static final String CDX_10 = " CDX A b a m s k r M V g";
     public static final String CDX_11 = " CDX N b a m s k r M S V g";
 
-    private static final Logger LOGGER = Logger
+    private static final Logger LOGGER = LoggerFactory
             .getLogger(DereferencingArchiveToCDXRecordReader.class.getName());
     private LineRecordReader internal = new LineRecordReader();
     private FSDataInputStream datainputstream;

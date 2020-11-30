@@ -27,10 +27,10 @@ package uk.bl.wa.hadoop.mapreduce.cdx;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Reducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -39,8 +39,7 @@ import org.apache.hadoop.mapreduce.Reducer;
 public class TinyCDXServerReducer
  extends Reducer<Text, Text, Text, Text> {
 
-    private static final Log log = LogFactory
-            .getLog(TinyCDXServerReducer.class);
+    private static final Logger log = LoggerFactory.getLogger(TinyCDXServerReducer.class);
 
     private TinyCDXSender tcs;
 

@@ -29,11 +29,12 @@ import java.io.DataOutput;
 import java.io.IOException;
 import java.io.InputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.io.Writable;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.warc.WARCRecord;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This is a very clumsy implementation that poorly wraps an InputStream.
@@ -55,7 +56,7 @@ public class WritableArchiveRecord implements Writable {
                                                      // or 'write' it, otherwise
                                                      // streaming is used.
     
-    private static Log log = LogFactory.getLog( WritableArchiveRecord.class );
+    private static Logger log = LoggerFactory.getLogger(WritableArchiveRecord.class );
     private ArchiveRecord record = null;
 
     public WritableArchiveRecord() {}

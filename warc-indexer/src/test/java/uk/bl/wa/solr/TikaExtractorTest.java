@@ -31,8 +31,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.File;
 import java.net.URL;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,7 +45,7 @@ import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
  *
  */
 public class TikaExtractorTest {
-    private static Log log = LogFactory.getLog(TikaExtractorTest.class);
+    private static Logger log = LoggerFactory.getLogger(TikaExtractorTest.class);
 
     private TikaPayloadAnalyser tika;
 

@@ -26,8 +26,6 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
@@ -37,12 +35,13 @@ import org.junit.Assert;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
 public class OutlinkExtractorTest extends MapReduceTestBaseClass {
-
-    private static final Log log = LogFactory
-            .getLog(OutlinkExtractorTest.class);
+    
+    private static final Logger log = LoggerFactory.getLogger(OutlinkExtractorTest.class);
 
     @Test
     public void test() throws Exception {

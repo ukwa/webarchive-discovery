@@ -33,9 +33,9 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -43,7 +43,7 @@ import org.apache.hadoop.io.Text;
  */
 public class TinyCDXSender {
 
-    private static final Log log = LogFactory.getLog(TinyCDXSender.class);
+    private static final Logger log = LoggerFactory.getLogger(TinyCDXSender.class);
 
     // The tinycdxserver URL to POST to.
     private String endpoint;

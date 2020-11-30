@@ -23,8 +23,8 @@ package uk.bl.wa.util;
  */
 
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 
 import java.io.ByteArrayOutputStream;
@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
  * Helper class for running jobs for a specific time before giving up.
  */
 public class TimeLimiter {
-    private static Log log = LogFactory.getLog( TimeLimiter.class );
+    private static Logger log = LoggerFactory.getLogger(TimeLimiter.class );
 
     /**
      * Creates a Thread with runnable and starts it. Waits at most timeoutMS for it to finish before sending an

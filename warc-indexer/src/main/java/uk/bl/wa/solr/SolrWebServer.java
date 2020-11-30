@@ -30,8 +30,8 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -55,7 +55,7 @@ import picocli.CommandLine.Option;
  * @author anj
  */
 public class SolrWebServer {
-    private static Log log = LogFactory.getLog(SolrWebServer.class);
+    private static Logger log = LoggerFactory.getLogger(SolrWebServer.class);
 
     @Command(name = "solr-options", description = "Setting up the Solr connection.")
     public

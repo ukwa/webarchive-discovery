@@ -23,11 +23,11 @@ package uk.bl.wa.util;
  */
 
 import junit.framework.TestCase;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class InstrumentTest extends TestCase {
-    private static Log log = LogFactory.getLog(InstrumentTest.class);
+    private static Logger log = LoggerFactory.getLogger(InstrumentTest.class);
 
     // Not a real test as it requires visual inspection
     public void testHierarchical() {

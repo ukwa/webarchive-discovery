@@ -27,8 +27,8 @@ package uk.bl.wa.analyser.payload;
 
 import java.io.InputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
@@ -45,7 +45,7 @@ import uk.bl.wa.util.TimeLimiter;
  *
  */
 public class XMLAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( XMLAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( XMLAnalyser.class );
 
     /** */
     private XMLRootNamespaceParser xrns = new XMLRootNamespaceParser();

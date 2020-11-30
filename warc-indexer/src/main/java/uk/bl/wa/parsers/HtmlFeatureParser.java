@@ -35,8 +35,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
@@ -63,7 +63,7 @@ public class HtmlFeatureParser extends AbstractParser {
     /** */
     private static final long serialVersionUID = 1631417895901342814L;
 
-    private static Log log = LogFactory.getLog(HtmlFeatureParser.class);
+    private static Logger log = LoggerFactory.getLogger(HtmlFeatureParser.class);
     
     private static final Set<MediaType> SUPPORTED_TYPES =
             Collections.unmodifiableSet(new HashSet<MediaType>(Arrays.asList(

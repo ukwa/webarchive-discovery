@@ -31,8 +31,8 @@ import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
 import javax.imageio.stream.ImageInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
 import org.archive.io.ArchiveRecordHeader;
 
@@ -46,7 +46,7 @@ import uk.bl.wa.solr.SolrRecord;
  *
  */
 public class ImageAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( ImageAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( ImageAnalyser.class );
 
     /** Maximum file size of images to attempt to parse */
     private long max_size_bytes = 1000;

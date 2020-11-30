@@ -38,8 +38,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.*;
 
 import org.apache.commons.httpclient.*;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -59,7 +59,7 @@ import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
 
 public class WARCIndexerTest {
-    private static Log log = LogFactory.getLog(WARCIndexerTest.class);
+    private static Logger log = LoggerFactory.getLogger(WARCIndexerTest.class);
 
     /**
      * Check timestamp parsing is working correctly, as various forms exist in the ARCs and WARCs.

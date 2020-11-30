@@ -33,7 +33,6 @@ import java.io.InputStream;
 import java.io.InterruptedIOException;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 import org.apache.tika.detect.CompositeDetector;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.io.TikaInputStream;
@@ -42,6 +41,8 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.WriteOutContentHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 
 
@@ -52,7 +53,7 @@ import org.xml.sax.ContentHandler;
  */
 public class TikaDeepIdentifier {
     
-    private static Logger log = Logger.getLogger(TikaDeepIdentifier.class.getName());
+    private static Logger log = LoggerFactory.getLogger(TikaDeepIdentifier.class.getName());
     
     private static int MAX_BUF = 1024*1024;
 

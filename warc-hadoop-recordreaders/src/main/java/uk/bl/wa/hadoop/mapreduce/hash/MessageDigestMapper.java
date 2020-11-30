@@ -30,12 +30,12 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
 import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.BytesWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Mapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -44,7 +44,7 @@ import org.apache.hadoop.mapreduce.Mapper;
  */
 public class MessageDigestMapper extends Mapper<Path, BytesWritable, Text, Text> {
 
-    private static final Log log = LogFactory.getLog(MessageDigestMapper.class);
+    private static final Logger log = LoggerFactory.getLogger(MessageDigestMapper.class);
 
     public static final String CONFIG_DIGEST_ALGORITHM = "message.digest.algorithm";
 

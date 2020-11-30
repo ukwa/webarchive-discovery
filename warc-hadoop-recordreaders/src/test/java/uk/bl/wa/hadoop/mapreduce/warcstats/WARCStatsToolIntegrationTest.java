@@ -32,8 +32,6 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -51,11 +49,12 @@ import org.junit.Test;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class WARCStatsToolIntegrationTest {
 
-    private static final Log log = LogFactory
-            .getLog(WARCStatsToolIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(WARCStatsToolIntegrationTest.class);
 
     // Test cluster:
     private MiniDFSCluster dfsCluster = null;
