@@ -413,13 +413,14 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             solr.addField(SolrFields.GENERATOR, metadata.get("generator"));
             solr.addField(SolrFields.GENERATOR, metadata.get("Generator"));
             solr.addField(SolrFields.GENERATOR, metadata.get("ProgId"));
-            
             //handle image EXIF metaformat
             String exifVersion = metadata.get("Exif Version");
-                    
+            // The metadata keys changed at some point. The prefix below is new
+            exifVersion = exifVersion != null ? exifVersion : metadata.get("Exif SubIFD:Exif Version");
+
             if (exifVersion != null){
               solr.addField(SolrFields.EXIF_VERSION, exifVersion);
-              String exif_artist = metadata.get("Artist");
+              String exif_artist = metadata.get("Artist"); // TODO: Has this key changed like the Exif Version key?
                if (exif_artist != null){ // This is a better value for the author field
             	      if (this.authorMonoValued) {
             	   	   solr.setField(SolrFields.SOLR_AUTHOR, exif_artist); //Clear old value if any. Not multi valued
@@ -430,9 +431,10 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                }
 
                 if (this.extractExifLocation) {
-
-              String exif_latitude = metadata.get("GPS Latitude");
-              String exif_longitude = metadata.get("GPS Longitude");            
+                    String exif_latitude = metadata.get("GPS Latitude"); // Keys changed as some point, just like Exif Version
+                    exif_latitude = exif_latitude != null ? exif_latitude : metadata.get("GPS:GPS Latitude");
+                    String exif_longitude = metadata.get("GPS Longitude");
+                    exif_longitude = exif_longitude != null ? exif_longitude : metadata.get("GPS:GPS Longitude");
                             
                 if (exif_latitude != null && exif_longitude != null){
                     double latitude = DMS2DG(exif_latitude);
@@ -452,6 +454,26 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
                         log.warn("error parsing exif gps data. latitude:"+exif_latitude +" longitude:"+exif_longitude);
                     }
                 }
+                }
+            }
+
+            if (this.extractExifLocation && !solr.containsKey(SolrFields.EXIF_LOCATION)) { // Attempt secondary geo
+                String sLat = metadata.get("geo:lat");
+                String sLong = metadata.get("geo:long");
+                if (sLat != null & sLong != null) {
+                    try {
+                        double latitude = Double.parseDouble(sLat);
+                        double longitude = Double.parseDouble(sLong);
+                        if (latitude != 0d && longitude != 0d){ // Sometimes they are defined but both 0
+                            if (latitude <= 90 && latitude >= -90 && longitude <= 180 && longitude >= -180){
+                                solr.addField(SolrFields.EXIF_LOCATION, latitude+","+longitude);
+                            } else{
+                                log.warn("invalid geo information:" + sLat +", "+ sLong);
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        log.warn("Exception parsing geo location lat='" + sLat + "', long='" + sLong + "'", e);
+                    }
                 }
             }
             //End image exif metadata
