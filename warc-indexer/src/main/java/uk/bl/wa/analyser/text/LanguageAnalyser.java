@@ -25,8 +25,8 @@ package uk.bl.wa.analyser.text;
  * #L%
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
@@ -42,7 +42,7 @@ import uk.bl.wa.util.Instrument;
  *
  */
 public class LanguageAnalyser extends AbstractTextAnalyser {
-    private Log log = LogFactory.getLog(LanguageAnalyser.class);
+    private Logger log = LoggerFactory.getLogger(LanguageAnalyser.class);
     
     /** */
     private LanguageDetector ld;

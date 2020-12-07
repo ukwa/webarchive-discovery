@@ -22,8 +22,8 @@ package uk.bl.wa.indexer;
  * #L%
  */
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import uk.bl.wa.util.Instrument;
 
@@ -50,7 +50,7 @@ import static org.junit.Assert.*;
  *
  */
 public class WARCIndexerCommandTest {
-    private static Log log = LogFactory.getLog(WARCIndexerCommandTest.class);
+    private static Logger log = LoggerFactory.getLogger(WARCIndexerCommandTest.class);
 
     // Local WARC that triggered long exit for the JVM after processing has finished
     @Test

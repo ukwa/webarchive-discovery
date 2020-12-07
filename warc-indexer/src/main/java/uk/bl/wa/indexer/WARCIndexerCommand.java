@@ -51,8 +51,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
@@ -80,7 +80,7 @@ import uk.bl.wa.util.Normalisation;
  */
 public class WARCIndexerCommand {
     
-    private static Log log = LogFactory.getLog(WARCIndexerCommand.class);
+    private static Logger log = LoggerFactory.getLogger(WARCIndexerCommand.class);
     static {
         Instrument.init();
     }

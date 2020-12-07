@@ -31,8 +31,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mrunit.MapDriver;
@@ -50,14 +48,16 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDXReduplicatingReducer;
 import uk.bl.wa.util.Normalisation;
 
 public class WARCMDXMapperTest {
-
-    private static final Log LOG = LogFactory.getLog(WARCMDXMapperTest.class);
+    
+    private static final Logger LOG = LoggerFactory.getLogger(WARCMDXMapperTest.class);
 
     MapDriver<Text, WritableArchiveRecord, Text, Text> mapDriver;
     ReduceDriver<Text, Text, Text, Text> reduceDriver;

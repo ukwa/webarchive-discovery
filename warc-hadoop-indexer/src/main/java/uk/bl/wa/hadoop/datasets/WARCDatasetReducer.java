@@ -26,8 +26,6 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -35,12 +33,14 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.log4j.PropertyConfigurator;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCDatasetReducer extends MapReduceBase implements
         Reducer<Text, Text, Text, Text> {
 
-    private static Log log = LogFactory.getLog(WARCDatasetReducer.class);
+    private static Logger log = LoggerFactory.getLogger(WARCDatasetReducer.class);
 
 
     static enum MyCounters {

@@ -22,8 +22,8 @@ package uk.bl.wa.util;
  * #L%
  */
 
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -39,7 +39,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * @author Toke Eskildsen <te@statsbiblioteket.dk>
  */
 public class Instrument {
-    private static Log log = LogFactory.getLog(Instrument.class);
+    private static Logger log = LoggerFactory.getLogger(Instrument.class);
 
     public enum SORT {insert, id, time, count, avgtime} // count, time & avgtime are max -> min
     

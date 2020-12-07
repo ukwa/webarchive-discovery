@@ -26,8 +26,8 @@ package uk.bl.wa.util;
  */
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jwat.common.RandomAccessFileInputStream;
 
 import java.io.*;
@@ -38,7 +38,7 @@ import java.io.*;
  * This allows for cheap calls to {@link InputStream#reset()} from the generated InputStream.
  */
 public class CachedInputStreamFactory {
-    private static Log log = LogFactory.getLog( CachedInputStreamFactory.class );
+    private static Logger log = LoggerFactory.getLogger(CachedInputStreamFactory.class );
 
     // Thresholds:
     public static final long defaultInMemoryThreshold = 1024*1024;     // Up to 1MB allowed in RAM.

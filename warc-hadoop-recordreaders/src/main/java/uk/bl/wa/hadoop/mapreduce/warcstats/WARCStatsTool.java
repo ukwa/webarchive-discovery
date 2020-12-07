@@ -29,8 +29,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -45,6 +43,8 @@ import org.apache.hadoop.util.ToolRunner;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapred.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
@@ -55,7 +55,7 @@ import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
  */
 public class WARCStatsTool extends Configured implements Tool {
     
-    private static Log log = LogFactory.getLog(WARCStatsTool.class);    
+    private static Logger log = LoggerFactory.getLogger(WARCStatsTool.class);
     
     protected void createJobConf( JobConf conf, String[] args ) throws IOException {
 

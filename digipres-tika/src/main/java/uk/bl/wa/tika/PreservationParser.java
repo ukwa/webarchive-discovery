@@ -30,7 +30,6 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.metadata.Metadata;
@@ -38,6 +37,8 @@ import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
 
@@ -50,7 +51,7 @@ import uk.bl.wa.tika.parser.warc.WARCParser;
  *
  */
 public class PreservationParser extends AutoDetectParser {
-    private static Logger log = Logger.getLogger(PreservationParser.class.getName());
+    private static Logger log = LoggerFactory.getLogger(PreservationParser.class.getName());
     
     public static final String EXT_MIME_TYPE = "Extended-MIME-Type";
     

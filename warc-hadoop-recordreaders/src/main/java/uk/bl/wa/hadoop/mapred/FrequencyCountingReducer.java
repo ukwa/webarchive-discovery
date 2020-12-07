@@ -34,8 +34,9 @@ import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
 import org.apache.hadoop.mapred.lib.MultipleOutputs;
-import org.apache.log4j.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.MutableInt;
 
 
@@ -48,7 +49,7 @@ import uk.bl.wa.hadoop.mapreduce.MutableInt;
  * 
  */
 public class FrequencyCountingReducer extends MapReduceBase implements Reducer<Text, Text, Text, Text> {
-    private static Logger log = Logger
+    private static Logger log = LoggerFactory
             .getLogger(FrequencyCountingReducer.class);
     
     private MultipleOutputs mos;

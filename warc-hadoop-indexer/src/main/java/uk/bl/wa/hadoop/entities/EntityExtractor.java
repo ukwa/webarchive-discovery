@@ -38,8 +38,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 
@@ -53,7 +54,7 @@ import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
 
 @SuppressWarnings( { "deprecation" } )
 public class EntityExtractor extends Configured implements Tool {
-    private static Logger log = Logger.getLogger(EntityExtractor.class.getName());
+    private static Logger log = LoggerFactory.getLogger(EntityExtractor.class.getName());
     
     public static final String REGEX_PATTERN_PARAM = "regex.pattern";
 

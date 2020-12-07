@@ -28,8 +28,8 @@ import java.io.InputStream;
 import java.util.Arrays;
 import java.util.zip.GZIPInputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.util.ArchiveUtils;
@@ -40,7 +40,7 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_PAYLOAD_DIGEST;
 import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 public class InputStreamUtils {
-    private static Log log = LogFactory.getLog(InputStreamUtils.class );
+    private static Logger log = LoggerFactory.getLogger(InputStreamUtils.class );
 
     /**
      * If true, {@link #maybeDechunk} also accepts LF as terminator for hex strings, instead of only CRLF.

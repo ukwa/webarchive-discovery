@@ -27,8 +27,8 @@ package uk.bl.wa.analyser.payload;
 
 import java.io.InputStream;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
@@ -49,7 +49,7 @@ import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
  *
  */
 public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( DroidDetectorAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( DroidDetectorAnalyser.class );
 
     /** */
     private DroidDetector dd = null;

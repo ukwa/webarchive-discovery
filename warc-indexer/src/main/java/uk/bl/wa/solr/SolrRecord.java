@@ -59,7 +59,7 @@ import uk.bl.wa.util.Normalisation;
  */
 public class SolrRecord implements Serializable {
 
-    // private static Log log = LogFactory.getLog(SolrRecord.class);
+    // private static Logger log = LoggerFactory.getLogger(SolrRecord.class);
 
     private static final long serialVersionUID = -4556484652176976472L;
     

@@ -33,16 +33,17 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.log4j.Logger;
 //import org.apache.tika.Tika;
 import org.archive.io.ArchiveRecordHeader;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCRegexMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
     
-    private static Logger log = Logger.getLogger(WARCRegexMapper.class.getName());
+    private static Logger log = LoggerFactory.getLogger(WARCRegexMapper.class.getName());
     
     private Pattern pattern;
     

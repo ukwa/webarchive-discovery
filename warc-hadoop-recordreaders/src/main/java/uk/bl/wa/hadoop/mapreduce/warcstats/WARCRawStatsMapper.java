@@ -33,8 +33,7 @@ import java.util.Date;
 import org.apache.commons.httpclient.Header;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.httpclient.ProtocolException;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -50,6 +49,8 @@ import org.archive.url.UsableURIFactory;
 import org.archive.util.ArchiveUtils;
 import org.json.JSONException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 
@@ -60,7 +61,7 @@ import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
 public class WARCRawStatsMapper extends MapReduceBase
         implements Mapper<Text, WritableArchiveRecord, Text, Text> {
 
-    private static Log log = LogFactory.getLog(WARCRawStatsMapper.class);
+    private static Logger log = LoggerFactory.getLogger(WARCRawStatsMapper.class);
 
     @Override
     public void map(Text key, WritableArchiveRecord value,

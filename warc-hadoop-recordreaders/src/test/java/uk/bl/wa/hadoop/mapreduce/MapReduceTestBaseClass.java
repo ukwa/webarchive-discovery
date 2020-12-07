@@ -31,8 +31,6 @@ import java.io.OutputStreamWriter;
 import java.io.Writer;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -45,6 +43,8 @@ import org.junit.AfterClass;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * This shared base class sets up a mini DFS/MR Hadoop cluster for testing, and
@@ -55,8 +55,7 @@ import org.junit.Test;
  */
 public abstract class MapReduceTestBaseClass {
 
-    private static final Log log = LogFactory
-            .getLog(MapReduceTestBaseClass.class);
+    private static final Logger log = LoggerFactory.getLogger(MapReduceTestBaseClass.class);
 
     // Test cluster:
     protected static MiniDFSCluster dfsCluster = null;

@@ -29,8 +29,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
@@ -39,6 +38,8 @@ import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
 import org.junit.Test;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
 
 /**
@@ -49,7 +50,7 @@ import uk.bl.wa.hadoop.mapreduce.MapReduceTestBaseClass;
  */
 public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
     
-    private static final Log log = LogFactory.getLog(HdsfFileHasherIntegrationTest.class);
+    private static final Logger log = LoggerFactory.getLogger(HdsfFileHasherIntegrationTest.class);
 
     @SuppressWarnings( "deprecation" )
     @Test

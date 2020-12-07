@@ -32,8 +32,8 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.apache.commons.cli.*;
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
@@ -71,7 +71,7 @@ import java.util.zip.GZIPOutputStream;
  */
 public class ValidateWARCNameMatchers {
     
-    private static Log log = LogFactory.getLog(ValidateWARCNameMatchers.class);
+    private static Logger log = LoggerFactory.getLogger(ValidateWARCNameMatchers.class);
 
     private static final String CLI_USAGE = "-c config_file <File with list of WARC files>";
     private static final String CLI_HEADER =

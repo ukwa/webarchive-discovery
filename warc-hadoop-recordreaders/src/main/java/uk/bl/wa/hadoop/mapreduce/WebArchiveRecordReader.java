@@ -40,11 +40,12 @@ import org.apache.hadoop.mapreduce.InputSplit;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
-import org.apache.log4j.Logger;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 /**
@@ -54,7 +55,7 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 public class WebArchiveRecordReader
         extends RecordReader<Text, WritableArchiveRecord> {
 
-    private static Logger log = Logger
+    private static Logger log = LoggerFactory
             .getLogger(WebArchiveRecordReader.class.getName());
 
     private FSDataInputStream datainputstream;

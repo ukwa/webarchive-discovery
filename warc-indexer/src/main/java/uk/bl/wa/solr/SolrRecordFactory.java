@@ -25,8 +25,8 @@ package uk.bl.wa.solr;
  */
 
 import com.typesafe.config.ConfigValue;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.typesafe.config.Config;
 import org.archive.io.ArchiveRecordHeader;
 
@@ -37,7 +37,7 @@ import java.util.Map;
  * Config supporting factory for {@link SolrRecord}, making it possible to specify limits on Solr fields.
  */
 public class SolrRecordFactory {
-    private static Log log = LogFactory.getLog(SolrRecordFactory.class);
+    private static Logger log = LoggerFactory.getLogger(SolrRecordFactory.class);
 
     public static final String KEY_DEFAULT_MAX = "warc.solr.field_setup.default_max_length";
     public static final String KEY_FIELD_LIST = "warc.solr.field_setup.fields";

@@ -23,8 +23,8 @@ package uk.bl.wa.util;
  */
 
 import org.apache.commons.httpclient.URIException;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.wayback.util.url.AggressiveUrlCanonicalizer;
 import org.jwat.common.Base32;
 
@@ -42,7 +42,7 @@ import java.util.regex.Pattern;
  * That should be incorporated here instead of the AggressiveUrlCanonicalizer and the custom code.
  */
 public class Normalisation {
-    private static Log log = LogFactory.getLog( Normalisation.class );
+    private static Logger log = LoggerFactory.getLogger(Normalisation.class );
 
     private static Charset UTF8_CHARSET = Charset.forName("UTF-8");
     private static AggressiveUrlCanonicalizer canon = new AggressiveUrlCanonicalizer();

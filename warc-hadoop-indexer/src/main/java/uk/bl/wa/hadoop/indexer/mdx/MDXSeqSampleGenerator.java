@@ -33,8 +33,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -56,6 +54,8 @@ import org.apache.zookeeper.KeeperException;
 import org.json.JSONArray;
 import org.json.JSONException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.mapred.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.ReservoirSamplingReducer;
 import uk.bl.wa.hadoop.mapreduce.mdx.MDX;
@@ -71,8 +71,7 @@ import uk.bl.wa.solr.SolrFields;
 
 @SuppressWarnings({ "deprecation" })
 public class MDXSeqSampleGenerator extends Configured implements Tool {
-    private static final Log LOG = LogFactory
-            .getLog(MDXSeqSampleGenerator.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MDXSeqSampleGenerator.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] [Wait for completion.]";
     private static final String CLI_HEADER = "MapReduce job extracting data from MDX Sequence Files.";
 

@@ -40,8 +40,8 @@ import java.util.Map;
 import java.util.Scanner;
 import java.util.Set;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.solr.common.util.Base64;
 import org.jdom.Document;
 import org.jdom.Element;
@@ -73,7 +73,7 @@ public class AnnotationsFromAct {
     private static String WARC_COLLECTIONS_URL_JSON = "http://www.webarchive.org.uk/act/taxonomy_term.json?vocabulary=5&limit=500&page=0";
     private static String WARC_SUBJECTS_URL_JSON = "http://www.webarchive.org.uk/act/taxonomy_term.json?vocabulary=2&limit=500&page=0";
 
-    private static Log LOG = LogFactory.getLog( AnnotationsFromAct.class );
+    private static Logger LOG = LoggerFactory.getLogger(AnnotationsFromAct.class );
     
     private String cookie;
     private String csrf;

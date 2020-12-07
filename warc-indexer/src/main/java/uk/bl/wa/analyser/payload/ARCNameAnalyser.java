@@ -7,8 +7,8 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.archive.io.ArchiveRecordHeader;
 
 /*
@@ -52,7 +52,7 @@ import uk.bl.wa.util.Instrument;
  *
  */
 public class ARCNameAnalyser extends AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( ARCNameAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger( ARCNameAnalyser.class );
 
     private final List<Rule> rules = new ArrayList<Rule>();
 

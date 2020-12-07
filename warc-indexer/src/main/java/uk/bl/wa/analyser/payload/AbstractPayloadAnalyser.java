@@ -30,8 +30,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.parser.AbstractParser;
 import org.archive.io.ArchiveRecordHeader;
@@ -46,7 +46,7 @@ import uk.bl.wa.solr.SolrRecord;
  *
  */
 public abstract class AbstractPayloadAnalyser {
-    private static Log log = LogFactory.getLog( AbstractPayloadAnalyser.class );
+    private static Logger log = LoggerFactory.getLogger(AbstractPayloadAnalyser.class );
 
     public void configure(Config conf) {
     }

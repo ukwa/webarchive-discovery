@@ -26,13 +26,14 @@ import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
 import javax.script.ScriptException;
 
-import org.apache.log4j.Logger;
 import org.apache.tika.detect.Detector;
 import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.mime.MediaTypeRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -43,7 +44,7 @@ import java.nio.charset.Charset;
 import java.util.HashMap;
 
 public class HighlightJSDetector implements Detector {
-    private static Logger log = Logger.getLogger(HighlightJSDetector.class.getName());
+    private static Logger log = LoggerFactory.getLogger(HighlightJSDetector.class.getName());
     
     /**
      * 

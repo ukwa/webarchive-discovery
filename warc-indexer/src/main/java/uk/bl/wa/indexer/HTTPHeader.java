@@ -37,8 +37,8 @@ package uk.bl.wa.indexer;
  */
 
 import org.apache.commons.httpclient.Header;
-import org.apache.commons.logging.LogFactory;
-import org.apache.commons.logging.Log;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.ArrayList;

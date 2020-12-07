@@ -28,8 +28,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.time.Instant;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
@@ -49,6 +47,8 @@ import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigRenderOptions;
 import com.typesafe.config.ConfigValueFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
@@ -66,7 +66,7 @@ import uk.bl.wa.util.ConfigPrinter;
 
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerRunner extends Configured implements Tool {
-    private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
+    private static final Logger LOG = LoggerFactory.getLogger(WARCIndexerRunner.class);
     public static final String CONFIG_PROPERTIES = "warc_indexer_config";
 
     WARCIndexerOptions opts = new WARCIndexerOptions();

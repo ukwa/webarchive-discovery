@@ -55,6 +55,15 @@
       </plugins>
    </build>
    <dependencies>
+
+      <dependency>
+         <!--slf4j simple for tests-->
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-simple</artifactId>
+         <version>1.7.30</version>
+         <scope>test</scope>
+      </dependency>
+
       <dependency>
          <groupId>com.typesafe</groupId>
          <artifactId>config</artifactId>
@@ -75,10 +84,6 @@
          <artifactId>tika-parsers</artifactId>
          <version>${tika.version}</version>
          <exclusions>
-            <exclusion>
-               <artifactId>slf4j-api</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
             <exclusion>
                <groupId>org.apache.cxf</groupId>
                <artifactId>cxf-rt-transports-http</artifactId>
@@ -123,16 +128,7 @@
          <type>jar</type>
          <scope>test</scope>
       </dependency>
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-1.2-api</artifactId>
-         <version>2.13.1</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.logging.log4j</groupId>
-         <artifactId>log4j-core</artifactId>
-         <version>2.13.2</version>
-      </dependency>
+
       <dependency>
          <groupId>com.github.stephenc.java-iso-tools</groupId>
          <artifactId>loopy-core</artifactId>
@@ -145,10 +141,6 @@
          <artifactId>nanite-core</artifactId>
          <version>1.4.0-97</version>
          <exclusions>
-            <exclusion>
-               <artifactId>slf4j-api</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
             <exclusion>
                <groupId>org.apache.cxf</groupId>
                <artifactId>cxf-rt-bindings-http</artifactId>
@@ -185,10 +177,6 @@
                <groupId>org.springframework</groupId>
                <artifactId>spring-beans</artifactId>
             </exclusion>
-            <exclusion>
-               <groupId>org.slf4j</groupId>
-               <artifactId>slf4j-log4j12</artifactId>
-            </exclusion>
          </exclusions>
       </dependency>
       <dependency>
@@ -201,10 +189,6 @@
          <artifactId>webarchive-commons</artifactId>
          <version>${webarchive.commons.version}</version>
          <exclusions>
-            <exclusion>
-               <artifactId>slf4j-api</artifactId>
-               <groupId>org.slf4j</groupId>
-            </exclusion>
             <exclusion>
                <artifactId>hadoop-core</artifactId>
                <groupId>org.apache.hadoop</groupId>
@@ -232,12 +216,7 @@
          <artifactId>guava</artifactId>
          <version>18.0</version>
       </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-simple</artifactId>
-         <version>1.7.4</version>
-         <scope>test</scope>
-      </dependency>
+
       <dependency>
          <groupId>org.netpreserve.openwayback</groupId>
          <artifactId>openwayback-core</artifactId>

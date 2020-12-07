@@ -38,8 +38,9 @@ import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import org.apache.log4j.Logger;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 
 /**
@@ -51,7 +52,7 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 
 @SuppressWarnings( { "deprecation" } )
 public class WARCRegexIndexer extends Configured implements Tool {
-    private static Logger log = Logger.getLogger(WARCRegexIndexer.class.getName());
+    private static Logger log = LoggerFactory.getLogger(WARCRegexIndexer.class.getName());
     
     public static final String REGEX_PATTERN_PARAM = "regex.pattern";
 

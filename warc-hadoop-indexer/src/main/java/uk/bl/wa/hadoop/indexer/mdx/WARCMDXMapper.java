@@ -28,8 +28,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MapReduceBase;
@@ -40,6 +38,8 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.solr.common.SolrInputField;
 import org.json.JSONException;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.hadoop.indexer.WARCIndexerMapper;
 import uk.bl.wa.hadoop.indexer.WritableSolrRecord;
@@ -50,7 +50,7 @@ import uk.bl.wa.solr.SolrRecord;
 @SuppressWarnings( { "deprecation" } )
 public class WARCMDXMapper extends MapReduceBase implements
         Mapper<Text, WritableArchiveRecord, Text, Text> {
-    private static final Log LOG = LogFactory.getLog( WARCMDXMapper.class );
+    private static final Logger LOG = LoggerFactory.getLogger(WARCMDXMapper.class );
 
     private WARCIndexerMapper wim;
 

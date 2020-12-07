@@ -168,6 +168,12 @@
 
    <repositories>
       <repository>
+         <id>version99</id>
+         <!-- highly available repository serving empty artifacts -->
+         <url>http://version99.qos.ch/</url>
+      </repository>
+
+      <repository>
          <id>maven-restlet</id>
          <name>Public online Restlet repository</name>
          <url>http://maven.restlet.org</url>
@@ -205,4 +211,32 @@
          <url>https://repository.apache.org/snapshots/</url>
       </repository>
    </repositories>
+
+   <dependencies>
+      <!--        Logging-->
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>slf4j-api</artifactId>
+         <version>${slf4j.version.override}</version>
+      </dependency>
+      <dependency>
+         <groupId>org.slf4j</groupId>
+         <artifactId>jcl-over-slf4j</artifactId>
+         <version>${slf4j.version.override}</version>
+      </dependency>
+   </dependencies>
+   <dependencyManagement>
+      <dependencies>
+         <dependency><!--Per default replace commons logging with empty jar, for all dependencies-->
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>99-empty</version>
+         </dependency>
+         <dependency> <!--Ignore log4j dependencies. We only include log4j if we actually want to-->
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>99-empty</version>
+         </dependency>
+      </dependencies>
+   </dependencyManagement>
 </project>

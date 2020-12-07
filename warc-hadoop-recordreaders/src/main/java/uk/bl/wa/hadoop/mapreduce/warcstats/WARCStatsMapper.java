@@ -29,8 +29,6 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.IOException;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -43,6 +41,8 @@ import org.archive.io.warc.WARCRecord;
 import org.archive.url.UsableURI;
 import org.archive.url.UsableURIFactory;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 /**
@@ -51,7 +51,7 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
  */
 public class WARCStatsMapper extends MapReduceBase implements Mapper<Text, WritableArchiveRecord, Text, Text> {
 
-    private static Log log = LogFactory.getLog(WARCStatsMapper.class);    
+    private static Logger log = LoggerFactory.getLogger(WARCStatsMapper.class);
 
     @Override
     public void map(Text key, WritableArchiveRecord value,

@@ -30,8 +30,8 @@ package uk.bl.wa.apache.solr.hadoop;
 //import java.security.NoSuchAlgorithmException;
 //import java.util.Properties;
 //
-//import org.apache.commons.logging.Log;
-//import org.apache.commons.logging.LogFactory;
+//import org.slf4j.Logger;
+//import org.slf4j.LoggerFactory;
 //import org.apache.hadoop.io.Text;
 //import org.apache.log4j.PropertyConfigurator;
 //import org.archive.io.ArchiveRecordHeader;
@@ -51,8 +51,8 @@ package uk.bl.wa.apache.solr.hadoop;
 // */
 //public class WebArchiveIndexerMapper extends
 //        SolrMapper<Text, WritableArchiveRecord> {
-//    private static final Log LOG = LogFactory
-//            .getLog(WebArchiveIndexerMapper.class);
+//    private static final Logger LOG = LoggerFactory
+//            .getLogger(WebArchiveIndexerMapper.class);
 //
 //    private WARCIndexer windex;
 //

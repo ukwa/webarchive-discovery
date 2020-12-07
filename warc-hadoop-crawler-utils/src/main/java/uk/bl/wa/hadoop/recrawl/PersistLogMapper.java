@@ -22,8 +22,8 @@ import java.util.HashMap;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.httpclient.HttpParser;
 import org.apache.commons.lang.SerializationUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.Mapper;
@@ -51,7 +51,7 @@ import uk.bl.wa.hadoop.WritableArchiveRecord;
 @SuppressWarnings({ "unchecked", "deprecation" })
 public class PersistLogMapper extends MapReduceBase implements
     Mapper<Text, WritableArchiveRecord, Text, Text> {
-    private static final Log LOGGER = LogFactory.getLog(PersistLogMapper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PersistLogMapper.class);
 
     ArchiveRecordHeader responseHeader = null;
     CrawlURI curi = null;

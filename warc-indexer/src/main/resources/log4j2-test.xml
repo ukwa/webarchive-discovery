@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Configuration xmlns="http://logging.apache.org/log4j/2.0/config">
+
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="%-5p %c{1} - %m%n"/>
+        </Console>
+    </Appenders>
+    <Loggers>
+        <!--  Reduce logging from Apache code, e.g. PDFBox  -->
+        <Logger name="org.apache" level="WARN"/>
+
+        <!-- Specifically  uk.gov.nationalarchives.droid.core.signature.droid6.InternalSignature -->
+        <Logger name="uk.gov.nationalarchives.droid" level="error"/>
+
+        <Logger name="uk.bl.wap" level="INFO"/>
+        <Logger name="uk.bl.wa" level="INFO"/>
+
+        <Root level="WARN">
+            <AppenderRef ref="console"/>
+        </Root>
+
+    </Loggers>
+
+
+</Configuration>

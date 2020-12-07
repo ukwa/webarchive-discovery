@@ -15,12 +15,12 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_IP;
  * it under the terms of the GNU General Public License as
  * published by the Free Software Foundation, either version 2 of the
  * License, or (at your option) any later version.
- * 
+ *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public
  * License along with this program.  If not, see
  * <http://www.gnu.org/licenses/gpl-2.0.html>.
@@ -31,9 +31,12 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_TYPE;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.io.UnsupportedEncodingException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -48,8 +51,8 @@ import org.apache.commons.httpclient.ProtocolException;
 import org.apache.commons.httpclient.URIException;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.http.HttpHeaders;
 import org.apache.log4j.PropertyConfigurator;
 import org.archive.format.warc.WARCConstants;
@@ -98,7 +101,7 @@ import uk.bl.wa.util.Normalisation;
  * 
  */
 public class WARCIndexer {
-    private static Log log = LogFactory.getLog( WARCIndexer.class );
+    private static Logger log = LoggerFactory.getLogger(WARCIndexer.class );
 
     private List<String> url_excludes;
     private List<String> protocol_includes;
@@ -157,7 +160,12 @@ public class WARCIndexer {
         log.info("Initialising WARCIndexer...");
         try {
             Properties props = new Properties();
-            props.load(getClass().getResourceAsStream("/log4j-override.properties"));
+            if (getClass().getResource("/log4j-override.properties") != null) {
+                try (Reader resourceAsStream = new InputStreamReader(getClass().getResourceAsStream(
+                        "/log4j-override.properties"), StandardCharsets.UTF_8)) {
+                    props.load(resourceAsStream);
+                }
+            }
             PropertyConfigurator.configure(props);
         } catch (IOException e1) {
             log.error("Failed to load log4j config from properties file.");

@@ -34,8 +34,8 @@ import java.io.PrintStream;
 import java.util.HashMap;
 
 import org.apache.commons.io.FileUtils;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.core.JsonParseException;
@@ -59,7 +59,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
  * 
  */
 public class Annotations {
-    private static final Log LOG = LogFactory.getLog(Annotations.class);
+    private static final Logger LOG = LoggerFactory.getLogger(Annotations.class);
 
     @JsonProperty
     private HashMap<String, HashMap<String, UriCollection>> collections;

@@ -32,8 +32,6 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -48,6 +46,8 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * 
@@ -59,7 +59,7 @@ import org.apache.zookeeper.KeeperException;
 
 @SuppressWarnings({ "deprecation" })
 public class MDXMerger extends Configured implements Tool {
-    private static final Log LOG = LogFactory.getLog(MDXMerger.class);
+    private static final Logger LOG = LoggerFactory.getLogger(MDXMerger.class);
     private static final String CLI_USAGE = "[-i <input file>] [-o <output dir>] [-r <#reducers>] [-w] (to wait for completion)";
     private static final String CLI_HEADER = "MapReduce job for merging MDX files.";
 
