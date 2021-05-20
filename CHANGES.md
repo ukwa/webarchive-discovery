@@ -7,6 +7,7 @@
 
 * Updated many dependencies, in particular Solr to 8.7.0.
 * Cut large, experimental packages out of the main build (NPL etc.) for now.
+* Add support for ElasticSearch [#249](https://github.com/ukwa/webarchive-discovery/pull/249)
 
 
 3.1.0
