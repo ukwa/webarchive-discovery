@@ -9,7 +9,7 @@ package uk.bl.wa.indexer;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2020 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -67,6 +67,8 @@ import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
+import uk.bl.wa.elastic.ElasticImporter;
+import uk.bl.wa.elastic.ElasticUrl;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
@@ -85,7 +87,7 @@ public class WARCIndexerCommand {
         Instrument.init();
     }
 
-    private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
+    private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-e <Elastic instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
     private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
     private static final String CLI_FOOTER = "";
     
@@ -109,6 +111,7 @@ public class WARCIndexerCommand {
         CommandLineParser parser = new PosixParser();
         String outputDir = null;
         String solrUrl = null;
+        String elasticUrl = null;
         String configFile = null;
         boolean isTextRequired = false;
         boolean slashPages = false;
@@ -123,6 +126,8 @@ public class WARCIndexerCommand {
                 "Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
         options.addOption("s", "solr", true,
                 "The URL of the Solr instance the document should be sent to");
+        options.addOption("e", "elastic", true,
+                "The URL of the Elastic instance the document should be sent to");
         options.addOption("t", "text", false,
                 "Include text in XML in output files");
         options.addOption("r", "slash", false,
@@ -173,6 +178,11 @@ public class WARCIndexerCommand {
                        solrUrl  = solrUrl.replaceAll("\"", "");
                 }
                }
+
+               // Get the Elastic Url, if set
+               if(line.hasOption("e")){
+                   elasticUrl = line.getOptionValue("e");
+               }
                
                // Check if the text field is required in the XML output
                if(line.hasOption("t") || line.hasOption("s")){
@@ -191,16 +201,16 @@ public class WARCIndexerCommand {
                 configFile = line.getOptionValue("c");
             }
 
-               // Check that either an output dir or Solr URL is supplied
-               if(outputDir == null && solrUrl == null){
-                   System.out.println( "A Solr URL or an Output Directory must be supplied" );
+               // Check that either an output dir or Solr URL or Elastic URL is supplied
+               if(outputDir == null && solrUrl == null && elasticUrl == null){
+                   System.out.println( "A Solr URL, Elastic URL or an Output Directory must be supplied" );
                    printUsage(options);
                    System.exit( 0 );
                }
                
-               // Check that both an output dir and Solr URL are not supplied
-               if(outputDir != null && solrUrl != null){
-                   System.out.println( "A Solr URL and an Output Directory cannot both be specified" );
+               // Check that both an output dir and Solr/Elastic URL are not supplied
+               if((outputDir != null && solrUrl != null) || (outputDir != null && elasticUrl != null)){
+                   System.out.println( "A Solr/Elastic URL and an Output Directory cannot both be specified" );
                    printUsage(options);
                    System.exit( 0 );
                }
@@ -225,7 +235,7 @@ public class WARCIndexerCommand {
             // Check for commit disabling
             disableCommit = line.hasOption("d");
 
-            parseWarcFiles(configFile, outputDir, gzip, solrUrl, cli_args,
+            parseWarcFiles(configFile, outputDir, gzip, solrUrl, elasticUrl, cli_args,
                            isTextRequired, slashPages, batchSize, annotationsFile,
                            disableCommit, institution, collection, collection_id);
         
@@ -246,7 +256,7 @@ public class WARCIndexerCommand {
      * @throws TransformerException
      */
     public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
-            String solrUrl, String[] args, boolean isTextRequired,
+            String solrUrl, String elasticUrl, String[] args, boolean isTextRequired,
             boolean slashPages, int batchSize, String annotationsFile,
             boolean disableCommit, String institution, String collection,
             String collection_id)
@@ -276,6 +286,17 @@ public class WARCIndexerCommand {
         if(solrUrl != null) {
             conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
         }
+        
+        ElasticImporter elasticImporter = null;
+        if(elasticUrl != null) {
+        	ElasticUrl eu = new ElasticUrl(elasticUrl);
+        	if (!eu.isValid()) {
+                log.error("ElasticUrl is not valid");
+                System.exit( 0 );                          
+        	}
+        	elasticImporter = new ElasticImporter(eu); 
+        }
+        
         // Use config for default value
         if (conf.hasPath("warc.solr.disablecommit")) {
             disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
@@ -286,9 +307,11 @@ public class WARCIndexerCommand {
         }
 
         // Set up the server config:
-        SolrWebServer solrWeb = new SolrWebServer(conf);
+        SolrWebServer solrWeb = null;
+        if(solrUrl != null) {
+        	solrWeb = new SolrWebServer(conf);
+        }
         
-
         // Also pass config down:
         WARCIndexer windex = new WARCIndexer(conf);
 
@@ -329,7 +352,7 @@ public class WARCIndexerCommand {
             }
 
             File dir = new File(outputWarcDir);
-            if (!dir.exists() && solrUrl == null && zipOut == null) {
+            if (!dir.exists() && solrUrl == null && elasticUrl == null && zipOut == null) {
                 FileUtils.forceMkdir(dir);
             }
 
@@ -376,14 +399,13 @@ public class WARCIndexerCommand {
 
                     if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
                                         doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
-
                         if (zipOut != null) {
                             doc.writeXml(zipOut);
-                        } else if (solrUrl == null) {
+                        } else if (solrUrl == null && elasticUrl == null) {
                             writeXMLToFile(doc.toXml(), fileOutput);
                         } else {
                             docs.add(doc.getSolrDocument());
-                            checkSubmission(solrWeb, docs, batchSize, false);
+                            checkSubmission(solrWeb, elasticImporter, docs, batchSize, false);
                         }
                         recordCount++;
                     }
@@ -403,7 +425,7 @@ public class WARCIndexerCommand {
         }
 
         // Submit any remaining docs:
-        checkSubmission(solrWeb, docs, batchSize, true);
+        checkSubmission(solrWeb, elasticImporter, docs, batchSize, true);
         if (!disableCommit) {
             // Commit the updates:
             commit(solrWeb);
@@ -439,7 +461,7 @@ public class WARCIndexerCommand {
      * @throws SolrServerException
      * @throws IOException
      */
-    private static void checkSubmission(SolrWebServer solr,
+    private static void checkSubmission(SolrWebServer solr, ElasticImporter elasticImporter,
             List<SolrInputDocument> docs, int limit, boolean force) {
         if (docs.size() > 0 && (docs.size() >= limit || force)) {
             try {
@@ -447,7 +469,9 @@ public class WARCIndexerCommand {
                 if (log.isTraceEnabled() || debugMode) {
                     for (SolrInputDocument doc : docs) {
                         try {
-                            solr.updateSolrDoc(doc);
+                        	if (solr != null) {
+                                solr.updateSolrDoc(doc);
+                        	}
                         } catch (Exception e) {
                             log.error(
                                     "Failed to post document - got exception: ",
@@ -458,7 +482,20 @@ public class WARCIndexerCommand {
                         }
                     }
                 } else {
-                    solr.add(docs);
+                	if (solr != null) {
+                        solr.add(docs);
+                	}
+                	else if (elasticImporter != null) {
+                        try {
+                            if (elasticImporter != null) {
+        						elasticImporter.importDocuments(docs);
+                            }
+                        	
+    					} catch (Exception e) {
+                            log.error(e.getMessage());
+                            System.exit(1);
+    					}
+                	}
                 }
                 Instrument.timeRel(
                         "WARCIndexerCommand.parseWarcFiles#docdelivery",

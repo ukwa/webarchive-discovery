@@ -4,7 +4,7 @@ package uk.bl.wa.indexer;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2020 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -67,7 +67,7 @@ public class WARCIndexerCommandTest {
         assertTrue("The config '" + config + "' should be available", new File(config).exists());
 
         WARCIndexerCommand.parseWarcFiles(
-                config, TMP, true, null, new String[]{warc}, false, false,
+                config, TMP, true, null, null, new String[]{warc}, false, false,
                 1, null, false, null, null, null);
     }
 }
