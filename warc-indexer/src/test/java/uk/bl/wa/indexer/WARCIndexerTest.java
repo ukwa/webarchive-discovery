@@ -11,7 +11,7 @@ import static org.junit.Assert.assertTrue;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2020 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
