@@ -66,7 +66,7 @@ public class HTMLAnalyserTest {
         Config config = ConfigFactory.parseFile(CONF);
         HTMLAnalyser ha = new HTMLAnalyser(config);
         Map<String, Object> core = new HashMap<String, Object>();
-        core.put("subject-uri", "NotPresent");
+        core.put("subject-uri", "http://example.org/");
         core.put("ip-address", "192.168.1.10");
         core.put("creation-date", "Invalid");
         core.put("content-type", "text/html");
@@ -81,12 +81,12 @@ public class HTMLAnalyserTest {
         ha.analyse("source", header, in, solr);
 
         // Check number of links:
-        assertEquals("The number of links should be correct", 4,
+        assertEquals("The number of links should be correct", 6,
                 solr.getField(SolrFields.SOLR_LINKS).getValueCount());
 
         // Check hosts are canonicalized:
-        assertEquals("The number of hosts should be correct", 1,
-                solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
+        assertEquals("The number of hosts should be correct. Got hosts " + solr.getField(SolrFields.SOLR_LINKS_HOSTS),
+                     1, solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
         String host = (String) solr.getField(SolrFields.SOLR_LINKS_HOSTS)
                 .getFirstValue();
         assertEquals("The host should be formatted correctly", "example.org",
@@ -107,5 +107,7 @@ public class HTMLAnalyserTest {
                 solr.getField(SolrFields.SOLR_LINKS_HOSTS_SURTS).getValues()
                         .toArray());
 
+        assertEquals("Image links should be for both src and srcset",
+                     12, solr.getField(SolrFields.SOLR_LINKS_IMAGES).getValueCount());
     }
 }
