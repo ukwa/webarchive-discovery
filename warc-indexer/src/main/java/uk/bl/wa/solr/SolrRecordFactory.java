@@ -30,11 +30,13 @@ import org.slf4j.LoggerFactory;
 import com.typesafe.config.Config;
 import org.archive.io.ArchiveRecordHeader;
 import uk.bl.wa.util.Instrument;
+import uk.bl.wa.util.RegexpReplacer;
 
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.*;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.function.UnaryOperator;
@@ -56,6 +58,7 @@ public class SolrRecordFactory {
     public static final String KEY_SANITIZE_UTF8 = "sanitize_utf8";
     public static final String KEY_REMOVE_CONTROL_CHARACTERS = "remove_control_characters";
     public static final String KEY_NORMALISE_WHITESPACE = "normalise_whitespace";
+    public static final String KEY_REWRITES = "rewrites";
 
     public static final int DEFAULT_MAX_LENGTH = -1; // -1 = no limit
     public static final int DEFAULT_MAX_VALUES = -1; // -1 = no limit
@@ -83,12 +86,13 @@ public class SolrRecordFactory {
                                       ConfigValueFactory.fromAnyRef(config.getBytes(KEY_DEFAULT_MAX)));
         }
         defaultContentAdjuster = createContentAdjuster(
-                config == null || !config.hasPath(KEY_DEFAULT_MAX) ? null : config.getConfig(KEY_DEFAULT_MAX));
+                config == null || !config.hasPath(KEY_DEFAULT_ADJUSTER) ? null : config.getConfig(KEY_DEFAULT_ADJUSTER));
         if (config == null || !config.hasPath(KEY_FIELD_LIST)) {
             contentAdjusters = Collections.emptyMap();
         } else {
             Config fieldConfigs = config.getConfig(KEY_FIELD_LIST);
-            contentAdjusters = fieldConfigs.entrySet().stream().collect(Collectors.toMap(
+
+            contentAdjusters = fieldConfigs.root().entrySet().stream().collect(Collectors.toMap(
                     Map.Entry::getKey,
                     e -> createContentAdjuster(fieldConfigs.getConfig(e.getKey()))));
         }
@@ -146,6 +150,14 @@ public class SolrRecordFactory {
         // Normalise white space
         if (isEnabled(config, KEY_NORMALISE_WHITESPACE, DEFAULT_NORMALISE_WHITESPACE)) {
             pipeline = pipeline.andThen(s -> SPACE_PATTERN.matcher(s.trim()).replaceAll(" "));
+        }
+
+        // Rewrites
+        List<? extends Config> rewrites = config != null && config.hasPath(KEY_REWRITES) ?
+                config.getConfigList(KEY_REWRITES) :
+                null;
+        if (rewrites != null && !rewrites.isEmpty()) {
+            pipeline = pipeline.andThen(new RegexpReplacer(rewrites));
         }
 
         // Don't index if empty
