@@ -116,13 +116,14 @@ public class SolrRecordFactory {
     private FieldAdjuster createContentAdjuster(Config config) {
 
         Function<String, String> pipeline = s -> s == null ? "" : s;
+        StringBuilder sb = new StringBuilder();
 
         // Max values for the given field
         int maxValues = config != null && config.hasPath(KEY_MAX_VALUES) ?
                 Math.toIntExact(config.getBytes(KEY_MAX_VALUES)) :
                 DEFAULT_MAX_VALUES;
         if (maxValues == 0) {
-            return new FieldAdjuster(0, s -> null); // Early termination: Don't create a full chain when we always discard the result
+            return new FieldAdjuster(0, s -> null, "break"); // Early termination: Don't create a full chain when we always discard the result
         }
 
         // Max content length in characters
@@ -130,26 +131,29 @@ public class SolrRecordFactory {
                 Math.toIntExact(config.getBytes(KEY_MAX_LENGTH)) :
                 DEFAULT_MAX_LENGTH;
         if (maxLength == 0) {
-            return new FieldAdjuster(maxValues, s -> null); // Early termination: Don't create a full chain when we always discard the result
+            return new FieldAdjuster(maxValues, s -> null, "break"); // Early termination: Don't create a full chain when we always discard the result
         }
         if (maxLength != -1) {
             pipeline = pipeline.andThen( s -> s.length() <= maxLength ? s : s.substring(0, maxLength));
-
+            sb.append("maxLength=").append(maxLength);
         }
 
         // Remove control characters
         if (isEnabled(config, KEY_REMOVE_CONTROL_CHARACTERS, DEFAULT_REMOVE_CONTROL_CHARACTERS)) {
             pipeline = pipeline.andThen(s -> CNTRL_PATTERN.matcher(s).replaceAll(""));
+            sb.append(sb.length() == 0 ? "" : ", ").append("remove_control_characters");
         }
 
         // Sanitize UTF-8
         if (isEnabled(config, KEY_SANITIZE_UTF8, DEFAULT_SANITIZE_UTF8)) {
             pipeline = pipeline.andThen(this::sanitiseUTF8);
+            sb.append(sb.length() == 0 ? "" : ", ").append("sanitise_UTF8");
         }
 
         // Normalise white space
         if (isEnabled(config, KEY_NORMALISE_WHITESPACE, DEFAULT_NORMALISE_WHITESPACE)) {
             pipeline = pipeline.andThen(s -> SPACE_PATTERN.matcher(s.trim()).replaceAll(" "));
+            sb.append(sb.length() == 0 ? "" : ", ").append("normalise_white_space");
         }
 
         // Rewrites
@@ -157,7 +161,9 @@ public class SolrRecordFactory {
                 config.getConfigList(KEY_REWRITES) :
                 null;
         if (rewrites != null && !rewrites.isEmpty()) {
-            pipeline = pipeline.andThen(new RegexpReplacer(rewrites));
+            RegexpReplacer replacer = new RegexpReplacer(rewrites);
+            pipeline = pipeline.andThen(replacer);
+            sb.append(sb.length() == 0 ? "" : ", ").append(replacer);
         }
 
         // Don't index if empty
@@ -174,7 +180,11 @@ public class SolrRecordFactory {
             }
         };
 
-        return new FieldAdjuster(maxValues, instrumented);
+        if (sb.length() == 0) {
+            sb.append("empty");
+        }
+
+        return new FieldAdjuster(maxValues, instrumented, sb.toString());
     }
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");
     private static final Pattern CNTRL_PATTERN = Pattern.compile("\\p{Cntrl}");

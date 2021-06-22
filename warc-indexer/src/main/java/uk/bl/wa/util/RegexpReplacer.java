@@ -62,7 +62,7 @@ public class RegexpReplacer implements UnaryOperator<String> {
      * @param rules a list of rules to apply. This can be empty or null.
      */
     public RegexpReplacer(List<? extends Config> rules) {
-        log.info("Creating RegexpReplacer with {} rules", rules == null ? 0 : rules.size());
+        log.debug("Creating RegexpReplacer with {} rules", rules == null ? 0 : rules.size());
         replacers = rules == null ? Collections.emptyList() :
                 rules.stream().map(Replacer::new).collect(Collectors.toList());
     }
@@ -78,6 +78,11 @@ public class RegexpReplacer implements UnaryOperator<String> {
             s = replacer.apply(s);
         }
         return s;
+    }
+
+    @Override
+    public String toString() {
+        return "RegexpReplacer{" + replacers + "}";
     }
 
     /**
@@ -102,6 +107,11 @@ public class RegexpReplacer implements UnaryOperator<String> {
         @Override
         public String apply(String s) {
             return pattern.matcher(s).replaceAll(replacement);
+        }
+
+        @Override
+        public String toString() {
+            return "replace('" + pattern + "', '" + replacement + "')";
         }
     }
 }
