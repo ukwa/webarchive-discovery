@@ -55,12 +55,14 @@ public class SolrRecord implements Serializable {
     /**
      * field name -> function map for adjusting content length, correct UTF-8 problems etc.
      */
-    private final Map<String, FieldAdjuster> contentAdjusters;
+    // Marked as transient: SolrRecord content should not be changed after serialization
+    private transient Map<String, FieldAdjuster> contentAdjusters;
     /**
      * If there is no contentAdjuster available for a given field from {@link #contentAdjusters},
      * the defaultContentAdjuster is used.
      */
-    private final FieldAdjuster defaultContentAdjuster;
+    // Marked as transient: SolrRecord content should not be changed after serialization
+    private transient FieldAdjuster defaultContentAdjuster;
 
     public SolrRecord(Map<String, FieldAdjuster> contentAdjusters, FieldAdjuster defaultcontentAdjuster) {
         this.contentAdjusters = contentAdjusters;
@@ -99,7 +101,8 @@ public class SolrRecord implements Serializable {
                 s -> SolrRecordFactory.DEFAULT_MAX_LENGTH < 0 || s == null ||
                      s.length() < SolrRecordFactory.DEFAULT_MAX_LENGTH ?
                         s :
-                        s.substring(0, SolrRecordFactory.DEFAULT_MAX_LENGTH)
+                        s.substring(0, SolrRecordFactory.DEFAULT_MAX_LENGTH),
+                "maxLength=" + SolrRecordFactory.DEFAULT_MAX_LENGTH
         );
     }
 
