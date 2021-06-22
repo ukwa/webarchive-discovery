@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package uk.bl.wa.indexer;
+package uk.bl.wa.indexer.delivery;
 
 import uk.bl.wa.solr.SolrRecord;
 
@@ -26,7 +26,7 @@ import java.io.IOException;
 public interface DocumentConsumer extends Closeable {
     /**
      * Add a record to the consumer. This might cause af flush of buffered documents.
-     * @param solrRecord   the record to add.
+     * @param solrRecord the record to add.
      * @throws IOException if a flush was attempted and could not be performed.
      */
     void add(SolrRecord solrRecord) throws IOException;

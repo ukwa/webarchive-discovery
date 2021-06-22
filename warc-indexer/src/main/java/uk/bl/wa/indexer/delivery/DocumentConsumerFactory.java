@@ -12,7 +12,7 @@
  *  limitations under the License.
  *
  */
-package uk.bl.wa.indexer;
+package uk.bl.wa.indexer.delivery;
 
 import com.typesafe.config.Config;
 import org.slf4j.Logger;

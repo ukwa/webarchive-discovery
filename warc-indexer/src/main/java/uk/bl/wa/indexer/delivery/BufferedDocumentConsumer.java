@@ -12,12 +12,13 @@
  *  limitations under the License.
  *
  */
-package uk.bl.wa.indexer;
+package uk.bl.wa.indexer.delivery;
 
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.bl.wa.solr.SolrRecord;
+import uk.bl.wa.util.Instrument;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -27,7 +28,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * Base implementation of a buffered DocumentConsumer. Takes care of tracking and buffering documents,
- * calling flush when needed.
+ * calling flush and commit when needed.
  */
 public abstract class BufferedDocumentConsumer implements DocumentConsumer {
     private static final Logger log = LoggerFactory.getLogger(BufferedDocumentConsumer.class);
@@ -45,7 +46,7 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
     private final boolean commitOnClose;
 
     private final List<SolrRecord> docs;
-    private final AtomicLong totalBytes = new AtomicLong(0);
+    private final AtomicLong bufferedBytes = new AtomicLong(0);
     boolean isClosed = false;
 
     /**
@@ -73,52 +74,104 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
 
     @Override
     public synchronized void add(SolrRecord solrRecord) throws IOException {
+        final long updateStart = System.nanoTime();
         docs.add(solrRecord);
-        if (maxBytes != -1 && totalBytes.addAndGet(solrRecord.getApproximateSize()) >= maxBytes) {
-            log.debug("Calling flush as totalBytes={} > maxBytes={}", totalBytes, maxBytes);
+        if (maxBytes != -1 && bufferedBytes.addAndGet(solrRecord.getApproximateSize()) >= maxBytes) {
+            log.debug("Calling flush as totalBytes={} > maxBytes={}", bufferedBytes, maxBytes);
             flush();
         } else if (maxDocuments != -1 && docs.size() >= maxDocuments){
             log.debug("Calling flush as #documents == maxDocuments == {}", maxDocuments);
             flush();
         }
+        Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
+                           "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
     }
 
     @Override
     public synchronized void flush() throws IOException {
+        if (isClosed) {
+            log.warn("flush() called on already closed DocumentConsumer");
+            return;
+        }
+
         if (docs.isEmpty()) {
             log.debug("Flush called with no documents buffered");
             return;
         }
+
         log.debug("Flushing {} documents", docs);
-        flush(Collections.unmodifiableList(docs));
+        final long start = System.nanoTime();
+        performFlush(Collections.unmodifiableList(docs));
+        Instrument.timeRel(
+                "WARCIndexerCommand.parseWarcFiles#docdelivery",
+                "WARCIndexerCommanc.checkSubmission#solrSendBatch", start);
+
         docs.clear();
-        totalBytes.set(0);
+        bufferedBytes.set(0);
     }
 
     @Override
     public void close() throws IOException {
-        log.debug("Flushing, optionally committing and closing");
+        if (isClosed) {
+            log.warn("close() called on already closed DocumentConsumer");
+            return;
+        }
+
+        log.info("close() called: Flushing, optionally committing and closing");
         flush();
         if (commitOnClose) {
-            log.debug("Triggering commit");
             commit();
         }
         performClose();
         isClosed = true;
     }
 
+    @Override
+    public void commit() throws IOException {
+        if (isClosed) {
+            log.warn("commit() called on already closed DocumentConsumer");
+            return;
+        }
+        log.debug("Triggering commit");
+        final long start = System.nanoTime();
+        performCommit();
+        Instrument.timeRel("WARCIndexerCommand.main#total", "WARCIndexerCommand.commit#success", start);
+    }
+
+    @Override
+    public String toString() {
+        return "BufferedDocumentConsumer{" +
+               "docs=" + docs +
+               ", maxDocs=" + maxDocuments +
+               ", bytes=" + bufferedBytes +
+               ", maxBytes=" + maxBytes +
+               ", commitOnClose=" + commitOnClose +
+               ", isClosed=" + isClosed +
+               '}';
+    }
+
     /**
-     * Flush the given documents. This will be called automatically by {@link #add(SolrRecord)}, {@link #flush()} and
-     * {@link #close()}.
+     * Flush the given documents.
+     *
+     * This will be called automatically by {@link #add(SolrRecord)}, {@link #flush()} and {@link #close()}.
      * @param docs the documents to flush.
      * @throws IOException if the flush failed.
      */
-    abstract void flush(List<SolrRecord> docs) throws IOException;
+    abstract void performFlush(List<SolrRecord> docs) throws IOException;
 
     /**
-     * Perform any close procedure needed by the consumer. This is called automatically by {@link #close()}.
+     * Perform any close procedure needed by the consumer. {@link #performFlush(List)} will be called automatically before
+     * performClose is called.
+     *
+     * This is called automatically by {@link #close()}.
      * @throws IOException if the close procedure failed.
      */
     abstract void performClose() throws IOException;
 
+    /**
+     * Trigger a commit at the receiving end of the document pipeline.
+     * This method is called automatically if {@link #DISABLE_COMMIT_KEY} is {@code false}.
+     * @throws IOException if the commit could not be completed.
+     */
+    protected abstract void performCommit() throws IOException;
 }
