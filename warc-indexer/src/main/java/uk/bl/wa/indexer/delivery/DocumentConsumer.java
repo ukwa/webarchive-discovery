@@ -53,4 +53,21 @@ public interface DocumentConsumer extends Closeable {
     default void close() throws IOException {
         flush();
     }
+
+    /**
+     * Signals that a new WARC is about to be processed.
+     * @param warcfile the warc file that will be processed.
+     * @throws IOException if the warc start signal caused problems.
+     */
+    default void startWARC(String warcfile) throws IOException {
+        // Do nothing per default
+    }
+
+    /**
+     * Signals that the processing of a WARC file has finished.
+     * @throws IOException if the warc end signal caused problems.
+     */
+    default void endWARC() throws IOException {
+        // Do nothing per default
+    }
 }

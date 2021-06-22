@@ -69,6 +69,8 @@ import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
 import uk.bl.wa.elastic.ElasticImporter;
 import uk.bl.wa.elastic.ElasticUrl;
+import uk.bl.wa.indexer.delivery.DocumentConsumer;
+import uk.bl.wa.indexer.delivery.DocumentConsumerFactory;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
@@ -286,7 +288,7 @@ public class WARCIndexerCommand {
         if(solrUrl != null) {
             conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
         }
-        
+
         ElasticImporter elasticImporter = null;
         if(elasticUrl != null) {
         	ElasticUrl eu = new ElasticUrl(elasticUrl);

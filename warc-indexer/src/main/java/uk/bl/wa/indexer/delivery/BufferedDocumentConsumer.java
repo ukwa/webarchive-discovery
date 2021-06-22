@@ -110,6 +110,10 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
         bufferedBytes.set(0);
     }
 
+    /**
+     * Automatically calls {@link #flush()} and {@link #commit()} (if auto commit is enabled).
+     * @throws IOException if flush/commit failed.
+     */
     @Override
     public void close() throws IOException {
         if (isClosed) {

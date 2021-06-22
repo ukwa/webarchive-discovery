@@ -30,14 +30,14 @@ import java.util.zip.GZIPOutputStream;
 public class FilesystemDocumentConsumer extends BufferedDocumentConsumer {
     private static final Logger log = LoggerFactory.getLogger(FilesystemDocumentConsumer.class);
 
-    private final String filename;
     private final boolean gzip;
-    private final Writer out;
+    private final String outputFolder;
+
+    private String filename = null;
+    private Writer out = null;
 
     /**
      * Create a FilesystemDocumentConsumer based on the given configuration.
-     * @param filename the destination for the documents.
-     *                 If gzipOverride is true, {@code .gz} will be appended to the filename.
      * @param gzipOverride if true, the output will be gzipped, else it will be stored directly.
      * @param conf base setup for the DocumentConsumer. Values for maxDocuments, maxBytes and disableCommit will be
      *             taken from here, if present.
@@ -48,24 +48,20 @@ public class FilesystemDocumentConsumer extends BufferedDocumentConsumer {
      * @throws IOException if the output file could not be created.
      */
     public FilesystemDocumentConsumer(
-            String filename, Config conf, Boolean gzipOverride,
+            String outputFolder, Config conf, Boolean gzipOverride,
             Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) throws IOException {
         super(conf, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
         gzip = gzipOverride != null && gzipOverride;
-        this.filename = filename + (gzip ? ".gz" : "");
-
-        out = gzip ?
-                new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(
-                        new FileOutputStream(this.filename))), StandardCharsets.UTF_8) :
-                new OutputStreamWriter(new BufferedOutputStream(
-                        new FileOutputStream(this.filename)), StandardCharsets.UTF_8);
-        out.write("<add>");
+        this.outputFolder = outputFolder + (outputFolder.endsWith("/") ? "" : "/");
 
         log.info("Constructed " + this);
     }
 
     @Override
     void performFlush(List<SolrRecord> docs) throws IOException {
+        if (out == null) {
+            throw new IllegalStateException("Flush called but no output file is defined");
+        }
         for (SolrRecord record: docs) {
             record.writeXml(out);
         }
@@ -73,14 +69,37 @@ public class FilesystemDocumentConsumer extends BufferedDocumentConsumer {
 
     @Override
     void performClose() throws IOException {
-        out.write("</add>");
-        out.flush();
-        out.close();
+        endWARC();
     }
 
     @Override
     public void performCommit() {
         // No commit for filesystem
+    }
+
+    @Override
+    public void startWARC(String warcfile) throws IOException {
+        File inFile = new File(warcfile);
+        filename = outputFolder + inFile.getName() + ".xml" + (gzip ? ".gz" : "");
+        out = gzip ?
+                new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(
+                        new FileOutputStream(filename))), StandardCharsets.UTF_8) :
+                new OutputStreamWriter(new BufferedOutputStream(
+                        new FileOutputStream(filename)), StandardCharsets.UTF_8);
+        out.write("<add>");
+    }
+
+    @Override
+    public void endWARC() throws IOException {
+        if (out == null) {
+            return;
+        }
+        out.write("</add>");
+        out.flush();
+        out.close();
+
+        out = null;
+        filename = null;
     }
 
     @Override

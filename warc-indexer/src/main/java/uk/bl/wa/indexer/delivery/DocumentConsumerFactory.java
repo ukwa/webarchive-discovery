@@ -18,6 +18,8 @@ import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.IOException;
+
 /**
  * A Documentconsumer is responsible for receiving {@link uk.bl.wa.solr.SolrRecord}s and passing them on to a
  * receiving system, such as Solr, Elasticsearch or the file system.
@@ -25,34 +27,40 @@ import org.slf4j.LoggerFactory;
 public class DocumentConsumerFactory {
     private static final Logger log = LoggerFactory.getLogger(DocumentConsumerFactory.class);
 
-    public static final String BATCH_DOCUMENTS_KEY = "warc.solr.batch_size";
-    public static final String BATCH_BYTES_KEY = "warc.solr.batch_bytes";
-    public static final String DISABLE_COMMIT_KEY = "warc.solr.disablecommit";
-
-    public static final int BATCH_DOCUMENTS_DEFAULT = 1;
-    public static final int BATCH_BYTES_DEFAULT = 20_000_000; // ~20MB
-    public static final boolean DISABLE_COMMIT_DEFAULT = false;
-
     /**
      * Create a DocumentConsumer based on the given configuration.
+     * Exactly one of outputdir, solrURL or elasticURL must be defined.
      * @param conf base setup for the DocumentConsumer.
+     * @param outputFolder if defined the DocumentConsumer will write to a local file in the folder.
+     * @param outputGZIP if true and outputDir is != null, the output will be gzipped.
+     * @param solrURL if defined the DocumentConsumer will send to Solr.
+     * @param elasticURL if defined the Documentconsumer will send to Elasticsearch.
      * @param maxDocumentsOverride  if not null, this will override the value from conf "warc.solr.batch_size"
      * @param maxBytesOverride if not null, this will override the value from conf "warc.solr.batch_bytes"
      * @param disableCommitOverride if not null, this will override the value from conf "warc.solr.disablecommit"
-     * @return
+     * @return a DocumentConsumer ready for consumption.
+     * @throws IOException if the consumer could not be constructed.
+     * @throws IllegalArgumentException if it was not possible to derive a proper setup.
      */
     public static DocumentConsumer createConsumer(
-            Config conf, String outputDir, boolean outputGZIP,
-            Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) {
-        int maxDocuments = maxDocumentsOverride != null ? maxDocumentsOverride :
-                conf.hasPath(BATCH_DOCUMENTS_KEY) ? conf.getInt(BATCH_DOCUMENTS_KEY) :
-                        BATCH_DOCUMENTS_DEFAULT;
-        long maxBytes = maxBytesOverride != null ? maxBytesOverride :
-                conf.hasPath(BATCH_BYTES_KEY) ? conf.getLong(BATCH_BYTES_KEY) :
-                        BATCH_BYTES_DEFAULT;
-        boolean disableCommit = disableCommitOverride != null ? disableCommitOverride :
-                conf.hasPath(DISABLE_COMMIT_KEY) ? conf.getBoolean(DISABLE_COMMIT_KEY) :
-                        DISABLE_COMMIT_DEFAULT;
-        throw new UnsupportedOperationException("Not implemented yet");
+            Config conf, String outputFolder, Boolean outputGZIP, String solrURL, String elasticURL,
+            Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) throws IOException {
+        int outputs = (outputFolder == null ? 0 : 1) + (solrURL == null ? 0 : 1) + (elasticURL == null ? 0 : 1);
+        if (outputs > 1) {
+            throw new IllegalArgumentException("Only 1 of either output, solr or elastic must be specified");
+        }
+        if (outputFolder != null) {
+            return new FilesystemDocumentConsumer(
+                    outputFolder, conf, outputGZIP, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
+        }
+        if (solrURL != null) {
+            return new SolrDocumentConsumer(
+                    solrURL, conf, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
+        }
+        if (elasticURL != null) {
+            return new ElasticsearchDocumentConsumer(
+                    elasticURL, conf, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
+        }
+        throw new IllegalArgumentException("Either output, solr or elastic must be specified");
     }
 }
