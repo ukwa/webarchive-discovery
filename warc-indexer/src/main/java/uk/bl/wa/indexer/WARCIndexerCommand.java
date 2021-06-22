@@ -286,7 +286,7 @@ public class WARCIndexerCommand {
         if(solrUrl != null) {
             conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
         }
-        
+
         ElasticImporter elasticImporter = null;
         if(elasticUrl != null) {
         	ElasticUrl eu = new ElasticUrl(elasticUrl);

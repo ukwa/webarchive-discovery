@@ -90,6 +90,7 @@ import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
+import uk.bl.wa.util.RegexpReplacer;
 
 /**
  * 
@@ -104,6 +105,7 @@ public class WARCIndexer {
     private static Logger log = LoggerFactory.getLogger(WARCIndexer.class );
 
     private List<String> url_excludes;
+    private final RegexpReplacer urlRewriter;
     private List<String> protocol_includes;
     private List<String> response_includes;
     private List<String> record_type_includes;
@@ -187,6 +189,8 @@ public class WARCIndexer {
         }
         // URLs to exclude:
         this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
+        // Rewrite rules for the URL
+        this.urlRewriter = new RegexpReplacer(conf, "warc.index.extract.url_rewrite");
         // Protocols to include:
         this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
         // Response codes to include:
@@ -317,7 +321,7 @@ public class WARCIndexer {
                 return null;
 
             // Get the URL:
-            String targetUrl = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+            String targetUrl = Normalisation.sanitiseWARCHeaderValue(urlRewriter.apply(header.getUrl()));
 
             // Strip down very long URLs to avoid
             // "org.apache.commons.httpclient.URIException: Created (escaped)
@@ -515,9 +519,12 @@ public class WARCIndexer {
         // String url_base64 =
         // Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
         final String url_md5hex = Base64.encodeBase64String(url_md5digest);
-        solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
+        solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(urlRewriter.apply(header.getUrl())));
+        if (!solr.getFieldValue(SolrFields.SOLR_URL).toString().equals(header.getUrl())) {
+            System.out.println("*** " + solr.getFieldValue(SolrFields.SOLR_URL) + " --- " + header.getUrl());
+        }
         if (addNormalisedURL) {
-            solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
+            solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl)); // targetUrl has already been rewritten
         }
 
         // Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):

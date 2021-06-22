@@ -44,8 +44,16 @@ public class WARCIndexerCommandTest {
     // Local WARC that triggered long exit for the JVM after processing has finished
     @Test
     public void testSBWARC() throws NoSuchAlgorithmException, TransformerException, IOException {
-        testWARC("/home/te/projects/measurements/solrcloud/config3.conf",
+        testWARC("/home/te/projects/netarkivet/warc-indexer-conf-rewrite-url.conf",
                 "/home/te/projects/measurements/solrcloud/169568-178-20121224135757-00257-sb-prod-har-006.statsbiblioteket.dk.arc.gz");
+        Instrument.log(true);
+    }
+
+    // Local WARC that contains problematic harvests of srcSet
+    @Test
+    public void testSBWARCSrcSet() throws NoSuchAlgorithmException, TransformerException, IOException {
+        testWARC("/home/te/projects/measurements/solrcloud/config3.conf",
+                "/home/te/projects/netarkivet/354485-265-20210102130246631-00000-sb-prod-har-002.statsbiblioteket.dk.warc.gz");
         Instrument.log(true);
     }
 
