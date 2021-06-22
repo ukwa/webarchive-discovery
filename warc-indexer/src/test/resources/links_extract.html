@@ -2,7 +2,7 @@
 <head>
     <title>Page for link extraction checking</title>
 </head>
-<body>
+<body background="mybackground.jpg"> <!-- HTML 4 style -->
 <h1>See HTMLAnalyserTest for test code</h1>
 <p>
     <ul>
@@ -16,5 +16,16 @@
     </ul>
 
 </p>
+<p><img src="http://example.org/fooA.png" srcset="http://example.org/foo1.png 1.5x, http://example.org/foo2.png 2x" /></p>
+<p><img src="fooB.png" srcset="foo3.png 720w, http://example.org/foo4.png 1080w" /></p>
+<p><img src="http://example.org/fooD.png" srcset="http://example.org/foo5.png" /></p> <!-- Yes, invalid, but this is The Internet! -->
+
+<!--  https://www.w3schools.com/TAgs/att_source_srcset.asp -->
+  <picture>
+  <source media="(min-width:650px)" srcset="http://example.org/fooC1.png">
+  <source media="(min-width:465px)" srcset="http://example.org/fooC2.png">
+  <img src="http://example.org/fooC0.png" alt="Flowers" style="width:auto;">
+</picture>
+
 </body>
 </html>

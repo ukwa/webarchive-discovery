@@ -26,12 +26,10 @@ package uk.bl.wa.parsers;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Set;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.util.*;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.apache.commons.lang.StringUtils;
@@ -54,6 +52,7 @@ import org.xml.sax.SAXException;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
+import uk.bl.wa.analyser.payload.TikaPayloadAnalyser;
 import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
@@ -268,19 +267,55 @@ public class HtmlFeatureParser extends AbstractParser {
 
         return linkset;
     }
-    
-       private Set<String> extractImageLinks( Document doc) throws IOException {
-            Set<String> linkset = new HashSet<String>();                                          
-                for( Element link : doc.select("img[src]") ) {
-                    linkset.add( normaliseLink(link.attr("abs:src")));
-                }          
-            return linkset;
-            // Example of use: all PNG references...
-            //Elements pngs = doc.select("img[src$=.png]");
 
-            //Element masthead = doc.select("div.masthead").first();
-       }
-    
+    // https://www.w3schools.com/TAgs/att_source_srcset.asp
+    //  <picture>
+    //  <source media="(min-width:650px)" srcset="img_pink_flowers.jpg">
+    //  <source media="(min-width:465px)" srcset="img_white_flower.jpg">
+    //  <img src="img_orange_flowers.jpg" alt="Flowers" style="width:auto;">
+    //</picture>
+    //
+    // <img src="..."/>
+    // <img srcSet="..."/>
+    private Set<String> extractImageLinks(Document doc) throws IOException {
+        URL base = null;
+        try {
+            base = doc.location() == null ? null : new URL(doc.location());
+        } catch (MalformedURLException e) {
+            log.warn("Unable to create base URL for document from '{}'", doc.location());
+        }
+        Set<String> linkset = new HashSet<String>();
+        // HTML 4 body background
+        for( Element link : doc.select("body[background]") ) {
+            linkset.add( normaliseLink(link.attr("abs:background")));
+        }
+        // HTML 4 table background
+        for( Element link : doc.select("table[background]") ) {
+            linkset.add( normaliseLink(link.attr("abs:background")));
+        }
+        // HTML 4 td background
+        for( Element link : doc.select("td[background]") ) {
+            linkset.add( normaliseLink(link.attr("abs:background")));
+        }
+        // Plain img src
+        for( Element link : doc.select("img[src]") ) {
+            linkset.add( normaliseLink(link.attr("abs:src")));
+        }
+        // img srcset
+        for( Element link : doc.select("img[srcset]") ) {
+            linkset.addAll(normaliseSrcsetLinks(base, link.attr("srcset"))); // abs: does not work on multi value
+        }
+        // picture source srcset
+        for (Element links: doc.select("picture source[srcset]")) {
+            linkset.addAll(normaliseSrcsetLinks(base, links.attr("srcset")));  // abs: does not work on multi value
+        }
+        return linkset;
+        // Example of use: all PNG references...
+        //Elements pngs = doc.select("img[src$=.png]");
+
+        //Element masthead = doc.select("div.masthead").first();
+    }
+
 
     /**
      * Normalises links if the parser has been configured to do so.
@@ -290,6 +325,51 @@ public class HtmlFeatureParser extends AbstractParser {
     public String normaliseLink(String link) {
         return normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
     }
+
+    /**
+     * Makes an absolute URL using base if the link is not already absolute, then normalises the URL if the parser has
+     * been configured to do so.
+     * @param base the base URL for the HTML document.
+     * @param link a link from a HTML document.
+     * @return the link in normalised form or the unchanged link if normalisation has not been enabled.
+     */
+    public String normaliseLink(URL base, String link) {
+        try {
+            link = base == null ? link : new URL(base, link).toString().replace("/../", "/");
+        } catch (MalformedURLException e) {
+            log.warn("Unable to create absolute URL from new URL('{}', '{}''", base, link);
+        }
+        return normaliseLinks ? Normalisation.canonicaliseURL(link) : link;
+    }
+
+    /**
+     * Takes the content of a srcSet, extracts the different images and normalises them.
+     * See https://html.com/attributes/img-srcset/
+     * @param base the base URL for the HTML document.
+     * @param srcSet multi-image attribute.
+     * @return the normalised links to images in the srcSet.
+     */
+    private Set<String> normaliseSrcsetLinks(URL base, String srcSet) {
+        if (srcSet == null || srcSet.isEmpty()) {
+            return Collections.emptySet();
+        }
+        Set<String> links = new HashSet<>();
+        Matcher cm = COMMA_SEPARATED_PATTERN.matcher(srcSet);
+        // "foo.jpg 1.5x, bar.jpg 1080w"
+        while (cm.find()) {
+            final String fullLink = cm.group(1);
+            Matcher sm = SPACE_SEPARATED_PATTERN.matcher(fullLink.trim());
+            if (sm.matches()) {
+                links.add(normaliseLink(base, sm.group(1)));
+            } else {
+                links.add(normaliseLink(base, fullLink));
+            }
+        }
+        return links;
+    }
+    private static final Pattern COMMA_SEPARATED_PATTERN = Pattern.compile("([^,]+),?");
+   	private static final Pattern SPACE_SEPARATED_PATTERN = Pattern.compile("([^ ]+) ?.*");
+
 
     public static Metadata extractMetadata( InputStream in, String url ) {
         HtmlFeatureParser hfp = new HtmlFeatureParser();
