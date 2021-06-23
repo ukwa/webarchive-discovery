@@ -31,6 +31,7 @@ import java.io.*;
 import java.nio.charset.Charset;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
@@ -124,7 +125,6 @@ public class WARCIndexerCommand {
         }
 
         final String[] inputFiles = line.getArgs();
-
         // Check that a mandatory Archive file(s) has been supplied
         if (inputFiles.length == 0) {
             printUsage( options );
@@ -276,15 +276,11 @@ public class WARCIndexerCommand {
                 Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
                 if (doc != null) {
-                    final long updateStart = System.nanoTime();
-
                     if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
                                         doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
                         docConsumer.add(doc);
                         recordCount++;
                     }
-                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
-                                       "WARCIndexerCommand.parseWarcFiles#docdelivery", updateStart);
                 }
             }
             docConsumer.endWARC();

@@ -161,7 +161,8 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
         log.debug("Triggering commit");
         final long start = System.nanoTime();
         performCommit();
-        Instrument.timeRel("WARCIndexerCommand.main#total", "WARCIndexerCommand.commit#success", start);
+        Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#docdelivery",
+                           "WARCIndexerCommand.commit#success", start);
     }
 
     @Override
