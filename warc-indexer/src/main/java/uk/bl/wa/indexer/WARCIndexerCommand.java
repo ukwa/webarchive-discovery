@@ -123,31 +123,31 @@ public class WARCIndexerCommand {
         
         Options options = new Options();
         options.addOption("o", "output", true,
-                "The directory to contain the output XML files");
+                          "The directory to contain the output XML files");
         options.addOption("z", "gzip", false,
-                "Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
+                          "Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
         options.addOption("s", "solr", true,
-                "The URL of the Solr instance the document should be sent to");
+                          "The URL of the Solr instance the document should be sent to");
         options.addOption("e", "elastic", true,
-                "The URL of the Elastic instance the document should be sent to");
+                          "The URL of the Elastic instance the document should be sent to");
         options.addOption("t", "text", false,
-                "Include text in XML in output files");
+                          "Include text in XML in output files");
         options.addOption("r", "slash", false,
-                "Only process slash (root) pages.");
+                          "Only process slash (root) pages.");
         options.addOption("a", "annotations", true,
-                "A JSON file containing the annotations to apply during indexing.");
+                          "A JSON file containing the annotations to apply during indexing.");
         options.addOption("b", "batch", true, "Batch size for submissions.");
         options.addOption("c", "config", true, "Configuration to use.");
         options.addOption("d", "disable_commit", false,
                           "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
-    options.addOption("i", "institution", true, "Institution.");
-    options.addOption("n", "collection", true, "Collection.");
-    options.addOption("u", "collection_id", true, "Collection ID.");
+        options.addOption("i", "institution", true, "Institution.");
+        options.addOption("n", "collection", true, "Collection.");
+        options.addOption("u", "collection_id", true, "Collection ID.");
 
         try {
             // parse the command line arguments
             CommandLine line = parser.parse( options, args );
-               String cli_args[] = line.getArgs();
+            String cli_args[] = line.getArgs();
            
         
             // Check that a mandatory Archive file(s) has been supplied
@@ -251,20 +251,19 @@ public class WARCIndexerCommand {
     
     /**
      * @param outputDir
-     * @param args
+     * @param inputFiles
      * @throws NoSuchAlgorithmException
      * @throws IOException
      * @throws TransformerFactoryConfigurationError
      * @throws TransformerException
      */
-    public static void parseWarcFiles(String configFile, String outputDir, boolean gzip,
-            String solrUrl, String elasticUrl, String[] args, boolean isTextRequired,
-            boolean slashPages, int batchSize, String annotationsFile,
-            boolean disableCommit, String institution, String collection,
-            String collection_id)
-            throws NoSuchAlgorithmException,
-            TransformerFactoryConfigurationError, TransformerException,
-            IOException {
+    public static void parseWarcFiles(
+            String configFile,
+            String outputDir, boolean gzip, String solrUrl, String elasticUrl,
+            String[] inputFiles,
+            boolean isTextRequired, boolean slashPages, int batchSize, String annotationsFile, boolean disableCommit,
+            String institution, String collection, String collection_id)
+            throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, IOException {
         long startTime = System.currentTimeMillis();
         final long start = System.nanoTime();
 
@@ -288,32 +287,17 @@ public class WARCIndexerCommand {
         if(solrUrl != null) {
             conf = conf.withValue(SolrWebServer.CONF_HTTP_SERVER, ConfigValueFactory.fromAnyRef(solrUrl) );
         }
-
-        ElasticImporter elasticImporter = null;
-        if(elasticUrl != null) {
-        	ElasticUrl eu = new ElasticUrl(elasticUrl);
-        	if (!eu.isValid()) {
-                log.error("ElasticUrl is not valid");
-                System.exit( 0 );                          
-        	}
-        	elasticImporter = new ElasticImporter(eu); 
+        if (batchSize == -1) { // Batch size not set as command line, so resolve it from conf with default 1
+            batchSize = conf.hasPath("warc.solr.batch_size") ? conf.getInt("warc.solr.batch_size") : 1;
         }
-        
         // Use config for default value
         if (conf.hasPath("warc.solr.disablecommit")) {
             disableCommit = disableCommit || conf.getBoolean("warc.solr.disablecommit");
         }
+        final DocumentConsumer docConsumer = DocumentConsumerFactory.createConsumer(
+                conf, outputDir, gzip, solrUrl, elasticUrl, batchSize, null, disableCommit);
 
-        if (batchSize == -1) { // Batch size not set as command line, so resolve it from conf with default 1
-            batchSize = conf.hasPath("warc.solr.batch_size") ? conf.getInt("warc.solr.batch_size") : 1;
-        }
 
-        // Set up the server config:
-        SolrWebServer solrWeb = null;
-        if(solrUrl != null) {
-        	solrWeb = new SolrWebServer(conf);
-        }
-        
         // Also pass config down:
         WARCIndexer windex = new WARCIndexer(conf);
 
@@ -328,35 +312,19 @@ public class WARCIndexerCommand {
 
         // To be indexed:
         ArrayList<SolrInputDocument> docs = new ArrayList<SolrInputDocument>(); 
-        int totInputFile = args.length;
+        int totInputFile = inputFiles.length;
         int curInputFile = 1;
                     
         Instrument.timeRel("WARCIndexerCommand.main#total",
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
         // Loop through each Warc files
-        for (int arcsIndex = 0; arcsIndex < args.length; arcsIndex++) {
+        for (int arcsIndex = 0; arcsIndex < inputFiles.length; arcsIndex++) {
             final long arcStart = System.nanoTime();
-            String inputFile = args[arcsIndex];
-            if (!disableCommit) {
-                // Commit to make sure index is up to date:
-                commit(solrWeb);
-            }
+            String inputFile = inputFiles[arcsIndex];
 
             System.out.println("Parsing Archive File [" + curInputFile + "/" + totInputFile + "]:" + inputFile);
+            docConsumer.startWARC(inputFile);
             File inFile = new File(inputFile);
-            String fileName = inFile.getName();
-            String outputWarcDir = outputDir + fileName + "//";
-            Writer zipOut = outputDir == null || !gzip ? null :
-                    new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(new FileOutputStream(
-                            outputDir + fileName + ".xml.gz"))), Charset.forName("utf-8"));
-            if (zipOut != null) {
-                zipOut.write("<add>");
-            }
-
-            File dir = new File(outputWarcDir);
-            if (!dir.exists() && solrUrl == null && elasticUrl == null && zipOut == null) {
-                FileUtils.forceMkdir(dir);
-            }
 
             ArchiveReader reader = ArchiveReaderFactory.get(inputFile);
             Iterator<ArchiveRecord> ir = reader.iterator();
@@ -366,7 +334,7 @@ public class WARCIndexerCommand {
             // Iterate though each record in the WARC file
             while (ir.hasNext()) {
                 final long recordStart = System.nanoTime();
-                ArchiveRecord rec = null;
+                ArchiveRecord rec;
                 try {
                     rec = ir.next();
                 } catch (RuntimeException e) {
@@ -397,18 +365,10 @@ public class WARCIndexerCommand {
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
                 if (doc != null) {
                     final long updateStart = System.nanoTime();
-                    File fileOutput = new File(outputWarcDir + "//" + "FILE_" + recordCount + ".xml");
 
                     if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
                                         doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
-                        if (zipOut != null) {
-                            doc.writeXml(zipOut);
-                        } else if (solrUrl == null && elasticUrl == null) {
-                            writeXMLToFile(doc.toXml(), fileOutput);
-                        } else {
-                            docs.add(doc.getSolrDocument());
-                            checkSubmission(solrWeb, elasticImporter, docs, batchSize, false);
-                        }
+                        docConsumer.add(doc);
                         recordCount++;
                     }
                     Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
@@ -416,132 +376,18 @@ public class WARCIndexerCommand {
                 }
             }
             curInputFile++;
-            if (zipOut != null) {
-                zipOut.write("</add>");
-                zipOut.flush();
-                zipOut.close();
-            }
+            docConsumer.endWARC();
             Instrument.timeRel("WARCIndexerCommand.main#total",
                                "WARCIndexerCommand.parseWarcFiles#fullarcprocess", arcStart);
-            Instrument.log(arcsIndex < args.length-1); // Don't log the last on info to avoid near-duplicate logging
+            Instrument.log(arcsIndex < inputFiles.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
         // Submit any remaining docs:
-        checkSubmission(solrWeb, elasticImporter, docs, batchSize, true);
-        if (!disableCommit) {
-            // Commit the updates:
-            commit(solrWeb);
-        }
+        docConsumer.close();
 
         long endTime = System.currentTimeMillis();
 
         System.out.println("WARC Indexer Finished in " + ((endTime - startTime) / 1000.0) + " seconds.");
-    }
-    
-    private static void commit( SolrWebServer solrWeb) {
-        // Commit any Solr Updates
-        if( solrWeb != null ) {
-            try {
-                final long start = System.nanoTime();
-                solrWeb.commit();
-                Instrument.timeRel("WARCIndexerCommand.main#total", "WARCIndexerCommand.commit#success", start);
-            } catch( SolrServerException s ) {
-                log.warn( "SolrServerException when committing.", s );
-            } catch( IOException i ) {
-                log.warn( "IOException when committing.", i );
-            }
-        }
-    }
-
-    /**
-     * Checks whether a List of SolrInputDocuments has grown large enough to
-     * be submitted to a SolrWebServer.
-     * 
-     * @param solr
-     * @param docs
-     * @param limit
-     * @throws SolrServerException
-     * @throws IOException
-     */
-    private static void checkSubmission(SolrWebServer solr, ElasticImporter elasticImporter,
-            List<SolrInputDocument> docs, int limit, boolean force) {
-        if (docs.size() > 0 && (docs.size() >= limit || force)) {
-            try {
-                final long start = System.nanoTime();
-                if (log.isTraceEnabled() || debugMode) {
-                    for (SolrInputDocument doc : docs) {
-                        try {
-                        	if (solr != null) {
-                                solr.updateSolrDoc(doc);
-                        	}
-                        } catch (Exception e) {
-                            log.error(
-                                    "Failed to post document - got exception: ",
-                                    e);
-                            log.error("Failed document was:\n"
-                                    + ClientUtils.toXML(doc));
-                            System.exit(1);
-                        }
-                    }
-                } else {
-                	if (solr != null) {
-                        solr.add(docs);
-                	}
-                	else if (elasticImporter != null) {
-                        try {
-                            if (elasticImporter != null) {
-        						elasticImporter.importDocuments(docs);
-                            }
-                        	
-    					} catch (Exception e) {
-                            log.error(e.getMessage());
-                            System.exit(1);
-    					}
-                	}
-                }
-                Instrument.timeRel(
-                        "WARCIndexerCommand.parseWarcFiles#docdelivery",
-                        "WARCIndexerCommanc.checkSubmission#solrSendBatch", start);
-                docs.clear();
-            } catch (SolrServerException s) {
-                log.warn("SolrServerException: ", s);
-            } catch (IOException i) {
-                log.warn("IOException: ", i);
-            }
-
-        }
-    }
-    
-    
-    public static void prettyPrintXML( String doc ) throws TransformerFactoryConfigurationError, TransformerException {
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        //initialize StreamResult with File object to save to file
-        StreamResult result = new StreamResult(new StringWriter());
-        StreamSource source = new StreamSource(new StringReader(doc));
-        transformer.transform(source, result);
-        String xmlString = result.getWriter().toString();
-        System.out.println(xmlString);        
-    }
-    
-    /**
-     * @param xml
-     * @param file
-     * @throws IOException
-     * @throws TransformerFactoryConfigurationError
-     * @throws TransformerException
-     */
-    public static void writeXMLToFile( String xml, File file ) throws IOException, TransformerFactoryConfigurationError, TransformerException {
-        
-        Result result = new StreamResult(file);
-        Source source =  new StreamSource(new StringReader(xml));
-        
-        Transformer transformer = TransformerFactory.newInstance().newTransformer();
-        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
-        //FileUtils.writeStringToFile(file, xml);
-        
-        transformer.transform(source, result);
-      
     }
     
     /**
