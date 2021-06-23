@@ -83,10 +83,10 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
     public BufferedDocumentConsumer(
             Config conf, Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) {
         this.maxDocuments = maxDocumentsOverride != null ? maxDocumentsOverride :
-                conf != null && conf.hasPath(BATCH_DOCUMENTS_KEY) ? conf.getInt(BATCH_DOCUMENTS_KEY) :
+                conf != null && conf.hasPath(BATCH_DOCUMENTS_KEY) ? conf.getBytes(BATCH_DOCUMENTS_KEY).intValue() :
                         BATCH_DOCUMENTS_DEFAULT;
         this.maxBytes = maxBytesOverride != null ? maxBytesOverride :
-                conf != null && conf.hasPath(BATCH_BYTES_KEY) ? conf.getLong(BATCH_BYTES_KEY) :
+                conf != null && conf.hasPath(BATCH_BYTES_KEY) ? conf.getBytes(BATCH_BYTES_KEY) :
                         BATCH_BYTES_DEFAULT;
         this.commitOnClose = !(disableCommitOverride != null ? disableCommitOverride :
                 conf != null && conf.hasPath(DISABLE_COMMIT_KEY) ? conf.getBoolean(DISABLE_COMMIT_KEY) :
