@@ -136,7 +136,7 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
     @Override
     public String toString() {
         return "SingleFileDocumentConsumer{" +
-               "filename='" + filename + '\'' +
+               "outputFolder='" + filename + '\'' +
                ", gzip=" + gzip +
                ", inner=" + super.toString() +
                '}';

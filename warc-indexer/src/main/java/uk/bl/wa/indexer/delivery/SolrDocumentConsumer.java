@@ -96,6 +96,7 @@ public class SolrDocumentConsumer extends BufferedDocumentConsumer {
     @Override
     public void performCommit() throws IOException {
         try {
+            log.info("Sending commit to '" + solrURL + ". Indexed documents should be visible immediately");
             solrWebServer.commit();
         } catch(SolrServerException e) {
             throw new IOException("SolrServerException when sending commit to " + solrURL, e);

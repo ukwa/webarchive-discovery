@@ -90,7 +90,7 @@ public class MultiFileDocumentConsumer implements DocumentConsumer {
         }
         final long updateStart = System.nanoTime();
 
-        File filename = new File(String.format(Locale.ROOT, "%s/FILE_%5d.xml%s",
+        File filename = new File(String.format(Locale.ROOT, "%s/FILE_%05d.xml%s",
                                                currentFolder, fileCounter.incrementAndGet(), gzip ? ".gz" : ""));
         Writer out = gzip ?
                 new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(

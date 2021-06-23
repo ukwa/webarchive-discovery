@@ -167,9 +167,9 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
     @Override
     public String toString() {
         return "BufferedDocumentConsumer{" +
-               "docs=" + docs +
+               "#docs=" + docs.size() +
                ", maxDocs=" + maxDocuments +
-               ", bytes=" + bufferedBytes +
+               ", #bytes=" + bufferedBytes +
                ", maxBytes=" + maxBytes +
                ", commitOnClose=" + commitOnClose +
                ", isClosed=" + isClosed +
