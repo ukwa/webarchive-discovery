@@ -73,10 +73,11 @@ public class DocumentConsumerFactory {
         if (outputs > 1) {
             throw new IllegalArgumentException("Only 1 of either output, solr or elastic can be specified");
         }
+
         if (outputFolder != null) {
             // The logic is horrible:
             // outputGZIP determines whether the output will be a single (gzipped) file or multiple (plain) files
-            return outputGZIP ?
+            return outputGZIP != null && outputGZIP ?
                     new SingleFileDocumentConsumer(
                             outputFolder, conf, outputGZIP, maxDocumentsOverride, maxBytesOverride):
                     new MultiFileDocumentConsumer(outputFolder, conf, outputGZIP);
