@@ -75,7 +75,7 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
             Integer maxDocumentsOverride, Long maxBytesOverride) throws IOException {
         super(conf, maxDocumentsOverride, maxBytesOverride, true); // Commit is implicit
         gzip = gzipOverride != null && gzipOverride;
-        this.outputFolder = outputFolder + (outputFolder.endsWith("/") ? "" : "/");
+        this.outputFolder = outputFolder + (outputFolder.endsWith("/") || outputFolder.endsWith("\\") ? "" : "/");
 
         Path outPath = new File(this.outputFolder).toPath();
         if (!Files.exists(outPath)) {
@@ -137,7 +137,7 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
     public String toString() {
         return "SingleFileDocumentConsumer{" +
                "filename='" + filename + '\'' +
-               "gzip=" + gzip +
+               ", gzip=" + gzip +
                ", inner=" + super.toString() +
                '}';
     }

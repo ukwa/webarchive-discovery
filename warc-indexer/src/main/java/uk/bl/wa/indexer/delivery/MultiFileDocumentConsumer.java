@@ -76,7 +76,7 @@ public class MultiFileDocumentConsumer implements DocumentConsumer {
     public MultiFileDocumentConsumer(
             String outputFolder, Config conf, Boolean gzipOverride) throws IOException {
         this.gzip = gzipOverride != null && gzipOverride;
-        this.rootFolder = outputFolder + (outputFolder.endsWith("/") ? "" : "/");
+        this.rootFolder = outputFolder + (outputFolder.endsWith("/") || outputFolder.endsWith("\\") ? "" : "/");
 
         createFolder(rootFolder);
         log.info("Constructed " + this);
@@ -123,7 +123,7 @@ public class MultiFileDocumentConsumer implements DocumentConsumer {
     }
 
     @Override
-    public void endWARC() throws IOException {
+    public void endWARC()  {
         currentFolder = null;
         fileCounter.set(0);
     }
@@ -159,7 +159,7 @@ public class MultiFileDocumentConsumer implements DocumentConsumer {
     public String toString() {
         return "MultiFileDocumentConsumer{" +
                "rootFolder='" + rootFolder + '\'' +
-               "gzip=" + gzip +
+               ", gzip=" + gzip +
                '}';
     }
 }
