@@ -451,4 +451,40 @@ public class SolrRecord implements Serializable {
         }
         return hl;
     }
+
+    /**
+     * Iterates the fields of the contained {@link org.apache.solr.common.SolrDocument} and calculates the approximate
+     * amount of bytes of heaps used to hold it. This is not an exact measure!
+     * @return the approximate amount of heap bytes for this SolrRecord.
+     */
+    public long getApproximateSize() {
+        long total = 200 + maxLengths.size()*100L; // The SolrRecord itself
+        total += getApproximateSize(doc);
+        return total;
+    }
+    // This is really quick & dirty work here, sorry. If an exact measure is needed, it should be re-implemented
+    private long getApproximateSize(SolrInputDocument doc) {
+        long total = 100L; // the doc itself
+        for (SolrInputField field: doc) {
+            total += 32 + getApproximateObjectSize(field.getName());
+             for (Object o: field) {
+                 total += getApproximateObjectSize(o);
+             }
+        }
+        if (doc.hasChildDocuments()) {
+            for (SolrInputDocument child: doc.getChildDocuments()) {
+                total += getApproximateSize(child);
+            }
+        }
+        return total;
+    }
+    private long getApproximateObjectSize(Object o) {
+        if (o instanceof String) {
+            return 48 + ((String)o).length()*2L;
+        }
+        if (o instanceof Long) {
+            return 128;
+        }
+        return 64;
+    }
 }
