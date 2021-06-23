@@ -21,7 +21,7 @@ import org.slf4j.LoggerFactory;
 import java.io.IOException;
 
 /**
- * A Documentconsumer is responsible for receiving {@link uk.bl.wa.solr.SolrRecord}s and passing them on to a
+ * A DocumentConsumer is responsible for receiving {@link uk.bl.wa.solr.SolrRecord}s and passing them on to a
  * receiving system, such as Solr, Elasticsearch or the file system.
  */
 public class DocumentConsumerFactory {
@@ -30,6 +30,8 @@ public class DocumentConsumerFactory {
     /**
      * Create a DocumentConsumer based on the given configuration.
      * Exactly one of outputdir, solrURL or elasticURL must be defined.
+     * if output is defined and oputputGZIP is true, a single gzipped file per WARC will be created.
+     * if output is defined and oputputGZIP is false, a single plain file per WARC record will be created.
      * @param conf base setup for the DocumentConsumer.
      * @param outputFolder if defined the DocumentConsumer will write to a local file in the folder.
      * @param outputGZIP if true and outputDir is != null, the output will be gzipped.
@@ -47,11 +49,15 @@ public class DocumentConsumerFactory {
             Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) throws IOException {
         int outputs = (outputFolder == null ? 0 : 1) + (solrURL == null ? 0 : 1) + (elasticURL == null ? 0 : 1);
         if (outputs > 1) {
-            throw new IllegalArgumentException("Only 1 of either output, solr or elastic must be specified");
+            throw new IllegalArgumentException("Only 1 of either output, solr or elastic can be specified");
         }
         if (outputFolder != null) {
-            return new FilesystemDocumentConsumer(
-                    outputFolder, conf, outputGZIP, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
+            // The logic is horrible:
+            // outputGZIP determines whether the output will be a single (gzipped) file or multiple (plain) files
+            return outputGZIP ?
+                    new SingleFileDocumentConsumer(
+                            outputFolder, conf, outputGZIP, maxDocumentsOverride, maxBytesOverride):
+                    new MultiFileDocumentConsumer(outputFolder, conf, outputGZIP);
         }
         if (solrURL != null) {
             return new SolrDocumentConsumer(
