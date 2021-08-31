@@ -86,6 +86,9 @@
                <trimStackTrace>false</trimStackTrace>
                <forkMode>always</forkMode>
                <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
+            	<parallel>classes</parallel>
+            	<useUnlimitedThreads>true</useUnlimitedThreads>
+
             </configuration>
             <executions>
                <execution>
