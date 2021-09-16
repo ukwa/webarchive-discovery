@@ -105,7 +105,6 @@ public class WARCIndexer {
     private static Logger log = LoggerFactory.getLogger(WARCIndexer.class );
 
     private List<String> url_excludes;
-    private final RegexpReplacer urlRewriter;
     private List<String> protocol_includes;
     private List<String> response_includes;
     private List<String> record_type_includes;
@@ -183,14 +182,11 @@ public class WARCIndexer {
                 conf.getBoolean(HtmlFeatureParser.CONF_LINKS_NORMALISE) :
                 HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
         this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
-        if (this.checkSolrForDuplicates == true) {
-            log.warn(
-                    "Checking Solr for duplicates is not implemented at present!");
+        if (this.checkSolrForDuplicates) {
+            log.warn("Checking Solr for duplicates is not implemented at present!");
         }
         // URLs to exclude:
         this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
-        // Rewrite rules for the URL
-        this.urlRewriter = new RegexpReplacer(conf, "warc.index.extract.url_rewrite");
         // Protocols to include:
         this.protocol_includes = conf.getStringList( "warc.index.extract.protocol_include" );
         // Response codes to include:
@@ -320,8 +316,10 @@ public class WARCIndexer {
             if( header.getUrl() == null )
                 return null;
 
-            // Get the URL:
-            String targetUrl = Normalisation.sanitiseWARCHeaderValue(urlRewriter.apply(header.getUrl()));
+            // Get the URL and ensure it conforms to the URL rules in the configuration
+            // This includes stripping the URL to a max length (default 2000)
+            String targetUrl = solrFactory.applyAdjustment(
+                    SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
 
             // Strip down very long URLs to avoid
             // "org.apache.commons.httpclient.URIException: Created (escaped)
@@ -515,14 +513,11 @@ public class WARCIndexer {
         solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath);
 
         byte[] url_md5digest = md5
-                .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
+                .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes(StandardCharsets.UTF_8));
         // String url_base64 =
         // Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
         final String url_md5hex = Base64.encodeBase64String(url_md5digest);
-        solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(urlRewriter.apply(header.getUrl())));
-        if (!solr.getFieldValue(SolrFields.SOLR_URL).toString().equals(header.getUrl())) {
-            System.out.println("*** " + solr.getFieldValue(SolrFields.SOLR_URL) + " --- " + header.getUrl());
-        }
+        solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         if (addNormalisedURL) {
             solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl)); // targetUrl has already been rewritten
         }

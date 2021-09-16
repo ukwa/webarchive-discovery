@@ -24,6 +24,7 @@ package uk.bl.wa.solr;
  * #L%
  */
 
+import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,6 +36,7 @@ import uk.bl.wa.util.RegexpReplacer;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
 import java.nio.charset.*;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -66,6 +68,9 @@ public class SolrRecordFactory {
     public static final boolean DEFAULT_REMOVE_CONTROL_CHARACTERS = true;
     public static final boolean DEFAULT_NORMALISE_WHITESPACE = true;
 
+    public static final int DEFAULT_URL_MAX_LENGTH = 2000;
+    private static final int DEFAULT_CONTENT_MAX_LENGTH = 512*1024; // Same as tika.max_text_length
+
     private final FieldAdjuster defaultContentAdjuster;
     private final Map<String, FieldAdjuster> contentAdjusters;
 
@@ -80,14 +85,10 @@ public class SolrRecordFactory {
 
     private SolrRecordFactory(Config config) {
         // Compensate for old setups
-        if (config != null && (!config.hasPath(KEY_DEFAULT_ADJUSTER) && config.hasPath(KEY_DEFAULT_MAX))) {
-            // This is an old config, which has a default_max. We copy the default_max to the new position
-            config = config.withValue(KEY_DEFAULT_ADJUSTER + "." + KEY_MAX_LENGTH,
-                                      ConfigValueFactory.fromAnyRef(config.getBytes(KEY_DEFAULT_MAX)));
-        }
+        config = handleLegacyAndDefaults(config);
         defaultContentAdjuster = createContentAdjuster(
-                config == null || !config.hasPath(KEY_DEFAULT_ADJUSTER) ? null : config.getConfig(KEY_DEFAULT_ADJUSTER));
-        if (config == null || !config.hasPath(KEY_FIELD_LIST)) {
+                config.hasPath(KEY_DEFAULT_ADJUSTER) ? config.getConfig(KEY_DEFAULT_ADJUSTER) : null);
+        if (!config.hasPath(KEY_FIELD_LIST)) {
             contentAdjusters = Collections.emptyMap();
         } else {
             Config fieldConfigs = config.getConfig(KEY_FIELD_LIST);
@@ -97,6 +98,72 @@ public class SolrRecordFactory {
                     e -> createContentAdjuster(fieldConfigs.getConfig(e.getKey()))));
         }
         log.info("Created " + this);
+    }
+
+    /**
+     * Handles legacy configs by copying the parameters to new places in the config tree and warning about
+     * the config being out of date.
+     * @param config configuration for the SolrRecordFactory.
+     * @return a config that is directly usable for the SolrRecordFactory.
+     */
+    static Config handleLegacyAndDefaults(Config config) {
+        if (config == null) {
+            config = ConfigFactory.empty();
+        }
+        config = copyIfNotPresent(config, KEY_DEFAULT_MAX, KEY_DEFAULT_ADJUSTER + "." + KEY_MAX_LENGTH);
+/*        if (!config.hasPath(KEY_DEFAULT_ADJUSTER) && config.hasPath(KEY_DEFAULT_MAX)) {
+            // This is an old config, which has a default_max. We copy the default_max to the new position
+            config = config.withValue(KEY_DEFAULT_ADJUSTER + "." + KEY_MAX_LENGTH,
+                                      ConfigValueFactory.fromAnyRef(config.getBytes(KEY_DEFAULT_MAX)));
+        }*/
+        // TODO: Check that the old config was a list of rewrites and not just a single regexp/replace pair
+        config = copyIfNotPresent(config, "warc.index.extract.url_rewrite", "warc.index.solr.field_setup.fields.url.rewrites");
+        for (String urlField: Arrays.asList(SolrFields.SOLR_URL, SolrFields.SOLR_URL_NORMALISED, SolrFields.SOLR_LINKS)) {
+            config = ensureValue(config,
+                                 "warc.index.solr.field_setup.fields." + urlField + ".max_length",
+                                 DEFAULT_URL_MAX_LENGTH);
+        }
+        config = ensureValue(config,
+                             "warc.index.solr.field_setup.fields.content.max_length",
+                             DEFAULT_CONTENT_MAX_LENGTH);
+        return config;
+    }
+
+    /**
+     * If there are no value at key in the config, assign defaultValue to that key. Else do nothing.
+     * @param config configuration for the SolrRecordFactory.
+     * @param key location of the value.
+     * @param defaultValue the value to assign if there are not alrerady a value.
+     * @return a potentially updated config with the defaultValue at the key position.
+     */
+    static Config ensureValue(Config config, String key, Object defaultValue) {
+        if (config.hasPath(key)) {
+            return config;
+        }
+        log.info("Applying default config " + key + " = " + defaultValue);
+        return config.withValue(key, ConfigValueFactory.fromAnyRef(defaultValue));
+    }
+
+    /**
+     * If the configuration does hav a value at oldKey but not a value at newKey, the value is copied to newKey.
+     * @param config configuration for the SolrRecordFactory.
+     * @param oldKey legacy location.
+     * @param newKey current location.
+     * @return a potentially updated config with the value at the newKey position.
+     */
+    static Config copyIfNotPresent(Config config, String oldKey, String newKey) {
+        if (!config.hasPath(oldKey)) {
+            return config;
+        }
+        if (config.hasPath(newKey)) {
+            log.warn("Warning: Config has both path '{}' and '{}' which serves the same purpose. " +
+                     "Only the values in '{}' will be used", oldKey, newKey, newKey);
+            return config;
+        }
+        log.warn("Warning: The config has the path '{}}', which is deprecated. " +
+                 "The new path is '{}'. The values are copied to the right location automatically, " +
+                 "but should be moved in the config to avoid confusion", oldKey, newKey);
+        return config.withValue(newKey, ConfigValueFactory.fromAnyRef(config.getAnyRef(oldKey)));
     }
 
     public SolrRecord createRecord() {
@@ -189,6 +256,17 @@ public class SolrRecordFactory {
     private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");
     private static final Pattern CNTRL_PATTERN = Pattern.compile("\\p{Cntrl}");
 
+    /**
+     * Applies the rules for the field to the given value (if max values is 0, null is returned).
+     * @param field a Solr field.
+     * @param value a value.
+     * @return the value adjusted according to the field setup.
+     */
+    public String applyAdjustment(String field, String value) {
+        return contentAdjusters.containsKey(field) ?
+                contentAdjusters.get(field).apply(value) :
+                defaultContentAdjuster.apply(value);
+    }
     private boolean isEnabled(Config config, String key, boolean defaultValue) {
         return config != null && config.hasPath(key) ? config.getBoolean(key) : defaultValue;
     }
@@ -234,4 +312,5 @@ public class SolrRecordFactory {
                ", contentAdjusters=" + contentAdjusters +
                '}';
     }
+
 }

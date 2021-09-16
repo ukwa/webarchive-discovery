@@ -411,7 +411,7 @@ public class SolrRecord implements Serializable {
      * @return the approximate amount of heap bytes for this SolrRecord.
      */
     public long getApproximateSize() {
-        long total = 200 + maxLengths.size()*100L; // The SolrRecord itself
+        long total = 200; // + maxLengths.size()*100L; // The SolrRecord itself
         total += getApproximateSize(doc);
         return total;
     }
