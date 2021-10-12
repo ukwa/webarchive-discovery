@@ -164,7 +164,7 @@ public class WARCIndexer {
         } catch (IOException e1) {
             log.error("Failed to load log4j config from properties file.");
         }
-        solrFactory = SolrRecordFactory.createFactory(conf);
+        solrFactory = SolrRecordFactory.createFactory(cli);
         // Optional configurations:
         this.extractText = conf.getBoolean( "warc.index.extract.content.text" );
         log.info("Extract text = " + extractText);

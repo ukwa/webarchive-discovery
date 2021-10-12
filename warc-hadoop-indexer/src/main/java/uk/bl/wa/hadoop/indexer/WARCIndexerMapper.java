@@ -42,8 +42,6 @@ import org.archive.util.SurtPrefixSet;
 
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.databind.JsonMappingException;
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 
 import picocli.CommandLine;
 import uk.bl.wa.annotation.Annotations;
@@ -68,17 +66,15 @@ public class WARCIndexerMapper extends MapReduceBase implements
     private String inputFile;
     private int noRecords = 0;
 
-    private WARCIndexer windex;
+    private WARCHadoopIndexerOptions opts = new WARCHadoopIndexerOptions();
 
-    private WARCIndexerOptions opts = new WARCIndexerOptions();
+    private WARCIndexer windex; // setup in .configure()
 
-    private Config config;
+    private SolrRecordFactory solrFactory; // setup in .configure()
 
-    private SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(null); // Overridden by innerConfigure
-
-    public WARCIndexerMapper() {
+    public WARCIndexerMapper() {    	
+        // Re-configure logging:
         try {
-            // Re-configure logging:
             Properties props = new Properties();
             props.load(getClass().getResourceAsStream("/log4j-override.properties"));
             PropertyConfigurator.configure(props);
@@ -89,15 +85,23 @@ public class WARCIndexerMapper extends MapReduceBase implements
 
     @Override
     public void configure( JobConf job ) {
+    	// Set up config:
+        CommandLine cli = new CommandLine(opts);
+        
+        // Set up dependents with CommandLine instance hooked in:
+        try {
+            // Initialise indexer:
+            this.windex = new WARCIndexer( cli );
+            // Set up record factory:
+            solrFactory = SolrRecordFactory.createFactory(cli);
+        } catch( NoSuchAlgorithmException e ) {
+            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
+        }
+
         // Get config from args:
         String[] args = job.get("commandline.args").split("@@@");
-        new CommandLine(opts).parseArgs(args);
-
-        // Get config from job property:
-        if (this.config == null) {
-            innerConfigure(ConfigFactory.parseString(job
-                .get(WARCIndexerRunner.CONFIG_PROPERTIES)));
-        }
+        // And parse everything to get set up:
+        cli.parseArgs(args);
 
         // Configure annotations:
         this.configureAnnotations();
@@ -132,17 +136,6 @@ public class WARCIndexerMapper extends MapReduceBase implements
             LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
         }
 
-    }
-
-    public void innerConfigure(Config config) {
-        try {
-            // Initialise indexer:
-            this.windex = new WARCIndexer( config );
-            // Set up record factory:
-            solrFactory = SolrRecordFactory.createFactory(config);
-        } catch( NoSuchAlgorithmException e ) {
-            LOG.error("WARCIndexerMapper.configure(): " + e.getMessage());
-        }
     }
 
     public WritableSolrRecord innerMap(Text key,

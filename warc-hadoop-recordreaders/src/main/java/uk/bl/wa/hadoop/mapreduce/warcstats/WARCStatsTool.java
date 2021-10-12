@@ -42,9 +42,6 @@ import org.apache.hadoop.mapred.RunningJob;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
-
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.mapred.io.KeylessTextOutputFormat;
 import uk.bl.wa.hadoop.mapred.FrequencyCountingReducer;
@@ -60,8 +57,8 @@ public class WARCStatsTool extends Configured implements Tool {
     protected void createJobConf( JobConf conf, String[] args ) throws IOException {
 
         // Store application properties where the mappers/reducers can access them
-        Config index_conf = ConfigFactory.load();
-        log.info("Loaded warc config.");
+        //Config index_conf = ConfigFactory.load();
+        //log.info("Loaded warc config.");
 
         // Also set mapred speculative execution off:
         conf.set( "mapred.reduce.tasks.speculative.execution", "false" );
@@ -69,7 +66,7 @@ public class WARCStatsTool extends Configured implements Tool {
         // Reducer count dependent on concurrent HTTP connections to Solr server.
         int numReducers = 1;
         try {
-            numReducers = index_conf.getInt( "warc.hadoop.num_reducers" );
+            //numReducers = index_conf.getInt( "warc.hadoop.num_reducers" );
         } catch( NumberFormatException n ) {
             numReducers = 10;
         }

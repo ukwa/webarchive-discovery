@@ -78,19 +78,6 @@ public class Annotator {
 
     private SurtPrefixSet openAccessSurts = null;
 
-
-    /**
-     * Factory method to pull annotations from ACT.
-     * 
-     * @throws IOException
-     * @throws JDOMException
-     */
-    public static Annotator annotationsFromAct() throws IOException,
-            JDOMException {
-        AnnotationsFromAct act = new AnnotationsFromAct();
-        return new Annotator(act.getAnnotations(), null);
-    }
-
     /**
      * 
      * @param surtPrefixFile

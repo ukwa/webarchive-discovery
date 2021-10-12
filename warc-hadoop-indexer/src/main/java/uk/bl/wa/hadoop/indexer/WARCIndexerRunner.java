@@ -61,7 +61,7 @@ import uk.bl.wa.solr.SolrWebServer.SolrOptions;
 @SuppressWarnings({ "deprecation" })
 public class WARCIndexerRunner extends Configured implements Tool {
     private static final Log LOG = LogFactory.getLog(WARCIndexerRunner.class);
-    public static final String CONFIG_PROPERTIES = "warc_indexer_config";
+    public static final String CONF_COMMANDLINE_ARGS = "commandline.args";
 
     WARCIndexerOptions opts = new WARCIndexerOptions();
 
@@ -152,7 +152,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
         JobConf conf = new JobConf(getConf(), WARCIndexerRunner.class);
 
         // Store the args in there, so Mapper/Reducer can read them:
-        conf.set("commandline.args", String.join("@@@", args));
+        conf.set(CONF_COMMANDLINE_ARGS, String.join("@@@", args));
 
         // Get the job configuration:
         this.createJobConf(conf);
