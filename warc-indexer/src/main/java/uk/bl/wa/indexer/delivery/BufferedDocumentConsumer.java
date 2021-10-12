@@ -121,7 +121,7 @@ public abstract class BufferedDocumentConsumer implements DocumentConsumer {
             return;
         }
 
-        log.debug("Flushing {} documents", docs);
+        log.debug("Flushing {} documents", docs.size());
         final long start = System.nanoTime();
         performFlush(Collections.unmodifiableList(docs));
         Instrument.timeRel(
