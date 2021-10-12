@@ -33,7 +33,7 @@
                 <artifactId>maven-shade-plugin</artifactId>
                 <version>2.3</version>
                 <configuration>
-                    <finalName>${project.build.finalName}-jar-with-dependencies.jar</finalName>
+                    <finalName>${project.build.finalName}-jar-with-dependencies</finalName>
                     <filters>
                         <filter>
                             <artifact>*:*</artifact>
