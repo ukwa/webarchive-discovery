@@ -67,7 +67,7 @@ public class WARCIndexerCommandTest {
         assertTrue("The config '" + config + "' should be available", new File(config).exists());
 
         WARCIndexerCommand.parseWarcFiles(
-                config, TMP, true, null, null, new String[]{warc}, false, false,
+                config, TMP, true, null, null, null, null, new String[]{warc}, false, false,
                 1, null, false, null, null, null);
     }
 }

@@ -43,7 +43,7 @@ import java.io.IOException;
 
 /**
  * Receives {@link uk.bl.wa.solr.SolrRecord}s, buffers them and sends them in batches to an implementation specific
- * destination such as the file system, Solr or Elasticsearch.
+ * destination such as the file system, Solr or Opensearch.
  */
 public interface DocumentConsumer extends Closeable {
     /**
