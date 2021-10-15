@@ -374,6 +374,8 @@ public class WARCIndexer {
                 // Skip recording non-content URLs (i.e. 2xx responses only please):
                 if(!checkResponseCode(httpHeader.getHttpStatus())) {
                     log.debug( "Skipping this record based on status code " + httpHeader.getHttpStatus() + ": " + targetUrl );
+                    Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
+                                       "WARCIndexerCommand.parseWarcFiles#solrdocDiscarding", start);
                     return null;
                 }
             } else {
@@ -649,10 +651,18 @@ public class WARCIndexer {
     private HTTPHeader processWARCHTTPHeaders(
             ArchiveRecord record, ArchiveRecordHeader warcHeader, String targetUrl, SolrRecord solr)
             throws IOException {
-        String statusCode = null;
         // There are not always headers! The code should check first.
-        String statusLine = HttpParser.readLine(record, "UTF-8");
         HTTPHeader httpHeaders = new HTTPHeader();
+        if (("" + warcHeader.getHeaderValue("WARC-Type")).equals("resource") &&
+            ("" + warcHeader.getHeaderValue("WARC-Source-URI")).startsWith("file:/")) {
+            log.debug("Skipping HTTP header extraction as the record is a resource from the file system " +
+                      "(probably produced by warcit): '" + targetUrl + "'");
+            httpHeaders.setHttpStatus("200");
+            return httpHeaders;
+        }
+
+        String statusCode = null;
+        String statusLine = HttpParser.readLine(record, "UTF-8");
 
         if (statusLine != null && statusLine.startsWith("HTTP")) {
             String[] firstLine = statusLine.split(" ");

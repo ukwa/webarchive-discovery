@@ -36,7 +36,9 @@ import java.security.NoSuchAlgorithmException;
 import static org.junit.Assert.*;
 
 /**
- * Helper class for debugging warc-indexer with local canfigs & WARCs.
+ * Helper class for debugging warc-indexer with local configs & WARCs.
+ * The class is bening as it checks for file existence, so it becomes a no-op for people that does
+ * not have the test files.
  */
 public class WARCIndexerCommandTest {
     private static Logger log = LoggerFactory.getLogger(WARCIndexerCommandTest.class);
@@ -54,6 +56,14 @@ public class WARCIndexerCommandTest {
     public void testKBWARCExif() throws NoSuchAlgorithmException, TransformerException, IOException {
         testWARC("/home/te/projects/webarchive-discovery/config3_toes.conf",
                 "/home/te/projects/webarchive-discovery/katte_gps.warc");
+        Instrument.log(true);
+    }
+
+    // warcit package from https://github.com/netarchivesuite/solrwayback/issues/192
+    @Test
+    public void testWarcit() throws NoSuchAlgorithmException, TransformerException, IOException {
+        testWARC("/home/te/projects/webarchive-discovery/config3_toes.conf",
+                "/home/te/projects/webarchive-discovery/20020308.warc.gz");
         Instrument.log(true);
     }
 
