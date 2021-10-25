@@ -651,13 +651,11 @@ public class WARCIndexer {
     private HTTPHeader processWARCHTTPHeaders(
             ArchiveRecord record, ArchiveRecordHeader warcHeader, String targetUrl, SolrRecord solr)
             throws IOException {
-        // There are not always headers! The code should check first.
+        // There are not always headers!
         HTTPHeader httpHeaders = new HTTPHeader();
-        if (("" + warcHeader.getHeaderValue("WARC-Type")).equals("resource") &&
-            ("" + warcHeader.getHeaderValue("WARC-Source-URI")).startsWith("file:/")) {
-            log.debug("Skipping HTTP header extraction as the record is a resource from the file system " +
-                      "(probably produced by warcit): '" + targetUrl + "'");
-            httpHeaders.setHttpStatus("200");
+        if (("" + warcHeader.getHeaderValue("WARC-Type")).equals("resource")) {
+            log.debug("Skipping HTTP header extraction as the record is a resource: '" + targetUrl + "'");
+            httpHeaders.setHttpStatus("200"); // Cheating a bit here for tool compatibility
             return httpHeaders;
         }
 
