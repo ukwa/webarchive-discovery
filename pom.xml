@@ -59,7 +59,8 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>1024</ram>
       <jackson.version>2.11.3</jackson.version>
-      <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
+      <slf4j.version.override>1.5.11</slf4j.version.override>
+   	<closeTestReports>true</closeTestReports> <!-- last version compatible with ancient Hadoop -->
    </properties>
    <build>
       <plugins>
@@ -86,6 +87,7 @@
                <trimStackTrace>false</trimStackTrace>
                <forkMode>always</forkMode>
                <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
+            	<disableXmlReport>${closeTestReports}</disableXmlReport>
             </configuration>
             <executions>
                <execution>
