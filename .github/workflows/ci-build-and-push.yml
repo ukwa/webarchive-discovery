@@ -18,10 +18,11 @@ jobs:
           java-version: '11'
           distribution: 'temurin'
       - name: Build with Maven
+        # Usually the build would run 'verify' but this runs the long-winded integration tests, so we run 'test' here only:
         run: |
           export JAVA_OPTS="-Xmx2048m"
           export MAVEN_CLI_OPTS="--no-transfer-progress"
-          mvn --batch-mode verify
+          mvn --batch-mode test
 
   push_to_docker_hub:
     needs: build
