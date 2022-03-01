@@ -56,29 +56,8 @@ public class HTMLAnalyserTest {
     // String should be discarded.
     @Test
     public void testLinksExtraction() throws IOException {
-        final URL SAMPLE_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.html");
-        assertNotNull("The sample file should be resolved", SAMPLE_RESOURCE);
-        final File SAMPLE = new File(SAMPLE_RESOURCE.getFile());
 
-        final URL CONF_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.conf");
-        assertNotNull("The config file should be resolved", CONF_RESOURCE);
-        final File CONF = new File(CONF_RESOURCE.getFile());
-        Config config = ConfigFactory.parseFile(CONF);
-        HTMLAnalyser ha = new HTMLAnalyser(config);
-        Map<String, Object> core = new HashMap<String, Object>();
-        core.put("subject-uri", "http://example.org/");
-        core.put("ip-address", "192.168.1.10");
-        core.put("creation-date", "Invalid");
-        core.put("content-type", "text/html");
-        core.put("length", Long.toString(SAMPLE.length()));
-        core.put("version", "InvalidVersion");
-        core.put("absolute-offset", "0");
-        core.put("origin", "");
-        ArchiveRecordHeader header = new ARCRecordMetaData("invalid", core);
-        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
-        InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());
-        in.mark((int) SAMPLE.length());
-        ha.analyse("source", header, in, solr);
+        SolrRecord solr = createSolrRecord("links_extract.html");
 
         // Check number of links:
         assertEquals("The number of links should be correct", 6,
@@ -109,5 +88,49 @@ public class HTMLAnalyserTest {
 
         assertEquals("Image links should be for both src and srcset",
                      12, solr.getField(SolrFields.SOLR_LINKS_IMAGES).getValueCount());
+    }
+
+    @Test
+    public void testIllegalLinksExtraction() throws IOException {
+
+        SolrRecord solr = createSolrRecord("links_extract_illegals.html");
+
+        // Check number of links:
+        assertEquals("The number of links should be correct. Got links: " + solr.getField(SolrFields.SOLR_LINKS),
+                     4, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+
+        // The subject-uri host is part of the count
+        assertEquals("The number of hosts should be correct. Got hosts " + solr.getField(SolrFields.SOLR_LINKS_HOSTS),
+                     2, solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
+        String host = (String) solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValues().toArray()[1];
+        assertEquals("The only HTML-defined link with a valid host should be correct",
+                     "valid.example.com", host);
+    }
+
+    private SolrRecord createSolrRecord(String resource) throws IOException {
+        final URL SAMPLE_RESOURCE = Thread.currentThread().getContextClassLoader().getResource(resource);
+        assertNotNull("The sample file should be resolved", SAMPLE_RESOURCE);
+        final File SAMPLE = new File(SAMPLE_RESOURCE.getFile());
+
+        final URL CONF_RESOURCE = Thread.currentThread().getContextClassLoader().getResource("links_extract.conf");
+        assertNotNull("The config file should be resolved", CONF_RESOURCE);
+        final File CONF = new File(CONF_RESOURCE.getFile());
+        Config config = ConfigFactory.parseFile(CONF);
+        HTMLAnalyser ha = new HTMLAnalyser(config);
+        Map<String, Object> core = new HashMap<String, Object>();
+        core.put("subject-uri", "http://example.org/");
+        core.put("ip-address", "192.168.1.10");
+        core.put("creation-date", "Invalid");
+        core.put("content-type", "text/html");
+        core.put("length", Long.toString(SAMPLE.length()));
+        core.put("version", "InvalidVersion");
+        core.put("absolute-offset", "0");
+        core.put("origin", "");
+        ArchiveRecordHeader header = new ARCRecordMetaData("invalid", core);
+        SolrRecord solr = SolrRecordFactory.createFactory(null).createRecord();
+        InputStream in = new BufferedInputStream(new FileInputStream(SAMPLE), (int) SAMPLE.length());
+        in.mark((int) SAMPLE.length());
+        ha.analyse("source", header, in, solr);
+        return solr;
     }
 }

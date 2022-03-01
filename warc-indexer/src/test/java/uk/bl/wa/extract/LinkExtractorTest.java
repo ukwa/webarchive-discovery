@@ -47,6 +47,25 @@ public class LinkExtractorTest {
         testExtractPublicSuffixFromHost("parliament.uk", "parliament.uk");
     }
 
+    @Test
+    public void testExtractHost() {
+        final String[][] TESTS = new String[][]{
+                // url, host
+                {"http://foo.example.com/", "foo.example.com"},
+                {"http://87.com/", "87.com"},
+                {"http://a.com/", "a.com"},
+                {"http://b-a", "b-a"},
+//                {"http://æblegrød.dk", "æblegrød.dk"}, // TODO: While not a legal host, this should be extracted?
+
+                {"http://-a", LinkExtractor.MALFORMED_HOST},
+                {"http://abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd.com", LinkExtractor.MALFORMED_HOST}, // 64 characters in a single part
+                {"http://foo.example.com&foo=bar", LinkExtractor.MALFORMED_HOST}
+        };
+        for (String[] test: TESTS) {
+            assertEquals(test[1], LinkExtractor.extractHost(test[0]));
+        };
+    }
+
     private void testExtractPublicSuffixFromHost(String host,
             String expectedResult) {
         String domain = LinkExtractor

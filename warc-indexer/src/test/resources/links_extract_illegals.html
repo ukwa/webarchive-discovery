@@ -1,0 +1,16 @@
+<html>
+<head>
+    <title>Illegal links for testing host extraction resilience</title>
+</head>
+<body> <!-- HTML 4 style -->
+<h1>See HTMLAnalyserTest for test code</h1>
+    <ul>
+    <li><a href="http://valid.example.com">Valid</a></li>
+    <li><a href="http://example.com&arguments">Missing slash</a></li>
+    <li><a href="not a link at all">Not n URL</a></li>
+    <li><a href="uuid:123456-1234-1234-12345678">UUID</a></li>
+    <li><a href="">Empty link</a></li>
+    </ul>
+
+</body>
+</html>

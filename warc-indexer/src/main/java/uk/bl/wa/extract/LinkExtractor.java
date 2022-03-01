@@ -32,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.tika.metadata.Metadata;
 
@@ -55,21 +56,26 @@ public class LinkExtractor {
      * @return
      */
     public static String extractHost(String url) {
-        String host = "unknown.host";
-        org.apache.commons.httpclient.URI uri = null;
         // Attempt to parse:
         try {
-            uri = new org.apache.commons.httpclient.URI(url,false);
+            org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(url,false);
             // Extract domain:
-            host = uri.getHost();
-            if( host == null )
-                host = MALFORMED_HOST;
+            String host = uri.getHost();
+            if( host == null || !HOST_PATTERN.matcher(host).matches()) {
+                return MALFORMED_HOST;
+            }
+            return host;
         } catch ( Exception e ) {
             // Return a special hostname if parsing failed:
-            host = MALFORMED_HOST;
+            return MALFORMED_HOST;
         }
-        return host;
     }
+    // Modified from
+    // https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address/3824105#3824105
+    // We allow all letters eventhough only a-z are legal for analysis purposes
+    private static final Pattern HOST_PATTERN = Pattern.compile(
+            "([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d])" +
+            "([.]([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d]))*$");
     
     /**
      * 
