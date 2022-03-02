@@ -97,7 +97,7 @@ public class HTMLAnalyserTest {
 
         // Check number of links:
         assertEquals("The number of links should be correct. Got links: " + solr.getField(SolrFields.SOLR_LINKS),
-                     5, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+                     6, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
 
         // The subject-uri host is part of the count
         // Before the fix in LinkExtractor#extractHost, example.com&arguments and æblegrød.dk was accepted as a valid host
@@ -116,7 +116,7 @@ public class HTMLAnalyserTest {
 
         // Check number of links:
         assertEquals("The number of links should be correct. Got links: " + solr.getField(SolrFields.SOLR_LINKS),
-                     5, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+                     6, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
 
         assertEquals("The number of linked domains should be correct. Got hosts " + solr.getField(SolrFields.SOLR_LINKS_DOMAINS),
                      2, solr.getField(SolrFields.SOLR_LINKS_DOMAINS).getValueCount());
