@@ -32,6 +32,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import org.apache.tika.metadata.Metadata;
 
@@ -50,26 +51,33 @@ public class LinkExtractor {
     public static final String MALFORMED_HOST = "malformed.host";
     
     /**
-     * 
-     * @param url
-     * @return
+     * Given an URL, extract the host and return it.
+     * @param url an uncontrolled String which might be a valid URL.
+     * @return the host or {@link #MALFORMED_HOST} if the host was malformed.
      */
     public static String extractHost(String url) {
-        String host = "unknown.host";
-        org.apache.commons.httpclient.URI uri = null;
         // Attempt to parse:
         try {
-            uri = new org.apache.commons.httpclient.URI(url,false);
+            org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(url,false);
             // Extract domain:
-            host = uri.getHost();
-            if( host == null )
-                host = MALFORMED_HOST;
+            String host = uri.getHost();
+            // RFC-952 and RFC-1123: 255 characters is the limit according to specs
+            if( host == null || !HOST_PATTERN.matcher(host).matches() || host.length() > 255) {
+                return MALFORMED_HOST;
+            }
+            return host;
         } catch ( Exception e ) {
             // Return a special hostname if parsing failed:
-            host = MALFORMED_HOST;
+            return MALFORMED_HOST;
         }
-        return host;
     }
+    // Modified from
+    // https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address/3824105#3824105
+    // We allow all letters even though only a-z are legal with the intention of later punycode-encoding
+    // This has no effect in extractHost as the Apache URI handler replaces non-ascii characters with '?'
+    private static final Pattern HOST_PATTERN = Pattern.compile(
+            "([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d])" +
+            "([.]([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d]))*$");
     
     /**
      * 
