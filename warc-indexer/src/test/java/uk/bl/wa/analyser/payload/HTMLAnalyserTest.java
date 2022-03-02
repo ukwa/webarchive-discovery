@@ -91,20 +91,38 @@ public class HTMLAnalyserTest {
     }
 
     @Test
-    public void testIllegalLinksExtraction() throws IOException {
+    public void testIllegalHostHandling() throws IOException {
 
         SolrRecord solr = createSolrRecord("links_extract_illegals.html");
 
         // Check number of links:
         assertEquals("The number of links should be correct. Got links: " + solr.getField(SolrFields.SOLR_LINKS),
-                     4, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+                     5, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
 
         // The subject-uri host is part of the count
+        // Before the fix in LinkExtractor#extractHost, example.com&arguments and æblegrød.dk was accepted as a valid host
         assertEquals("The number of hosts should be correct. Got hosts " + solr.getField(SolrFields.SOLR_LINKS_HOSTS),
                      2, solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValueCount());
         String host = (String) solr.getField(SolrFields.SOLR_LINKS_HOSTS).getValues().toArray()[1];
         assertEquals("The only HTML-defined link with a valid host should be correct",
                      "valid.example.com", host);
+    }
+
+    // domain handling is not using by LinkExtractor#extractHost but must obey similar rules for validity
+    @Test
+    public void testIllegalDomainHandling() throws IOException {
+
+        SolrRecord solr = createSolrRecord("links_extract_illegals.html");
+
+        // Check number of links:
+        assertEquals("The number of links should be correct. Got links: " + solr.getField(SolrFields.SOLR_LINKS),
+                     5, solr.getField(SolrFields.SOLR_LINKS).getValueCount());
+
+        assertEquals("The number of linked domains should be correct. Got hosts " + solr.getField(SolrFields.SOLR_LINKS_DOMAINS),
+                     2, solr.getField(SolrFields.SOLR_LINKS_DOMAINS).getValueCount());
+        String domain = (String) solr.getField(SolrFields.SOLR_LINKS_DOMAINS).getValues().toArray()[1];
+        assertEquals("The only HTML-defined link with a valid domain should be correct",
+                     "example.com", domain); // Not valid.example.com as "valid." is host-only
     }
 
     private SolrRecord createSolrRecord(String resource) throws IOException {
