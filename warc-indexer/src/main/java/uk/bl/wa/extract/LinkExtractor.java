@@ -51,9 +51,9 @@ public class LinkExtractor {
     public static final String MALFORMED_HOST = "malformed.host";
     
     /**
-     * 
-     * @param url
-     * @return
+     * Given an URL, extract the host and return it.
+     * @param url an uncontrolled String which might be a valid URL.
+     * @return the host or {@link #MALFORMED_HOST} if the host was malformed.
      */
     public static String extractHost(String url) {
         // Attempt to parse:
@@ -61,7 +61,8 @@ public class LinkExtractor {
             org.apache.commons.httpclient.URI uri = new org.apache.commons.httpclient.URI(url,false);
             // Extract domain:
             String host = uri.getHost();
-            if( host == null || !HOST_PATTERN.matcher(host).matches()) {
+            // RFC-952 and RFC-1123: 255 characters is the limit according to specs
+            if( host == null || !HOST_PATTERN.matcher(host).matches() || host.length() > 255) {
                 return MALFORMED_HOST;
             }
             return host;
@@ -72,7 +73,8 @@ public class LinkExtractor {
     }
     // Modified from
     // https://stackoverflow.com/questions/106179/regular-expression-to-match-dns-hostname-or-ip-address/3824105#3824105
-    // We allow all letters eventhough only a-z are legal for analysis purposes
+    // We allow all letters even though only a-z are legal with the intention of later punycode-encoding
+    // This has no effect in extractHost as the Apache URI handler replaces non-ascii characters with '?'
     private static final Pattern HOST_PATTERN = Pattern.compile(
             "([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d])" +
             "([.]([\\p{L}\\d]|[\\p{L}\\d][\\p{L}\\d-]{0,61}[\\p{L}\\d]))*$");

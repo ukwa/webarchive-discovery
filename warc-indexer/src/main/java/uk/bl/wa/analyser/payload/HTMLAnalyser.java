@@ -188,8 +188,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
                 }
 
                 for(String hostLevel : uniqueHostLevels) {
-                    solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS,
-                            SURT.toSURT(hostLevel));
+                    solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS, SURT.toSURT(hostLevel));
                 }
             }
             if( this.extractLinkDomains ) {

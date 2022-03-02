@@ -55,7 +55,7 @@ public class LinkExtractorTest {
                 {"http://87.com/", "87.com"},
                 {"http://a.com/", "a.com"},
                 {"http://b-a", "b-a"},
-//                {"http://æblegrød.dk", "æblegrød.dk"}, // TODO: While not a legal host, this should be extracted?
+//                {"http://æblegrød.dk", "æblegrød.dk"}, // TODO: Should this be converted to punycode?
 
                 {"http://-a", LinkExtractor.MALFORMED_HOST},
                 {"http://abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd.com", LinkExtractor.MALFORMED_HOST}, // 64 characters in a single part
