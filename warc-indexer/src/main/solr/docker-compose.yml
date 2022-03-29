@@ -1,5 +1,21 @@
-# Solr instance for running tests against
-solr:
-  build: .
-  ports:
-    - "8983:8983"
+version: "3.3"
+
+services:
+
+  # Solr instance for running tests against
+  solr:
+    build:
+      context: .
+      args:
+        - "http_proxy=${HTTP_PROXY}"
+        - "https_proxy=${HTTPS_PROXY}"
+    ports:
+      - "18983:8983"
+
+  # Hook to populate the image with test data:
+  populate:
+    build: .
+    command: "/populate.sh"
+    environment:
+      - "SOLR_URL=http://solr:8983/solr/discovery"
+

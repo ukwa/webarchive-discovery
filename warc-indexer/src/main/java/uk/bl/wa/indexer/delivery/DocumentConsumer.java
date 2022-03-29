@@ -18,7 +18,7 @@ package uk.bl.wa.indexer.delivery;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -54,7 +54,8 @@ public interface DocumentConsumer extends Closeable {
     void add(SolrRecord solrRecord) throws IOException;
 
     /**
-     * Perform an explicit flush of buffered documents.
+     * Perform an explicit flush of buffered documents. After this, all buffered documents should have been
+     * fully consumed, i.e. send to Solr/Elasticsearch or written to the file system.
      * @throws IOException if the flush could not be completed.
      */
     void flush() throws IOException;
@@ -87,6 +88,7 @@ public interface DocumentConsumer extends Closeable {
 
     /**
      * Signals that the processing of a WARC file has finished.
+     * DocumentConsumer implementations are responsible for calling {@link #flush()} if needed.
      * @throws IOException if the warc end signal caused problems.
      */
     default void endWARC() throws IOException {

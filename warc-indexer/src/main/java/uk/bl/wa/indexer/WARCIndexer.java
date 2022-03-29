@@ -9,7 +9,7 @@ import static org.archive.format.warc.WARCConstants.HEADER_KEY_IP;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
