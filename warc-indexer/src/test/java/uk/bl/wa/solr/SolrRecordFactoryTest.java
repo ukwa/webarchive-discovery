@@ -83,6 +83,15 @@ public class SolrRecordFactoryTest {
                          record.getFieldValue(SolrFields.SOLR_URL).toString().length());
         }
 
+        // Check whitespace collapsing
+        {
+            SolrRecord record = factory.createRecord();
+            record.addField(SolrFields.SOLR_EXTRACTED_TEXT, " leading   middle   and   trailing spaces  ");
+            assertEquals("Multiple consecutive white spaces should be collapsed",
+                         "leading middle and trailing spaces",
+                         record.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT).toString());
+        }
+
         // Check url_norm rewrite
         final String BASE_URL = "http://example.com/foo.png";
         final String PROBLEM_URL = "http://example.com/foo.png%201080w";

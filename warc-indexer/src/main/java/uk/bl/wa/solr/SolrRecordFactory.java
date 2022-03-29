@@ -200,10 +200,6 @@ public class SolrRecordFactory {
         if (maxLength == 0) {
             return new FieldAdjuster(maxValues, s -> null, "break"); // Early termination: Don't create a full chain when we always discard the result
         }
-        if (maxLength != -1) {
-            pipeline = pipeline.andThen( s -> s.length() <= maxLength ? s : s.substring(0, maxLength));
-            sb.append("maxLength=").append(maxLength);
-        }
 
         // Remove control characters
         if (isEnabled(config, KEY_REMOVE_CONTROL_CHARACTERS, DEFAULT_REMOVE_CONTROL_CHARACTERS)) {
@@ -233,6 +229,12 @@ public class SolrRecordFactory {
             sb.append(sb.length() == 0 ? "" : ", ").append(replacer);
         }
 
+        // Max length is applied after whitespace collapsing etc.
+        if (maxLength != -1) {
+            pipeline = pipeline.andThen( s -> s.length() <= maxLength ? s : s.substring(0, maxLength));
+            sb.append("maxLength=").append(maxLength);
+        }
+
         // Don't index if empty
         Function<String, String> frozen = pipeline.andThen(s -> s.isEmpty() ? null : s);
 
@@ -253,7 +255,7 @@ public class SolrRecordFactory {
 
         return new FieldAdjuster(maxValues, instrumented, sb.toString());
     }
-    private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}");
+    private static final Pattern SPACE_PATTERN = Pattern.compile("\\p{Space}+");
     private static final Pattern CNTRL_PATTERN = Pattern.compile("\\p{Cntrl}");
 
     /**
