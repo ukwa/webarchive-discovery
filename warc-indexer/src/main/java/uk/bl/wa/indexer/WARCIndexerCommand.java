@@ -153,8 +153,8 @@ public class WARCIndexerCommand {
             System.exit( 0 );
         }
 
-        // Check if the text field is required in the XML output
-        final boolean isTextRequired = line.hasOption("t") || line.hasOption("s");
+        // Check if the text field is required for the output (explicit (-t), Elasticsearch or Solr)
+        final boolean isTextRequired = line.hasOption("t") || line.hasOption("s") || line.hasOption("e");
 
         final boolean slashPages = line.hasOption("r");
 
