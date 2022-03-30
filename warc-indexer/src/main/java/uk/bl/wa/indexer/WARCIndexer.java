@@ -90,6 +90,7 @@ import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.util.InputStreamUtils;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
+import uk.bl.wa.util.RegexpReplacer;
 
 /**
  * 
@@ -181,9 +182,8 @@ public class WARCIndexer {
                 conf.getBoolean(HtmlFeatureParser.CONF_LINKS_NORMALISE) :
                 HtmlFeatureParser.DEFAULT_LINKS_NORMALISE;
         this.checkSolrForDuplicates = conf.getBoolean("warc.solr.check_solr_for_duplicates");
-        if (this.checkSolrForDuplicates == true) {
-            log.warn(
-                    "Checking Solr for duplicates is not implemented at present!");
+        if (this.checkSolrForDuplicates) {
+            log.warn("Checking Solr for duplicates is not implemented at present!");
         }
         // URLs to exclude:
         this.url_excludes = conf.getStringList( "warc.index.extract.url_exclude" );
@@ -316,8 +316,10 @@ public class WARCIndexer {
             if( header.getUrl() == null )
                 return null;
 
-            // Get the URL:
-            String targetUrl = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
+            // Get the URL and ensure it conforms to the URL rules in the configuration
+            // This includes stripping the URL to a max length (default 2000)
+            String targetUrl = solrFactory.applyAdjustment(
+                    SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
 
             // Strip down very long URLs to avoid
             // "org.apache.commons.httpclient.URIException: Created (escaped)
@@ -511,13 +513,13 @@ public class WARCIndexer {
         solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath);
 
         byte[] url_md5digest = md5
-                .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes("UTF-8"));
+                .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes(StandardCharsets.UTF_8));
         // String url_base64 =
         // Base64.encodeBase64String(fullUrl.getBytes("UTF-8"));
         final String url_md5hex = Base64.encodeBase64String(url_md5digest);
         solr.setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         if (addNormalisedURL) {
-            solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl) );
+            solr.setField( SolrFields.SOLR_URL_NORMALISED, Normalisation.canonicaliseURL(targetUrl)); // targetUrl has already been rewritten
         }
 
         // Get the length, but beware, this value also includes the HTTP headers (i.e. it is the payload_length):
