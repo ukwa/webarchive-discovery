@@ -4,7 +4,7 @@ package uk.bl.wa.solr;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -51,6 +51,7 @@ public class SolrRecordFactoryTest {
     @Test
     public void testBasicFactorySetup() {
         final String KEY_URL_MAX_LENGTH = "warc.solr.field_setup.fields.url.max_length";
+        final String KEY_URL_NORM = "warc.solr.field_setup.fields.url_norm.rewrites";
 
         URL ref = Thread.currentThread().getContextClassLoader().getResource("reference.conf");
         assertNotNull("The config reference.conf should exist", ref);
@@ -58,14 +59,16 @@ public class SolrRecordFactoryTest {
         Config conf = ConfigFactory.parseFile(configFilePath);
         assertTrue("Max for url field should be specified with key " + KEY_URL_MAX_LENGTH,
                    conf.hasPath(KEY_URL_MAX_LENGTH));
+        assertTrue("There should be a setup for url_norm.rewrites", conf.hasPath(KEY_URL_NORM));
         SolrRecordFactory factory = SolrRecordFactory.createFactory(conf);
 
+        // Check max_length handling
         {
             SolrRecord record = factory.createRecord();
             final String FAKE_URL = "short";
-            record.addField("url", FAKE_URL);
+            record.addField(SolrFields.SOLR_URL, FAKE_URL);
             assertEquals("The length of the url field with a short String should be unchanged",
-                         FAKE_URL.length(), record.getFieldValue("url").toString().length());
+                         FAKE_URL.length(), record.getFieldValue(SolrFields.SOLR_URL).toString().length());
         }
         {
             SolrRecord record = factory.createRecord();
@@ -74,10 +77,38 @@ public class SolrRecordFactoryTest {
             for (int i = 0 ; i < 2500 ; i++) {
                 fakeURL.append("O");
             }
-            record.addField("url", fakeURL.toString());
+            record.addField(SolrFields.SOLR_URL, fakeURL.toString());
             assertEquals("The length of the url field with a huge String should be trimmed",
                          conf.getBytes(KEY_URL_MAX_LENGTH).intValue(),
-                         record.getFieldValue("url").toString().length());
+                         record.getFieldValue(SolrFields.SOLR_URL).toString().length());
         }
+
+        // Check whitespace collapsing
+        {
+            SolrRecord record = factory.createRecord();
+            record.addField(SolrFields.SOLR_EXTRACTED_TEXT, " leading   middle   and   trailing spaces  ");
+            assertEquals("Multiple consecutive white spaces should be collapsed",
+                         "leading middle and trailing spaces",
+                         record.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT).toString());
+        }
+
+        // Check url_norm rewrite
+        final String BASE_URL = "http://example.com/foo.png";
+        final String PROBLEM_URL = "http://example.com/foo.png%201080w";
+        {
+            SolrRecord record = factory.createRecord();
+            record.addField(SolrFields.SOLR_URL_NORMALISED, BASE_URL);
+            assertEquals("Non-problematic URL should be stored unchanged in url_norm",
+                         BASE_URL,
+                         record.getFieldValue(SolrFields.SOLR_URL_NORMALISED).toString());
+        }
+        {
+            SolrRecord record = factory.createRecord();
+            record.addField(SolrFields.SOLR_URL_NORMALISED, PROBLEM_URL);
+            assertEquals("Problematic URL should be adjusted to base URL in url_norm",
+                         BASE_URL,
+                         record.getFieldValue(SolrFields.SOLR_URL_NORMALISED).toString());
+        }
+
     }
 }

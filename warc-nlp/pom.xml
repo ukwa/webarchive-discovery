@@ -9,7 +9,7 @@
    <properties>
       <nd4j.version>1.0.0-beta7</nd4j.version>
       <dl4j.version>1.0.0-beta7</dl4j.version>
-      <stanford.nlp.version>4.0.0</stanford.nlp.version>
+      <stanford.nlp.version>4.4.0</stanford.nlp.version>
    </properties>
    <build>
      <plugins>

@@ -18,7 +18,7 @@ package uk.bl.wa.indexer.delivery;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -96,6 +96,9 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
         for (SolrRecord record: docs) {
             record.writeXml(out);
         }
+        // "</add>" is not appended, as it only makes sense on close, so this is not strictly correct behaviour
+        // as defined in DocumentConsumer#flush. Not much to do about that.
+        out.flush();
     }
 
     @Override
@@ -125,6 +128,7 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
         if (out == null) {
             return;
         }
+        flush(); // Ensure all buffered documents are written
         out.write("</add>");
         out.flush();
         out.close();

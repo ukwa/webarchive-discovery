@@ -9,7 +9,7 @@ package uk.bl.wa.indexer;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -155,8 +155,8 @@ public class WARCIndexerCommand {
             System.exit( 0 );
         }
 
-        // Check if the text field is required in the XML output
-        final boolean isTextRequired = line.hasOption("t") || line.hasOption("s");
+        // Check if the text field is required for the output (explicit (-t), Elasticsearch or Solr)
+        final boolean isTextRequired = line.hasOption("t") || line.hasOption("s") || line.hasOption("e");
 
         final boolean slashPages = line.hasOption("r");
 

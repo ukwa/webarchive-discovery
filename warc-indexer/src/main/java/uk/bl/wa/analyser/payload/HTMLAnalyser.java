@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.payload;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -188,8 +188,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
                 }
 
                 for(String hostLevel : uniqueHostLevels) {
-                    solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS,
-                            SURT.toSURT(hostLevel));
+                    solr.addField(SolrFields.SOLR_LINKS_HOSTS_SURTS, SURT.toSURT(hostLevel));
                 }
             }
             if( this.extractLinkDomains ) {

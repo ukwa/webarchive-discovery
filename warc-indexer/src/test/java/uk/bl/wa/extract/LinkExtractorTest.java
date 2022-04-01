@@ -4,7 +4,7 @@ package uk.bl.wa.extract;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2021 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -45,6 +45,25 @@ public class LinkExtractorTest {
         testExtractPublicSuffixFromHost("place.nhs.uk", "place.nhs.uk");
         testExtractPublicSuffixFromHost("nhs.uk", "nhs.uk");
         testExtractPublicSuffixFromHost("parliament.uk", "parliament.uk");
+    }
+
+    @Test
+    public void testExtractHost() {
+        final String[][] TESTS = new String[][]{
+                // url, host
+                {"http://foo.example.com/", "foo.example.com"},
+                {"http://87.com/", "87.com"},
+                {"http://a.com/", "a.com"},
+                {"http://b-a", "b-a"},
+//                {"http://æblegrød.dk", "æblegrød.dk"}, // TODO: Should this be converted to punycode?
+
+                {"http://-a", LinkExtractor.MALFORMED_HOST},
+                {"http://abcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcdefghijabcd.com", LinkExtractor.MALFORMED_HOST}, // 64 characters in a single part
+                {"http://foo.example.com&foo=bar", LinkExtractor.MALFORMED_HOST}
+        };
+        for (String[] test: TESTS) {
+            assertEquals(test[1], LinkExtractor.extractHost(test[0]));
+        };
     }
 
     private void testExtractPublicSuffixFromHost(String host,
