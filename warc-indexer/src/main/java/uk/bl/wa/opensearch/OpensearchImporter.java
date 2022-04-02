@@ -1,4 +1,4 @@
-package uk.bl.wa.elastic;
+package uk.bl.wa.opensearch;
 
 /*-
  * #%L
@@ -31,29 +31,29 @@ import java.util.List;
 
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequest;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.client.RequestOptions;
-import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
+import org.opensearch.action.bulk.BulkItemResponse;
+import org.opensearch.action.bulk.BulkRequest;
+import org.opensearch.action.bulk.BulkResponse;
+import org.opensearch.action.index.IndexRequest;
+import org.opensearch.client.RequestOptions;
+import org.opensearch.common.xcontent.XContentBuilder;
+import org.opensearch.common.xcontent.XContentFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ElasticImporter {
-	private static Logger log = LoggerFactory.getLogger(ElasticImporter.class);
+public class OpensearchImporter {
+	private static Logger log = LoggerFactory.getLogger(OpensearchImporter.class);
 	static final int MAXRETRIES = 20;
 	String indexName;
-	ElasticClient elasticClient;
+	OpensearchClient opensearchClient;
 
 	long rowCount = 0;
 	boolean initialized = false;
 	
-	public ElasticImporter(ElasticUrl aElasticUrl) {
-		indexName = aElasticUrl.getIndexName();
+	public OpensearchImporter(OpensearchUrl aOpensearchUrl, String aUser, String aPassword) {
+		indexName = aOpensearchUrl.getIndexName();
 		
-		elasticClient = new ElasticClient(aElasticUrl.getServer(), null, null, aElasticUrl.getScheme(), aElasticUrl.getPort());
+		opensearchClient = new OpensearchClient(aOpensearchUrl.getServer(), aUser, aPassword, aOpensearchUrl.getScheme(), aOpensearchUrl.getPort());
 	}
 
 	public void importDocuments(List<SolrInputDocument> aDocs) throws Exception {
@@ -109,7 +109,7 @@ public class ElasticImporter {
 
 			for (int i = 1; i <= MAXRETRIES; i++) {
 				try {
-					bulkResponse = elasticClient.getClient().bulk(bulkRequest, RequestOptions.DEFAULT);
+					bulkResponse = opensearchClient.getClient().bulk(bulkRequest, RequestOptions.DEFAULT);
 					if (bulkResponse.hasFailures()) {
 						Iterator<BulkItemResponse> iterator = bulkResponse.iterator();
 						int rowcount = 0;
@@ -138,8 +138,8 @@ public class ElasticImporter {
 			log.error(e.getMessage());
 			throw new RuntimeException(e);
 		} finally {
-			if (elasticClient != null) {
-				elasticClient.close();
+			if (opensearchClient != null) {
+				opensearchClient.close();
 			}
 		}
 	}

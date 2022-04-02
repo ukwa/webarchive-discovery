@@ -1,4 +1,4 @@
-package uk.bl.wa.elastic;
+package uk.bl.wa.opensearch;
 
 /*-
  * #%L
@@ -22,7 +22,7 @@ package uk.bl.wa.elastic;
  * #L%
  */
 
-public class ElasticUrl {
+public class OpensearchUrl {
     public static final String PORT_DELIM = ":";
     public static final String SCHEME_DELIM = "://";
     public static final String PATH_DELIM = "/";
@@ -43,7 +43,7 @@ public class ElasticUrl {
      *
      * scheme, host, port and path (index) are extracted from the url
      */
-    public ElasticUrl(String aUrl) {
+    public OpensearchUrl(String aUrl) {
     	parse(aUrl);
     }
     

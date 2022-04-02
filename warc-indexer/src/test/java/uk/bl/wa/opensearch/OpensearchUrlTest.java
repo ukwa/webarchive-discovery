@@ -1,4 +1,4 @@
-package uk.bl.wa.elastic;
+package uk.bl.wa.opensearch;
 
 /*
  * #%L
@@ -28,133 +28,130 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
-
-public class ElasticUrlTest {
-
+public class OpensearchUrlTest {
     @Test
     public void testInvalidUrls() {
-    	ElasticUrl eu;
+    	OpensearchUrl eu;
     	
-    	eu = new ElasticUrl(null);
+    	eu = new OpensearchUrl(null);
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("");
+    	eu = new OpensearchUrl("");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("invalid");
+    	eu = new OpensearchUrl("invalid");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("ftp://server");
+    	eu = new OpensearchUrl("ftp://server");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://");
+    	eu = new OpensearchUrl("http://");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("https://");
+    	eu = new OpensearchUrl("https://");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://server");
+    	eu = new OpensearchUrl("http://server");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("https://server");
+    	eu = new OpensearchUrl("https://server");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://server");
+    	eu = new OpensearchUrl("http://server");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server/");
+    	eu = new OpensearchUrl("https://server/");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://server:x");
+    	eu = new OpensearchUrl("http://server:x");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server:x");
+    	eu = new OpensearchUrl("https://server:x");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://server:");
+    	eu = new OpensearchUrl("http://server:");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server:");
+    	eu = new OpensearchUrl("https://server:");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("http://server:9200");
+    	eu = new OpensearchUrl("http://server:9200");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server:9200");
+    	eu = new OpensearchUrl("https://server:9200");
     	assertFalse(eu.isValid());
 
-    	eu = new ElasticUrl("http://server:9200index");
+    	eu = new OpensearchUrl("http://server:9200index");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server:9200index");
+    	eu = new OpensearchUrl("https://server:9200index");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("http://server:9200/");
+    	eu = new OpensearchUrl("http://server:9200/");
     	assertFalse(eu.isValid());
     	
-    	eu = new ElasticUrl("https://server:9200/");
+    	eu = new OpensearchUrl("https://server:9200/");
     	assertFalse(eu.isValid());
     }
     
     @Test
     public void testValidUrls() {
-    	ElasticUrl eu;
+    	OpensearchUrl eu;
     	
-    	eu = new ElasticUrl("http://server:9200/index");
+    	eu = new OpensearchUrl("http://server:9200/index");
     	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTP);
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTP);
     	assertEquals(eu.getServer(), "server");
     	assertEquals(eu.getPort(), 9200);
     	assertEquals(eu.getIndexName(), "index");
     	
-    	eu = new ElasticUrl("https://server:9200/index");
+    	eu = new OpensearchUrl("https://server:9200/index");
     	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTPS);
-    	assertEquals(eu.getServer(), "server");
-    	assertEquals(eu.getPort(), 9200);
-    	assertEquals(eu.getIndexName(), "index");
-
-    	eu = new ElasticUrl("http://server/index");
-    	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTP);
-    	assertEquals(eu.getServer(), "server");
-    	assertEquals(eu.getPort(), 80);
-    	assertEquals(eu.getIndexName(), "index");
-    	
-    	eu = new ElasticUrl("https://server/index");
-    	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTPS);
-    	assertEquals(eu.getServer(), "server");
-    	assertEquals(eu.getPort(), 80);
-    	assertEquals(eu.getIndexName(), "index");
-
-    	eu = new ElasticUrl("https://server:9200/index/");
-    	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTPS);
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTPS);
     	assertEquals(eu.getServer(), "server");
     	assertEquals(eu.getPort(), 9200);
     	assertEquals(eu.getIndexName(), "index");
 
-    	eu = new ElasticUrl("http://server:9200/index/");
+    	eu = new OpensearchUrl("http://server/index");
     	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTP);
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTP);
+    	assertEquals(eu.getServer(), "server");
+    	assertEquals(eu.getPort(), 80);
+    	assertEquals(eu.getIndexName(), "index");
+    	
+    	eu = new OpensearchUrl("https://server/index");
+    	assertTrue(eu.isValid());
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTPS);
+    	assertEquals(eu.getServer(), "server");
+    	assertEquals(eu.getPort(), 80);
+    	assertEquals(eu.getIndexName(), "index");
+
+    	eu = new OpensearchUrl("https://server:9200/index/");
+    	assertTrue(eu.isValid());
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTPS);
+    	assertEquals(eu.getServer(), "server");
+    	assertEquals(eu.getPort(), 9200);
+    	assertEquals(eu.getIndexName(), "index");
+
+    	eu = new OpensearchUrl("http://server:9200/index/");
+    	assertTrue(eu.isValid());
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTP);
     	assertEquals(eu.getServer(), "server");
     	assertEquals(eu.getPort(), 9200);
     	assertEquals(eu.getIndexName(), "index");
     	
-    	eu = new ElasticUrl("https://server/index/");
+    	eu = new OpensearchUrl("https://server/index/");
     	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTPS);
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTPS);
     	assertEquals(eu.getServer(), "server");
     	assertEquals(eu.getPort(), 80);
     	assertEquals(eu.getIndexName(), "index");
     	
-    	eu = new ElasticUrl("http://server/index/");
+    	eu = new OpensearchUrl("http://server/index/");
     	assertTrue(eu.isValid());
-    	assertEquals(eu.getScheme(), ElasticUrl.HTTP);
+    	assertEquals(eu.getScheme(), OpensearchUrl.HTTP);
     	assertEquals(eu.getServer(), "server");
     	assertEquals(eu.getPort(), 80);
     	assertEquals(eu.getIndexName(), "index");
-    	
     }
 }

@@ -42,8 +42,9 @@ import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import uk.bl.wa.elastic.ElasticImporter;
-import uk.bl.wa.elastic.ElasticUrl;
+
+import uk.bl.wa.opensearch.OpensearchImporter;
+import uk.bl.wa.opensearch.OpensearchUrl;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrWebServer;
 
@@ -52,17 +53,19 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Sends documents to a Elasticsearch installation.
+ * Sends documents to a Opensearch installation.
  */
-public class ElasticsearchDocumentConsumer extends BufferedDocumentConsumer {
-    private static final Logger log = LoggerFactory.getLogger(ElasticsearchDocumentConsumer.class);
+public class OpensearchDocumentConsumer extends BufferedDocumentConsumer {
+    private static final Logger log = LoggerFactory.getLogger(OpensearchDocumentConsumer.class);
 
-    private final String elasticURL;
-    private final ElasticImporter elasticImporter;
+    private final String opensearchURL;
+    private final OpensearchImporter opensearchImporter;
 
     /**
      * Create a SolrDocumentConsumer based on the given configuration.
-     * @param elasticURL the URL to an Elasticsearch installation.
+     * @param opensearchURL the URL to an Opensearch installation.
+     * @param opensearchUser the User for the Opensearch installation.
+     * @param opensearchPassword the Password for the Opensearch installation.
      * @param conf base setup for the DocumentConsumer. Values for maxDocuments, maxBytes and disableCommit will be
      *             taken from here, if present.
      * @param maxDocumentsOverride  if not null, this will override the value from conf "warc.solr.batch_size"
@@ -70,16 +73,16 @@ public class ElasticsearchDocumentConsumer extends BufferedDocumentConsumer {
      * @param disableCommitOverride if not null, this will override the value from conf "warc.solr.disablecommit"
      * @return a SolrDocumentconsumer, ready for use.
      */
-    public ElasticsearchDocumentConsumer(String elasticURL, Config conf,
+    public OpensearchDocumentConsumer(String opensearchURL, String opensearchUser, String opensearchPassword, Config conf,
                                          Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) {
         super(conf, maxDocumentsOverride, maxBytesOverride, disableCommitOverride);
 
-        this.elasticURL = elasticURL;
-        ElasticUrl eu = new ElasticUrl(elasticURL);
+        this.opensearchURL = opensearchURL;
+        OpensearchUrl eu = new OpensearchUrl(opensearchURL);
         if (!eu.isValid()) {
-            throw new IllegalArgumentException("ElasticUrl '" + elasticURL + "' is not valid");
+            throw new IllegalArgumentException("OpensearchUrl '" + opensearchURL + "' is not valid");
         }
-        elasticImporter = new ElasticImporter(eu);
+        opensearchImporter = new OpensearchImporter(eu, opensearchUser, opensearchPassword);
 
         log.info("Constructed " + this);
     }
@@ -88,10 +91,10 @@ public class ElasticsearchDocumentConsumer extends BufferedDocumentConsumer {
     void performFlush(List<SolrRecord> docs) throws IOException {
         List<SolrInputDocument> solrDocs  = docs.stream().map(SolrRecord::getSolrDocument).collect(Collectors.toList());
         try {
-            elasticImporter.importDocuments(solrDocs);
+            opensearchImporter.importDocuments(solrDocs);
         } catch (Exception e) {
             throw new IOException(
-                    "Exception while flushing " + docs.size() + " records to Elasticsearch at " + elasticURL, e);
+                    "Exception while flushing " + docs.size() + " records to Opensearch at " + opensearchURL, e);
         }
     }
 
@@ -102,13 +105,13 @@ public class ElasticsearchDocumentConsumer extends BufferedDocumentConsumer {
 
     @Override
     public void performCommit() throws IOException {
-        // The ElasticImporter does not support explicit commit
+        // The OpensearchImporter does not support explicit commit
     }
 
     @Override
     public String toString() {
-        return "ElasticsearchDocumentConsumer{" +
-               "elasticURL='" + elasticURL + '\'' +
+        return "OpensearchDocumentConsumer{" +
+               "opensearchURL='" + opensearchURL + '\'' +
                ", inner=" + super.toString() +
                '}';
     }

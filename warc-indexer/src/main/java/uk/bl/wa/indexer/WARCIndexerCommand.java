@@ -69,10 +69,10 @@ import com.typesafe.config.ConfigValueFactory;
 
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
-import uk.bl.wa.elastic.ElasticImporter;
-import uk.bl.wa.elastic.ElasticUrl;
 import uk.bl.wa.indexer.delivery.DocumentConsumer;
 import uk.bl.wa.indexer.delivery.DocumentConsumerFactory;
+import uk.bl.wa.opensearch.OpensearchImporter;
+import uk.bl.wa.opensearch.OpensearchUrl;
 import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.solr.SolrRecordFactory;
@@ -91,7 +91,7 @@ public class WARCIndexerCommand {
         Instrument.init();
     }
 
-    private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-e <Elastic instance>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
+    private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-e <Opensearch instance>] [-u <user>] [-p <password>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
     private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
     private static final String CLI_FOOTER = "";
     
@@ -131,24 +131,26 @@ public class WARCIndexerCommand {
             System.exit( 0 );
         }
 
-        // Either file output, solr or elastic are required
+        // Either file output, solr or opensearch are required
         final String outputDir = line.hasOption("o") ? line.getOptionValue("o") : null;
         final String solrUrl = line.hasOption("s") ? line.getOptionValue("s").replaceAll("\"", "") : null;
-        final String elasticUrl = line.hasOption("e") ? line.getOptionValue("e") : null;
+        final String opensearchUrl = line.hasOption("e") ? line.getOptionValue("e") : null;
+        final String user = line.hasOption("user") ? line.getOptionValue("user") : null;
+        final String password = line.hasOption("password") ? line.getOptionValue("password") : null;
         boolean gzip = line.hasOption("z"); // Used with outputDir
-        final Boolean disableCommit = line.hasOption("d") ? true : null; // Used with Solr (and possibly Elasticsearch?)
+        final Boolean disableCommit = line.hasOption("d") ? true : null; // Used with Solr (and possibly Opensearch?)
         // -1 means no explicit batch size (defaults to 1 if not stated in the conf-file)
         final Integer batchSize = line.hasOption("b") ? Integer.parseInt(line.getOptionValue("b")) : null;
 
-        // Check that either an output dir or Solr URL or Elastic URL is supplied
-        if(outputDir == null && solrUrl == null && elasticUrl == null){
-            System.out.println( "A Solr URL, Elastic URL or an Output Directory must be supplied" );
+        // Check that either an output dir or Solr URL or Opensearch URL is supplied
+        if(outputDir == null && solrUrl == null && opensearchUrl == null){
+            System.out.println( "A Solr URL, Opensearch URL or an Output Directory must be supplied" );
             printUsage(options);
             System.exit( 0 );
         }
-        // Check that both an output dir and Solr/Elastic URL are not supplied
-        if((outputDir != null && solrUrl != null) || (outputDir != null && elasticUrl != null)){
-            System.out.println( "A Solr/Elastic URL and an Output Directory cannot both be specified" );
+        // Check that both an output dir and Solr/Opensearch URL are not supplied
+        if((outputDir != null && solrUrl != null) || (outputDir != null && opensearchUrl != null)){
+            System.out.println( "A Solr/Opensearch URL and an Output Directory cannot both be specified" );
             printUsage(options);
             System.exit( 0 );
         }
@@ -168,7 +170,7 @@ public class WARCIndexerCommand {
         collection_id = line.hasOption("u") ? line.getOptionValue("u") : null;
 
         try {
-            parseWarcFiles(configFile, outputDir, gzip, solrUrl, elasticUrl, inputFiles,
+            parseWarcFiles(configFile, outputDir, gzip, solrUrl, opensearchUrl, user, password, inputFiles,
                            isTextRequired, slashPages, batchSize, annotationsFile,
                            disableCommit, institution, collection, collection_id);
         } finally {
@@ -187,7 +189,7 @@ public class WARCIndexerCommand {
      */
     public static void parseWarcFiles(
             String configFile,
-            String outputDir, boolean gzip, String solrUrl, String elasticUrl,
+            String outputDir, boolean gzip, String solrUrl, String opensearchUrl, String user, String password,
             String[] inputFiles,
             boolean isTextRequired, boolean slashPages,
             Integer batchSize, String annotationsFile, Boolean disableCommit,
@@ -214,7 +216,7 @@ public class WARCIndexerCommand {
         }
         final SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(conf);
         final DocumentConsumer docConsumer = DocumentConsumerFactory.createConsumer(
-                conf, outputDir, gzip, solrUrl, elasticUrl, batchSize, null, disableCommit);
+                conf, outputDir, gzip, solrUrl, opensearchUrl, user, password, batchSize, null, disableCommit);
 
         // Also pass config down:
         WARCIndexer windex = new WARCIndexer(conf);
@@ -314,8 +316,12 @@ public class WARCIndexerCommand {
                           "Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
         options.addOption("s", "solr", true,
                           "The URL of the Solr instance the document should be sent to");
-        options.addOption("e", "elastic", true,
-                          "The URL of the Elastic instance the document should be sent to");
+        options.addOption("e", "opensearch", true,
+                          "The URL of the Opensearch instance the document should be sent to");
+        options.addOption("user", "user", true,
+                		  "The user for the fulltext instance");
+        options.addOption("password", "password", true,
+                		  "The userpassword for the fulltext instance");
         options.addOption("t", "text", false,
                           "Include text in XML in output files");
         options.addOption("r", "slash", false,
