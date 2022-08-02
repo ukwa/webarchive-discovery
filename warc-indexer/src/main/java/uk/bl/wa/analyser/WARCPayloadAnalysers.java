@@ -128,7 +128,7 @@ public class WARCPayloadAnalysers {
      * @param header
      * @param content_length
      */
-    private void processContentType(SolrRecord solr, ArchiveRecordHeader header,
+    void processContentType(SolrRecord solr, ArchiveRecordHeader header,
             long content_length, boolean revisit) {
         // Get the current content-type:
         String contentType = (String) solr
@@ -157,7 +157,7 @@ public class WARCPayloadAnalysers {
         }
 
         // Allow header MIME
-        if (contentType != null && contentType.isEmpty()) {
+        if (contentType != null && (contentType.isEmpty() || "application/octet-stream".equals(contentType))) {
             if (header.getHeaderFieldKeys()
                     .contains("WARC-Identified-Payload-Type")) {
                 contentType = ((String) header.getHeaderFields()
