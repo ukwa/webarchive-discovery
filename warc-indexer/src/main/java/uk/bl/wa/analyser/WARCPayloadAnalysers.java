@@ -162,6 +162,8 @@ public class WARCPayloadAnalysers {
                     .contains("WARC-Identified-Payload-Type")) {
                 contentType = ((String) header.getHeaderFields()
                         .get("WARC-Identified-Payload-Type"));
+            } else if (solr.containsKey(SolrFields.CONTENT_TYPE_SERVED)) {
+                contentType = (String)solr.getFieldValue(SolrFields.CONTENT_TYPE_SERVED);
             } else {
                 contentType = header.getMimetype();
             }
