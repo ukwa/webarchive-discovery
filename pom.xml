@@ -52,14 +52,15 @@
       <url>https://github.com/ukwa/webarchive-discovery.git</url>
    </scm>
    <properties>
-      <solr.version>8.7.0</solr.version>
+      <solr.version>8.11.0</solr.version>
       <webarchive.commons.version>1.1.9</webarchive.commons.version>
       <jdk.version>1.8</jdk.version>
-      <hadoop.version>0.20.2</hadoop.version>
+      <hadoop.version>3.3.1</hadoop.version>
+      <spark.version>3.3.0</spark.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>1024</ram>
-      <jackson.version>2.11.3</jackson.version>
-      <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
+      <jackson.version>2.13.3</jackson.version>
+      <slf4j.version.override>1.7.32</slf4j.version.override> <!-- last version compatible with Hadoop/Spark -->
    </properties>
    <build>
       <plugins>
@@ -167,7 +168,7 @@
    </build>
 
    <dependencies>
-      <!--        Logging-->
+      <!-- Logging and testing -->
       <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
@@ -178,5 +179,11 @@
          <artifactId>jcl-over-slf4j</artifactId>
          <version>${slf4j.version.override}</version>
       </dependency>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>4.11</version>
+         <scope>test</scope>
+       </dependency>      
    </dependencies>
 </project>

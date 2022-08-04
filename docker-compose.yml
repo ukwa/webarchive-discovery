@@ -1,0 +1,28 @@
+version: "3.7"
+
+services:
+
+  # ----------------------------------------
+  # Build the indexer
+  # ----------------------------------------
+
+  indexer:
+    build:
+      context: .
+      args:
+        http_proxy: ${HTTP_PROXY}
+        https_proxy: ${HTTPS_PROXY}
+    environment:
+     - "SOLR_URL=http://warc-solr:8983/solr/discovery"
+
+
+  # ----------------------------------------
+  # Solr instances for running tests against
+  # ----------------------------------------
+
+  warc-solr:
+    image: ukwa/webarchive-discovery-solr:master
+    ports:
+      - 8983:8983
+    volumes:
+      - $PWD/tmp/logs:/opt/solr/server/logs

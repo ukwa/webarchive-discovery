@@ -26,6 +26,8 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.hadoop.conf.Configurable;
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -78,7 +80,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
 
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
+        Configuration conf = this.mrCluster.getConfig();
         conf.set("mapred.child.java.opts", "-Xmx1024m");
         wir.setConf(conf);
         log.info("Running job...");

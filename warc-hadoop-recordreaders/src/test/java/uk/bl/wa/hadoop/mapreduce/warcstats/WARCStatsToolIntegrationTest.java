@@ -40,8 +40,11 @@ import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MiniMRClientCluster;
+import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
+import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -58,7 +61,7 @@ public class WARCStatsToolIntegrationTest {
 
     // Test cluster:
     private MiniDFSCluster dfsCluster = null;
-    private MiniMRCluster mrCluster = null;
+    private MiniMRClientCluster mrCluster = null;
     
     // Input files: 
     // 1. The variations.warc.gz example is rather large, and there are mysterious problems parsing the statusCode.
@@ -91,12 +94,12 @@ public class WARCStatsToolIntegrationTest {
         
         //
         Configuration conf = new Configuration();
-        dfsCluster = new MiniDFSCluster(conf, 1, true, null );
+        dfsCluster = new MiniDFSCluster.Builder(conf).build();
         dfsCluster.getFileSystem().makeQualified(input);
         dfsCluster.getFileSystem().makeQualified(output);
         //
-        mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
-        
+        mrCluster = MiniMRClientClusterFactory.create(this.getClass(), 2, conf);        
+
         // prepare for tests
         for( String filename : testWarcs ) {
             copyFileToTestCluster(filename);
@@ -143,12 +146,11 @@ public class WARCStatsToolIntegrationTest {
 
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
-        wir.createJobConf(conf, args);
+        Configuration conf = this.mrCluster.getConfig();
         // Disable speculative execution for tests:
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
         log.info("Running job...");
-        JobClient.runJob(conf);
+        ToolRunner.run(conf, wir, args);
         log.info("Job finished, checking the results...");
 
         // check the output
@@ -203,12 +205,11 @@ public class WARCStatsToolIntegrationTest {
 
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
-        wir.createJobConf(conf, args);
+        Configuration conf = this.mrCluster.getConfig();
         // Disable speculative execution for tests:
         conf.set("mapred.reduce.tasks.speculative.execution", "false");
         log.info("Running job...");
-        JobClient.runJob(conf);
+        ToolRunner.run(conf, wir, args);
         log.info("Job finished, checking the results...");
 
         // check the output
@@ -244,13 +245,13 @@ public class WARCStatsToolIntegrationTest {
     @After
     public void tearDown() throws Exception {
         log.warn("Tearing down test cluster...");
+        if (mrCluster != null) {
+            mrCluster.stop();
+            mrCluster = null;
+        }
         if (dfsCluster != null) {
             dfsCluster.shutdown();
             dfsCluster = null;
-        }
-        if (mrCluster != null) {
-            mrCluster.shutdown();
-            mrCluster = null;
         }
         log.warn("Torn down test cluster.");
     }

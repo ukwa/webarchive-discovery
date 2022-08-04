@@ -29,7 +29,7 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
-
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobConf;
@@ -71,7 +71,7 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
         
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
+        Configuration conf = this.mrCluster.getConfig();
         log.info("Running job...");
         ToolRunner.run(conf, new HdfsFileHasher(), args);
         log.info("Job finished, checking the results...");

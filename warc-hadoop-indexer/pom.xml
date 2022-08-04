@@ -36,7 +36,8 @@
 				</configuration>
 				<executions>
 					<execution>
-						<phase>package</phase>
+						<!-- phase>package</phase -->
+                        <phase>none</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
@@ -87,24 +88,17 @@
 		   <version>${solr.version}</version>
 		</dependency>
 
-      <dependency>
-         <groupId>org.apache.hadoop</groupId>
-         <artifactId>hadoop-core</artifactId>
-         <version>${hadoop.version}</version>
-         <scope>provided</scope>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.hadoop</groupId>
-         <artifactId>hadoop-test</artifactId>
-         <version>${hadoop.version}</version>
-         <scope>test</scope>
-      </dependency>
-      <dependency>
-        <groupId>org.apache.mrunit</groupId>
-        <artifactId>mrunit</artifactId>
-        <version>0.9.0-incubating</version>
-        <classifier>hadoop1</classifier>
-        <scope>test</scope>
-      </dependency>
+		<dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-client</artifactId>
+			<version>${hadoop.version}</version>
+			<scope>provided</scope>
+		 </dependency>
+		 <dependency>
+			<groupId>org.apache.hadoop</groupId>
+			<artifactId>hadoop-minicluster</artifactId>
+			<version>${hadoop.version}</version>
+			<scope>test</scope>
+		 </dependency>
 	</dependencies>
 </project>

@@ -50,8 +50,7 @@ public class DereferencingArchiveToCDXRecordReaderTest {
 
         ArchiveToCDXFileInputFormat inputFormat = ReflectionUtils
                 .newInstance(ArchiveToCDXFileInputFormat.class, conf);
-        TaskAttemptContext context = new TaskAttemptContext(conf,
-                new TaskAttemptID());
+        TaskAttemptContext context = null;
         RecordReader<Text, Text> reader = inputFormat.createRecordReader(split,
                 context);
 

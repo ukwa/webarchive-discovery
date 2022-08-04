@@ -205,7 +205,7 @@ public class WARCDatasetGenerator extends Configured implements Tool {
         return 0;
     }
 
-    private void setup(String[] args, JobConf conf) throws ParseException {
+    private void setup(String[] args, JobConf conf) throws ParseException, IOException {
         // Process Hadoop args first:
         String[] otherArgs = new GenericOptionsParser(conf, args)
                 .getRemainingArgs();
