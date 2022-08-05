@@ -1,4 +1,4 @@
-package uk.bl.wa.hadoop;
+package uk.bl.wa.spark;
 
 /*-
  * #%L
@@ -22,49 +22,35 @@ package uk.bl.wa.hadoop;
  * #L%
  */
 
-import scala.Tuple2;
+import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 import org.apache.spark.api.java.JavaSparkContext;
-import org.apache.spark.api.java.function.Function;
 import org.apache.spark.api.java.JavaPairRDD;
 
 import java.util.List;
 
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.spark.SparkConf;
 
-public class SparkTest {
+/**
+ * Run tests using Spark local mode, as per: https://spark.apache.org/docs/latest/rdd-programming-guide.html#unit-testing 
+ */
+public class WarcLoaderTest {
 
     public static void main(String[] args) throws Exception {
-        System.err.println("And first...");
-        System.out.println("And first...");
         String appName = "test";
         String master = "local";
         SparkConf conf = new SparkConf().setAppName(appName).setMaster(master);
         JavaSparkContext sc = new JavaSparkContext(conf);
 
-        System.out.println("And first...");
 
-        JavaPairRDD<Text, WritableArchiveRecord> rdd = sc.hadoopFile("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", 
-            ArchiveFileInputFormat.class, Text.class, WritableArchiveRecord.class);
-        List<String> out = rdd.map(new Function<Tuple2<Text, WritableArchiveRecord>, String>() {
+        JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", sc);
+        List<String> out = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc)).collect();
 
-            @Override
-            public String call(Tuple2<Text, WritableArchiveRecord> tuple) throws Exception {
-                System.out.println(tuple._1());
-                String url = tuple._2().getRecord().getHeader().getUrl();
-                System.out.println(url);
-                return url;
-            }
-
-        }).collect();
-
-        System.out.println("And finally...");
         System.out.println(out);
         
         sc.close();
-        
+
     }
     
 }
