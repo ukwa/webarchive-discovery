@@ -118,21 +118,5 @@ public class WarcLoader {
         }
 
     }
-
-    public static void main(String[] args) throws Exception {
-        String appName = "test";
-        String master = "local";
-        SparkConf conf = new SparkConf().setAppName(appName).setMaster(master);
-        JavaSparkContext sc = new JavaSparkContext(conf);
-
-
-        JavaPairRDD<Text, WritableArchiveRecord> rdd = load("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", sc);
-        List<String> out = rdd.mapPartitions(new WarcIndexMapFunction(sc)).collect();
-
-        System.out.println(out);
-        
-        sc.close();
-        
-    }
     
 }
