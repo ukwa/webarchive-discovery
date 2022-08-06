@@ -36,14 +36,55 @@
 				</configuration>
 				<executions>
 					<execution>
-						<!-- phase>package</phase -->
-                        <phase>none</phase>
+						<phase>package</phase>
 						<goals>
 							<goal>single</goal>
 						</goals>
 					</execution>
 				</executions>
 			</plugin>
+
+			<!-- Shaded job jar, roughly followin https://cloud.google.com/blog/products/data-analytics/managing-java-dependencies-apache-spark-applications-cloud-dataproc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.3.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <configuration>
+                    <filters>
+                        <filter>
+                            <artifact>*:*</artifact>
+                            <excludes>
+                                <exclude>META-INF/*.SF</exclude>
+                                <exclude>META-INF/*.DSA</exclude>
+                                <exclude>META-INF/*.RSA</exclude>
+                            </excludes>
+                        </filter>
+                    </filters>
+                    <finalName>${project.artifactId}-${project.version}-shaded-job</finalName>
+		            <transformers>
+					    <!-- in case there are multiple parser services jars -->
+                		<transformer implementation="org.apache.maven.plugins.shade.resource.ServicesResourceTransformer"/>
+              		</transformers>
+					<relocations>
+						<relocation>
+							<!-- avoid Guava version conflict -->
+						 	<pattern>com</pattern>
+							<shadedPattern>uk.bl.wa.shaded.com</shadedPattern>
+							<includes>
+								<include>com.google.common.**</include>
+							</includes>
+						</relocation>
+					</relocations>
+                </configuration>
+            </plugin>
 		</plugins>
 	</build>
 	<dependencies>
@@ -100,5 +141,17 @@
 			<version>${hadoop.version}</version>
 			<scope>test</scope>
 		 </dependency>
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-core_2.12</artifactId>
+			<version>${spark.version}</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.spark</groupId>
+			<artifactId>spark-sql_2.12</artifactId>
+			<version>${spark.version}</version>
+			<scope>provided</scope>
+		</dependency>      
 	</dependencies>
 </project>
