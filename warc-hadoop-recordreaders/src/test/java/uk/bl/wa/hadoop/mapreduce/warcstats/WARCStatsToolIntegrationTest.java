@@ -50,8 +50,6 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import com.typesafe.config.Config;
-import com.typesafe.config.ConfigFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -79,9 +77,6 @@ public class WARCStatsToolIntegrationTest {
 
     @Before
     public void setUp() throws Exception {
-        // Print out the full config for debugging purposes:
-        //Config index_conf = ConfigFactory.load();
-        //LOG.debug(index_conf.root().render());
         
         log.warn("Spinning up test cluster...");
         // make sure the log folder exists,
@@ -141,7 +136,6 @@ public class WARCStatsToolIntegrationTest {
                 this.output.getName() };
 
         // Set up the config and tool
-        Config config = ConfigFactory.load();
         WARCStatsTool wir = new WARCStatsTool();
 
         // run job
@@ -156,7 +150,7 @@ public class WARCStatsToolIntegrationTest {
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(
                 getFileSystem().listStatus(output, new OutputLogFilter()));
-        Assert.assertEquals(config.getInt("warc.hadoop.num_reducers"),
+        Assert.assertEquals(1,
                 outputFiles.length);
 
         // Check contents of the output:
@@ -200,7 +194,6 @@ public class WARCStatsToolIntegrationTest {
                 this.output.getName(), "-w" };
 
         // Set up the config and tool
-        Config config = ConfigFactory.load();
         WARCRawStatsMDXGenerator wir = new WARCRawStatsMDXGenerator();
 
         // run job
@@ -215,7 +208,7 @@ public class WARCStatsToolIntegrationTest {
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(
                 getFileSystem().listStatus(output, new OutputLogFilter()));
-        Assert.assertEquals(config.getInt("warc.hadoop.num_reducers"),
+        Assert.assertEquals(1,
                 outputFiles.length);
 
         // Check contents of the output:
