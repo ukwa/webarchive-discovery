@@ -108,7 +108,7 @@ jobs:
         with:
           # Use different build context:
           context: ./warc-indexer/src/main/solr
-          file: Dockerfile9
+          file: ./warc-indexer/src/main/solr/Dockerfile9
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
