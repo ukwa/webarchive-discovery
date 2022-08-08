@@ -12,6 +12,16 @@ services:
     ports:
       - "18983:8983"
 
+  solr9:
+    build:
+      context: .
+      dockerfile: Dockerfile9
+      args:
+        - "http_proxy=${HTTP_PROXY}"
+        - "https_proxy=${HTTPS_PROXY}"
+    ports:
+      - "38983:8983"
+
   # Hook to populate the image with test data:
   populate:
     build: .
