@@ -30,6 +30,7 @@ import org.apache.hadoop.conf.Configurable;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputLogFilter;
@@ -89,7 +90,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                output, new OutputLogFilter()));
+                output, new GlobFilter("part-*")));
         Assert.assertEquals(reducers, outputFiles.length);
         
         // Check contents of the output:

@@ -93,6 +93,7 @@ public class WARCStatsTool extends Configured implements Tool {
         conf.setOutputValueClass( Text.class );
         conf.setMapOutputValueClass( Text.class );
         conf.setNumReduceTasks( numReducers );
+        log.info("Set #reducers to: " + conf.getNumReduceTasks());
     }
 
     

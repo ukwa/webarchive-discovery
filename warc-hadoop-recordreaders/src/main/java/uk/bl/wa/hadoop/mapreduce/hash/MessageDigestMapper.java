@@ -121,7 +121,7 @@ public class MessageDigestMapper extends Mapper<Path, BytesWritable, Text, Text>
         // Otherwise:
         try {
             byte[] digest = md.digest(); // Get once as reset after .digest()
-            Text name = new Text(current.getParent().toUri().getPath());
+            Text name = new Text(current.toUri().getPath());
             Text hex = new Text(new String(Hex.encodeHex(digest)) + " "
                     + bytes_seen + " " + current.toUri().getPath());
             log.debug("Got " + name + " " + hex + " from " + bytes_seen);

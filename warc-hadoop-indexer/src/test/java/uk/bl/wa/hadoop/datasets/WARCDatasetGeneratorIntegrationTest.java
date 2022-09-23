@@ -36,6 +36,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
@@ -163,8 +164,7 @@ public class WARCDatasetGeneratorIntegrationTest {
         log.info("Job finished, checking the results...");
 
         // check the output exists
-        Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                output, new OutputLogFilter()));
+        Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(output));
 
         // Copy the output out of HDFS and onto local FS:
         for (Path output : outputFiles) {
@@ -182,7 +182,8 @@ public class WARCDatasetGeneratorIntegrationTest {
         }
 
         // Did we generate the expected multiple output files?:
-        Assert.assertEquals(4, outputFiles.length);
+        // Note it's 5 because we get a _SUCCESS file too.
+        Assert.assertEquals(5, outputFiles.length);
 
     }
 

@@ -37,13 +37,13 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.MiniMRClientCluster;
 import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.mapred.MiniMRCluster;
-import org.apache.hadoop.mapred.OutputLogFilter;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Assert;
@@ -127,7 +127,7 @@ public class WARCStatsToolIntegrationTest {
         log.info("Checking input file is present...");
         // Check that the input file is present:
         Path[] inputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(input, new OutputLogFilter()));
+                getFileSystem().listStatus(input));
         Assert.assertEquals(2, inputFiles.length);
 
         // Set up arguments for the job:
@@ -149,9 +149,7 @@ public class WARCStatsToolIntegrationTest {
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(output, new OutputLogFilter()));
-        Assert.assertEquals(1,
-                outputFiles.length);
+                getFileSystem().listStatus(output, new GlobFilter("part-*")));
 
         // Check contents of the output:
         for (Path output : outputFiles) {
@@ -172,9 +170,8 @@ public class WARCStatsToolIntegrationTest {
                 log.info(" --- ...skipping directory...");
             }
         }
-        // Assert.assertEquals("a\t2", reader.readLine());
-        // Assert.assertEquals("b\t1", reader.readLine());
-        // Assert.assertNull(reader.readLine());
+        // Check that there was only one output file (one reducer)
+        Assert.assertEquals(1, outputFiles.length);
     }
 
     @Test
@@ -185,7 +182,8 @@ public class WARCStatsToolIntegrationTest {
         log.info("Checking input file is present...");
         // Check that the input file is present:
         Path[] inputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(input, new OutputLogFilter()));
+                getFileSystem().listStatus(input));
+        // Check there was only one output file:
         Assert.assertEquals(2, inputFiles.length);
 
         // Set up arguments for the job:
@@ -207,7 +205,7 @@ public class WARCStatsToolIntegrationTest {
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(output, new OutputLogFilter()));
+                getFileSystem().listStatus(output, new GlobFilter("part-*")));
         Assert.assertEquals(1,
                 outputFiles.length);
 

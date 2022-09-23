@@ -40,6 +40,7 @@ import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.Writable;
@@ -178,7 +179,7 @@ public class WARCMDXGeneratorIntegrationTest {
 
         // check the output exists
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                output, new OutputLogFilter()));
+                output, new GlobFilter("part-*")));
         // Default is 1 reducers (as knitting together multiple sequence files
         // is not a mere matter of concatentation):
         Assert.assertEquals(1, outputFiles.length);
