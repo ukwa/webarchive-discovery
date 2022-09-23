@@ -30,6 +30,7 @@ import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.RecordReader;
 import org.apache.hadoop.mapreduce.TaskAttemptContext;
 import org.apache.hadoop.mapreduce.TaskAttemptID;
+import org.apache.hadoop.mapreduce.task.TaskAttemptContextImpl;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.util.ReflectionUtils;
 import org.junit.Assert;
@@ -50,7 +51,7 @@ public class DereferencingArchiveToCDXRecordReaderTest {
 
         ArchiveToCDXFileInputFormat inputFormat = ReflectionUtils
                 .newInstance(ArchiveToCDXFileInputFormat.class, conf);
-        TaskAttemptContext context = null;
+        TaskAttemptContext context =  new TaskAttemptContextImpl(conf, new TaskAttemptID());
         RecordReader<Text, Text> reader = inputFormat.createRecordReader(split,
                 context);
 
