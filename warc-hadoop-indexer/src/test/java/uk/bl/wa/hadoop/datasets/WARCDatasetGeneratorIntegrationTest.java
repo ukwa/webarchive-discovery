@@ -40,8 +40,10 @@ import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hadoop.mapred.MiniMRClientCluster;
+import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.mapred.OutputLogFilter;
+import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -56,7 +58,7 @@ public class WARCDatasetGeneratorIntegrationTest {
 
     // Test cluster:
     private MiniDFSCluster dfsCluster = null;
-    private MiniMRCluster mrCluster = null;
+    private MiniMRClientCluster mrCluster = null;
 
     // Input files:
     public final static String[] testWarcs = new String[] {
@@ -82,14 +84,14 @@ public class WARCDatasetGeneratorIntegrationTest {
                 "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
 
         //
+        //
         Configuration conf = new Configuration();
-        System.setProperty("test.build.data",
-                new File("target/mini-dfs").getAbsolutePath());
-        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        conf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage", "99.5");
+        dfsCluster = new MiniDFSCluster.Builder(conf).build();
         dfsCluster.getFileSystem().makeQualified(input);
         dfsCluster.getFileSystem().makeQualified(output);
         //
-        mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
+        mrCluster = MiniMRClientClusterFactory.create(WARCDatasetGeneratorIntegrationTest.class, 2, conf);
 
         // prepare for tests
         for (String filename : testWarcs) {
@@ -147,7 +149,7 @@ public class WARCDatasetGeneratorIntegrationTest {
         File tmpInputsFile = writeInputFile(inputFiles);
 
         // Set up arguments for the job:
-        String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
+        String[] args = { "-w", "-i", tmpInputsFile.getAbsolutePath(), "-o",
                 this.output.getName() };
 
         // Set up the WARCIndexerRunner
@@ -156,11 +158,10 @@ public class WARCDatasetGeneratorIntegrationTest {
         // run job
         // Job configuration:
         log.info("Setting up job config...");
-        JobConf jobConf = this.mrCluster.createJobConf();
-        jobConf.set("mapred.child.java.opts", "-Xmx512m");
-        wir.createJobConf(jobConf, args);
+        Configuration conf = this.mrCluster.getConfig();
+        conf.set("mapred.child.java.opts", "-Xmx512m");
         log.info("Running job...");
-        JobClient.runJob(jobConf);
+        ToolRunner.run(conf, wir, args);
         log.info("Job finished, checking the results...");
 
         // check the output exists
@@ -196,7 +197,7 @@ public class WARCDatasetGeneratorIntegrationTest {
             dfsCluster = null;
         }
         if (mrCluster != null) {
-            mrCluster.shutdown();
+            mrCluster.stop();
             mrCluster = null;
         }
         log.warn("Torn down test cluster.");

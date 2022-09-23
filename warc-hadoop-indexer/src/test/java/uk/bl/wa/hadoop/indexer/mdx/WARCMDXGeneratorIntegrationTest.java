@@ -47,8 +47,11 @@ import org.apache.hadoop.io.Writable;
 import org.apache.hadoop.io.WritableComparable;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
+import org.apache.hadoop.mapred.MiniMRClientCluster;
+import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.mapred.MiniMRCluster;
 import org.apache.hadoop.mapred.OutputLogFilter;
+import org.apache.hadoop.util.ToolRunner;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -65,7 +68,7 @@ public class WARCMDXGeneratorIntegrationTest {
 
     // Test cluster:
     private MiniDFSCluster dfsCluster = null;
-    private MiniMRCluster mrCluster = null;
+    private MiniMRClientCluster mrCluster = null;
 
     // Input files:
     public final static String[] testWarcs = new String[] {
@@ -97,13 +100,12 @@ public class WARCMDXGeneratorIntegrationTest {
 
         //
         Configuration conf = new Configuration();
-        System.setProperty("test.build.data",
-                new File("target/mini-dfs").getAbsolutePath());
-        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        conf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage", "99.5");
+        dfsCluster = new MiniDFSCluster.Builder(conf).build();
         dfsCluster.getFileSystem().makeQualified(input);
         dfsCluster.getFileSystem().makeQualified(output);
         //
-        mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(), 1);
+        mrCluster = MiniMRClientClusterFactory.create(MDXSeqSampleGeneratorIntegrationTest.class, 2, conf);
 
         // prepare for tests
         for (String filename : testWarcs) {
@@ -169,13 +171,12 @@ public class WARCMDXGeneratorIntegrationTest {
 
         // run job
         // Job configuration:
-        log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
-        conf.set("mapred.child.java.opts", "-Xmx512m");
-        wir.setConf(conf);
-        log.info("Running job...");
-        wir.run(args);
-        log.info("Job finished, checking the results...");
+       // run job
+       log.info("Setting up job config...");
+       Configuration conf = this.mrCluster.getConfig();
+       log.info("Running job...");
+       ToolRunner.run(conf, wir, args);
+       log.info("Job finished, checking the results...");
 
         // check the output exists
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
@@ -228,7 +229,7 @@ public class WARCMDXGeneratorIntegrationTest {
         File tmpInputsFile = writeInputFile(inputFiles);
 
         // Set up arguments for the job:
-        String[] args = { "-i", tmpInputsFile.getAbsolutePath(), "-o",
+        String[] args = { "-w", "-i", tmpInputsFile.getAbsolutePath(), "-o",
                 this.outputMerged.getName(), "-r", "1", "-S", "none" };
 
         // Set up the WARCIndexerRunner
@@ -236,10 +237,9 @@ public class WARCMDXGeneratorIntegrationTest {
 
         // run job
         log.info("Setting up job config...");
-        JobConf jobConf = this.mrCluster.createJobConf();
-        msm.createJobConf(jobConf, args);
+        Configuration conf = this.mrCluster.getConfig();
         log.info("Running job...");
-        JobClient.runJob(jobConf);
+        ToolRunner.run(conf, msm, args);
         log.info("Job finished, checking the results...");
 
         // Copy the output out of HDFS and onto local FS:
@@ -268,7 +268,7 @@ public class WARCMDXGeneratorIntegrationTest {
             dfsCluster = null;
         }
         if (mrCluster != null) {
-            mrCluster.shutdown();
+            mrCluster.stop();
             mrCluster = null;
         }
         log.warn("Torn down test cluster.");

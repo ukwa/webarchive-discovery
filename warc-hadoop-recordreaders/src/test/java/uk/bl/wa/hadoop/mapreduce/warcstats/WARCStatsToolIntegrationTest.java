@@ -89,6 +89,7 @@ public class WARCStatsToolIntegrationTest {
         
         //
         Configuration conf = new Configuration();
+        conf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage", "99.5");
         dfsCluster = new MiniDFSCluster.Builder(conf).build();
         dfsCluster.getFileSystem().makeQualified(input);
         dfsCluster.getFileSystem().makeQualified(output);

@@ -35,7 +35,6 @@ import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.GlobFilter;
-import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
 import org.junit.Test;
