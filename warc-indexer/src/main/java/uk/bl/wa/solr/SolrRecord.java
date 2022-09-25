@@ -38,6 +38,7 @@ import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
 import org.archive.io.ArchiveRecordHeader;
 
+import uk.bl.wa.Memento;
 import uk.bl.wa.util.Normalisation;
 
 /**
@@ -439,5 +440,16 @@ public class SolrRecord implements Serializable {
             return 128;
         }
         return 64;
+    }
+
+    // Convertor class to convert to plain bean:
+    public Memento toMemento() {
+        Memento m = new Memento();
+
+        m.setId((String)this.getFieldValue(SolrFields.ID));
+        m.setUrl((String)this.getFieldValue(SolrFields.SOLR_URL));
+        m.setContentType((String)this.getFieldValue(SolrFields.SOLR_CONTENT_TYPE));
+
+        return m;
     }
 }

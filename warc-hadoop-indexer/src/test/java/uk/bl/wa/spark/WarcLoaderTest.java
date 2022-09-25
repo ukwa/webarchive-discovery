@@ -1,5 +1,7 @@
 package uk.bl.wa.spark;
 
+import uk.bl.wa.Memento;
+
 /*-
  * #%L
  * warc-hadoop-indexer
@@ -25,7 +27,11 @@ package uk.bl.wa.spark;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 import org.apache.spark.api.java.JavaSparkContext;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 
 import java.util.List;
 
@@ -41,15 +47,23 @@ public class WarcLoaderTest {
         String appName = "test";
         String master = "local";
         SparkConf conf = new SparkConf().setAppName(appName).setMaster(master);
-        JavaSparkContext sc = new JavaSparkContext(conf);
+        SparkSession spark = SparkSession
+        .builder()
+        .config(conf)
+        .appName("Java Spark SQL WARC example")
+        .getOrCreate();
 
+        JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
 
         JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", sc);
-        List<String> out = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc)).collect();
+        JavaRDD<Memento> mementosRDD = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc));
 
-        System.out.println(out);
-        
-        sc.close();
+        Dataset<Row> df = spark.createDataFrame(mementosRDD, Memento.class);
+
+        df.show();
+
+
+        spark.stop();
 
     }
     

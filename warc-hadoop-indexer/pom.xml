@@ -129,6 +129,10 @@
 					<groupId>org.bouncycastle</groupId>
 					<artifactId>*</artifactId>
 				</exclusion>
+				<exclusion>
+					<groupId>org.antlr</groupId>
+					<artifactId>*</artifactId>
+				</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
@@ -161,18 +165,17 @@
 			<version>${spark.version}</version>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-annotations</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
 		<!-- The following dependencies seem to be required to make the MiniCluster run job okay. 
            They seem to be from the hadoop-client dependencies, but they need adding here it seems.-->
       	<dependency>
 			<groupId>io.netty</groupId>
 			<artifactId>netty-all</artifactId>
 			<version>4.1.74.Final</version>
-			<scope>test</scope>
-		</dependency>
-  	    <dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-annotations</artifactId>
-			<version>${jackson.version}</version>
 			<scope>test</scope>
 		</dependency>
   	    <dependency>

@@ -23,6 +23,7 @@ package uk.bl.wa.spark;
  */
 
 import scala.Tuple2;
+import uk.bl.wa.Memento;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
@@ -34,6 +35,7 @@ import uk.bl.wa.util.Normalisation;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.sql.SparkSession;
 import org.apache.spark.util.LongAccumulator;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
@@ -43,6 +45,7 @@ import com.typesafe.config.ConfigFactory;
 
 import org.apache.spark.api.java.JavaPairRDD;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -76,44 +79,54 @@ public class WarcLoader {
         return rdd;
     }
 
-    public static class WarcIndexMapFunction implements FlatMapFunction<Iterator<Tuple2<Text, WritableArchiveRecord>>, String> {
+    public static class WarcIndexMapFunction implements FlatMapFunction<Iterator<Tuple2<Text, WritableArchiveRecord>>, Memento> {
 
         private Broadcast<Config> broadcastIndexConfig;
         private LongAccumulator recordsCounter;
+        private LongAccumulator extractedRecordsCounter;
 
         public WarcIndexMapFunction(JavaSparkContext sc) {
-            System.out.println("And first...");
             Config indexConfig = ConfigFactory.load();
             broadcastIndexConfig = sc.broadcast(indexConfig);
             recordsCounter = sc.sc().longAccumulator("warc_records_processed");
+            extractedRecordsCounter = sc.sc().longAccumulator("warc_records_extracted");
         }
 
         @Override
-        public Iterator<String> call(Iterator<Tuple2<Text, WritableArchiveRecord>> t) throws Exception {
+        public Iterator<Memento> call(Iterator<Tuple2<Text, WritableArchiveRecord>> t) throws Exception {
             WARCIndexer index = new WARCIndexer( broadcastIndexConfig.getValue() );
-            SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(broadcastIndexConfig.getValue() );
-            Set<String> output = new HashSet<String>();
+
+            List<Memento> output = new ArrayList<Memento>();
             while( t.hasNext() ) {
                 Tuple2<Text, WritableArchiveRecord> tuple = t.next();
-                System.out.println(tuple._1);
                 ArchiveRecordHeader header = tuple._2.getRecord().getHeader();
                 ArchiveRecord rec = tuple._2.getRecord();
-                SolrRecord solr = solrFactory.createRecord(tuple._1.toString(), rec.getHeader());
-                final String url = Normalisation.sanitiseWARCHeaderValue(header.getUrl());
-                System.out.println(url);
-                    if (!header.getHeaderFields().isEmpty()) {
-                        // Do the indexing:
-                        solr = index.extract(tuple._1.toString(),rec);
+                // Create a minimal record:
+                Memento minimal = new Memento();
+                minimal.setId( "source:" + tuple._1 + "@" + header.getOffset());
+                minimal.setSourceFile(tuple._1.toString());
+                minimal.setSourceFileOffset(header.getOffset());
+                minimal.setUrl(Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
+                minimal.setUrlType(SolrFields.SOLR_URL_TYPE_UNKNOWN);
+                //minimal.setRecordType(rec);
+        
+                if (!header.getHeaderFields().isEmpty()) {
+                    // Do the indexing:
+                    SolrRecord solr = index.extract(tuple._1.toString(),rec);
+                    if( solr != null) {
+                        output.add(solr.toMemento());
+                        // Counter
+                        extractedRecordsCounter.add(1);
+                    } else {
+                        output.add(minimal);
                     }
-                if( solr != null ) {   
-                    System.out.println(solr.getFieldValue(SolrFields.FULL_CONTENT_TYPE));
                 }
-                output.add(url);
-                // Counters
+                // Counter
                 recordsCounter.add(1);
 
             }
             System.out.println("Processed "+ recordsCounter.value() + " record(s)...");
+            System.out.println("Extracted "+ extractedRecordsCounter.value() + " record(s)...");
             return output.iterator();
         }
 
