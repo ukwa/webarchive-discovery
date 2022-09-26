@@ -60,6 +60,9 @@ public class WarcLoaderTest {
 
         Dataset<Row> df = spark.createDataFrame(mementosRDD, Memento.class);
 
+        df.printSchema();
+
+
         df.show();
 
 

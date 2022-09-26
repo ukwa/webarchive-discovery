@@ -46,6 +46,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * This shared base class sets up a mini DFS/MR Hadoop cluster for testing, and
@@ -82,6 +83,11 @@ public abstract class MapReduceTestBaseClass {
         // static Print out the full config for debugging purposes:
         // Config index_conf = ConfigFactory.load();
         // LOG.debug(index_conf.root().render());
+
+        // Some test classes use JUL so we use this to tidy it up:
+        // https://www.slf4j.org/api/org/slf4j/bridge/SLF4JBridgeHandler.html
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
 
         log.warn("Spinning up test cluster...");
         // make sure the log folder exists,

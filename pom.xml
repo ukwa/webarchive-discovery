@@ -62,6 +62,7 @@
       <jackson.version>2.13.3</jackson.version>
       <guava.version>18.0</guava.version>
       <slf4j.version.override>1.7.32</slf4j.version.override> <!-- last version compatible with Hadoop/Spark -->
+      <log4j.version>2.19.0</log4j.version>
    </properties>
    <build>
       <plugins>
@@ -86,7 +87,6 @@
                <!-- Show 100% of the lines from the stack trace (doesn't 
                   work) -->
                <trimStackTrace>false</trimStackTrace>
-               <forkMode>always</forkMode>
                <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
             </configuration>
             <executions>
