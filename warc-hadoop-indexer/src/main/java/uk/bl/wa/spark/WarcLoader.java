@@ -35,8 +35,11 @@ import uk.bl.wa.util.Normalisation;
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
 import org.apache.spark.broadcast.Broadcast;
+import org.apache.spark.sql.Dataset;
+import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
 import org.apache.spark.util.LongAccumulator;
+import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
@@ -44,6 +47,7 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
 import org.apache.spark.api.java.JavaPairRDD;
+import org.apache.spark.api.java.JavaRDD;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -53,6 +57,7 @@ import java.util.Set;
 
 import org.apache.hadoop.io.Text;
 import org.apache.spark.SparkConf;
+import org.apache.spark.SparkContext;
 
 /**
  * 
@@ -73,10 +78,40 @@ import org.apache.spark.SparkConf;
  */
 public class WarcLoader {
 
+    /**
+     * 
+     * @param path
+     * @param sc
+     * @return
+     */
     public static JavaPairRDD<Text, WritableArchiveRecord> load(String path, JavaSparkContext sc) {
         JavaPairRDD<Text, WritableArchiveRecord> rdd = sc.hadoopFile(path, 
             ArchiveFileInputFormat.class, Text.class, WritableArchiveRecord.class);
         return rdd;
+    }
+    
+    /**
+     * 
+     * @param path
+     * @param sc
+     * @return
+     */
+    public static JavaRDD<Memento> loadAndAnalyse(String path, JavaSparkContext sc) {
+        JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load(path, sc);
+        JavaRDD<Memento> mementosRDD = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc));
+        return mementosRDD;
+    }
+
+    /**
+     * 
+     * @param path
+     * @param spark
+     * @return
+     */
+    public static Dataset<Row> createDataFrame(String path, SparkSession spark) {
+        JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
+        Dataset<Row> df = spark.createDataFrame(WarcLoader.loadAndAnalyse(path, sc), Memento.class);
+        return df;
     }
 
     public static class WarcIndexMapFunction implements FlatMapFunction<Iterator<Tuple2<Text, WritableArchiveRecord>>, Memento> {
@@ -111,6 +146,9 @@ public class WarcLoader {
                 //minimal.setRecordType(rec);
         
                 if (!header.getHeaderFields().isEmpty()) {
+                    if( header.getHeaderFieldKeys().contains( WARCConstants.HEADER_KEY_TYPE ) ) {
+                        minimal.setRecordType((String)header.getHeaderFields().get(WARCConstants.HEADER_KEY_TYPE));
+                    }
                     // Do the indexing:
                     SolrRecord solr = index.extract(tuple._1.toString(),rec);
                     if( solr != null) {

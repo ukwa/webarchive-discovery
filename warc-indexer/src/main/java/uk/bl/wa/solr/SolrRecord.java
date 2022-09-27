@@ -448,7 +448,22 @@ public class SolrRecord implements Serializable {
 
         m.setId((String)this.getFieldValue(SolrFields.ID));
         m.setUrl((String)this.getFieldValue(SolrFields.SOLR_URL));
+        m.setRecordType((String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
+        
+        String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
+        if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
+        String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);
+        if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
+        m.setContentLanguage((String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
+
         m.setContentType((String)this.getFieldValue(SolrFields.SOLR_CONTENT_TYPE));
+        m.setContentTypeDroid((String)this.getFieldValue(SolrFields.CONTENT_TYPE_DROID));
+        m.setContentTypeExt((String)this.getFieldValue(SolrFields.CONTENT_TYPE_EXT));
+        m.setContentTypeFull((String)this.getFieldValue(SolrFields.FULL_CONTENT_TYPE));
+        m.setContentTypeNorm((String)this.getFieldValue(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
+        m.setContentTypeServed((String)this.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
+        m.setContentTypeTika((String)this.getFieldValue(SolrFields.CONTENT_TYPE_TIKA));
+        m.setContentTypeVersion((String)this.getFieldValue(SolrFields.CONTENT_VERSION));
 
         return m;
     }

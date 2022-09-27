@@ -33,135 +33,214 @@ import com.fasterxml.jackson.annotation.JsonProperty;
  * Used to manage/generate a suitable schema, and JSON encoding compatible with Solr.
  */
 public class Memento {
+    
     private String id;
+    
     @JsonProperty("access_terms")
     private String accessTerms; // From annotations
+    
     private String author;
+    
     private String category; // Not in use
+    
     private String collection; // From annotations
+    
     private List<String> collections; // From annotations
+    
     private List<String> comments; // Not in use
+    
     private String description;
+    
     private List<String> keywords;
+    
     @JsonProperty("license_url")
     private List<String> licenceUrl;
+    
     @JsonProperty("content")
-    private String content_text; // The extracted text (called 'content' in Solr schema)
+    private String contentText; // The extracted text (called 'content' in Solr schema)
+    
     @JsonProperty("content_encoding")
-    private String content_text_original_encoding; // 'content_encoding' in Solr schema
+    private String contentTextOriginalEncoding; // 'content_encoding' in Solr schema
+    
     //private byte[] content_ffb; // First four bytes, output as lower-case hex string. Derive from first bytes.
+    
     @JsonProperty("content_first_bytes")
     private byte[] contentFirstBytes; // First 32 bytes, output as space-separated hex.
+    
     @JsonProperty("content_language")
     private String contentLanguage;
+    
     @JsonProperty("content_length")
     private long contentLength;
+    
     // String content_metadata, // Not sure how to store that
+    
     @JsonProperty("content_text_length")
     private long contentTextLength;
+    
     @JsonProperty("content_type_droid")
     private String contentTypeDroid;
+    
     @JsonProperty("content_type_ext")
     private String contentTypeExt;
+    
     @JsonProperty("content_type_full")
     private String contentTypeFull;
+    
     @JsonProperty("content_type_norm")
     private String contentTypeNorm;
+    
     @JsonProperty("content_type_served")
     private String contentTypeServed;
+    
     @JsonProperty("content_type_tika")
     private String contentTypeTika;
+    
     @JsonProperty("content_type")
     private String contentType;
+    
     @JsonProperty("content_type_version")
     private String contentTypeVersion;
+    
     @JsonProperty("elements_used")
     private List<String> elementsUsed; // Best thing to be doing?
+    
     private String hash;
+    
     //List<String> hashes; // Not in use
+    
     // long id_long; // Not in use
+    
     @JsonProperty("wayback_date")
     private long waybackDate;
+    
     // List<Date> crawl_dates; // Not in use
+    
     @JsonProperty("crawl_date")
     private Date crawlDate;
+    
     // List<int> crawl_years; // Not in use
+    
     // int crawl_year; // To be generated from crawl_date;
+    
     @JsonProperty("last_modified")
     private Date lastModified;
+    
     // int last_modified_year; // To be generated from last_modified
+    
     @JsonProperty("url_norm")
     private String urlNorm;
+    
     // String url_search; // Generated from url_norm?
+    
     @JsonProperty("url_path")
     private String urlPath;
+    
     private String url;
+    
     @JsonProperty("url_type")
     private String urlType;
+    
     private String domain;
+    
     private String host;
+    
     @JsonProperty("host_surt")
     private List<String> hostSurt;
+    
     @JsonProperty("public_suffix")
     private String publicSuffix;
+    
     private String resourcename; // Needed?
+    
     @JsonProperty("resourcenameFacet")
     private String resourcename_facet; // Needed? Copied from resourcename?
+    
     @JsonProperty("image_colours")
     private List<String> imageColours;
+    
     @JsonProperty("image_dominant_colour")
     private String imageDominantColour;
+    
     @JsonProperty("image_faces_count")
     private int imageFacesCount;
+    
     @JsonProperty("image_faces")
     private List<String> imageFaces;
+    
     @JsonProperty("image_height")
     private long imageHeight;
+    
     @JsonProperty("image_width")
     private long imageWidth;
+    
     @JsonProperty("image_size")
     private long imageSize;
+    
     @JsonProperty("links_images")
     private List<String> linksImages;
+    
     @JsonProperty("links_domains")
     private List<String> linksDomains;
+    
     @JsonProperty("links_hosts")
     private List<String> linksHosts;
+    
     @JsonProperty("links_hosts_surts")
     private List<String> linksHostsSurts;
+    
     @JsonProperty("links_public_suffixes")
     private List<String> linksPublicSuffixes;
+    
     private List<String> links;
+    
     private List<String> locations;
+    
     @JsonProperty("parse_error")
     private List<String> parseErrors;
+    
     @JsonProperty("pdf_pdfa_errors")
     private List<String> pdfPdfaErrors;
+    
     @JsonProperty("pdf_pdfa_is_valid")
     private String pdfPdfaIsValid;
+    
     @JsonProperty("postcode_district")
     private List<String> postcodeDistrict;
+    
     private List<String> postcode;
+    
     @JsonProperty("publication_date")
     private Date publicationDate;
+    
     @JsonProperty("publication_year")
     private int publicationYear;
+    
     @JsonProperty("record_type")
     private String recordType;
+    
     //float sentiment_score; // Not in use
+    
     //String sentiment; // Not in use
+    
     private List<String> server;
+    
     @JsonProperty("status_code")
     private int statusCode;
+    
     private List<String> generator;
+    
     //String referrer_url; // Not in use
+    
     @JsonProperty("redirect_to_norm")
     private String redirectToNorm;
 
     @JsonProperty("source_file_path")
     private String sourceFilePath;
+    
     @JsonProperty("source_file_offset")
     private long sourceFileOffset;
+
     @JsonProperty("source_file")
     private String sourceFile;
 
@@ -270,23 +349,23 @@ public class Memento {
     }
 
 
-    public String getContent_text() {
-        return content_text;
+    public String getContentText() {
+        return contentText;
     }
 
 
-    public void setContent_text(String content_text) {
-        this.content_text = content_text;
+    public void setContentText(String contentText) {
+        this.contentText = contentText;
     }
 
 
-    public String getContent_text_original_encoding() {
-        return content_text_original_encoding;
+    public String getContentTextOriginalEncoding() {
+        return contentTextOriginalEncoding;
     }
 
 
-    public void setContent_text_original_encoding(String content_text_original_encoding) {
-        this.content_text_original_encoding = content_text_original_encoding;
+    public void setContentTextOriginalEncoding(String contentTextOriginalEncoding) {
+        this.contentTextOriginalEncoding = contentTextOriginalEncoding;
     }
 
 

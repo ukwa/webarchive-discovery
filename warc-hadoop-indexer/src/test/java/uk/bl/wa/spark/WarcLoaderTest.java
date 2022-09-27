@@ -50,20 +50,20 @@ public class WarcLoaderTest {
         SparkSession spark = SparkSession
         .builder()
         .config(conf)
+        .config("spark.sql.parser.quotedRegexColumnNames", true)
         .appName("Java Spark SQL WARC example")
         .getOrCreate();
 
-        JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
-
-        JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", sc);
-        JavaRDD<Memento> mementosRDD = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc));
-
-        Dataset<Row> df = spark.createDataFrame(mementosRDD, Memento.class);
+        Dataset<Row> df = WarcLoader.createDataFrame("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", spark);
 
         df.printSchema();
 
+        df.createOrReplaceTempView("mementos");
 
-        df.show();
+        //df.show();
+
+        Dataset<Row> dft = spark.sql("SELECT url, `content.*` FROM mementos WHERE contentType IS NOT NULL");
+        dft.show();
 
 
         spark.stop();
@@ -71,3 +71,4 @@ public class WarcLoaderTest {
     }
     
 }
+
