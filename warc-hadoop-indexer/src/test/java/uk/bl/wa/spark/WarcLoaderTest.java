@@ -24,18 +24,11 @@ import uk.bl.wa.Memento;
  * #L%
  */
 
-import uk.bl.wa.hadoop.WritableArchiveRecord;
 
-import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
-import org.apache.spark.api.java.JavaPairRDD;
-import org.apache.spark.api.java.JavaRDD;
 
-import java.util.List;
-
-import org.apache.hadoop.io.Text;
 import org.apache.spark.SparkConf;
 
 /**
@@ -51,12 +44,16 @@ public class WarcLoaderTest {
         .builder()
         .config(conf)
         .config("spark.sql.parser.quotedRegexColumnNames", true)
+        //.config("spark.sql.parquet.compression.codec", "gzip") // SNAPPY hits annoying errors with ByteBuffers across J11/J8
         .appName("Java Spark SQL WARC example")
         .getOrCreate();
 
         Dataset<Row> df = WarcLoader.createDataFrame("/Users/anj/Work/workspace/webarchive-discovery/temp/video_error.warc.gz", spark);
 
         df.printSchema();
+
+        //df.write().parquet("video_error.parquet");
+        //df.printSchema();
 
         df.createOrReplaceTempView("mementos");
 
