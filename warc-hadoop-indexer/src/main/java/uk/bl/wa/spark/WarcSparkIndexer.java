@@ -30,6 +30,7 @@ import org.apache.spark.api.java.JavaPairRDD;
 import org.apache.spark.api.java.JavaSparkContext;
 
 import uk.bl.wa.Memento;
+import uk.bl.wa.MementoRecord;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 
 public class WarcSparkIndexer {
@@ -41,10 +42,10 @@ public class WarcSparkIndexer {
         JavaSparkContext sc = new JavaSparkContext(conf);
 
         JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load(args[0], sc);
-        List<Memento> out = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc)).collect();
+        List<MementoRecord> out = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc)).collect();
 
-        for (Memento m : out) {
-            System.out.println(m.getUrl());
+        for (MementoRecord m : out) {
+            System.out.println(m.getSourceFilePath());
         }
         sc.close();
         

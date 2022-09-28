@@ -23,7 +23,7 @@ package uk.bl.wa.spark;
  */
 
 import scala.Tuple2;
-import uk.bl.wa.Memento;
+import uk.bl.wa.MementoRecord;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
 import uk.bl.wa.indexer.WARCIndexer;
@@ -34,10 +34,15 @@ import uk.bl.wa.util.Normalisation;
 
 import org.apache.spark.api.java.JavaSparkContext;
 import org.apache.spark.api.java.function.FlatMapFunction;
+import org.apache.spark.api.java.function.Function;
 import org.apache.spark.broadcast.Broadcast;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
+import org.apache.spark.sql.RowFactory;
 import org.apache.spark.sql.SparkSession;
+import org.apache.spark.sql.types.DataTypes;
+import org.apache.spark.sql.types.StructField;
+import org.apache.spark.sql.types.StructType;
 import org.apache.spark.util.LongAccumulator;
 import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
@@ -54,27 +59,15 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.SortedMap;
 
 import org.apache.hadoop.io.Text;
+import org.apache.james.mime4j.dom.field.FieldName;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
 
 /**
  * 
- * Make a WebArchiveLoader.load that wraps the Hadoop stuff.
- * Convert from input to POJO: a Memento with:
- *  - Named fields for core properties, naming consistent with CDX etc.
- *  - The source file name and offset etc.
- *  - A @Transient reference to the underlying WritableArchiveRecord wrapped as HashCached etc.
- *  - A Hash<String,String> for arbitrary metadata extracted fields.
- * Possibly an 'enrich' convention, a bit like ArchiveSpark, with the WARC Indexer being wrapped to create an enriched Memento from a basic one.
- *  - e.g. rdd.mapPartitions(EnricherFunction) wrapped as...
- *  - JavaRDD<Memento> rdd = WebArchiveLoader.load("paths", JavaSparkContext).enrich(WarcIndexerEnricherFunction);
- * POJO allows mapping JavaRDD<Memento> to a Dataframe
- * Register dataframe as temp table df.createOrReplaceTempView("table")
- * Use Spark SQL + Iceberg to take the temp table and MERGE INTO a destination MegaTable.
- * (Partitioned by day? https://iceberg.apache.org/docs/latest/spark-ddl/#partitioned-by )
- * https://iceberg.apache.org/docs/latest/spark-writes/#merge-into
  */
 public class WarcLoader {
 
@@ -96,9 +89,9 @@ public class WarcLoader {
      * @param sc
      * @return
      */
-    public static JavaRDD<Memento> loadAndAnalyse(String path, JavaSparkContext sc) {
+    public static JavaRDD<MementoRecord> loadAndAnalyse(String path, JavaSparkContext sc) {
         JavaPairRDD<Text, WritableArchiveRecord> rdd = WarcLoader.load(path, sc);
-        JavaRDD<Memento> mementosRDD = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc));
+        JavaRDD<MementoRecord> mementosRDD = rdd.mapPartitions(new WarcLoader.WarcIndexMapFunction(sc));
         return mementosRDD;
     }
 
@@ -110,11 +103,16 @@ public class WarcLoader {
      */
     public static Dataset<Row> createDataFrame(String path, SparkSession spark) {
         JavaSparkContext sc = new JavaSparkContext(spark.sparkContext());
-        Dataset<Row> df = spark.createDataFrame(WarcLoader.loadAndAnalyse(path, sc), Memento.class);
+        //Dataset<Row> df = spark.createDataFrame(WarcLoader.loadAndAnalyse(path, sc), Memento.class);
+        JavaRDD<MementoRecord> mementos = WarcLoader.loadAndAnalyse(path, sc);
+        JavaRDD<Row> mementoRows = mementos.map((Function<MementoRecord, Row>) record -> {
+            return WarcLoader.getRow(record);
+          });
+        Dataset<Row> df = spark.createDataFrame(mementoRows, WarcLoader.getSchema());
         return df;
     }
 
-    public static class WarcIndexMapFunction implements FlatMapFunction<Iterator<Tuple2<Text, WritableArchiveRecord>>, Memento> {
+    public static class WarcIndexMapFunction implements FlatMapFunction<Iterator<Tuple2<Text, WritableArchiveRecord>>, MementoRecord> {
 
         private Broadcast<Config> broadcastIndexConfig;
         private LongAccumulator recordsCounter;
@@ -128,37 +126,28 @@ public class WarcLoader {
         }
 
         @Override
-        public Iterator<Memento> call(Iterator<Tuple2<Text, WritableArchiveRecord>> t) throws Exception {
+        public Iterator<MementoRecord> call(Iterator<Tuple2<Text, WritableArchiveRecord>> t) throws Exception {
             WARCIndexer index = new WARCIndexer( broadcastIndexConfig.getValue() );
 
-            List<Memento> output = new ArrayList<Memento>();
+            List<MementoRecord> output = new ArrayList<MementoRecord>();
             while( t.hasNext() ) {
                 Tuple2<Text, WritableArchiveRecord> tuple = t.next();
                 ArchiveRecordHeader header = tuple._2.getRecord().getHeader();
                 ArchiveRecord rec = tuple._2.getRecord();
-                // Create a minimal record:
-                Memento minimal = new Memento();
-                minimal.setId( "source:" + tuple._1 + "@" + header.getOffset());
-                minimal.setSourceFile(tuple._1.toString());
-                minimal.setSourceFileOffset(header.getOffset());
-                minimal.setUrl(Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
-                minimal.setUrlType(SolrFields.SOLR_URL_TYPE_UNKNOWN);
-                //minimal.setRecordType(rec);
+                // Create a minimal fallback record:
+                SolrRecord sr = SolrRecordFactory.DEFAULT_FACTORY.createRecord(tuple._1.toString() , header);
         
-                if (!header.getHeaderFields().isEmpty()) {
-                    if( header.getHeaderFieldKeys().contains( WARCConstants.HEADER_KEY_TYPE ) ) {
-                        minimal.setRecordType((String)header.getHeaderFields().get(WARCConstants.HEADER_KEY_TYPE));
-                    }
-                    // Do the indexing:
-                    SolrRecord solr = index.extract(tuple._1.toString(),rec);
-                    if( solr != null) {
-                        output.add(solr.toMemento());
-                        // Counter
-                        extractedRecordsCounter.add(1);
-                    } else {
-                        output.add(minimal);
-                    }
+                // Do the indexing:
+                SolrRecord solr = index.extract(tuple._1.toString(),rec);
+                if( solr != null) {
+                    sr = solr;
+                    // Counter
+                    extractedRecordsCounter.add(1);
                 }
+
+                // And add converted form:
+                output.add(sr.toMementoRecord());
+
                 // Counter
                 recordsCounter.add(1);
 
@@ -169,5 +158,49 @@ public class WarcLoader {
         }
 
     }
-    
+
+    public static StructType getSchema() {
+        SolrRecord empty = SolrRecordFactory.DEFAULT_FACTORY.createRecord();
+        empty.setField(SolrFields.SOURCE_FILE_OFFSET, "0");
+        return getSchema(empty.toMementoRecord());
+    }
+ 
+    public static Row getRow(MementoRecord mr) {
+        // Goes through fields in a deterministic order to build up a Row:
+        List<Object> ml = new ArrayList<Object>();
+        ml.add(mr.getSourceFilePath());
+        ml.add(mr.getSourceFileOffset());
+        SortedMap<String,Object> md = mr.getMetadata();
+        for (String fieldName : md.keySet()) {
+            ml.add(md.get(fieldName));
+        }   
+        Row row = RowFactory.create(ml.toArray());
+        return row;
+    }
+
+    public static StructType getSchema(MementoRecord mr) {
+        // Goes through fields in deterministic over to build up the Schema:
+        List<StructField> fields = new ArrayList<>();
+        // Base
+        fields.add(DataTypes.createStructField("source_file_path", DataTypes.StringType, true));
+        fields.add(DataTypes.createStructField("source_file_offset", DataTypes.LongType, true));
+        // Metadata
+        SortedMap<String,Object> md = mr.getMetadata();
+        SortedMap<String,Class> mt = mr.getMetadataTypes();
+        for (String fieldName : md.keySet()) {
+            Object o = md.get(fieldName);
+            Class c = mt.get(fieldName);
+            StructField field;
+            // Encode based on class:
+            if( c.equals(String.class) ) {
+                field = DataTypes.createStructField(fieldName, DataTypes.StringType, true);
+            } else {
+                throw new RuntimeException("Could not generate schema for field " + fieldName + ": "+ o);
+            }
+            fields.add(field);
+        }
+        StructType schema = DataTypes.createStructType(fields);
+        return schema;
+    }
+
 }
