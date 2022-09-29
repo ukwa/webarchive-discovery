@@ -67,18 +67,18 @@ public class Memento {
     //private byte[] content_ffb; // First four bytes, output as lower-case hex string. Derive from first bytes.
     
     @JsonProperty("content_first_bytes")
-    private byte[] contentFirstBytes; // First 32 bytes, output as space-separated hex.
+    private String contentFirstBytes; // First 32 bytes, output as space-separated hex.
     
     @JsonProperty("content_language")
     private String contentLanguage;
     
     @JsonProperty("content_length")
-    private long contentLength;
+    private Long contentLength;
     
     // String content_metadata, // Not sure how to store that
     
     @JsonProperty("content_text_length")
-    private long contentTextLength;
+    private Long contentTextLength;
     
     @JsonProperty("content_type_droid")
     private String contentTypeDroid;
@@ -111,10 +111,10 @@ public class Memento {
     
     //List<String> hashes; // Not in use
     
-    // long id_long; // Not in use
+    // Long id_long; // Not in use
     
     @JsonProperty("wayback_date")
-    private long waybackDate;
+    private Long waybackDate;
     
     // List<Date> crawl_dates; // Not in use
     
@@ -123,12 +123,12 @@ public class Memento {
     
     // List<int> crawl_years; // Not in use
     
-    // int crawl_year; // To be generated from crawl_date;
+    // Integer crawl_year; // To be generated from crawl_date;
     
     @JsonProperty("last_modified")
     private String lastModified;
     
-    // int last_modified_year; // To be generated from last_modified
+    // Integer last_modified_year; // To be generated from last_modified
     
     @JsonProperty("url_norm")
     private String urlNorm;
@@ -148,15 +148,12 @@ public class Memento {
     private String host;
     
     @JsonProperty("host_surt")
-    private List<String> hostSurt;
+    private String hostSurt;
     
     @JsonProperty("public_suffix")
     private String publicSuffix;
     
     private String resourcename; // Needed?
-    
-    @JsonProperty("resourcenameFacet")
-    private String resourcename_facet; // Needed? Copied from resourcename?
     
     @JsonProperty("image_colours")
     private List<String> imageColours;
@@ -165,19 +162,19 @@ public class Memento {
     private String imageDominantColour;
     
     @JsonProperty("image_faces_count")
-    private int imageFacesCount;
+    private Integer imageFacesCount;
     
     @JsonProperty("image_faces")
     private List<String> imageFaces;
     
     @JsonProperty("image_height")
-    private long imageHeight;
+    private Long imageHeight;
     
     @JsonProperty("image_width")
-    private long imageWidth;
+    private Long imageWidth;
     
     @JsonProperty("image_size")
-    private long imageSize;
+    private Long imageSize;
     
     @JsonProperty("links_images")
     private List<String> linksImages;
@@ -216,7 +213,7 @@ public class Memento {
     private String publicationDate;
     
     @JsonProperty("publication_year")
-    private int publicationYear;
+    private Integer publicationYear;
     
     @JsonProperty("record_type")
     private String recordType;
@@ -228,7 +225,7 @@ public class Memento {
     private List<String> server;
     
     @JsonProperty("status_code")
-    private int statusCode;
+    private Integer statusCode;
     
     private List<String> generator;
     
@@ -241,7 +238,7 @@ public class Memento {
     private String sourceFilePath;
     
     @JsonProperty("source_file_offset")
-    private long sourceFileOffset;
+    private Long sourceFileOffset;
 
     @JsonProperty("source_file")
     private String sourceFile;
@@ -371,12 +368,12 @@ public class Memento {
     }
 
 
-    public byte[] getContentFirstBytes() {
+    public String getContentFirstBytes() {
         return contentFirstBytes;
     }
 
 
-    public void setContentFirstBytes(byte[] contentFirstBytes) {
+    public void setContentFirstBytes(String contentFirstBytes) {
         this.contentFirstBytes = contentFirstBytes;
     }
 
@@ -391,22 +388,22 @@ public class Memento {
     }
 
 
-    public long getContentLength() {
+    public Long getContentLength() {
         return contentLength;
     }
 
 
-    public void setContentLength(long contentLength) {
+    public void setContentLength(Long contentLength) {
         this.contentLength = contentLength;
     }
 
 
-    public long getContentTextLength() {
+    public Long getContentTextLength() {
         return contentTextLength;
     }
 
 
-    public void setContentTextLength(long contentTextLength) {
+    public void setContentTextLength(Long contentTextLength) {
         this.contentTextLength = contentTextLength;
     }
 
@@ -511,12 +508,12 @@ public class Memento {
     }
 
 
-    public long getWaybackDate() {
+    public Long getWaybackDate() {
         return waybackDate;
     }
 
 
-    public void setWaybackDate(long waybackDate) {
+    public void setWaybackDate(Long waybackDate) {
         this.waybackDate = waybackDate;
     }
 
@@ -601,12 +598,12 @@ public class Memento {
     }
 
 
-    public List<String> getHostSurt() {
+    public String getHostSurt() {
         return hostSurt;
     }
 
 
-    public void setHostSurt(List<String> hostSurt) {
+    public void setHostSurt(String hostSurt) {
         this.hostSurt = hostSurt;
     }
 
@@ -631,16 +628,6 @@ public class Memento {
     }
 
 
-    public String getResourcename_facet() {
-        return resourcename_facet;
-    }
-
-
-    public void setResourcename_facet(String resourcename_facet) {
-        this.resourcename_facet = resourcename_facet;
-    }
-
-
     public List<String> getImageColours() {
         return imageColours;
     }
@@ -661,12 +648,12 @@ public class Memento {
     }
 
 
-    public int getImageFacesCount() {
+    public Integer getImageFacesCount() {
         return imageFacesCount;
     }
 
 
-    public void setImageFacesCount(int imageFacesCount) {
+    public void setImageFacesCount(Integer imageFacesCount) {
         this.imageFacesCount = imageFacesCount;
     }
 
@@ -681,32 +668,32 @@ public class Memento {
     }
 
 
-    public long getImageHeight() {
+    public Long getImageHeight() {
         return imageHeight;
     }
 
 
-    public void setImageHeight(long imageHeight) {
+    public void setImageHeight(Long imageHeight) {
         this.imageHeight = imageHeight;
     }
 
 
-    public long getImageWidth() {
+    public Long getImageWidth() {
         return imageWidth;
     }
 
 
-    public void setImageWidth(long imageWidth) {
+    public void setImageWidth(Long imageWidth) {
         this.imageWidth = imageWidth;
     }
 
 
-    public long getImageSize() {
+    public Long getImageSize() {
         return imageSize;
     }
 
 
-    public void setImageSize(long imageSize) {
+    public void setImageSize(Long imageSize) {
         this.imageSize = imageSize;
     }
 
@@ -841,12 +828,12 @@ public class Memento {
     }
 
 
-    public int getPublicationYear() {
+    public Integer getPublicationYear() {
         return publicationYear;
     }
 
 
-    public void setPublicationYear(int publicationYear) {
+    public void setPublicationYear(Integer publicationYear) {
         this.publicationYear = publicationYear;
     }
 
@@ -871,12 +858,12 @@ public class Memento {
     }
 
 
-    public int getStatusCode() {
+    public Integer getStatusCode() {
         return statusCode;
     }
 
 
-    public void setStatusCode(int statusCode) {
+    public void setStatusCode(Integer statusCode) {
         this.statusCode = statusCode;
     }
 
@@ -911,12 +898,12 @@ public class Memento {
     }
 
 
-    public long getSourceFileOffset() {
+    public Long getSourceFileOffset() {
         return sourceFileOffset;
     }
 
 
-    public void setSourceFileOffset(long sourceFileOffset) {
+    public void setSourceFileOffset(Long sourceFileOffset) {
         this.sourceFileOffset = sourceFileOffset;
     }
 

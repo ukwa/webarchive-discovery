@@ -66,7 +66,12 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
         // Set up arguments for the job:
         // FIXME The input file could be written by this test.
         int reducers = 1;
-        String[] args = { "--dummy-run", "-w", "-S", "http://none", "-R",
+        String[] args = { 
+                //"--jsonl",
+                "--no-solr", 
+                "-w", 
+                "-S", "http://none", 
+                "-R",
                 ""
                 + reducers,
                 "-i",
@@ -97,9 +102,15 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
                 InputStream is = getFileSystem().open(output);
                 BufferedReader reader = new BufferedReader(new InputStreamReader(is));
                 String line = null;
+                int counter = 0;
                 while( ( line = reader.readLine()) != null ) {
                     log.info(line);
-                    System.out.println(line);
+                    //System.out.println(line);
+                    counter++;
+                    if( counter > 5) {
+                        log.info("Stopping printing output after 5 lines...");
+                        break;
+                    }
                 }
                 reader.close();
             } else {
