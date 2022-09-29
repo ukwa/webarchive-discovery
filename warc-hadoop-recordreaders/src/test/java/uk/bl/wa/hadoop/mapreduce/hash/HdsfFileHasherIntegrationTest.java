@@ -123,5 +123,4 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
                 "inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz"));
 
     }
-
 }

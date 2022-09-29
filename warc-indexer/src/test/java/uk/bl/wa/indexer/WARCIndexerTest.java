@@ -153,7 +153,7 @@ public class WARCIndexerTest {
         // Now URL excludes:
         String path = "warc.index.extract.response_include";
         List<String> response_includes = new ArrayList<String>();
-        this.testFilterBehaviour(path, response_includes, 36);
+        this.testFilterBehaviour(path, response_includes, 20);
         response_includes.add("2");
         this.testFilterBehaviour(path, response_includes, 29);
         response_includes.add("3");
