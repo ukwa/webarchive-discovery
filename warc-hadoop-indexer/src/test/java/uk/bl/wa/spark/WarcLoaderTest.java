@@ -57,9 +57,9 @@ public class WarcLoaderTest {
 
         df.createOrReplaceTempView("mementos");
 
-        df.show();
+        //df.show();
 
-        spark.sql("SELECT url, record_type, `source_.*` FROM mementos").show();
+        spark.sql("SELECT url, record_type, content_type_full, `source_.*` FROM mementos WHERE record_type = 'response'").show(100);
         //Dataset<Row> dft = spark.sql("SELECT url, `content.*` FROM mementos WHERE contentType IS NOT NULL");
         //dft.show();
 

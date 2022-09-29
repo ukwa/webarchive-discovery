@@ -23,6 +23,7 @@ package uk.bl.wa.spark;
  */
 
 import scala.Tuple2;
+import uk.bl.wa.Memento;
 import uk.bl.wa.MementoRecord;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.hadoop.WritableArchiveRecord;
@@ -48,6 +49,9 @@ import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecord;
 import org.archive.io.ArchiveRecordHeader;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
+import com.fasterxml.jackson.annotation.JsonAutoDetect.Visibility;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 
@@ -65,6 +69,8 @@ import org.apache.hadoop.io.Text;
 import org.apache.james.mime4j.dom.field.FieldName;
 import org.apache.spark.SparkConf;
 import org.apache.spark.SparkContext;
+
+import org.apache.solr.common.util.Utils;
 
 /**
  * 
@@ -119,7 +125,7 @@ public class WarcLoader {
         private LongAccumulator extractedRecordsCounter;
 
         public WarcIndexMapFunction(JavaSparkContext sc) {
-            Config indexConfig = ConfigFactory.load();
+            Config indexConfig = ConfigFactory.load("spark");
             broadcastIndexConfig = sc.broadcast(indexConfig);
             recordsCounter = sc.sc().longAccumulator("warc_records_processed");
             extractedRecordsCounter = sc.sc().longAccumulator("warc_records_extracted");
@@ -135,6 +141,7 @@ public class WarcLoader {
                 ArchiveRecordHeader header = tuple._2.getRecord().getHeader();
                 ArchiveRecord rec = tuple._2.getRecord();
                 // Create a minimal fallback record:
+                // See also WARCIndexer.processEnvelopeHeader
                 SolrRecord sr = SolrRecordFactory.DEFAULT_FACTORY.createRecord(tuple._1.toString() , header);
         
                 // Do the indexing:
@@ -145,8 +152,16 @@ public class WarcLoader {
                     extractedRecordsCounter.add(1);
                 }
 
+
+                // Experimenting with JSON
+                ObjectMapper mapper = new ObjectMapper();
+                //mapper.setVisibility(PropertyAccessor.FIELD, Visibility.NONE);
+                String jsonInString = mapper.writeValueAsString(sr.toMemento());      
+                System.out.println( "JSON: " + jsonInString ); 
+
                 // And add converted form:
-                output.add(sr.toMementoRecord());
+                MementoRecord mr = sr.toMementoRecord();
+                output.add(mr);
 
                 // Counter
                 recordsCounter.add(1);

@@ -190,7 +190,7 @@ public class ArchiveFileRecordReader<Key extends WritableComparable<?>, Value ex
         arcreader.setStrict(true);
         // Get the iterator:
         iterator = arcreader.iterator();
-        this.archiveName = paths[currentPath].getName();
+        this.archiveName = paths[currentPath].toString();
         return true;
     }
 

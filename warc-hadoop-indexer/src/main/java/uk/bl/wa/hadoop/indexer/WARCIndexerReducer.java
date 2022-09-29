@@ -134,6 +134,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
             noValues++;
 
             if (!opts.dummyRun) {
+                //solr.getSolrDocument().writeMap(ew);
                 docs.add(solr.getSolrDocument());
                 // Have we exceeded the batchSize?
                 checkSubmission(docs, opts.solr.batchSize, reporter);

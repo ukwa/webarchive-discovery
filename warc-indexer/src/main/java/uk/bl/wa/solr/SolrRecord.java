@@ -457,6 +457,9 @@ public class SolrRecord implements Serializable {
         m.setId((String)this.getFieldValue(SolrFields.ID));
         m.setUrl((String)this.getFieldValue(SolrFields.SOLR_URL));
         m.setRecordType((String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
+
+        String statusCode = (String)this.getFieldValue(SolrFields.SOLR_STATUS_CODE);
+        if( statusCode != null ) m.setStatusCode(Integer.parseInt(statusCode));
         
         String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
         if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
@@ -480,7 +483,8 @@ public class SolrRecord implements Serializable {
         MementoRecord m = new MementoRecord();
 
         m.setSourceFilePath((String)this.getFieldValue(SolrFields.SOURCE_FILE_PATH));
-        m.setSourceFileOffset(Long.parseLong((String)this.getFieldValue(SolrFields.SOURCE_FILE_OFFSET)));
+        m.setSourceFileOffset(Long.parseLong((String)this.getFieldValue(SolrFields.SOURCE_FILE_OFFSET)));        
+        m.addMetadata(SolrFields.SOURCE_FILE, (String)this.getFieldValue(SolrFields.SOURCE_FILE));
 
         m.addMetadata(SolrFields.ID, (String)this.getFieldValue(SolrFields.ID));
         m.addMetadata(SolrFields.SOLR_URL, (String)this.getFieldValue(SolrFields.SOLR_URL));
