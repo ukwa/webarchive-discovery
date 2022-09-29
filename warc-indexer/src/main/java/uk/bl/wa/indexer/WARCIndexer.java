@@ -512,7 +512,7 @@ public class WARCIndexer {
 
         //Will convert windows path to linux path. Linux paths will not be modified.
         final String linuxFilePath = FilenameUtils.separatorsToUnix(filePath);
-        solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath);
+        solr.setField(SolrFields.SOURCE_FILE, linuxFilePath);
 
         byte[] url_md5digest = md5
                 .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes(StandardCharsets.UTF_8));
@@ -848,6 +848,11 @@ public class WARCIndexer {
     }
 
     private boolean checkResponseCode( String statusCode ) {
+        // Allow all through if this is not set:
+        if( response_includes == null || response_includes.isEmpty() ) {
+            return true;
+        }
+        // Otherwise, do not allow things through with no status code:
         if( statusCode == null )
             return false;
         // Check for match:

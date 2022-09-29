@@ -28,7 +28,8 @@ import static org.junit.Assert.assertTrue;
 import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-
+import java.util.List;
+import java.util.ArrayList;
 
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
@@ -81,6 +82,9 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
                 output, new OutputLogFilter()));
         //Assert.assertEquals(1, outputFiles.length);
         
+        // Collect the output:
+        List<String> lines = new ArrayList<String>();
+
         // Check contents of the output:
         int line_count = 0;
         for( Path output : outputFiles ) {
@@ -91,27 +95,33 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
                 String line = null;
                 while( ( line = reader.readLine()) != null ) {
                     log.info(line);
+                    lines.add(line);
                     line_count++;
-                    // Check:
-                    if (line_count == 1) {
-                        assertTrue(line.contains(
-                                "722eb9d7bfeb0b2ad2dd9c8a2fd7105f2880b139e5248e9b13a41d69ec63893b9afc034751be1432d867e171f4c6293ac89fc4e85c09a72288c16fd40f5996b2"));
-                        assertTrue(line.contains("26164"));
-                        assertTrue(line.contains(
-                                "inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz"));
-                    } else if (line_count == 2) {
-                        assertTrue(line.contains(
-                                "ba14747ac52ff1885905022299b4c470ad87270128939001b674c13e8787612011b4f2bd4f3c568df3b6789b7aa50ba0062c58a506debc12c57c037d10012203"));
-                        assertTrue(line.contains("18406"));
-                        assertTrue(line.contains(
-                                "inputs/IAH-20080430204825-00000-blackbook-truncated.arc.gz"));
-                    }
                 }
                 reader.close();
             } else {
                 log.info(" --- ...skipping directory...");
             }
         }
-    }
+        log.info("Lines: " + line_count);
 
+        // Check there was only one output file, of the right length:
+        Assert.assertEquals(1, outputFiles.length);
+        Assert.assertEquals(2, line_count);
+
+        // Check contents of the output:
+        // Line 1
+        assertTrue(lines.get(0).contains(
+                "ba14747ac52ff1885905022299b4c470ad87270128939001b674c13e8787612011b4f2bd4f3c568df3b6789b7aa50ba0062c58a506debc12c57c037d10012203"));
+        assertTrue(lines.get(0).contains("18406"));
+        assertTrue(lines.get(0).contains(
+                "inputs/IAH-20080430204825-00000-blackbook-truncated.arc.gz"));
+        // Line 2
+        assertTrue(lines.get(1).contains(
+                "722eb9d7bfeb0b2ad2dd9c8a2fd7105f2880b139e5248e9b13a41d69ec63893b9afc034751be1432d867e171f4c6293ac89fc4e85c09a72288c16fd40f5996b2"));
+        assertTrue(lines.get(1).contains("26164"));
+        assertTrue(lines.get(1).contains(
+                "inputs/IAH-20080430204825-00000-blackbook-truncated.warc.gz"));
+
+    }
 }

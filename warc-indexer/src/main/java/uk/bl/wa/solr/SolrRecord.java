@@ -36,8 +36,11 @@ import java.util.function.UnaryOperator;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
 import org.apache.solr.common.SolrInputField;
+import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveRecordHeader;
 
+import uk.bl.wa.Memento;
+import uk.bl.wa.MementoRecord;
 import uk.bl.wa.util.Normalisation;
 
 /**
@@ -85,6 +88,11 @@ public class SolrRecord implements Serializable {
         setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
         setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
+        if (!header.getHeaderFields().isEmpty()) {
+            if( header.getHeaderFieldKeys().contains( WARCConstants.HEADER_KEY_TYPE ) ) {
+                setField(SolrFields.SOLR_RECORD_TYPE, (String)header.getHeaderFields().get(WARCConstants.HEADER_KEY_TYPE));
+            }
+        }
     }
 
     /**
@@ -439,5 +447,63 @@ public class SolrRecord implements Serializable {
             return 128;
         }
         return 64;
+    }
+
+    // Convertor class to convert to plain bean:
+    public Memento toMemento() {
+        Memento m = new Memento();
+
+        m.setId((String)this.getFieldValue(SolrFields.ID));
+        m.setUrl((String)this.getFieldValue(SolrFields.SOLR_URL));
+        m.setRecordType((String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
+
+        String statusCode = (String)this.getFieldValue(SolrFields.SOLR_STATUS_CODE);
+        if( statusCode != null ) m.setStatusCode(Integer.parseInt(statusCode));
+
+        String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
+        if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
+        String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);
+        if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
+        m.setContentLanguage((String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
+
+        m.setContentType((String)this.getFieldValue(SolrFields.SOLR_CONTENT_TYPE));
+        m.setContentTypeDroid((String)this.getFieldValue(SolrFields.CONTENT_TYPE_DROID));
+        m.setContentTypeExt((String)this.getFieldValue(SolrFields.CONTENT_TYPE_EXT));
+        m.setContentTypeFull((String)this.getFieldValue(SolrFields.FULL_CONTENT_TYPE));
+        m.setContentTypeNorm((String)this.getFieldValue(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
+        m.setContentTypeServed((String)this.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
+        m.setContentTypeTika((String)this.getFieldValue(SolrFields.CONTENT_TYPE_TIKA));
+        m.setContentTypeVersion((String)this.getFieldValue(SolrFields.CONTENT_VERSION));
+
+        return m;
+    }
+
+    public MementoRecord toMementoRecord() {
+        MementoRecord m = new MementoRecord();
+
+        m.setSourceFilePath((String)this.getFieldValue(SolrFields.SOURCE_FILE_PATH));
+        m.setSourceFileOffset(Long.parseLong((String)this.getFieldValue(SolrFields.SOURCE_FILE_OFFSET)));        
+        m.addMetadata(SolrFields.SOURCE_FILE, (String)this.getFieldValue(SolrFields.SOURCE_FILE));
+
+        m.addMetadata(SolrFields.ID, (String)this.getFieldValue(SolrFields.ID));
+        m.addMetadata(SolrFields.SOLR_URL, (String)this.getFieldValue(SolrFields.SOLR_URL));
+        m.addMetadata(SolrFields.SOLR_RECORD_TYPE, (String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
+
+        //String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
+        //if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
+        //String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);
+        //if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
+        m.addMetadata(SolrFields.CONTENT_LANGUAGE, (String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
+
+        m.addMetadata(SolrFields.SOLR_CONTENT_TYPE, (String)this.getFieldValue(SolrFields.SOLR_CONTENT_TYPE));
+        m.addMetadata(SolrFields.CONTENT_TYPE_DROID, (String)this.getFieldValue(SolrFields.CONTENT_TYPE_DROID));
+        m.addMetadata(SolrFields.CONTENT_TYPE_EXT, (String)this.getFieldValue(SolrFields.CONTENT_TYPE_EXT));
+        m.addMetadata(SolrFields.FULL_CONTENT_TYPE, (String)this.getFieldValue(SolrFields.FULL_CONTENT_TYPE));
+        m.addMetadata(SolrFields.SOLR_NORMALISED_CONTENT_TYPE, (String)this.getFieldValue(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
+        m.addMetadata(SolrFields.CONTENT_TYPE_SERVED, (String)this.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
+        m.addMetadata(SolrFields.CONTENT_TYPE_TIKA, (String)this.getFieldValue(SolrFields.CONTENT_TYPE_TIKA));
+        m.addMetadata(SolrFields.CONTENT_VERSION, (String)this.getFieldValue(SolrFields.CONTENT_VERSION));
+
+        return m;
     }
 }
