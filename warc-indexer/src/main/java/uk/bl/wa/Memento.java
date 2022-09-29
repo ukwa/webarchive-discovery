@@ -24,7 +24,7 @@ package uk.bl.wa;
 
 import java.io.Serializable;
 import java.util.List;
-import java.util.Date;
+//import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -119,14 +119,14 @@ public class Memento {
     // List<Date> crawl_dates; // Not in use
     
     @JsonProperty("crawl_date")
-    private Date crawlDate;
+    private String crawlDate;
     
     // List<int> crawl_years; // Not in use
     
     // int crawl_year; // To be generated from crawl_date;
     
     @JsonProperty("last_modified")
-    private Date lastModified;
+    private String lastModified;
     
     // int last_modified_year; // To be generated from last_modified
     
@@ -213,7 +213,7 @@ public class Memento {
     private List<String> postcode;
     
     @JsonProperty("publication_date")
-    private Date publicationDate;
+    private String publicationDate;
     
     @JsonProperty("publication_year")
     private int publicationYear;
@@ -521,22 +521,22 @@ public class Memento {
     }
 
 
-    public Date getCrawlDate() {
+    public String getCrawlDate() {
         return crawlDate;
     }
 
 
-    public void setCrawlDate(Date crawlDate) {
+    public void setCrawlDate(String crawlDate) {
         this.crawlDate = crawlDate;
     }
 
 
-    public Date getLastModified() {
+    public String getLastModified() {
         return lastModified;
     }
 
 
-    public void setLastModified(Date lastModified) {
+    public void setLastModified(String lastModified) {
         this.lastModified = lastModified;
     }
 
@@ -831,12 +831,12 @@ public class Memento {
     }
 
 
-    public Date getPublicationDate() {
+    public String getPublicationDate() {
         return publicationDate;
     }
 
 
-    public void setPublicationDate(Date publicationDate) {
+    public void setPublicationDate(String publicationDate) {
         this.publicationDate = publicationDate;
     }
 
@@ -939,7 +939,7 @@ public class Memento {
         ObjectMapper mapper = new ObjectMapper();
         //mapper.setVisibility(PropertyAccessor.FIELD, Visibility.NONE);
         String jsonInString = mapper.writeValueAsString(this);      
-        System.out.println( "JSON: " + jsonInString );
+        //System.out.println( "JSON: " + jsonInString );
         return jsonInString;
     }
 }
