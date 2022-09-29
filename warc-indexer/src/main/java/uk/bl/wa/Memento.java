@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.Date;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
 
 /**
  * POJO that declares the information we can know about an archived web resource (a.k.a. Memento)
@@ -928,4 +930,16 @@ public class Memento {
         this.sourceFile = sourceFile;
     }
 
+    /**
+     * Convert to JSON, in a single line.
+     * 
+     * @return This class in JSON form.
+     */
+    public String toJSON() throws JsonProcessingException {
+        ObjectMapper mapper = new ObjectMapper();
+        //mapper.setVisibility(PropertyAccessor.FIELD, Visibility.NONE);
+        String jsonInString = mapper.writeValueAsString(this);      
+        System.out.println( "JSON: " + jsonInString );
+        return jsonInString;
+    }
 }
