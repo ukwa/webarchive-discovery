@@ -222,7 +222,7 @@ public class WARCIndexerCommand {
                 final String url = Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl());
                 final String type = (String)rec.getHeader().getHeaderValue(WARCConstants.HEADER_KEY_TYPE);
                 SolrRecord doc = solrFactory.createRecord(inFile.getName(), rec.getHeader());
-                log.info("Processing record " + type + " for url " + url + " from " + inFile.getName() + " @"
+                log.debug("Processing record " + type + " for url " + url + " from " + inFile.getName() + " @"
                         + rec.getHeader().getOffset());
                 try {
                     doc = windex.extract(inFile.getName(), rec, isTextRequired);
