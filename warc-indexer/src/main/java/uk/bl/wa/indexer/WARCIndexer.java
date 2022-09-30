@@ -559,9 +559,9 @@ public class WARCIndexer {
         // -----------------------------------------------------
         // Add user supplied Archive-It Solr fields and values:
         // -----------------------------------------------------
-        solr.setField(SolrFields.INSTITUTION, WARCIndexerCommand.institution );
-        solr.setField( SolrFields.COLLECTION, WARCIndexerCommand.collection );
-        solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.collection_id );
+        solr.setField(SolrFields.INSTITUTION, WARCIndexerCommand.opts.institution );
+        solr.setField( SolrFields.COLLECTION, WARCIndexerCommand.opts.collection );
+        solr.setField( SolrFields.COLLECTION_ID, WARCIndexerCommand.opts.collectionId );
     }
 
     /**
@@ -658,6 +658,12 @@ public class WARCIndexer {
         if (("" + warcHeader.getHeaderValue("WARC-Type")).equals("resource")) {
             log.debug("Skipping HTTP header extraction as the record is a resource: '" + targetUrl + "'");
             httpHeaders.setHttpStatus("200"); // Cheating a bit here for tool compatibility
+            return httpHeaders;
+        }
+
+        // FIXME Support HTTP Headers extraction for requests:
+        if (("" + warcHeader.getHeaderValue("WARC-Type")).equals("request")) {
+            log.debug("Skipping HTTP header extraction as the record is a request: '" + targetUrl + "'");
             return httpHeaders;
         }
 
@@ -866,6 +872,9 @@ public class WARCIndexer {
     }
 
     private boolean checkRecordType( String type ) {
+        if (record_type_includes.isEmpty()) {
+            return true;
+        }
         if (record_type_includes.contains(type)) {
                 return true;
         }

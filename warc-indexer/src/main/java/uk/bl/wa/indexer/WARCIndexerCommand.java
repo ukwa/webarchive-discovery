@@ -46,11 +46,6 @@ import javax.xml.transform.TransformerFactoryConfigurationError;
 import javax.xml.transform.stream.StreamResult;
 import javax.xml.transform.stream.StreamSource;
 
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.PosixParser;
 import org.apache.commons.io.FileUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -58,6 +53,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.util.ClientUtils;
 import org.apache.solr.common.SolrInputDocument;
+import org.archive.format.warc.WARCConstants;
 import org.archive.io.ArchiveReader;
 import org.archive.io.ArchiveReaderFactory;
 import org.archive.io.ArchiveRecord;
@@ -67,8 +63,11 @@ import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
 import com.typesafe.config.ConfigValueFactory;
 
+import picocli.CommandLine;
+import picocli.CommandLine.ParseResult;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.Annotator;
+import uk.bl.wa.indexer.WARCIndexerCommandOptions.OutputFormat;
 import uk.bl.wa.indexer.delivery.DocumentConsumer;
 import uk.bl.wa.indexer.delivery.DocumentConsumerFactory;
 import uk.bl.wa.opensearch.OpensearchImporter;
@@ -91,15 +90,8 @@ public class WARCIndexerCommand {
         Instrument.init();
     }
 
-    private static final String CLI_USAGE = "[-o <output dir>] [-s <Solr instance>] [-e <Opensearch instance>] [-u <user>] [-p <password>] [-t] <include text> [-r] <root/slash pages only> [-b <batch-submissions size>] [WARC File List]";
-    private static final String CLI_HEADER = "WARCIndexer - Extracts metadata and text from Archive Records";
-    private static final String CLI_FOOTER = "";
-    
-    private static boolean debugMode = false;
-    
-    public static String institution;
-    public static String collection;
-    public static String collection_id;
+    static WARCIndexerCommandOptions opts = new WARCIndexerCommandOptions();
+
 
     /**
      * 
@@ -112,67 +104,32 @@ public class WARCIndexerCommand {
      */
     public static void main( String[] args ) throws NoSuchAlgorithmException, IOException, TransformerFactoryConfigurationError, TransformerException {
         final long allStart = System.nanoTime();
-        CommandLineParser parser = new PosixParser();
-        final Options options = getParserOptions();
 
-        CommandLine line;
-        try {
-            line = parser.parse(options, args );
-        } catch (org.apache.commons.cli.ParseException e) {
-            log.error("Parse exception when processing command line arguments: " + e);
-            printUsage(options);
-            throw new IllegalArgumentException("Exception parsing arguments", e);
+        CommandLine cli = new CommandLine(opts);
+        ParseResult pr = cli.parseArgs(args);
+        if (pr.isUsageHelpRequested()) {
+            cli.usage(System.out);
+            return;
         }
-
-        final String[] inputFiles = line.getArgs();
-        // Check that a mandatory Archive file(s) has been supplied
-        if (inputFiles.length == 0) {
-            printUsage( options );
-            System.exit( 0 );
-        }
-
-        // Either file output, solr or opensearch are required
-        final String outputDir = line.hasOption("o") ? line.getOptionValue("o") : null;
-        final String solrUrl = line.hasOption("s") ? line.getOptionValue("s").replaceAll("\"", "") : null;
-        final String opensearchUrl = line.hasOption("e") ? line.getOptionValue("e") : null;
-        final String user = line.hasOption("user") ? line.getOptionValue("user") : null;
-        final String password = line.hasOption("password") ? line.getOptionValue("password") : null;
-        boolean gzip = line.hasOption("z"); // Used with outputDir
-        final Boolean disableCommit = line.hasOption("d") ? true : null; // Used with Solr (and possibly Opensearch?)
-        // -1 means no explicit batch size (defaults to 1 if not stated in the conf-file)
-        final Integer batchSize = line.hasOption("b") ? Integer.parseInt(line.getOptionValue("b")) : null;
 
         // Check that either an output dir or Solr URL or Opensearch URL is supplied
-        if(outputDir == null && solrUrl == null && opensearchUrl == null){
+        if(opts.output == null && opts.solrUrl == null && opts.opensearchUrl == null){
             System.out.println( "A Solr URL, Opensearch URL or an Output Directory must be supplied" );
-            printUsage(options);
+            cli.usage(System.out);
             System.exit( 0 );
         }
         // Check that both an output dir and Solr/Opensearch URL are not supplied
-        if((outputDir != null && solrUrl != null) || (outputDir != null && opensearchUrl != null)){
+        if((opts.output != null && opts.solrUrl != null) || (opts.output != null && opts.opensearchUrl != null)){
             System.out.println( "A Solr/Opensearch URL and an Output Directory cannot both be specified" );
-            printUsage(options);
+            cli.usage(System.out);
             System.exit( 0 );
         }
 
         // Check if the text field is required for the output (explicit (-t), Elasticsearch or Solr)
-        final boolean isTextRequired = line.hasOption("t") || line.hasOption("s") || line.hasOption("e");
-
-        final boolean slashPages = line.hasOption("r");
-
-        final String configFile = line.hasOption("c") ? line.getOptionValue("c") : null;
-
-        // Pick up any annotations specified:
-        final String annotationsFile = line.hasOption("a") ? line.getOptionValue("a") : null;
-
-        institution = line.hasOption("i") ? line.getOptionValue("i") : null;
-        collection = line.hasOption("n") ? line.getOptionValue("n") : null;
-        collection_id = line.hasOption("u") ? line.getOptionValue("u") : null;
+        final boolean isTextRequired = opts.includeText || opts.solrUrl != null || opts.opensearchUrl != null;
 
         try {
-            parseWarcFiles(configFile, outputDir, gzip, solrUrl, opensearchUrl, user, password, inputFiles,
-                           isTextRequired, slashPages, batchSize, annotationsFile,
-                           disableCommit, institution, collection, collection_id);
+            parseWarcFiles(opts, isTextRequired);
         } finally {
             Instrument.timeRel("WARCIndexerCommand.main#total", allStart);
             Instrument.log(true);
@@ -187,43 +144,45 @@ public class WARCIndexerCommand {
      * @throws TransformerFactoryConfigurationError
      * @throws TransformerException
      */
-    public static void parseWarcFiles(
-            String configFile,
-            String outputDir, boolean gzip, String solrUrl, String opensearchUrl, String user, String password,
-            String[] inputFiles,
-            boolean isTextRequired, boolean slashPages,
-            Integer batchSize, String annotationsFile, Boolean disableCommit,
-            String institution, String collection, String collection_id)
+    public static void parseWarcFiles( WARCIndexerCommandOptions opts, boolean isTextRequired )
             throws NoSuchAlgorithmException, TransformerFactoryConfigurationError, IOException {
         long startTime = System.currentTimeMillis();
         final long start = System.nanoTime();
 
-        // If the Solr URL is set initiate a connections
+        // Setup default config:
         Config conf = ConfigFactory.load();
-        if (configFile != null) {
-            log.info("Loading config from log file: " + configFile);
-            File configFilePath = new File(configFile);
+        if( opts.output != null && opts.outputFormat.equals(OutputFormat.jsonl)) {
+            log.warn("As generating JSONL, using the dataset-generation default configuration...");
+            conf = ConfigFactory.load("dataset-generation");
+        }
+        // Allow config override:
+        if (opts.config != null) {
+            log.info("Loading config from log file: " + opts.config);
+            File configFilePath = new File(opts.config);
             if (!configFilePath.exists()){
-              log.error("Config file not found:"+configFile);
+              log.error("Config file not found:"+opts.config);
               System.exit( 0 );                          
             }
             
             conf = ConfigFactory.parseFile(configFilePath);
-            // ConfigPrinter.print(conf);
-            // conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
-            log.info("Loaded warc config.");
-            log.info(conf.getString("warc.title"));
         }
+
+        // FIXME DUMP CONFIG OPTIONS
+        // ConfigPrinter.print(conf);
+        // conf.withOnlyPath("warc").root().render(ConfigRenderOptions.concise()));
+        log.info("Loaded indexer config: " + conf.getString("warc.title"));
+
         final SolrRecordFactory solrFactory = SolrRecordFactory.createFactory(conf);
         final DocumentConsumer docConsumer = DocumentConsumerFactory.createConsumer(
-                conf, outputDir, gzip, solrUrl, opensearchUrl, user, password, batchSize, null, disableCommit);
+                conf, opts.output, opts.outputFormat, opts.compressOutput, opts.solrUrl, 
+                opts.opensearchUrl, opts.user, opts.password, opts.batchSize, null, opts.disableCommit);
 
         // Also pass config down:
         WARCIndexer windex = new WARCIndexer(conf);
 
         // Add in annotations, if set:
-        if (annotationsFile != null) {
-            Annotations ann = Annotations.fromJsonFile(annotationsFile);
+        if (opts.annotations != null) {
+            Annotations ann = Annotations.fromJsonFile(opts.annotations);
             SurtPrefixSet oaSurts = Annotator.loadSurtPrefix("openAccessSurts.txt");
             windex.setAnnotations(ann, oaSurts);
         }
@@ -232,11 +191,11 @@ public class WARCIndexerCommand {
                            "WARCIndexerCommand.parseWarcFiles#startup", start);
 
         // Loop through each Warc files
-        for (int arcsIndex = 0; arcsIndex < inputFiles.length; arcsIndex++) {
+        for (int arcsIndex = 0; arcsIndex < opts.inputFiles.length; arcsIndex++) {
             final long arcStart = System.nanoTime();
-            String inputFile = inputFiles[arcsIndex];
+            String inputFile = opts.inputFiles[arcsIndex];
 
-            System.out.println("Parsing Archive File [" + (arcsIndex+1) + "/" + inputFiles.length + "]:" + inputFile);
+            System.out.println("Parsing Archive File [" + (arcsIndex+1) + "/" + opts.inputFiles.length + "]:" + inputFile);
             docConsumer.startWARC(inputFile);
             File inFile = new File(inputFile);
 
@@ -261,8 +220,9 @@ public class WARCIndexerCommand {
                     break;
                 }
                 final String url = Normalisation.sanitiseWARCHeaderValue(rec.getHeader().getUrl());
+                final String type = (String)rec.getHeader().getHeaderValue(WARCConstants.HEADER_KEY_TYPE);
                 SolrRecord doc = solrFactory.createRecord(inFile.getName(), rec.getHeader());
-                log.debug("Processing record for url " + url + " from " + inFile.getName() + " @"
+                log.info("Processing record " + type + " for url " + url + " from " + inFile.getName() + " @"
                         + rec.getHeader().getOffset());
                 try {
                     doc = windex.extract(inFile.getName(), rec, isTextRequired);
@@ -278,17 +238,20 @@ public class WARCIndexerCommand {
                 Instrument.timeRel("WARCIndexerCommand.parseWarcFiles#fullarcprocess",
                                    "WARCIndexerCommand.parseWarcFiles#solrdocCreation", recordStart);
                 if (doc != null) {
-                    if (!slashPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
+                    if (!opts.onlyRootPages || (doc.getFieldValue(SolrFields.SOLR_URL_TYPE) != null &&
                                         doc.getFieldValue(SolrFields.SOLR_URL_TYPE).equals(SolrFields.SOLR_URL_TYPE_SLASHPAGE))) {
                         docConsumer.add(doc);
                         recordCount++;
                     }
-                }
+                } else {
+                    log.info("No document produced by record: " + type + " for url " + url + " from " + 
+                        inFile.getName() + " @" + rec.getHeader().getOffset());
+            }
             }
             docConsumer.endWARC();
             Instrument.timeRel("WARCIndexerCommand.main#total",
                                "WARCIndexerCommand.parseWarcFiles#fullarcprocess", arcStart);
-            Instrument.log(arcsIndex < inputFiles.length-1); // Don't log the last on info to avoid near-duplicate logging
+            Instrument.log(arcsIndex < opts.inputFiles.length-1); // Don't log the last on info to avoid near-duplicate logging
         }
 
         // Submit any remaining docs:
@@ -298,44 +261,4 @@ public class WARCIndexerCommand {
         System.out.println("WARC Indexer Finished in " + ((endTime - startTime) / 1000.0) + " seconds.");
     }
     
-    /**
-     * @param options the options to print to stdout.
-     */
-    private static void printUsage( Options options ) {
-        HelpFormatter helpFormatter = new HelpFormatter();
-        helpFormatter.setWidth( 80 );
-        helpFormatter.printHelp( CLI_USAGE, CLI_HEADER, options, CLI_FOOTER );
-    }
-    
-    @NotNull
-    private static Options getParserOptions() {
-        Options options = new Options();
-        options.addOption("o", "output", true,
-                          "The directory to contain the output XML files");
-        options.addOption("z", "gzip", false,
-                          "Pack the output XML files in a single gzipped XML file (only valid when -o has been specified)");
-        options.addOption("s", "solr", true,
-                          "The URL of the Solr instance the document should be sent to");
-        options.addOption("e", "opensearch", true,
-                          "The URL of the Opensearch instance the document should be sent to");
-        options.addOption("user", "user", true,
-                		  "The user for the fulltext instance");
-        options.addOption("password", "password", true,
-                		  "The userpassword for the fulltext instance");
-        options.addOption("t", "text", false,
-                          "Include text in XML in output files");
-        options.addOption("r", "slash", false,
-                          "Only process slash (root) pages.");
-        options.addOption("a", "annotations", true,
-                          "A JSON file containing the annotations to apply during indexing.");
-        options.addOption("b", "batch", true, "Batch size for submissions.");
-        options.addOption("c", "config", true, "Configuration to use.");
-        options.addOption("d", "disable_commit", false,
-                          "Disable client side commits (speeds up indexing at the cost of flush guarantee).");
-        options.addOption("i", "institution", true, "Institution.");
-        options.addOption("n", "collection", true, "Collection.");
-        options.addOption("u", "collection_id", true, "Collection ID.");
-        return options;
-    }
-
 }

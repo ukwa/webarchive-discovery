@@ -63,30 +63,30 @@ public class SolrWebServer {
         // Must specify either one or more Solr endpoints, or Zookeeper hosts
         // and a Solr collection
         @ArgGroup(exclusive = true, multiplicity = "1")
-        SolrServiceOptions service;
+        public SolrServiceOptions service;
 
         public
         static class SolrServiceOptions {
-            @Option(names = { "-S",
+            @Option(names = { "-s", "-S",
                     "--solr-endpoint" }, description = "The HTTP Solr endpoints to use. Set this multiple times to use a load-balanced group of endpoints.")
-            String[] endpoint;
+            public String[] endpoint;
 
             @ArgGroup(exclusive = false)
-            ZKCollection zk;
+            public ZKCollection zk;
         }
 
         public
         static class ZKCollection {
             @Option(names = { "-Z",
                     "--solr-zookeepers" }, description = "A list of comma-separated HOST:PORT values for the Zookeepers. e.g. 'zk1:2121,zk2:2121'")
-            String zookeepers;
+            public String zookeepers;
 
             @Option(names = { "-C",
                     "--solr-collection" }, description = "The Solr collection to populate.")
-            String collection;
+            public String collection;
         }
 
-        @Option(names = "--solr-batch-size", description = "Size of batches of documents to send to Solr.", defaultValue = "100")
+        @Option(names = { "--solr-batch-size" }, description = "Size of batches of documents to send to Solr.", defaultValue = "100")
         public int batchSize;
 
     }

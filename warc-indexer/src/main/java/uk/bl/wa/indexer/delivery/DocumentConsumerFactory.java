@@ -37,6 +37,9 @@ package uk.bl.wa.indexer.delivery;
  */
 
 import com.typesafe.config.Config;
+
+import uk.bl.wa.indexer.WARCIndexerCommandOptions;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +72,7 @@ public class DocumentConsumerFactory {
      * @throws IllegalArgumentException if it was not possible to derive a proper setup.
      */
     public static DocumentConsumer createConsumer(
-            Config conf, String outputFolder, Boolean outputGZIP, String solrURL, String opensearchURL, String user, String password,
+            Config conf, String outputFolder, WARCIndexerCommandOptions.OutputFormat outputFormat, Boolean outputGZIP, String solrURL, String opensearchURL, String user, String password,
             Integer maxDocumentsOverride, Long maxBytesOverride, Boolean disableCommitOverride) throws IOException {
         int outputs = (outputFolder == null ? 0 : 1) + (solrURL == null ? 0 : 1) + (opensearchURL == null ? 0 : 1);
         if (outputs > 1) {
@@ -78,11 +81,18 @@ public class DocumentConsumerFactory {
 
         if (outputFolder != null) {
             // The logic is horrible:
-            // outputGZIP determines whether the output will be a single (gzipped) file or multiple (plain) files
-            return outputGZIP != null && outputGZIP ?
-                    new SingleFileDocumentConsumer(
-                            outputFolder, conf, outputGZIP, maxDocumentsOverride, maxBytesOverride):
-                    new MultiFileDocumentConsumer(outputFolder, conf, outputGZIP);
+            if( WARCIndexerCommandOptions.OutputFormat.xml.equals(outputFormat)) {
+                // outputGZIP determines whether the output will be a single (gzipped) file or multiple (plain) files
+                return outputGZIP != null && outputGZIP ?
+                        new SingleFileDocumentConsumer(
+                                outputFolder, conf, outputFormat, outputGZIP, maxDocumentsOverride, maxBytesOverride):
+                        new MultiFileDocumentConsumer(outputFolder, conf, outputFormat, outputGZIP);
+            } else if( WARCIndexerCommandOptions.OutputFormat.jsonl.equals(outputFormat) ) {
+                return new SingleFileDocumentConsumer(
+                    outputFolder, conf, outputFormat, outputGZIP, maxDocumentsOverride, maxBytesOverride);
+            } else {
+                throw new IllegalArgumentException("No support code for format: " + outputFormat);
+            }
         }
         if (solrURL != null) {
             return new SolrDocumentConsumer(

@@ -25,6 +25,8 @@ package uk.bl.wa.indexer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.junit.Test;
+
+import uk.bl.wa.indexer.WARCIndexerCommandOptions.OutputFormat;
 import uk.bl.wa.util.Instrument;
 
 import javax.xml.transform.TransformerException;
@@ -84,8 +86,13 @@ public class WARCIndexerCommandTest {
         final String TMP = System.getProperty("java.io.tmpdir") + "/";
         assertTrue("The config '" + config + "' should be available", new File(config).exists());
 
-        WARCIndexerCommand.parseWarcFiles(
-                config, TMP, true, null, null, null, null, new String[]{warc}, false, false,
-                1, null, false, null, null, null);
+        WARCIndexerCommandOptions opts = new WARCIndexerCommandOptions();
+        opts.config = config;
+        opts.output = TMP;
+        opts.outputFormat = OutputFormat.jsonl;
+        opts.inputFiles = new String[]{warc};
+
+        WARCIndexerCommand.parseWarcFiles(opts, false);
     }
+
 }
