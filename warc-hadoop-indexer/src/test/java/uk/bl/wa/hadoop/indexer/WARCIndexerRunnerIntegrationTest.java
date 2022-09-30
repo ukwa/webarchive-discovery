@@ -23,9 +23,13 @@ package uk.bl.wa.hadoop.indexer;
  */
 
 import java.io.BufferedReader;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.mapred.JobClient;
@@ -95,24 +99,23 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
                 output, new OutputLogFilter()));
         Assert.assertEquals(reducers, outputFiles.length);
         
-        // Check contents of the output:
+        // Get the output:
+        List<String> resultFiles = new ArrayList<String>();
         for( Path output : outputFiles ) {
             log.info(" --- output : "+output);
             if( getFileSystem().isFile(output) ) {
-                InputStream is = getFileSystem().open(output);
-                BufferedReader reader = new BufferedReader(new InputStreamReader(is));
-                String line = null;
-                int counter = 0;
-                while( ( line = reader.readLine()) != null ) {
-                    log.info(line);
-                    //System.out.println(line);
-                    counter++;
-                    if( counter > 5) {
-                        log.info("Stopping printing output after 5 lines...");
-                        break;
-                    }
+                String resultFile = "target/indexer-" + output.getName();
+                resultFiles.add(resultFile);
+                FileOutputStream out = new FileOutputStream(resultFile);
+                log.info(" --- output : " + output + " is being written to " + resultFile);
+                if (getFileSystem().isFile(output)) {
+                    InputStream is = getFileSystem().open(output);
+                    IOUtils.copy(is, out);
+                } else {
+                    log.info(" --- ...skipping directory...");
                 }
-                reader.close();
+                out.flush();
+                out.close();
             } else {
                 log.info(" --- ...skipping directory...");
             }
