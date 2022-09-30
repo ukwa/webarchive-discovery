@@ -37,7 +37,7 @@ import uk.bl.wa.solr.SolrWebServer.SolrOptions;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-@Command(name = "WARCIndexer", description = "Extracts metadata and text from Archive Records", mixinStandardHelpOptions = true)
+@Command(name = "WARCIndexer", description = "Extracts metadata and text from Archive Records", mixinStandardHelpOptions = true, separator = " ")
 public class WARCIndexerCommandOptions {
 
     /* 

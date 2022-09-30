@@ -39,7 +39,7 @@ import uk.bl.wa.solr.SolrWebServer.SolrOptions;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-@Command(name = "WARCIndexer", description = "Options for the WARCIndexer", mixinStandardHelpOptions = true)
+@Command(name = "WARCIndexer", description = "Options for the WARCIndexer", mixinStandardHelpOptions = true, separator = " ")
 public class WARCIndexerOptions {
 
     @Option(names = { "-R",
