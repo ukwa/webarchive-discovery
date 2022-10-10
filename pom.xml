@@ -60,6 +60,7 @@
       <ram>1024</ram>
       <jackson.version>2.11.3</jackson.version>
       <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
+      <log4j.version>2.19.0</log4j.version>
    </properties>
    <build>
       <plugins>
