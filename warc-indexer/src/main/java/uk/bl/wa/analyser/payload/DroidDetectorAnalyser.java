@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.payload;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -30,6 +30,7 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.UsableURI;
@@ -107,7 +108,7 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
                     // Droid seems unhappy about spaces in filenames, so hack to
                     // avoid:
                     String cleanUrl = uuri.getName().replace(" ", "+");
-                    metadata.set(Metadata.RESOURCE_NAME_KEY, cleanUrl);
+                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, cleanUrl);
                 }
                 // Run Droid:
                 MediaType mt = dd.detect(tikainput, metadata);

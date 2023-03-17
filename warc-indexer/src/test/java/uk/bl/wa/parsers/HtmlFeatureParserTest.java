@@ -7,7 +7,7 @@ package uk.bl.wa.parsers;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -38,6 +38,7 @@ import junit.framework.Assert;
 
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.parser.ParseError;
@@ -128,7 +129,7 @@ public class HtmlFeatureParserTest {
             throws IOException, SAXException, TikaException {
         HtmlFeatureParser hfp = new HtmlFeatureParser();
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.RESOURCE_NAME_KEY, uri);
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, uri);
         hfp.parse(stream, null, metadata, null);
         printMetadata(metadata);
         // for (ParseError err : hfp.getParseErrors()) {

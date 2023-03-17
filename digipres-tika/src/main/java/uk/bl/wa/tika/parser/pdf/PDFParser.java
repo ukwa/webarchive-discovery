@@ -7,7 +7,7 @@ package uk.bl.wa.tika.parser.pdf;
  * #%L
  * digipres-tika
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -32,7 +32,6 @@ import org.apache.pdfbox.io.RandomAccess;
 import org.apache.pdfbox.io.RandomAccessFile;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;

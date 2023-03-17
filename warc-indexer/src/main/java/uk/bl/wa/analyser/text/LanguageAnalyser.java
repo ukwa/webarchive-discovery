@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.text;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -27,9 +27,9 @@ package uk.bl.wa.analyser.text;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
+import org.apache.tika.langdetect.optimaize.OptimaizeLangDetector;
 
 import com.typesafe.config.Config;
 

@@ -20,7 +20,7 @@ package uk.bl.wa.tika.parser.pdf.itext;
  * #%L
  * digipres-tika
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -51,10 +51,10 @@ import java.util.Set;
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
-import org.apache.tika.parser.image.xmp.JempboxExtractor;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
 import org.xml.sax.SAXException;
@@ -167,9 +167,6 @@ public class PDFParser extends AbstractParser {
             // Also grap XMP metadata, if present:
             byte[] xmpmd = reader.getMetadata();
             if( xmpmd != null ) {
-                // This is standard Tika code for parsing standard stuff from the XMP:
-                JempboxExtractor extractor = new JempboxExtractor(metadata);
-                extractor.parse( new ByteArrayInputStream( xmpmd ) );
                 // This is custom XMP-handling code:
                 XMPMetadata xmp = XMPMetadata.load( new ByteArrayInputStream( xmpmd ) );
                 // There is a special class for grabbing data in the PDF schema - not sure it will add much here:
@@ -198,9 +195,9 @@ public class PDFParser extends AbstractParser {
             }
             // Ensure the normalised metadata are mapped in:
             if(  map.get( "Title" ) != null ) 
-                metadata.set( Metadata.TITLE, map.get( "Title" ) );
+                metadata.set( TikaCoreProperties.TITLE, map.get( "Title" ) );
             if(  map.get( "Author" ) != null ) 
-                metadata.set( Metadata.AUTHOR, map.get( "Author" ) );
+                metadata.set( TikaCoreProperties.CREATOR, map.get( "Author" ) );
         } catch( Exception e ) {
             System.err.println( "PDFParser.extractMetadata() caught Exception: " + e.getMessage() );
             e.printStackTrace();

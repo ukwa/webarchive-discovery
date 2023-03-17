@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.payload;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -77,7 +78,7 @@ public class DroidDetectorTest {
                 .getPath();
         File file = new File(filePath);
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, file.getName());
 
         // Test identification two ways:
         assertEquals("ID of " + filename + " as File, failed.", expected, dd

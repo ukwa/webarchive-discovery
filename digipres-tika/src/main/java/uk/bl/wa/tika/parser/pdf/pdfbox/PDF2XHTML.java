@@ -20,7 +20,7 @@ package uk.bl.wa.tika.parser.pdf.pdfbox;
  * #%L
  * digipres-tika
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -48,7 +48,6 @@ import org.apache.pdfbox.pdmodel.interactive.annotation.PDAnnotationMarkup;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.apache.pdfbox.text.TextPosition;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.io.IOExceptionWithCause;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
@@ -131,7 +130,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.startDocument();
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to start a document", e);
+            throw new IOException("Unable to start a document", e);
         }
     }
 
@@ -140,7 +139,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.endDocument();
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to end a document", e);
+            throw new IOException("Unable to end a document", e);
         }
     }
 
@@ -149,7 +148,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.startElement("div", "class", "page");
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to start a page", e);
+            throw new IOException("Unable to start a page", e);
         }
         writeParagraphStart();
     }
@@ -197,7 +196,7 @@ class PDF2XHTML extends PDFTextStripper {
             }
             handler.endElement("div");
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to end a page", e);
+            throw new IOException("Unable to end a page", e);
         }
     }
 
@@ -213,7 +212,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.startElement("p");
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to start a paragraph", e);
+            throw new IOException("Unable to start a paragraph", e);
         }
     }
 
@@ -228,7 +227,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.endElement("p");
         } catch (SAXException e) {
-            throw new IOExceptionWithCause("Unable to end a paragraph", e);
+            throw new IOException("Unable to end a paragraph", e);
         }
     }
 
@@ -237,7 +236,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.characters(text);
         } catch (SAXException e) {
-            throw new IOExceptionWithCause(
+            throw new IOException(
                     "Unable to write a string: " + text, e);
         }
     }
@@ -247,7 +246,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.characters(text.getUnicode());
         } catch (SAXException e) {
-            throw new IOExceptionWithCause(
+            throw new IOException(
                     "Unable to write a character: " + text.getUnicode(), e);
         }
     }
@@ -257,7 +256,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.characters(getWordSeparator());
         } catch (SAXException e) {
-            throw new IOExceptionWithCause(
+            throw new IOException(
                     "Unable to write a space character", e);
         }
     }
@@ -267,7 +266,7 @@ class PDF2XHTML extends PDFTextStripper {
         try {
             handler.characters("\n");
         } catch (SAXException e) {
-            throw new IOExceptionWithCause(
+            throw new IOException(
                     "Unable to write a newline character", e);
         }
     }

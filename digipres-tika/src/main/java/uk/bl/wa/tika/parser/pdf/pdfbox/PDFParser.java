@@ -20,7 +20,7 @@ package uk.bl.wa.tika.parser.pdf.pdfbox;
  * #%L
  * digipres-tika
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -49,6 +49,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.jempbox.xmp.XMPMetadata;
 import org.apache.jempbox.xmp.XMPSchemaPDF;
 import org.apache.pdfbox.cos.COSArray;
@@ -60,12 +61,13 @@ import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.tika.exception.TikaException;
-import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.Office;
 import org.apache.tika.metadata.PagedText;
 import org.apache.tika.metadata.Property;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -135,7 +137,7 @@ public class PDFParser extends AbstractParser {
             //  for unpacked / processed resources
             // Decide which to do based on if we're reading from a file or not already
             TikaInputStream tstream = TikaInputStream.cast(stream);
-            pdfDocument = PDDocument.load(new CloseShieldInputStream(stream),
+            pdfDocument = PDDocument.load(CloseShieldInputStream.wrap(stream),
                     MemoryUsageSetting.setupMixed(100 * 1024 * 1024));
            
             if (pdfDocument.isEncrypted()) {
@@ -177,17 +179,17 @@ public class PDFParser extends AbstractParser {
             throws TikaException {
         PDDocumentInformation info = document.getDocumentInformation();
         metadata.set(PagedText.N_PAGES, document.getNumberOfPages());
-        addMetadata(metadata, Metadata.TITLE, info.getTitle());
-        addMetadata(metadata, Metadata.AUTHOR, info.getAuthor());
-        addMetadata(metadata, Metadata.KEYWORDS, info.getKeywords());
+        addMetadata(metadata, TikaCoreProperties.TITLE, info.getTitle());
+        addMetadata(metadata, TikaCoreProperties.CREATOR, info.getAuthor());
+        addMetadata(metadata, Office.KEYWORDS, info.getKeywords());
         addMetadata(metadata, "pdf:creator", info.getCreator());
         addMetadata(metadata, "pdf:producer", info.getProducer());
-        addMetadata(metadata, Metadata.SUBJECT, info.getSubject());
+        addMetadata(metadata, TikaCoreProperties.SUBJECT, info.getSubject());
         addMetadata(metadata, "trapped", info.getTrapped());
         addMetadata(metadata, "created", info.getCreationDate());
-        addMetadata(metadata, Metadata.CREATION_DATE, info.getCreationDate());
+        addMetadata(metadata, TikaCoreProperties.CREATED, info.getCreationDate());
         Calendar modified = info.getModificationDate();
-        addMetadata(metadata, Metadata.LAST_MODIFIED, modified);
+        addMetadata(metadata, TikaCoreProperties.MODIFIED, modified);
         
         // All remaining metadata is custom
         // Copy this over as-is
@@ -262,6 +264,12 @@ public class PDFParser extends AbstractParser {
             }
         }
         // End Of ANJ Extensions.
+    }
+
+    private void addMetadata(Metadata metadata, Property name, String value) {
+        if (value != null) {
+            metadata.add(name, value);
+        }
     }
 
     private void addMetadata(Metadata metadata, String name, String value) {

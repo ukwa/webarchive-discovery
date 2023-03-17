@@ -6,7 +6,7 @@ package uk.bl.wa.parsers;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -38,6 +38,7 @@ import org.slf4j.LoggerFactory;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.metadata.Metadata;
 import org.apache.tika.metadata.Property;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AbstractParser;
 import org.apache.tika.parser.ParseContext;
@@ -155,7 +156,7 @@ public class HtmlFeatureParser extends AbstractParser {
             SAXException, TikaException {
         final long start = System.nanoTime();
         // Pick up the URL:
-        String url = metadata.get( Metadata.RESOURCE_NAME_KEY );
+        String url = metadata.get( TikaCoreProperties.RESOURCE_NAME_KEY );
         
         // Parse it using JSoup
         Document doc = null;
@@ -374,7 +375,7 @@ public class HtmlFeatureParser extends AbstractParser {
     public static Metadata extractMetadata( InputStream in, String url ) {
         HtmlFeatureParser hfp = new HtmlFeatureParser();
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.RESOURCE_NAME_KEY, url);
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, url);
         try {
             hfp.parse(in, null, metadata, null);
         } catch (Exception e) {

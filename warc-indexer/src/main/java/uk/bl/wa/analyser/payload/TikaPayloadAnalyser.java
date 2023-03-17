@@ -6,7 +6,7 @@ package uk.bl.wa.analyser.payload;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.io.input.CloseShieldInputStream;
 import org.apache.commons.io.input.BoundedInputStream;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.exception.ExceptionUtils;
@@ -42,14 +43,14 @@ import org.slf4j.LoggerFactory;
 import org.apache.tika.Tika;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
-import org.apache.tika.io.CloseShieldInputStream;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.DublinCore;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.parser.Parser;
-import org.apache.tika.parser.html.BoilerpipeContentHandler;
+import org.apache.tika.sax.boilerpipe.BoilerpipeContentHandler;
 import org.apache.tika.sax.BodyContentHandler;
 import org.apache.tika.sax.WriteOutContentHandler;
 import org.archive.io.ArchiveRecordHeader;
@@ -249,7 +250,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
         // Also pass URL as metadata to allow extension hints to work:
         Metadata metadata = new Metadata();
         if( url != null )
-            metadata.set( Metadata.RESOURCE_NAME_KEY, url);
+            metadata.set( TikaCoreProperties.RESOURCE_NAME_KEY, url);
 
         final long detectStart = System.nanoTime();
         StringBuilder detected = new StringBuilder();
@@ -335,7 +336,7 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             if (this.extractAllMetadata) {
                 for (String m : metadata.names()) {
                     // Ignore these as they are not very interesting:
-                    if (Metadata.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
+                    if (TikaCoreProperties.RESOURCE_NAME_KEY.equalsIgnoreCase(m)
                             || "dc:title".equalsIgnoreCase(m)
                             || "title".equalsIgnoreCase(m)
                             || "description".equalsIgnoreCase(m)
@@ -371,13 +372,13 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             // Parse out any embedded date that can act as a created/modified date.
             // I was not able find a single example where both created and modified where defined and different. I single field is sufficient.
             String date = null;
-            if( metadata.get( Metadata.CREATION_DATE ) != null)
-                date = metadata.get( Metadata.CREATION_DATE );
+            if( metadata.get( TikaCoreProperties.CREATED ) != null)
+                date = metadata.get( TikaCoreProperties.CREATED );
 
-            if( metadata.get( Metadata.DATE ) != null)
-                date = metadata.get( Metadata.DATE );
-            if( metadata.get( Metadata.MODIFIED ) != null)
-                date = metadata.get( Metadata.MODIFIED );
+            if( metadata.get( TikaCoreProperties.METADATA_DATE ) != null)
+                date = metadata.get( TikaCoreProperties.METADATA_DATE );
+            if( metadata.get( TikaCoreProperties.MODIFIED ) != null)
+                date = metadata.get( TikaCoreProperties.MODIFIED );
             if( date != null ) {
                 DateTimeFormatter df = ISODateTimeFormat.dateTimeParser();
                 DateTime edate = null;
@@ -483,8 +484,8 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             
             // Application ID, MS Office only AFAICT, and the VERSION is only doc
             String software = null;
-            if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
-            if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
+            if( metadata.get( Metadata.SOFTWARE ) != null ) software = metadata.get( Metadata.SOFTWARE );
+            //if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
             // Images, e.g. JPEG and TIFF, can have 'Software', 'tiff:Software',
             // PNGs have a 'tEXt tEXtEntry: keyword=Software, value=GPL Ghostscript 8.71'
             String png_textentry = metadata.get("tEXt tEXtEntry");
@@ -546,12 +547,12 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             } catch( InterruptedIOException i ) {
                 this.complete = false;
                 log.error("ParseRunner.run() Interrupted: " + i.getMessage() +
-                          " for URL " + metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
+                          " for URL " + metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) + " in " + source);
                 addExceptionMetadata(metadata, i);
             } catch( Exception e ) {
                 this.complete = false;
                 log.error( "ParseRunner.run() Exception: " + ExceptionUtils.getRootCauseMessage(e) +
-                           " for URL " + metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
+                           " for URL " + metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) + " in " + source);
                 addExceptionMetadata(metadata, e);
             } finally {
             }
@@ -582,11 +583,11 @@ mime_exclude = x-tar,x-gzip,bz,lz,compress,zip,javascript,css,octet-stream,image
             } catch( NoSuchFieldError e ) {
                 // Apache POI version issue?
                 log.error("Tika.detect(): " + e.getMessage() + " for URL " +
-                          metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
+                          metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) + " in " + source);
                 addExceptionMetadata(metadata, new Exception(e));
             } catch( Exception e ) {
                 log.error( "Tika.detect(): " + e.getMessage() + " for URL " +
-                           metadata.get(Metadata.RESOURCE_NAME_KEY) + " in " + source);
+                           metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY) + " in " + source);
                 addExceptionMetadata(metadata, e);
             }
         }

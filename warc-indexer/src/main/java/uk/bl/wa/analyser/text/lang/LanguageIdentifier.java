@@ -20,7 +20,7 @@ package uk.bl.wa.analyser.text.lang;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -123,7 +123,7 @@ public class LanguageIdentifier {
     private static InputStream getResourceAsStream(String path) {
         InputStream is;
         return (is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) != null ? is :
-                org.apache.tika.language.LanguageIdentifier.class.getResourceAsStream(path);
+                org.apache.tika.language.detect.LanguageDetector.class.getResourceAsStream(path);
         //return Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
     }
 

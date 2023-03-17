@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.payload;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -34,6 +34,7 @@ import org.apache.commons.httpclient.URIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.SURT;
 
@@ -116,7 +117,7 @@ public class HTMLAnalyser extends AbstractPayloadAnalyser {
         Set<String> domains = new HashSet<String>();
         
         // JSoup NEEDS the URL to function:
-        metadata.set( Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()) );
+        metadata.set( TikaCoreProperties.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()) );
         ParseRunner parser = new ParseRunner( hfp, tikainput, metadata, solr );
         try {
             TimeLimiter.run(parser, 30000L, false);

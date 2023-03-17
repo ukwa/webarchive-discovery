@@ -9,7 +9,7 @@ package uk.bl.wa.util;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -29,7 +29,8 @@ package uk.bl.wa.util;
 
 import java.io.InputStream;
 
-import org.apache.tika.io.CloseShieldInputStream;
+import org.apache.commons.io.input.CloseShieldInputStream;
+
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

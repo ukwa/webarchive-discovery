@@ -4,7 +4,7 @@ package uk.bl.wa.util;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -24,7 +24,6 @@ package uk.bl.wa.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.mchange.util.AssertException;
 import org.apache.commons.httpclient.URIException;
 import org.junit.Test;
 

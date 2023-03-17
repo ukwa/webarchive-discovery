@@ -7,7 +7,7 @@ package uk.bl.wa.analyser.payload;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,6 +31,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.archive.io.ArchiveRecordHeader;
 
 import com.typesafe.config.Config;
@@ -84,7 +85,7 @@ public class PDFAnalyser extends AbstractPayloadAnalyser {
             SolrRecord solr) {
         final long start = System.nanoTime();
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         ParseRunner parser = new ParseRunner(app, tikainput, metadata, solr);
         try {
             TimeLimiter.run(parser, 30000L, false);

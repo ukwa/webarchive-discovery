@@ -7,7 +7,7 @@ package uk.bl.wa.tika;
  * #%L
  * digipres-tika
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -155,8 +155,9 @@ public class PreservationParser extends AutoDetectParser {
         // Also look to record the software:
         String software = null;
         // Application ID, MS Office only AFAICT, and the VERSION is only doc
-        if( metadata.get( Metadata.APPLICATION_NAME ) != null ) software = metadata.get( Metadata.APPLICATION_NAME );
-        if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
+        String APPLICATION_NAME = "extended-properties:Application";
+        if( metadata.get( APPLICATION_NAME ) != null ) software = metadata.get( APPLICATION_NAME );
+        //if( metadata.get( Metadata.APPLICATION_VERSION ) != null ) software += " "+metadata.get( Metadata.APPLICATION_VERSION);
         // Images, e.g. JPEG and TIFF, can have 'Software', 'tiff:Software',
         if( metadata.get("pdf:producer") != null ) software = metadata.get("pdf:producer");
         if( metadata.get( "Software" ) != null ) software = metadata.get( "Software" );

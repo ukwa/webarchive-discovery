@@ -16,7 +16,7 @@
       </license>
    </licenses>
    <properties>
-      <tika.version>1.24.1</tika.version>
+      <tika.version>2.7.0</tika.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>512</ram>
    </properties>
@@ -71,12 +71,7 @@
       </dependency>
       <dependency>
          <groupId>org.apache.tika</groupId>
-         <artifactId>tika-langdetect</artifactId>
-         <version>${tika.version}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.apache.tika</groupId>
-         <artifactId>tika-parsers</artifactId>
+         <artifactId>tika-parsers-standard-package</artifactId>
          <version>${tika.version}</version>
          <exclusions>
             <exclusion>
@@ -85,6 +80,16 @@
             </exclusion>
          </exclusions>
       </dependency>
+   	  <dependency>
+	     <groupId>org.apache.tika</groupId>
+	     <artifactId>tika-parser-html-commons</artifactId>
+	     <version>${tika.version}</version>
+  	  </dependency>
+   	  <dependency>
+	     <groupId>org.apache.tika</groupId>
+	     <artifactId>tika-langdetect-optimaize</artifactId>
+	     <version>${tika.version}</version>
+  	  </dependency>
       <dependency>
          <groupId>com.itextpdf</groupId>
          <artifactId>itextpdf</artifactId>
