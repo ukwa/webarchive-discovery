@@ -7,7 +7,7 @@ package uk.bl.wa.hadoop.mapreduce.lib.input;
  * #%L
  * warc-hadoop-recordreaders
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
