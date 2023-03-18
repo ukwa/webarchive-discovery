@@ -42,7 +42,7 @@ import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 @SuppressWarnings( "deprecation" )
 public class OutlinkExtractor extends Configured implements Tool {
 
-    private boolean wait = false;
+    private boolean wait = true;
     
     protected void createJobConf(JobConf conf, String[] args)
             throws IOException {
@@ -61,6 +61,9 @@ public class OutlinkExtractor extends Configured implements Tool {
 
         conf.setOutputKeyClass( Text.class );
         conf.setOutputValueClass( Text.class );
+
+        // FIXME Hard-code a single reducer:
+        conf.setNumReduceTasks(1);
     }
 
     public int run(String[] args) throws IOException {
@@ -76,6 +79,7 @@ public class OutlinkExtractor extends Configured implements Tool {
         } else {
             JobClient client = new JobClient(conf);
             client.submitJob(conf);
+            client.close();
         }
         return 0;
     }

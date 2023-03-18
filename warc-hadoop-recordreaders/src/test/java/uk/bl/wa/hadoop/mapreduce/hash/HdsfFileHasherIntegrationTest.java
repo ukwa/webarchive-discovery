@@ -31,10 +31,10 @@ import java.io.InputStreamReader;
 import java.util.List;
 import java.util.ArrayList;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.mapred.JobConf;
-import org.apache.hadoop.mapred.OutputLogFilter;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.util.ToolRunner;
 import org.junit.Assert;
 import org.junit.Test;
@@ -62,7 +62,7 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
         log.info("Checking input file is present...");
         // Check that the input file is present:
         Path[] inputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                input, new OutputLogFilter()));
+                input));
         Assert.assertEquals(2, inputFiles.length);
         
         // Set up arguments for the job:
@@ -72,16 +72,15 @@ public class HdsfFileHasherIntegrationTest extends MapReduceTestBaseClass {
         
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
+        Configuration conf = this.mrCluster.getConfig();
         log.info("Running job...");
         ToolRunner.run(conf, new HdfsFileHasher(), args);
         log.info("Job finished, checking the results...");
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                output, new OutputLogFilter()));
-        //Assert.assertEquals(1, outputFiles.length);
-        
+                output, new GlobFilter("part-*")));
+
         // Collect the output:
         List<String> lines = new ArrayList<String>();
 

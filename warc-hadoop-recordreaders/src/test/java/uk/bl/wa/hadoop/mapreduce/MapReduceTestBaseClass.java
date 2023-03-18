@@ -37,7 +37,8 @@ import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hdfs.MiniDFSCluster;
-import org.apache.hadoop.mapred.MiniMRCluster;
+import org.apache.hadoop.mapred.MiniMRClientCluster;
+import org.apache.hadoop.mapred.MiniMRClientClusterFactory;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.junit.AfterClass;
 import org.junit.Assert;
@@ -45,6 +46,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
  * This shared base class sets up a mini DFS/MR Hadoop cluster for testing, and
@@ -59,7 +61,7 @@ public abstract class MapReduceTestBaseClass {
 
     // Test cluster:
     protected static MiniDFSCluster dfsCluster = null;
-    protected static MiniMRCluster mrCluster = null;
+    protected static MiniMRClientCluster mrCluster = null;
 
     // Input files:
     // 1. The variations.warc.gz example is rather large, and there are
@@ -82,6 +84,11 @@ public abstract class MapReduceTestBaseClass {
         // Config index_conf = ConfigFactory.load();
         // LOG.debug(index_conf.root().render());
 
+        // Some test classes use JUL so we use this to tidy it up:
+        // https://www.slf4j.org/api/org/slf4j/bridge/SLF4JBridgeHandler.html
+        SLF4JBridgeHandler.removeHandlersForRootLogger();
+        SLF4JBridgeHandler.install();
+
         log.warn("Spinning up test cluster...");
         // make sure the log folder exists,
         // otherwise the test fill fail
@@ -92,12 +99,12 @@ public abstract class MapReduceTestBaseClass {
                 "com.sun.org.apache.xerces.internal.jaxp.SAXParserFactoryImpl");
         //
         Configuration conf = new Configuration();
-        dfsCluster = new MiniDFSCluster(conf, 1, true, null);
+        conf.set("yarn.nodemanager.disk-health-checker.max-disk-utilization-per-disk-percentage", "99.5");
+        dfsCluster = new MiniDFSCluster.Builder(conf).build();
         dfsCluster.getFileSystem().makeQualified(input);
         dfsCluster.getFileSystem().makeQualified(output);
         //
-        mrCluster = new MiniMRCluster(1, getFileSystem().getUri().toString(),
-                1);
+        mrCluster = MiniMRClientClusterFactory.create(MapReduceTestBaseClass.class, 2, conf);
 
         // prepare for tests
         for (String filename : testWarcs) {
@@ -137,13 +144,13 @@ public abstract class MapReduceTestBaseClass {
     @AfterClass
     public static void tearDown() throws Exception {
         log.warn("Tearing down test cluster...");
+        if (mrCluster != null) {
+            mrCluster.stop();
+            mrCluster = null;
+        }
         if (dfsCluster != null) {
             dfsCluster.shutdown();
             dfsCluster = null;
-        }
-        if (mrCluster != null) {
-            mrCluster.shutdown();
-            mrCluster = null;
         }
         log.warn("Torn down test cluster.");
     }

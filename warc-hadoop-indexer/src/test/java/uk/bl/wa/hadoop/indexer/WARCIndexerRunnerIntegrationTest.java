@@ -29,9 +29,11 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.commons.io.IOUtils;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.mapred.JobClient;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputLogFilter;
@@ -87,7 +89,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
 
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
+        Configuration conf = this.mrCluster.getConfig();
         conf.set("mapred.child.java.opts", "-Xmx1024m");
         wir.setConf(conf);
         log.info("Running job...");
@@ -96,7 +98,7 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(getFileSystem().listStatus(
-                output, new OutputLogFilter()));
+                output, new GlobFilter("part-*")));
         Assert.assertEquals(reducers, outputFiles.length);
         
         // Get the output:
