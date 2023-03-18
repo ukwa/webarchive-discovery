@@ -7,7 +7,7 @@ package uk.bl.wa.hadoop.indexer;
  * #%L
  * warc-hadoop-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -39,7 +39,7 @@ import uk.bl.wa.solr.SolrWebServer.SolrOptions;
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
  *
  */
-@Command(name = "WARCIndexer", description = "Options for the WARCIndexer", mixinStandardHelpOptions = true)
+@Command(name = "WARCIndexer", description = "Options for the WARCIndexer", mixinStandardHelpOptions = true, separator = " ")
 public class WARCIndexerOptions {
 
     @Option(names = { "-R",
@@ -62,7 +62,7 @@ public class WARCIndexerOptions {
             "--annotations" }, description = "apply annotations from fixed-name files, via '-files annotations.json,openAccessSurts.txt'", defaultValue = "false")
     public boolean annotations;
 
-    @Option(names = "-c", description = "Local file that contains the indexer configuration", required = false)
+    @Option(names = "-c", description = "Local file that contains the indexer configuration.", required = false)
     public File config;
 
     @Option(names = "-i", description = "Local input file that contains a list of HDFS paths to WARCs to be indexed.", required = true)
@@ -71,8 +71,14 @@ public class WARCIndexerOptions {
     @Option(names = "-o", description = "HDFS folder the job should write to.", required = true)
     public String output;
 
-    @Option(names = "--dummy-run", description = "Run the indexing process but do not attempt to push data to Solr.", defaultValue = "false")
+    @Option(names = "--no-solr", description = "Run the indexing process but do not attempt to push data to Solr.", defaultValue = "false")
     public boolean dummyRun;
+
+    @Option(names = "--compress", description = "Compress the final output file(s).", defaultValue = "false")
+    public boolean compressOutput;
+
+    @Option(names = "--jsonl", description = "Output extracted data as JSONL data.", defaultValue = "false")
+    public boolean outputJSONL;
 
     // Add in Solr options:
     @Mixin

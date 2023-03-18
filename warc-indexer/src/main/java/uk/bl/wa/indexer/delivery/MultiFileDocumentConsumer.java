@@ -18,7 +18,7 @@ package uk.bl.wa.indexer.delivery;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -39,6 +39,8 @@ package uk.bl.wa.indexer.delivery;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.bl.wa.indexer.WARCIndexerCommandOptions;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 
@@ -74,9 +76,14 @@ public class MultiFileDocumentConsumer implements DocumentConsumer {
      * @throws IOException if the output file could not be created.
      */
     public MultiFileDocumentConsumer(
-            String outputFolder, Config conf, Boolean gzipOverride) throws IOException {
+            String outputFolder, Config conf, WARCIndexerCommandOptions.OutputFormat outputFormat, Boolean gzipOverride) throws IOException {
         this.gzip = gzipOverride != null && gzipOverride;
         this.rootFolder = outputFolder + (outputFolder.endsWith("/") || outputFolder.endsWith("\\") ? "" : "/");
+
+        if( outputFormat.equals(WARCIndexerCommandOptions.OutputFormat.jsonl)) {
+            throw new IllegalStateException(
+                    "Error: MultiFileDocumentConsumer does not support JSONL");
+        }
 
         createFolder(rootFolder);
         log.info("Constructed " + this);

@@ -9,7 +9,7 @@ package uk.bl.wa.solr;
  * $Id:$
  * $HeadURL:$
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -252,6 +252,41 @@ public class SolrRecord implements Serializable {
         return doc.getField(fieldname);
     }
 
+    public String getFieldAsString(String fieldname) {
+        return (String) getFieldValue(fieldname);
+    }
+
+    public List<String> getFieldAsStrings(String fieldname) {
+        ArrayList<String> strings = new ArrayList<String>();
+        SolrInputField f = this.getField(fieldname);
+        if( f != null ) {
+            for( Object o : f.getValues()) {
+                strings.add((String)o);
+            }
+            return strings;
+        } else {
+            return null;
+        }
+    }
+
+    public Long getFieldAsLong(String fieldname) {
+        String value = (String)this.getFieldValue(fieldname);
+        if( value != null ) {
+            return Long.parseLong(value);
+        } else {
+            return null;
+        }
+    }
+
+    public Integer getFieldAsInteger(String fieldname) {
+        String value = (String)this.getFieldValue(fieldname);
+        if( value != null ) {
+            return Integer.parseInt(value);
+        } else {
+            return null;
+        }
+    }
+
     /**
      * @param fieldname
      * @return
@@ -454,9 +489,16 @@ public class SolrRecord implements Serializable {
     public Memento toMemento() {
         Memento m = new Memento();
 
-        m.setId((String)this.getFieldValue(SolrFields.ID));
-        m.setUrl((String)this.getFieldValue(SolrFields.SOLR_URL));
-        m.setRecordType((String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
+        m.setId(this.getFieldAsString(SolrFields.ID));
+        m.setAccessTerms(this.getFieldAsString(SolrFields.ACCESS_TERMS));
+        m.setAuthor(this.getFieldAsString(SolrFields.SOLR_AUTHOR));
+        m.setCategory(this.getFieldAsString(SolrFields.SOLR_CATEGORY));
+        m.setCollection(this.getFieldAsString(SolrFields.COLLECTION));
+        m.setCollections(this.getFieldAsStrings(SolrFields.SOLR_COLLECTIONS));
+        m.setComments(this.getFieldAsStrings(SolrFields.SOLR_COMMENTS));
+        m.setDescription(this.getFieldAsString(SolrFields.SOLR_DESCRIPTION));
+        m.setKeywords(this.getFieldAsStrings(SolrFields.SOLR_KEYWORDS));
+        m.setLicenceUrl(this.getFieldAsStrings(SolrFields.LICENSE_URL));
 
         String statusCode = (String)this.getFieldValue(SolrFields.SOLR_STATUS_CODE);
         if( statusCode != null ) m.setStatusCode(Integer.parseInt(statusCode));
@@ -467,15 +509,64 @@ public class SolrRecord implements Serializable {
         if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
         m.setContentLanguage((String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
 
-        m.setContentType((String)this.getFieldValue(SolrFields.SOLR_CONTENT_TYPE));
-        m.setContentTypeDroid((String)this.getFieldValue(SolrFields.CONTENT_TYPE_DROID));
-        m.setContentTypeExt((String)this.getFieldValue(SolrFields.CONTENT_TYPE_EXT));
-        m.setContentTypeFull((String)this.getFieldValue(SolrFields.FULL_CONTENT_TYPE));
-        m.setContentTypeNorm((String)this.getFieldValue(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
-        m.setContentTypeServed((String)this.getFieldValue(SolrFields.CONTENT_TYPE_SERVED));
-        m.setContentTypeTika((String)this.getFieldValue(SolrFields.CONTENT_TYPE_TIKA));
-        m.setContentTypeVersion((String)this.getFieldValue(SolrFields.CONTENT_VERSION));
+        m.setElementsUsed(this.getFieldAsStrings(SolrFields.ELEMENTS_USED));
+        m.setHash(this.getFieldAsString(SolrFields.HASH));
+        m.setWaybackDate(this.getFieldAsLong(SolrFields.WAYBACK_DATE));
+        m.setCrawlDate(this.getFieldAsString(SolrFields.CRAWL_DATE));
+        m.setLastModified(this.getFieldAsString(SolrFields.LAST_MODIFIED));
 
+        m.setUrlNorm(this.getFieldAsString(SolrFields.SOLR_URL_NORMALISED));
+        m.setUrlPath(this.getFieldAsString(SolrFields.SOLR_URL_PATH));
+        m.setUrl(this.getFieldAsString(SolrFields.SOLR_URL));
+        m.setUrlType(this.getFieldAsString(SolrFields.SOLR_URL_TYPE));
+        m.setDomain(this.getFieldAsString(SolrFields.DOMAIN));
+        m.setHost(this.getFieldAsString(SolrFields.SOLR_HOST));
+        m.setHostSurt(this.getFieldAsString(SolrFields.SOLR_HOST_SURT));
+        m.setPublicSuffix(this.getFieldAsString(SolrFields.PUBLIC_SUFFIX));
+
+        m.setResourcename(this.getFieldAsString(SolrFields.RESOURCE_NAME));
+
+        m.setImageColours(this.getFieldAsStrings(SolrFields.IMAGE_COLOURS));
+        m.setImageDominantColour(this.getFieldAsString(SolrFields.IMAGE_DOMINANT_COLOUR));
+        m.setImageFacesCount(this.getFieldAsInteger(SolrFields.IMAGE_FACES_COUNT));
+        m.setImageFaces(this.getFieldAsStrings(SolrFields.IMAGE_FACES));
+        m.setImageHeight(this.getFieldAsLong(SolrFields.IMAGE_HEIGHT));
+        m.setImageWidth(this.getFieldAsLong(SolrFields.IMAGE_WIDTH));
+        m.setImageSize(this.getFieldAsLong(SolrFields.IMAGE_SIZE));
+
+        m.setLinksImages(this.getFieldAsStrings(SolrFields.SOLR_LINKS_IMAGES));
+        m.setLinksDomains(this.getFieldAsStrings(SolrFields.SOLR_LINKS_DOMAINS));
+        m.setLinksHosts(this.getFieldAsStrings(SolrFields.SOLR_LINKS_HOSTS));
+        m.setLinksHostsSurts(this.getFieldAsStrings(SolrFields.SOLR_LINKS_HOSTS_SURTS));
+        m.setLinksPublicSuffixes(this.getFieldAsStrings(SolrFields.SOLR_LINKS_PUBLIC_SUFFIXES));
+        m.setLinks(this.getFieldAsStrings(SolrFields.SOLR_LINKS));
+
+        m.setLocations(this.getFieldAsStrings(SolrFields.LOCATIONS));
+
+        m.setParseErrors(this.getFieldAsStrings(SolrFields.PARSE_ERROR));
+        m.setPdfPdfaErrors(this.getFieldAsStrings(SolrFields.PDFA_ERRORS));
+        // FIXME m.setPdfPdfaIsValid(String pdfPdfaIsValid);
+
+        m.setPostcodeDistrict(this.getFieldAsStrings(SolrFields.POSTCODE_DISTRICT));
+        m.setPostcode(this.getFieldAsStrings(SolrFields.POSTCODE));
+
+        m.setPublicationDate(this.getFieldAsString(SolrFields.PUBLICATION_DATE));
+        m.setPublicationYear(this.getFieldAsInteger(SolrFields.PUBLICATION_YEAR));
+
+        m.setRecordType(this.getFieldAsString(SolrFields.SOLR_RECORD_TYPE));
+
+        m.setServer(this.getFieldAsStrings(SolrFields.SERVER));
+
+        m.setStatusCode(this.getFieldAsInteger(SolrFields.SOLR_STATUS_CODE));
+
+        m.setGenerator(this.getFieldAsStrings(SolrFields.GENERATOR));
+
+        m.setRedirectToNorm(this.getFieldAsString(SolrFields.REDIRECT_TO_NORM));
+
+        m.setSourceFilePath(this.getFieldAsString(SolrFields.SOURCE_FILE_PATH));
+        m.setSourceFileOffset(this.getFieldAsLong(SolrFields.SOURCE_FILE_OFFSET));
+        m.setSourceFile(this.getFieldAsString(SolrFields.SOURCE_FILE));
+        
         return m;
     }
 

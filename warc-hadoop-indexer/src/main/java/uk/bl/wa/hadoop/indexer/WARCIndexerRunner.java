@@ -4,7 +4,7 @@ package uk.bl.wa.hadoop.indexer;
  * #%L
  * warc-hadoop-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -31,6 +31,7 @@ import java.time.Instant;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.IntWritable;
+import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapred.FileInputFormat;
 import org.apache.hadoop.mapred.FileOutputFormat;
@@ -41,6 +42,9 @@ import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 import org.apache.zookeeper.KeeperException;
+//import org.apache.parquet.avro.AvroWriteSupport;
+//import org.apache.parquet.hadoop.mapred.DeprecatedParquetOutputFormat;
+//import org.apache.avro.reflect.ReflectData;
 
 import com.typesafe.config.Config;
 import com.typesafe.config.ConfigFactory;
@@ -51,6 +55,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 import picocli.CommandLine.ParseResult;
+//import uk.bl.wa.Memento;
 import uk.bl.wa.hadoop.ArchiveFileInputFormat;
 import uk.bl.wa.solr.SolrWebServer;
 import uk.bl.wa.solr.SolrWebServer.SolrOptions;
@@ -92,7 +97,11 @@ public class WARCIndexerRunner extends Configured implements Tool {
         if (opts.config != null) {
             index_conf = ConfigFactory.parseFile(opts.config);
         } else {
-            index_conf = ConfigFactory.load();
+            if( opts.outputJSONL ) {
+                index_conf = ConfigFactory.load("dataset-generation");
+            } else {
+                index_conf = ConfigFactory.load();
+            }
         }
         if (opts.dump) {
             ConfigPrinter.print(index_conf);
@@ -132,6 +141,10 @@ public class WARCIndexerRunner extends Configured implements Tool {
                 + " input files.");
 
         FileOutputFormat.setOutputPath(conf, new Path(opts.output));
+        if( opts.compressOutput) {
+            FileOutputFormat.setCompressOutput(conf, true);
+            FileOutputFormat.setOutputCompressorClass(conf, org.apache.hadoop.io.compress.GzipCodec.class);
+        }
 
         conf.setJobName(
                 "WARCIndexer " + opts.input + " @ " + Instant.now().toString());
@@ -139,24 +152,33 @@ public class WARCIndexerRunner extends Configured implements Tool {
         conf.setMapperClass(WARCIndexerMapper.class);
         conf.setReducerClass(WARCIndexerReducer.class);
         conf.setOutputFormat(TextOutputFormat.class);
+        // Fragments of direct Parquet support:
+        //conf.setOutputFormat(DeprecatedParquetOutputFormat.class);
+        //DeprecatedParquetOutputFormat.setWriteSupportClass(conf, AvroWriteSupport.class);
+        //AvroWriteSupport.setSchema(conf, ReflectData.AllowNull.get().getSchema(Memento.class));
 
         // Compress the output from the maps, to cut down temp space
         // requirements between map and reduce.
         conf.setBoolean("mapreduce.map.output.compress", true); // Wrong syntax
         // for 0.20.x ?
         conf.set("mapred.compress.map.output", "true");
-        // conf.set("mapred.map.output.compression.codec",
-        // "org.apache.hadoop.io.compress.GzipCodec");
+        // Support compression:
+        //conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec");
         // Ensure the JARs we provide take precedence over ones from Hadoop:
         conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
 
         conf.setBoolean("mapred.output.oai-pmh", opts.xml);
 
         conf.setOutputKeyClass(Text.class);
-        conf.setOutputValueClass(Text.class);
+        conf.setOutputValueClass(NullWritable.class);
+        // Fragments of direct Parquet support:
+        //conf.setOutputValueClass(Memento.class);
         conf.setMapOutputKeyClass(IntWritable.class);
         conf.setMapOutputValueClass(WritableSolrRecord.class);
         conf.setNumReduceTasks(numReducers);
+
+
+
     }
 
     /**

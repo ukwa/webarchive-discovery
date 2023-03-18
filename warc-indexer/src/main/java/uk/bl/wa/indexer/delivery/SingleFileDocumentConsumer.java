@@ -18,7 +18,7 @@ package uk.bl.wa.indexer.delivery;
  * #%L
  * warc-indexer
  * %%
- * Copyright (C) 2013 - 2022 The webarchive-discovery project contributors
+ * Copyright (C) 2013 - 2023 The webarchive-discovery project contributors
  * %%
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as
@@ -39,6 +39,8 @@ package uk.bl.wa.indexer.delivery;
 import com.typesafe.config.Config;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import uk.bl.wa.indexer.WARCIndexerCommandOptions;
 import uk.bl.wa.solr.SolrRecord;
 
 import java.io.*;
@@ -56,6 +58,7 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
 
     private final boolean gzip;
     private final String outputFolder;
+    private final WARCIndexerCommandOptions.OutputFormat outputFormat;
 
     private String filename = null;
     private Writer out = null;
@@ -71,11 +74,12 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
      * @throws IOException if the output file could not be created.
      */
     public SingleFileDocumentConsumer(
-            String outputFolder, Config conf, Boolean gzipOverride,
+            String outputFolder, Config conf, WARCIndexerCommandOptions.OutputFormat outputFormat, Boolean gzipOverride,
             Integer maxDocumentsOverride, Long maxBytesOverride) throws IOException {
         super(conf, maxDocumentsOverride, maxBytesOverride, true); // Commit is implicit
         gzip = gzipOverride != null && gzipOverride;
         this.outputFolder = outputFolder + (outputFolder.endsWith("/") || outputFolder.endsWith("\\") ? "" : "/");
+        this.outputFormat = outputFormat;
 
         Path outPath = new File(this.outputFolder).toPath();
         if (!Files.exists(outPath)) {
@@ -94,7 +98,12 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
             throw new IllegalStateException("Flush called but no output file is defined");
         }
         for (SolrRecord record: docs) {
-            record.writeXml(out);
+            if( WARCIndexerCommandOptions.OutputFormat.xml.equals(outputFormat)) {
+                record.writeXml(out);
+            } else {
+                out.write(record.toMemento().toJSON());
+                out.write("\n");
+            }
         }
         // "</add>" is not appended, as it only makes sense on close, so this is not strictly correct behaviour
         // as defined in DocumentConsumer#flush. Not much to do about that.
@@ -114,13 +123,20 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
     @Override
     public void startWARC(String warcfile) throws IOException {
         File inFile = new File(warcfile);
-        filename = outputFolder + inFile.getName() + ".xml" + (gzip ? ".gz" : "");
+        if( WARCIndexerCommandOptions.OutputFormat.xml.equals(outputFormat)) {
+            filename = outputFolder + inFile.getName() + ".xml" + (gzip ? ".gz" : "");
+        } else {
+            filename = outputFolder + inFile.getName() + ".jsonl" + (gzip ? ".gz" : "");
+        }
         out = gzip ?
                 new OutputStreamWriter(new GZIPOutputStream(new BufferedOutputStream(
                         new FileOutputStream(filename))), StandardCharsets.UTF_8) :
                 new OutputStreamWriter(new BufferedOutputStream(
                         new FileOutputStream(filename)), StandardCharsets.UTF_8);
-        out.write("<add>");
+
+        if( WARCIndexerCommandOptions.OutputFormat.xml.equals(outputFormat)) {
+            out.write("<add>");
+        }
     }
 
     @Override
@@ -129,7 +145,9 @@ public class SingleFileDocumentConsumer extends BufferedDocumentConsumer {
             return;
         }
         flush(); // Ensure all buffered documents are written
-        out.write("</add>");
+        if( WARCIndexerCommandOptions.OutputFormat.xml.equals(outputFormat)) {
+            out.write("</add>");
+        }
         out.flush();
         out.close();
 
