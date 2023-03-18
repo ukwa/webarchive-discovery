@@ -500,14 +500,21 @@ public class SolrRecord implements Serializable {
         m.setKeywords(this.getFieldAsStrings(SolrFields.SOLR_KEYWORDS));
         m.setLicenceUrl(this.getFieldAsStrings(SolrFields.LICENSE_URL));
 
-        String statusCode = (String)this.getFieldValue(SolrFields.SOLR_STATUS_CODE);
-        if( statusCode != null ) m.setStatusCode(Integer.parseInt(statusCode));
-        
-        String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
-        if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
-        String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);
-        if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
-        m.setContentLanguage((String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
+        m.setContentText(this.getFieldAsString(SolrFields.SOLR_EXTRACTED_TEXT));
+        m.setContentTextOriginalEncoding(this.getFieldAsString(SolrFields.CONTENT_ENCODING));
+        m.setContentFirstBytes(this.getFieldAsString(SolrFields.CONTENT_FIRST_BYTES));
+        m.setContentLanguage(this.getFieldAsString(SolrFields.CONTENT_LANGUAGE));
+        m.setContentLength(this.getFieldAsLong(SolrFields.CONTENT_LENGTH));
+        m.setContentTextLength(this.getFieldAsLong(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH));
+
+        m.setContentTypeDroid(this.getFieldAsString(SolrFields.CONTENT_TYPE_DROID));
+        m.setContentTypeExt(this.getFieldAsString(SolrFields.CONTENT_TYPE_EXT));
+        m.setContentTypeFull(this.getFieldAsString(SolrFields.FULL_CONTENT_TYPE));
+        m.setContentTypeNorm(this.getFieldAsString(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
+        m.setContentTypeServed(this.getFieldAsString(SolrFields.CONTENT_TYPE_SERVED));
+        m.setContentTypeTika(this.getFieldAsString(SolrFields.CONTENT_TYPE_TIKA));
+        m.setContentType(this.getFieldAsString(SolrFields.SOLR_CONTENT_TYPE));
+        m.setContentTypeVersion(this.getFieldAsString(SolrFields.CONTENT_VERSION));
 
         m.setElementsUsed(this.getFieldAsStrings(SolrFields.ELEMENTS_USED));
         m.setHash(this.getFieldAsString(SolrFields.HASH));
