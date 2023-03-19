@@ -139,7 +139,7 @@
       <dependency>
          <groupId>eu.scape-project.nanite</groupId>
          <artifactId>nanite-core</artifactId>
-         <version>1.4.1-97</version>
+         <version>1.5.0-111</version>
          <exclusions>
             <exclusion>
                <groupId>org.apache.cxf</groupId>

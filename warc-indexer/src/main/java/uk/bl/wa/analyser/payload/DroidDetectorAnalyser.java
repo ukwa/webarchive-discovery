@@ -3,6 +3,8 @@
  */
 package uk.bl.wa.analyser.payload;
 
+import java.io.IOException;
+
 /*
  * #%L
  * warc-indexer
@@ -43,7 +45,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
-import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
+import uk.gov.nationalarchives.droid.core.SignatureParseException;
 
 /**
  * @author anj
@@ -62,8 +64,8 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
         // Attempt to set up Droid:
         try {
             dd = new DroidDetector();
-        } catch (CommandExecutionException e) {
-            e.printStackTrace();
+        } catch (IOException | SignatureParseException e) {
+            log.error("Exception during DroidDetector setup.", e);
             dd = null;
         }
         Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid",
