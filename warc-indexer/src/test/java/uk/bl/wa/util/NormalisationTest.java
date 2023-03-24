@@ -24,7 +24,6 @@ package uk.bl.wa.util;
 
 import static org.junit.Assert.assertEquals;
 
-import com.mchange.util.AssertException;
 import org.apache.commons.httpclient.URIException;
 import org.junit.Test;
 

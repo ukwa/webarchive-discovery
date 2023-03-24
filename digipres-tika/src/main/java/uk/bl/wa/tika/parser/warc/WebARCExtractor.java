@@ -35,6 +35,7 @@ import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.archive.io.ArchiveReader;
@@ -87,7 +88,7 @@ public class WebARCExtractor {
         XHTMLContentHandler xhtml = new XHTMLContentHandler(handler, metadata);
         xhtml.startDocument();
 
-        System.out.println("GO: "+metadata.get( Metadata.RESOURCE_NAME_KEY ));
+        System.out.println("GO: "+metadata.get( TikaCoreProperties.RESOURCE_NAME_KEY ));
         // Open the ARCReader:
         // This did not work as assumes compressed:
         // ArchiveReaderFactory.get("name.arc", stream, true);
@@ -120,7 +121,7 @@ public class WebARCExtractor {
                 // Now parse it...
                 // Setup
                 Metadata entrydata = new Metadata();
-                entrydata.set(Metadata.RESOURCE_NAME_KEY, name );
+                entrydata.set(TikaCoreProperties.RESOURCE_NAME_KEY, name );
                 // Use the delegate parser to parse the compressed document
                 if (extractor.shouldParseEmbedded(entrydata)) {
                     extractor.parseEmbedded(is, xhtml, entrydata, true);

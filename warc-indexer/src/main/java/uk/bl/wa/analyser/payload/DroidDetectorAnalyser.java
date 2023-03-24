@@ -3,6 +3,8 @@
  */
 package uk.bl.wa.analyser.payload;
 
+import java.io.IOException;
+
 /*
  * #%L
  * warc-indexer
@@ -30,6 +32,7 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.archive.io.ArchiveRecordHeader;
 import org.archive.url.UsableURI;
@@ -42,7 +45,7 @@ import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Instrument;
 import uk.bl.wa.util.Normalisation;
-import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
+import uk.gov.nationalarchives.droid.core.SignatureParseException;
 
 /**
  * @author anj
@@ -61,8 +64,8 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
         // Attempt to set up Droid:
         try {
             dd = new DroidDetector();
-        } catch (CommandExecutionException e) {
-            e.printStackTrace();
+        } catch (IOException | SignatureParseException e) {
+            log.error("Exception during DroidDetector setup.", e);
             dd = null;
         }
         Instrument.createSortedStat("WARCPayloadAnalyzers.analyze#droid",
@@ -107,7 +110,7 @@ public class DroidDetectorAnalyser extends AbstractPayloadAnalyser {
                     // Droid seems unhappy about spaces in filenames, so hack to
                     // avoid:
                     String cleanUrl = uuri.getName().replace(" ", "+");
-                    metadata.set(Metadata.RESOURCE_NAME_KEY, cleanUrl);
+                    metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, cleanUrl);
                 }
                 // Run Droid:
                 MediaType mt = dd.detect(tikainput, metadata);

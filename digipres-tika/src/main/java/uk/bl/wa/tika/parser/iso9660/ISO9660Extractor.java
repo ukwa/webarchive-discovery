@@ -39,12 +39,13 @@ import net.didion.loopy.iso9660.ISO9660FileEntry;
 import net.didion.loopy.iso9660.ISO9660FileSystem;
 import net.didion.loopy.iso9660.ISO9660VolumeDescriptorSet;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.extractor.EmbeddedDocumentExtractor;
 import org.apache.tika.extractor.ParsingEmbeddedDocumentExtractor;
-import org.apache.tika.io.IOUtils;
 import org.apache.tika.io.TemporaryResources;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.parser.ParseContext;
 import org.apache.tika.sax.XHTMLContentHandler;
 import org.xml.sax.ContentHandler;
@@ -222,7 +223,7 @@ public class ISO9660Extractor {
                          */
                         // Setup
                         Metadata entrydata = new Metadata();
-                        entrydata.set(Metadata.RESOURCE_NAME_KEY, key);
+                        entrydata.set(TikaCoreProperties.RESOURCE_NAME_KEY, key);
                         // Use the delegate parser to parse the compressed document
                         if (extractor.shouldParseEmbedded(entrydata)) {
                             extractor.parseEmbedded(stream, xhtml, entrydata, true);

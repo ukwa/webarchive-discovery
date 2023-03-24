@@ -29,7 +29,8 @@ package uk.bl.wa.util;
 
 import java.io.InputStream;
 
-import org.apache.tika.io.CloseShieldInputStream;
+import org.apache.commons.io.input.CloseShieldInputStream;
+
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>

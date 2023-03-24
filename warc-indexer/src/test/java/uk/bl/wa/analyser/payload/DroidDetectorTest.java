@@ -33,11 +33,12 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.junit.Before;
 import org.junit.Test;
 
 import uk.bl.wa.nanite.droid.DroidDetector;
-import uk.gov.nationalarchives.droid.command.action.CommandExecutionException;
+import uk.gov.nationalarchives.droid.core.SignatureParseException;
 
 /**
  * @author Andrew Jackson <Andrew.Jackson@bl.uk>
@@ -48,10 +49,12 @@ public class DroidDetectorTest {
     private DroidDetector dd;
 
     /**
+     * @throws SignatureParseException 
+     * @throws IOException 
      * @throws java.lang.Exception
      */
     @Before
-    public void setUp() throws Exception {
+    public void setUp() throws IOException, SignatureParseException {
         dd = new DroidDetector();
 
     }
@@ -64,20 +67,20 @@ public class DroidDetectorTest {
      */
     @Test
     public void testBasicDetection() throws IOException,
-            CommandExecutionException, URISyntaxException {
+            URISyntaxException {
         this.runDroids("cc.png", "image/png");
         this.runDroids("cc0.mp3", "audio/mpeg");
     }
 
     private void runDroids(String filename, String expected) throws IOException,
-            CommandExecutionException, URISyntaxException {
+            URISyntaxException {
 
         // Set up File and Metadata:
         String filePath = this.getClass().getClassLoader().getResource(filename)
                 .getPath();
         File file = new File(filePath);
         Metadata metadata = new Metadata();
-        metadata.set(Metadata.RESOURCE_NAME_KEY, file.getName());
+        metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, file.getName());
 
         // Test identification two ways:
         assertEquals("ID of " + filename + " as File, failed.", expected, dd
