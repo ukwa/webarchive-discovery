@@ -26,8 +26,10 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 
+import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileUtil;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.GlobFilter;
 import org.apache.hadoop.mapred.JobConf;
 import org.apache.hadoop.mapred.OutputLogFilter;
 import org.apache.hadoop.util.ToolRunner;
@@ -48,7 +50,7 @@ public class OutlinkExtractorTest extends MapReduceTestBaseClass {
         log.info("Checking input file is present...");
         // Check that the input file is present:
         Path[] inputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(input, new OutputLogFilter()));
+                getFileSystem().listStatus(input));
         Assert.assertEquals(2, inputFiles.length);
 
         // Set up arguments for the job:
@@ -61,14 +63,14 @@ public class OutlinkExtractorTest extends MapReduceTestBaseClass {
 
         // run job
         log.info("Setting up job config...");
-        JobConf conf = this.mrCluster.createJobConf();
+        Configuration conf = this.mrCluster.getConfig();
         ToolRunner.run(conf, job, args);
         log.info("Job finished, checking the results...");
 
         // check the output
         Path[] outputFiles = FileUtil.stat2Paths(
-                getFileSystem().listStatus(output, new OutputLogFilter()));
-        // Assert.assertEquals(1, outputFiles.length);
+                getFileSystem().listStatus(output, new GlobFilter("part-*")));
+        Assert.assertEquals(1, outputFiles.length);
 
         // Check contents of the output:
         for (Path output : outputFiles) {

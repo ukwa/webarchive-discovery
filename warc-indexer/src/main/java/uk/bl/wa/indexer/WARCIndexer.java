@@ -555,7 +555,7 @@ public class WARCIndexer {
      * Assigns user-specified fields (institution, collection, collection ID) to the provided Solr document.
      */
     private void setUserFields(SolrRecord solr, String archiveName) {
-        solr.setField(SolrFields.SOURCE_FILE, archiveName);
+        solr.setField(SolrFields.SOURCE_FILE_PATH, archiveName);
         // -----------------------------------------------------
         // Add user supplied Archive-It Solr fields and values:
         // -----------------------------------------------------

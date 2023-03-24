@@ -83,8 +83,9 @@ public class SolrRecord implements Serializable {
     public SolrRecord(Map<String, FieldAdjuster> contentAdjusters, FieldAdjuster defaultContentAdjuster,
                       String filename, ArchiveRecordHeader header) {
         this(contentAdjusters, defaultContentAdjuster);
-        setField(SolrFields.ID, "exception-at-" + filename + "@" + header.getOffset());
+        setField(SolrFields.ID, "source:" + filename + "@" + header.getOffset());
         setField(SolrFields.SOURCE_FILE, filename);
+        setField(SolrFields.SOURCE_FILE_PATH, filename);
         setField(SolrFields.SOURCE_FILE_OFFSET, "" + header.getOffset());
         setField(SolrFields.SOLR_URL, Normalisation.sanitiseWARCHeaderValue(header.getUrl()));
         setField(SolrFields.SOLR_URL_TYPE, SolrFields.SOLR_URL_TYPE_UNKNOWN);
@@ -499,21 +500,14 @@ public class SolrRecord implements Serializable {
         m.setKeywords(this.getFieldAsStrings(SolrFields.SOLR_KEYWORDS));
         m.setLicenceUrl(this.getFieldAsStrings(SolrFields.LICENSE_URL));
 
-        m.setContentText(this.getFieldAsString(SolrFields.SOLR_EXTRACTED_TEXT));
-        m.setContentTextOriginalEncoding(this.getFieldAsString(SolrFields.CONTENT_ENCODING));
-        m.setContentFirstBytes(this.getFieldAsString(SolrFields.CONTENT_FIRST_BYTES));
-        m.setContentLanguage(this.getFieldAsString(SolrFields.CONTENT_LANGUAGE));
-        m.setContentLength(this.getFieldAsLong(SolrFields.CONTENT_LENGTH));
-        m.setContentTextLength(this.getFieldAsLong(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH));
-
-        m.setContentTypeDroid(this.getFieldAsString(SolrFields.CONTENT_TYPE_DROID));
-        m.setContentTypeExt(this.getFieldAsString(SolrFields.CONTENT_TYPE_EXT));
-        m.setContentTypeFull(this.getFieldAsString(SolrFields.FULL_CONTENT_TYPE));
-        m.setContentTypeNorm(this.getFieldAsString(SolrFields.SOLR_NORMALISED_CONTENT_TYPE));
-        m.setContentTypeServed(this.getFieldAsString(SolrFields.CONTENT_TYPE_SERVED));
-        m.setContentTypeTika(this.getFieldAsString(SolrFields.CONTENT_TYPE_TIKA));
-        m.setContentType(this.getFieldAsString(SolrFields.SOLR_CONTENT_TYPE));
-        m.setContentTypeVersion(this.getFieldAsString(SolrFields.CONTENT_VERSION));
+        String statusCode = (String)this.getFieldValue(SolrFields.SOLR_STATUS_CODE);
+        if( statusCode != null ) m.setStatusCode(Integer.parseInt(statusCode));
+        
+        String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
+        if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
+        String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);
+        if( textLength != null ) m.setContentTextLength(Long.parseLong(textLength));
+        m.setContentLanguage((String)this.getFieldValue(SolrFields.CONTENT_LANGUAGE));
 
         m.setElementsUsed(this.getFieldAsStrings(SolrFields.ELEMENTS_USED));
         m.setHash(this.getFieldAsString(SolrFields.HASH));
@@ -586,7 +580,7 @@ public class SolrRecord implements Serializable {
         m.addMetadata(SolrFields.ID, (String)this.getFieldValue(SolrFields.ID));
         m.addMetadata(SolrFields.SOLR_URL, (String)this.getFieldValue(SolrFields.SOLR_URL));
         m.addMetadata(SolrFields.SOLR_RECORD_TYPE, (String)this.getFieldValue(SolrFields.SOLR_RECORD_TYPE));
-
+        
         //String contentLength = (String)this.getFieldValue(SolrFields.CONTENT_LENGTH);
         //if( contentLength != null ) m.setContentLength(Long.parseLong(contentLength));
         //String textLength = (String)this.getFieldValue(SolrFields.SOLR_EXTRACTED_TEXT_LENGTH);

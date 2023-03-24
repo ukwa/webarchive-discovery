@@ -52,14 +52,16 @@
       <url>https://github.com/ukwa/webarchive-discovery.git</url>
    </scm>
    <properties>
-      <solr.version>8.7.0</solr.version>
+      <solr.version>8.11.0</solr.version>
       <webarchive.commons.version>1.1.9</webarchive.commons.version>
       <jdk.version>1.8</jdk.version>
-      <hadoop.version>0.20.2</hadoop.version>
+      <hadoop.version>3.3.4</hadoop.version>
+      <spark.version>3.3.0</spark.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>1024</ram>
-      <jackson.version>2.11.3</jackson.version>
-      <slf4j.version.override>1.5.11</slf4j.version.override> <!-- last version compatible with ancient Hadoop -->
+      <jackson.version>2.13.3</jackson.version>
+      <guava.version>18.0</guava.version>
+      <slf4j.version.override>1.7.32</slf4j.version.override> <!-- last version compatible with Hadoop/Spark -->
       <log4j.version>2.19.0</log4j.version>
    </properties>
    <build>
@@ -85,8 +87,7 @@
                <!-- Show 100% of the lines from the stack trace (doesn't 
                   work) -->
                <trimStackTrace>false</trimStackTrace>
-               <forkMode>always</forkMode>
-               <argLine>-Xms${ram}m -Xmx${ram}m</argLine>
+               <argLine>-Xms${ram}m -Xmx${ram}m --illegal-access=warn</argLine>
             </configuration>
             <executions>
                <execution>
@@ -168,7 +169,7 @@
    </build>
 
    <dependencies>
-      <!--        Logging-->
+      <!-- Logging and testing -->
       <dependency>
          <groupId>org.slf4j</groupId>
          <artifactId>slf4j-api</artifactId>
@@ -179,5 +180,11 @@
          <artifactId>jcl-over-slf4j</artifactId>
          <version>${slf4j.version.override}</version>
       </dependency>
+      <dependency>
+         <groupId>junit</groupId>
+         <artifactId>junit</artifactId>
+         <version>4.11</version>
+         <scope>test</scope>
+       </dependency>      
    </dependencies>
 </project>
