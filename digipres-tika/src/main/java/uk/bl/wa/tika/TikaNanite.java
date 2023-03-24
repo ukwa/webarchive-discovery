@@ -35,6 +35,7 @@ import org.apache.tika.Tika;
 import org.apache.tika.exception.TikaException;
 import org.apache.tika.io.TikaInputStream;
 import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
 import org.apache.tika.mime.MediaType;
 import org.apache.tika.parser.AutoDetectParser;
 import org.apache.tika.parser.CompositeParser;
@@ -75,7 +76,7 @@ public class TikaNanite {
         for( String arg : args ) {
             File inputFile = new File(arg);
         Metadata metadata = new Metadata();
-        metadata.add( Metadata.RESOURCE_NAME_KEY, inputFile.toURI().toString());
+        metadata.add( TikaCoreProperties.RESOURCE_NAME_KEY, inputFile.toURI().toString());
         // Instream
         InputStream stream = TikaInputStream.get(inputFile);
         // Detect
@@ -135,7 +136,7 @@ public class TikaNanite {
             }
             
             System.out.println("----");
-            System.out.println("resourceName = "+metadata.get(Metadata.RESOURCE_NAME_KEY));
+            System.out.println("resourceName = "+metadata.get(TikaCoreProperties.RESOURCE_NAME_KEY));
             System.out.println("----");
             String[] names = metadata.names();
             Arrays.sort(names);

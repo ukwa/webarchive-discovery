@@ -123,7 +123,7 @@ public class LanguageIdentifier {
     private static InputStream getResourceAsStream(String path) {
         InputStream is;
         return (is = Thread.currentThread().getContextClassLoader().getResourceAsStream(path)) != null ? is :
-                org.apache.tika.language.LanguageIdentifier.class.getResourceAsStream(path);
+                org.apache.tika.language.detect.LanguageDetector.class.getResourceAsStream(path);
         //return Thread.currentThread().getContextClassLoader().getResourceAsStream(path);
     }
 

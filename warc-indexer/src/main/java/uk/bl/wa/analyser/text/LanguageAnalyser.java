@@ -27,9 +27,9 @@ package uk.bl.wa.analyser.text;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.tika.langdetect.OptimaizeLangDetector;
 import org.apache.tika.language.detect.LanguageDetector;
 import org.apache.tika.language.detect.LanguageResult;
+import org.apache.tika.langdetect.optimaize.OptimaizeLangDetector;
 
 import com.typesafe.config.Config;
 
