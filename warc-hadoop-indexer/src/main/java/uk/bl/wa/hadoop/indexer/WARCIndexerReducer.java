@@ -104,8 +104,10 @@ public class WARCIndexerReducer extends MapReduceBase implements
         new CommandLine(opts).parseArgs(args);
 
         // Decide between to-HDFS and to-SolrCloud indexing modes:
-        solrServer = new SolrWebServer(opts.solr).getSolrServer();
-
+        SolrOptions solrOpts = opts.solr;
+        if( solrOpts.service != null) {
+            solrServer = new SolrWebServer(solrOpts).getSolrServer();
+        }
         log.info("Initialisation complete.");
     }
 

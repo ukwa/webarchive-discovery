@@ -62,7 +62,7 @@ public class SolrWebServer {
     static class SolrOptions {
         // Must specify either one or more Solr endpoints, or Zookeeper hosts
         // and a Solr collection
-        @ArgGroup(exclusive = true, multiplicity = "1")
+        @ArgGroup(exclusive = true, multiplicity = "0..1")
         public SolrServiceOptions service;
 
         public

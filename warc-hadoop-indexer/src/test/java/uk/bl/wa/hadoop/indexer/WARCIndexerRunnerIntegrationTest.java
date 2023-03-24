@@ -71,13 +71,12 @@ public class WARCIndexerRunnerIntegrationTest extends MapReduceTestBaseClass {
         // FIXME The input file could be written by this test.
         int reducers = 1;
         String[] args = { 
-                //"--jsonl",
-                "--no-solr", 
+                "--jsonl",
+                "--compress",
+                "--no-solr",
                 "-w", 
-                "-S", "http://none", 
                 "-R",
-                ""
-                + reducers,
+                Integer.toString(reducers),
                 "-i",
                 "src/test/resources/test-inputs.txt",
                 "-o", this.output.getName() };
