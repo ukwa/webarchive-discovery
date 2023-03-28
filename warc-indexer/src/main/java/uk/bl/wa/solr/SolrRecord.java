@@ -514,6 +514,8 @@ public class SolrRecord implements Serializable {
         m.setContentTypeTika(this.getFieldAsString(SolrFields.CONTENT_TYPE_TIKA));
         m.setContentType(this.getFieldAsString(SolrFields.SOLR_CONTENT_TYPE));
         m.setContentTypeVersion(this.getFieldAsString(SolrFields.CONTENT_VERSION));
+        
+        m.setContentFuzzyHash(this.reformatSsdeep());
 
         m.setElementsUsed(this.getFieldAsStrings(SolrFields.ELEMENTS_USED));
         m.setHash(this.getFieldAsString(SolrFields.HASH));
@@ -569,11 +571,37 @@ public class SolrRecord implements Serializable {
 
         m.setRedirectToNorm(this.getFieldAsString(SolrFields.REDIRECT_TO_NORM));
 
-        m.setSourceFilePath(this.getFieldAsString(SolrFields.SOURCE_FILE_PATH));
         m.setSourceFileOffset(this.getFieldAsLong(SolrFields.SOURCE_FILE_OFFSET));
         m.setSourceFile(this.getFieldAsString(SolrFields.SOURCE_FILE));
         
         return m;
+    }
+    
+    private String reformatSsdeep() {
+        // Scan for ssdeep blocks:
+        int blockSize = -1;
+        List<String> values = new ArrayList<String>();
+        for( String key : doc.getFieldNames()) {
+            if( key.startsWith(SolrFields.SSDEEP_PREFIX)) {
+                int currentBlockSize = Integer.parseInt(key.substring(SolrFields.SSDEEP_PREFIX.length()));
+                if( blockSize == -1) {
+                    blockSize = currentBlockSize;
+                    values.add(0, doc.getFieldValue(key).toString());
+                } else if( currentBlockSize < blockSize ) {
+                    blockSize = currentBlockSize;
+                    values.add(0, doc.getFieldValue(key).toString());
+                } else {
+                    values.add(1, doc.getFieldValue(key).toString());                    
+                }
+            }
+        }
+        // Return the match:
+        if( values.size() == 2) {
+            // Reformat a-la https://ssdeep-project.github.io/ssdeep/usage.html
+            return Integer.toString(blockSize)+":"+values.get(0)+":"+values.get(1)+":"+doc.getFieldValue(SolrFields.RESOURCE_NAME);
+        }
+        // Otherwise:
+        return null;
     }
 
     public MementoRecord toMementoRecord() {

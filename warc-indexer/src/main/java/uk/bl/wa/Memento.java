@@ -242,6 +242,9 @@ public class Memento {
 
     @JsonProperty("source_file")
     private String sourceFile;
+    
+    @JsonProperty("content_fuzzy_hash")
+    private String contentFuzzyHash;
 
 
     public Memento() {
@@ -888,16 +891,6 @@ public class Memento {
     }
 
 
-    public String getSourceFilePath() {
-        return sourceFilePath;
-    }
-
-
-    public void setSourceFilePath(String sourceFilePath) {
-        this.sourceFilePath = sourceFilePath;
-    }
-
-
     public Long getSourceFileOffset() {
         return sourceFileOffset;
     }
@@ -916,6 +909,16 @@ public class Memento {
     public void setSourceFile(String sourceFile) {
         this.sourceFile = sourceFile;
     }
+
+    public String getContentFuzzyHash() {
+        return contentFuzzyHash;
+    }
+
+
+    public void setContentFuzzyHash(String contentFuzzyHash) {
+        this.contentFuzzyHash = contentFuzzyHash;
+    }
+
 
     /**
      * Convert to JSON, in a single line.
