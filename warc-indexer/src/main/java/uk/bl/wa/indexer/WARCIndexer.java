@@ -313,9 +313,11 @@ public class WARCIndexer {
                 processARCHeader(solr);
             }
 
-            if( header.getUrl() == null )
+            if( header.getUrl() == null ) {
+                // e.g. warcinfo records:
+                log.error("Skipping "+header.getHeaderValue(HEADER_KEY_TYPE)+" as there is no URL.");
                 return null;
-
+            }
             // Get the URL and ensure it conforms to the URL rules in the configuration
             // This includes stripping the URL to a max length (default 2000)
             String targetUrl = solrFactory.applyAdjustment(
