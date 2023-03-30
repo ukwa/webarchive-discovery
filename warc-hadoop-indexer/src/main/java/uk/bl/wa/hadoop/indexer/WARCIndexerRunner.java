@@ -166,6 +166,7 @@ public class WARCIndexerRunner extends Configured implements Tool {
         //conf.set("mapred.map.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec");
         // Ensure the JARs we provide take precedence over ones from Hadoop:
         conf.setBoolean("mapreduce.task.classpath.user.precedence", true);
+        conf.setBoolean("mapreduce.user.classpath.first", true);
 
         conf.setBoolean("mapred.output.oai-pmh", opts.xml);
 
