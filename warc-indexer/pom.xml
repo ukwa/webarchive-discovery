@@ -114,6 +114,12 @@
             <groupId>uk.bl.wa.sentimentalj</groupId>
             <artifactId>sentimentalj</artifactId>
             <version>1.0.2</version>
+            <exclusions>
+            	<exclusion>
+            		<groupId>log4j</groupId>
+            		<artifactId>log4j</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.brotli</groupId>
@@ -129,6 +135,12 @@
             <groupId>uk.bl.wa.bitwiser</groupId>
             <artifactId>bitwiser</artifactId>
             <version>0.0.2</version>
+            <exclusions>
+            	<exclusion>
+            		<groupId>log4j</groupId>
+            		<artifactId>log4j</artifactId>
+            	</exclusion>
+            </exclusions>
         </dependency>
         <dependency>
             <groupId>org.apache.pdfbox</groupId>
@@ -232,6 +244,10 @@
                 <exclusion>
                     <artifactId>guava</artifactId>
                     <groupId>com.google.guava</groupId>
+                </exclusion>
+                <exclusion>
+                	<groupId>log4j</groupId>
+                	<artifactId>log4j</artifactId>
                 </exclusion>
             </exclusions>
         </dependency>
