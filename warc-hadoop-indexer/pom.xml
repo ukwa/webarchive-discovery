@@ -55,6 +55,11 @@
             <artifactId>log4j-core</artifactId>
             <version>${log4j.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-log4j12</artifactId>
+            <version>${slf4j.version.override}</version>
+        </dependency>
 
         <dependency>
             <groupId>uk.bl.wa.discovery</groupId>
