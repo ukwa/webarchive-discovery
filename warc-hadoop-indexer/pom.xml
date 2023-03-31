@@ -46,22 +46,6 @@
 	<dependencies>
 
         <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-1.2-api</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>${log4j.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${slf4j.version.override}</version>
-        </dependency>
-
-        <dependency>
             <groupId>uk.bl.wa.discovery</groupId>
             <artifactId>warc-hadoop-recordreaders</artifactId>
             <version>3.3.0-SNAPSHOT</version>
@@ -77,12 +61,6 @@
 			<groupId>uk.bl.wa.discovery</groupId>
 			<artifactId>warc-indexer</artifactId>
 			<version>3.3.0-SNAPSHOT</version>
-			<exclusions>
-				<exclusion>
-					<groupId>org.apache.logging.log4j</groupId>
-					<artifactId>*</artifactId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 		   <groupId>org.apache.solr</groupId>

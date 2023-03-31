@@ -168,16 +168,21 @@
    </build>
 
    <dependencies>
-      <!-- Logging-->
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>slf4j-api</artifactId>
-         <version>${slf4j.version.override}</version>
-      </dependency>
-      <dependency>
-         <groupId>org.slf4j</groupId>
-         <artifactId>jcl-over-slf4j</artifactId>
-         <version>${slf4j.version.override}</version>
-      </dependency>
+	    <!-- Logging-->
+	    <dependency>
+	       <groupId>org.slf4j</groupId>
+	       <artifactId>slf4j-api</artifactId>
+	       <version>${slf4j.version.override}</version>
+	    </dependency>
+	    <dependency>
+	       <groupId>org.slf4j</groupId>
+	       <artifactId>jcl-over-slf4j</artifactId>
+	       <version>${slf4j.version.override}</version>
+  	    </dependency>
+		<dependency>
+		    <groupId>org.slf4j</groupId>
+		    <artifactId>slf4j-simple</artifactId>
+		    <version>${slf4j.version.override}</version>
+		</dependency>
    </dependencies>
 </project>

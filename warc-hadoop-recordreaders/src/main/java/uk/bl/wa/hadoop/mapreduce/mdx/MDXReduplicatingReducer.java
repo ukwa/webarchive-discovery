@@ -34,7 +34,6 @@ import org.apache.hadoop.mapred.MapReduceBase;
 import org.apache.hadoop.mapred.OutputCollector;
 import org.apache.hadoop.mapred.Reducer;
 import org.apache.hadoop.mapred.Reporter;
-import org.apache.log4j.PropertyConfigurator;
 import org.json.JSONException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -61,14 +60,6 @@ public class MDXReduplicatingReducer extends MapReduceBase implements
     private static final String response = "response";
 
     public MDXReduplicatingReducer() {
-        try {
-            Properties props = new Properties();
-            props.load(getClass()
-                    .getResourceAsStream("/log4j-override.properties"));
-            PropertyConfigurator.configure(props);
-        } catch (IOException e1) {
-            log.error("Failed to load log4j config from properties file.");
-        }
     }
 
     /**
