@@ -359,7 +359,7 @@ public class WARCIndexer {
             if( targetUrl.startsWith( "http" ) ) {
                 // TODO: Consider extracting & temporarily keeping all HTTP-header for later hinting on compression etc.
                 if( record instanceof WARCRecord ) {
-                    httpHeader = this.processWARCHTTPHeaders(record, header, targetUrl, solr);
+                    httpHeader = this.processWARCHTTPHeaders(archiveName, record, header, targetUrl, solr);
                 } else if( record instanceof ARCRecord ) {
                     ARCRecord arcr = ( ARCRecord ) record;
                     httpHeader = new HTTPHeader();
@@ -653,7 +653,7 @@ public class WARCIndexer {
      * @return {@link HTTPHeader} containing extracted HTTP status and headers for the record.
      */
     private HTTPHeader processWARCHTTPHeaders(
-            ArchiveRecord record, ArchiveRecordHeader warcHeader, String targetUrl, SolrRecord solr)
+            String archiveName, ArchiveRecord record, ArchiveRecordHeader warcHeader, String targetUrl, SolrRecord solr)
             throws IOException {
         // There are not always headers!
         HTTPHeader httpHeaders = new HTTPHeader();
@@ -684,7 +684,7 @@ public class WARCIndexer {
                 } catch (ProtocolException p) {
                     log.error(
                             "ProtocolException [" + statusCode + "]: "
-                                    + warcHeader.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
+                                    + archiveName
                                     + "@"
                                     + warcHeader.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY),
                             p);
@@ -694,9 +694,10 @@ public class WARCIndexer {
             }
         } else {
             log.warn("Invalid status line: "
-                    + warcHeader.getHeaderValue(WARCConstants.HEADER_KEY_FILENAME)
+                    + archiveName
                     + "@"
-                    + warcHeader.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY));
+                    + warcHeader.getHeaderValue(WARCConstants.ABSOLUTE_OFFSET_KEY)
+                    + " WARC-Type:" + warcHeader.getHeaderValue(HEADER_KEY_TYPE));
         }
         // No need for this, as the headers have already been read from the
         // InputStream (above):

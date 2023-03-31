@@ -156,8 +156,8 @@ public class SolrRecordFactory {
             return config;
         }
         if (config.hasPath(newKey)) {
-            log.warn("Warning: Config has both path '{}' and '{}' which serves the same purpose. " +
-                     "Only the values in '{}' will be used", oldKey, newKey, newKey);
+            log.warn("Warning: Config has both path '"+oldKey+"' and '"+newKey+"' which serves the same purpose. " +
+                     "Only the values in '"+newKey+"' will be used", oldKey);
             return config;
         }
         log.warn("Warning: The config has the path '{}}', which is deprecated. " +
