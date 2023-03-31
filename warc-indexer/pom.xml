@@ -8,9 +8,6 @@
         <version>3.3.0-SNAPSHOT</version>
         <relativePath>..</relativePath>
     </parent>
-    <properties>
-        <slf4j.version.override>1.7.30</slf4j.version.override>
-    </properties>
     <licenses>
         <license>
             <name>GNU General Public License Version 2</name>
