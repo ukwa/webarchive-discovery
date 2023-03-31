@@ -59,7 +59,7 @@
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
       <ram>1024</ram>
       <jackson.version>2.11.3</jackson.version>
-      <slf4j.version.override>2.0.7</slf4j.version.override>
+      <slf4j.version.override>1.7.36</slf4j.version.override>
       <log4j.version>2.19.0</log4j.version>
    </properties>
    <build>
