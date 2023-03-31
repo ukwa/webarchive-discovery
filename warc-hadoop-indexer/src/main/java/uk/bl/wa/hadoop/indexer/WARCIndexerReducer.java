@@ -136,7 +136,7 @@ public class WARCIndexerReducer extends MapReduceBase implements
             solr = wsr.getSolrRecord();
             noValues++;
 
-            if (!opts.dummyRun) {
+            if (solrServer != null && !opts.dummyRun) {
                 docs.add(solr.getSolrDocument());
                 // Have we exceeded the batchSize?
                 checkSubmission(docs, opts.solr.batchSize, reporter);
