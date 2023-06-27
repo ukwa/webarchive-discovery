@@ -245,6 +245,8 @@ public class Memento {
     
     @JsonProperty("content_fuzzy_hash")
     private String contentFuzzyHash;
+    
+    // FIXME Add WARC fields (somehow!)
 
 
     public Memento() {

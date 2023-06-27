@@ -91,7 +91,7 @@ public class WARCIndexerCommandOptions {
     public String output;
 
     public enum OutputFormat { jsonl, xml }
-    @Option(names = {"-F", "--output-format"}, description = "Output as JSON/XML, when an output is specified", defaultValue = "jsonl")
+    @Option(names = {"-F", "--output-format"}, description = "Which format, 'jsonl' or 'xml', to use when output is specified (rather than direct indexing). Default is 'xml'.", defaultValue = "xml")
     public OutputFormat outputFormat;
 
     @Option(names = { "-z", "--gzip", "--compress" }, description = "Compress the final output file(s).", defaultValue = "false")
