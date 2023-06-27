@@ -3,7 +3,9 @@ Web Archive Discovery
 
 These are the components we use to data-mine and index our ARC and WARC files and make the contents explorable and discoverable.
 
-[![Build Status](https://travis-ci.org/ukwa/webarchive-discovery.png?branch=master)](https://travis-ci.org/ukwa/webarchive-discovery/)
+[![Java CI Maven Build](https://github.com/ukwa/webarchive-discovery/actions/workflows/ci-build-and-push.yml/badge.svg)](https://github.com/ukwa/webarchive-discovery/actions/workflows/ci-build-and-push.yml)
+
+[![Maven Central](https://img.shields.io/maven-central/v/uk.bl.wa.discovery/warc-indexer)](https://central.sonatype.com/namespace/uk.bl.wa.discovery)
 
 Documentation
 -------------
