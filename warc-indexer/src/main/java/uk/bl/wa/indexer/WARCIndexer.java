@@ -514,7 +514,7 @@ public class WARCIndexer {
 
         //Will convert windows path to linux path. Linux paths will not be modified.
         final String linuxFilePath = FilenameUtils.separatorsToUnix(filePath);
-        solr.setField(SolrFields.SOURCE_FILE, linuxFilePath);
+        solr.setField(SolrFields.SOURCE_FILE_PATH, linuxFilePath);
 
         byte[] url_md5digest = md5
                 .digest(Normalisation.sanitiseWARCHeaderValue(header.getUrl()).getBytes(StandardCharsets.UTF_8));
