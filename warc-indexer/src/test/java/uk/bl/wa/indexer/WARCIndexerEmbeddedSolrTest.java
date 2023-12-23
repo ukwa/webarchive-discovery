@@ -28,6 +28,7 @@ package uk.bl.wa.indexer;
  */
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
@@ -61,6 +62,7 @@ import org.junit.Test;
 import uk.bl.wa.annotation.Annotations;
 import uk.bl.wa.annotation.AnnotationsTest;
 import uk.bl.wa.annotation.Annotator;
+import uk.bl.wa.solr.SolrFields;
 import uk.bl.wa.solr.SolrRecord;
 import uk.bl.wa.util.Normalisation;
 
@@ -191,6 +193,12 @@ public class WARCIndexerEmbeddedSolrTest {
         }
         assertEquals(21L, response.getResults().getNumFound());
 
+        //Test source_file and source_file_path
+        SolrDocument doc = response.getResults().get(0);       
+        assertEquals(doc.getFieldValue(SolrFields.SOURCE_FILE),"flashfrozen-jwat-recompressed.warc.gz");
+        String source_file_path = (String) doc.getFieldValue(SolrFields.SOURCE_FILE_PATH);
+        assertTrue(source_file_path.endsWith("wikipedia-mona-lisa/flashfrozen-jwat-recompressed.warc.gz")); //First path of path depend on project location.               
+       
     }
 
 }
