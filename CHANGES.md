@@ -1,6 +1,12 @@
 
 **NOTE** Generally, we only add terms to the Solr schema, so it should usually be compatible with previous versions (i.e. clients should be able to query across both without modification). However, there are been a small number of fixes which unfortunately required breaking changes you may need to be aware of or work-around. e.g. [hash becomes single-valued](https://github.com/ukwa/webarchive-discovery/issues/95)... TBA...
 
+3.3.1
+-----
+ (UNRELEASED)
+
+source_file and source_file_path are not set correct as there were in version 3.2.0. 
+
 3.3.0
 -----
 
