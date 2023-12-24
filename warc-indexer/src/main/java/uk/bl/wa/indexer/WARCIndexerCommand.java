@@ -245,7 +245,7 @@ public class WARCIndexerCommand {
                     }
                 } else {
                     log.debug("No document produced by record: " + type + " for url " + url + " from " + 
-                        inFile.getName() + " @" + rec.getHeader().getOffset());
+                        inFile.getName() + " @" + rec.getHeader().getOffset()); //All request records will log this. It is expected there is no document.
             }
             }
             docConsumer.endWARC();
