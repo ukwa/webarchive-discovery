@@ -244,7 +244,7 @@ public class WARCIndexerCommand {
                         recordCount++;
                     }
                 } else {
-                    log.info("No document produced by record: " + type + " for url " + url + " from " + 
+                    log.debug("No document produced by record: " + type + " for url " + url + " from " + 
                         inFile.getName() + " @" + rec.getHeader().getOffset());
             }
             }
