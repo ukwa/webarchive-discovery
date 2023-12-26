@@ -5,7 +5,7 @@
 -----
  (UNRELEASED)
 
-source_file and source_file_path are not set correct as there were in version 3.2.0. 
+source_file and source_file_path are again set correct as there were in version 3.2.0. 
 
 3.3.0
 -----
