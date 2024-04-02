@@ -3,7 +3,6 @@
 
 3.3.1
 -----
- (UNRELEASED)
 
 source_file and source_file_path are again set correct as there were in version 3.2.0. 
 
