@@ -116,8 +116,8 @@ public class WARCIndexerCommandOptions {
     @Option(names = { "-b", "--batch" }, description = "Batch size for submissions.", defaultValue = "100")
     public Integer batchSize;
 
-    @Option(names = { "-d", "--disable_commit", "--disable-commit" }, description = "Disable client side commits (speeds up indexing at the cost of flush guarantee).", defaultValue = "false")
-    public boolean disableCommit;
+    @Option(names = { "-d", "--disable_commit", "--disable-commit" }, description = "Disable client side commits (speeds up indexing at the cost of flush guarantee).")
+    public Boolean disableCommit;
 
     // The input files:
     @Parameters(paramLabel = "FILE", description = "Input file that contains a list of WARCs to be processed.")
