@@ -33,8 +33,9 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
- * @author Andrew Jackson <Andrew.Jackson@bl.uk>
- *
+ * Demonstrates timeout-safe task execution with cooperative interruption.
+ * 
+ * @author Andrew Jackson
  */
 public class CallableTest {
     public static void main(String[] args) throws Exception {
@@ -43,20 +44,23 @@ public class CallableTest {
 
         try {
             System.out.println("Started..");
-            System.out.println(future.get(3, TimeUnit.SECONDS));
+            System.out.println(future.get(3, TimeUnit.SECONDS)); // Wait up to 3s
             System.out.println("Finished!");
         } catch (TimeoutException e) {
-            System.out.println("Terminated!");
+            System.out.println("Terminated due to timeout!");
+            future.cancel(true); // Cooperative cancel on timeout
+        } finally {
+            executor.shutdownNow();
         }
-
-        executor.shutdownNow();
     }
 }
 
 class Task implements Callable<String> {
     @Override
     public String call() throws Exception {
-        Thread.sleep(4000); // Just to demo a long running task of 4 seconds.
-        return "Ready!";
+        while (!Thread.currentThread().isInterrupted()) {
+            Thread.sleep(100); // Simulate ongoing work
+        }
+        return "Cancelled!";
     }
 }
