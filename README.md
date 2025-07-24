@@ -1,3 +1,7 @@
+** Please note that the `warc-indexer` tool & code is now supported by [NetArchiveSuite](https://github.com/netarchivesuite/warc-indexer)
+The 'warc-indexer' directory and code that exists in this repo is now only for reference. For support and issues of 'warc-indexer', please communicate with NetArchiveSuite. **
+
+
 Web Archive Discovery
 =====================
 
